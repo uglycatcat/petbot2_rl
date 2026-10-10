@@ -1,6 +1,6 @@
 # 本地参考项目
 
-此处保留 9 个上游仓库快照（robot_lab、rl_sar、recovery、WBC-AGILE、getup_gym、HumanUP、tron2_rl_lab、b2w-rl、Wheel-Legged-Lab），并在训练服务器上额外克隆了论文作者的部署栈 Recovery_go2w（本机没有）。
+此处保留 9 个上游仓库快照（robot_lab、rl_sar、recovery、WBC-AGILE、getup_gym、HumanUP、tron2_rl_lab、b2w-rl、Wheel-Legged-Lab），此外，论文作者的部署栈 Recovery_go2w 也在 `default.xml` 清单里，目前只在一台设备（训练服务器）上物化过。
 
 除 rl_sar、recovery 外只保存调研源码，不安装各仓库依赖，也不代表这些项目能直接解决 PetBot 的完整翻倒恢复。rl_sar 已构建并运行，用于验证「训练产物离开 Isaac Sim 后还能看到效果」这条链路（在桌面机上做，因为 MuJoCo 渲染是桌面机的职责）；recovery 正在训练服务器上试训，汇总见 [recovery 试训汇总](../docs/reference_recovery_validation.md)。
 
@@ -13,7 +13,7 @@
 | [robot_lab](robot_lab/README.md) | 首选训练框架 | 复用 Isaac Lab 扩展、Go2W 混合 action、RSL-RL 训练 / 导出；恢复任务需要新增。 |
 | [rl_sar](rl_sar/README.md) | 策略验证与部署入口 | 复用 TorchScript / ONNX 推理、MuJoCo 与 Gazebo 仿真、真机部署；本身不做训练，策略须来自 robot_lab `play.py` 导出，且关节顺序要与 robot_lab cfg 的 `joint_names` 一致。 |
 | [recovery](recovery/README.md) | 当前试训对象 | 唯一同时满足轮足 / Isaac Lab / SO(3) 全姿态随机 / 零参考动作；自带 Thunder 的 URDF 与 STL、ED/CW 动态塑形奖励、非对称 actor-critic。需比 2.3.2 更新的 Isaac Lab（`dump_pickle`），只提供 Isaac Lab 通路、无 MuJoCo。试训结论见 [recovery 试训汇总](../docs/reference_recovery_validation.md)。 |
-| Recovery_go2w | 作者部署栈 | 论文作者的公开实现，含 `model_7999.pt` 权重与 `simulate_python/` 运行入口；**只在训练服务器上有**。可用于对照「作者自己的检查点能否站起」，但权重可用性、观测 / 动作维度一致性与许可证均未核实。 |
+| Recovery_go2w | 作者部署栈 | 论文作者的公开实现，含 `model_7999.pt` 权重与 `simulate_python/` 运行入口；**在清单里，目前只在一台设备上物化过**。可用于对照「作者自己的检查点能否站起」，但权重可用性、观测 / 动作维度一致性与许可证均未核实。 |
 | [WBC-AGILE](WBC-AGILE/README.md) | 恢复任务参考 | 倒地状态数据集、stand_up 奖励与课程；当前 Lab 3 beta API 需适配。 |
 | [getup_gym](getup_gym/README.md) | 轮足恢复方法 | FTSR 力辅助探索、教师学生与分阶段奖励；基于 Isaac Gym。 |
 | [HumanUP](HumanUP/README.md) | 恢复与平滑方法 | 先发现恢复动作再优化平滑性；G1 / Isaac Gym 代码需按 PetBot 适配。 |

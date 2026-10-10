@@ -6,7 +6,8 @@
 
 - 目标：PetBot（轮足机器狗）在平地上被推倒、滚翻或跌落后，用强化学习策略恢复到默认站立构型并保持稳定。
 - 主线：Isaac Lab + RSL-RL + PPO 训练 → 策略导出 → MuJoCo 做 sim2sim 验证。
-- **当前阶段：调研与早期验证。** 在训练服务器上试跑成熟的开源参考项目（当前是 `recovery`），目标是选出最适合 PetBot 的算法框架；**尚未开始 PetBot 自身的任务与训练**。
+- **当前阶段：试跑参考项目、挑最佳参考项目。** 在训练服务器上试跑成熟的开源参考项目（当前是 `recovery`），**先选出最合适的参考项目**，再开始 PetBot 自身的任务与训练；**尚未开始 PetBot 训练**。
+- **PetBot 与参考项目的本质区别**：PetBot **本来就能轻松站住**（默认站姿是四轮着地的静稳定姿态，站立不需要策略去学）；而 `recovery` 这类轮足翻倒起身项目，研究对象默认**连"站住"都还没解决** —— 它们的站立姿态是要学出来的，所以才有高度 / 姿态塑形、ED-CW 类课程，以及"站住了但还在晃"这种失败模式。**参考项目的奖励权重、课程与成功判据不能直接照搬。**
 
 ## 第一步：判断自己在哪台设备上
 
@@ -62,13 +63,13 @@
 | 日期 | 事件 | 结果 |
 |---|---|---|
 | 2026-09-24 | 模型观察与文献调研归档 | `docs/reports/`（历史资料） |
-| 2026-09-29 | 9 个上游参考项目快照入库 | [manifest.json](reference_project/manifest.json) |
-| 2026-09-30 | 追加 rl_sar、recovery，整理独立仓库与需求文档 | rl_sar 已构建并跑通 MuJoCo 通路 |
+| 2026-09-29 | 7 个上游参考项目快照入库 | [manifest.json](reference_project/manifest.json) |
+| 2026-09-30 | 追加 rl_sar、recovery（累计 9 个），整理独立仓库与需求文档 | rl_sar 已构建并跑通 MuJoCo 通路 |
 | 2026-09-30 | 桌面机（RTX 2080Ti）早期部分运行 512 envs × 400 iter | **已做，但无参考价值**：该机不承担训练，记录仅存档 |
 | 2026-10-09 | 训练服务器部署 recovery 容器，发起论文原配置训练 | 4096 envs × 10000 iteration |
-| 2026-10-10 | recovery 上游原配置训练跑满：**完全失败**（成功率 0.00%） | 见 [recovery 试训汇总](docs/reference_recovery_validation.md) |
-| 2026-10-10 | 按论文口径改 8 项偏差后启动 6 个并行实验 | 进行中，见 [recovery 试训汇总](docs/reference_recovery_validation.md) |
-| 2026-10-10 | 仓库远程迁至 `petbot2_rl`，文档重整为鱼骨结构 | 本文件与 [README.md](README.md) |
+| 2026-10-10 | recovery 上游原配置训练跑满：**完全失败**（成功率 0.00%） | 见 [recovery 试训记录](docs/reference_recovery_validation.md) |
+| 2026-10-10 | 按论文口径改 8 项偏差后启动 6 个并行实验（1 个论文口径基线 + 5 个变体） | 进行中，见 [recovery 试训记录](docs/reference_recovery_validation.md) |
+| 2026-10-10 | 追加 Recovery_go2w 到清单；仓库远程迁至 `petbot2_rl`，文档重整为鱼骨结构 | 本文件与 [README.md](README.md) |
 
 细节写进对应文档，本表只保留一行结论。
 

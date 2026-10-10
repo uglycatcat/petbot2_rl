@@ -1,6 +1,6 @@
 {
   "captured_at": "2026-09-29T10:13:21.448539+00:00",
-  "updated_at": "2026-09-30T11:08:00+00:00",
+  "updated_at": "2026-10-10T12:00:00+00:00",
   "purpose": "Source references only; not installed as project dependencies, except rl_sar (built and run locally for policy verification) and recovery (installed and trained locally for fall-recovery verification).",
   "clone_options": [
     "--depth",
@@ -57,7 +57,7 @@
       "branch": "main",
       "commit": "e6424625011fbddebe74a2ea0b496fae324b6778",
       "captured_at": "2026-10-10T08:00:00+00:00",
-      "note": "Cloned on the training server only (not present on the desktop machine). Contains model_7999.pt; weight usability and license unverified.",
+      "note": "Listed in default.xml; currently materialized on the training server only (repo sync fetches it on other machines). Contains model_7999.pt; weight usability and license unverified.",
       "shallow": true,
       "lfs_downloaded": false,
       "submodules_initialized": false
