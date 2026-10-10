@@ -1,9 +1,12 @@
 # ─── 上游参考项目快照 ────────────────────────────────────────
-# reference_project/ 下是调研用的上游 checkout（实测约 1.8 GB，含各仓库自身 .git 约 404 MB；
-# 不含 .git 约 1.4 GB）。
-# 只保留该目录的 README.md、manifest.json 和 .gitignore 纳入版本管理；
-# 其它参考仓库不作为 submodule / 嵌套仓库提交；实际运行使用各自专用容器。
+# reference_project/ 下是调研用的上游 checkout，由根目录 default.xml 这份 repo 清单管理
+# （用法见 README.md 的「如何配置」）。只把该目录的 README.md、manifest.json 和 .gitignore
+# 纳入版本管理；其它参考仓库不作为 submodule / 嵌套仓库提交。
 /reference_project/*/
+
+# ─── repo 工作区元数据 ───────────────────────────────────────
+# repo init 会在仓库根目录生成 .repo/，不属于本仓库内容。
+/.repo/
 
 # ─── Python 缓存 ─────────────────────────────────────────────
 __pycache__/

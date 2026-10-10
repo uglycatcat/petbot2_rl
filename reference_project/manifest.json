@@ -51,6 +51,18 @@
       "submodules_initialized": false
     },
     {
+      "name": "Recovery_go2w",
+      "url": "https://github.com/boyuandeng/Recovery_go2w.git",
+      "role": "author_deployment_stack",
+      "branch": "main",
+      "commit": "e6424625011fbddebe74a2ea0b496fae324b6778",
+      "captured_at": "2026-10-10T08:00:00+00:00",
+      "note": "Cloned on the training server only (not present on the desktop machine). Contains model_7999.pt; weight usability and license unverified.",
+      "shallow": true,
+      "lfs_downloaded": false,
+      "submodules_initialized": false
+    },
+    {
       "name": "WBC-AGILE",
       "url": "https://github.com/nvidia-isaac/WBC-AGILE.git",
       "role": "self_righting_task",

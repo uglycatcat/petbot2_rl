@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  参考项目清单（repo manifest）。
+
+  用途：统一管理 reference_project/ 下的多个上游仓库 —— 一条命令物化 / 更新全部，
+  并用 revision 把每个项目锁在确定的 commit 上。
+
+  用法（在本仓库根目录执行）：
+      repo init -u <本仓库的远端 URL> -m default.xml
+      repo sync
+
+  被管理的项目会检出到 reference_project/<name>/（该目录被 .gitignore 排除）。
+
+  注意：clone-depth 只对 <project> 生效，写在 <default> 上会被 repo 忽略（已实测）。
+
+  维护规则：
+  - 新增 / 删除 / 改变某个参考项目的 pin，必须在同一次改动中更新本文件与 reference_project/manifest.json。
+  - 如果某个项目被我们改过（补丁 / 魔改），把改后的内容推到本仓库的一个专用分支，
+    再把该项目的 remote/revision 指向那条分支，这样 repo sync 能直接拿到修改后的版本。
+    分支命名约定：refproj/<项目名>，例如 refproj/recovery。
+-->
+<manifest>
+
+  <remote name="github" fetch="https://github.com/" review="https://github.com/" />
+  <!-- 我们自己的仓库：用于存放被改过的参考项目（refproj/* 分支） -->
+  <remote name="ours" fetch="https://github.com/uglycatcat/" review="https://github.com/" />
+
+  <default remote="github" revision="main" sync-j="4" />
+
+  <!-- 训练框架 / 工程参考 -->
+  <project name="fan-ziqi/robot_lab"
+           path="reference_project/robot_lab"
+           revision="500399ed75f510aeaff28705a8ce736c514dbec3"
+           clone-depth="1"
+           groups="framework" />
+
+  <!-- 策略验证与部署（MuJoCo 通路） -->
+  <project name="fan-ziqi/rl_sar"
+           path="reference_project/rl_sar"
+           revision="376d42c9b128f963ab08579762d5a216a976ce39"
+           clone-depth="1"
+           groups="deploy" />
+
+  <!-- 轮足倒地起身：当前试训对象及其相关参考 -->
+  <project name="Kitjesen/recovery"
+           path="reference_project/recovery"
+           revision="5b57477598963695be27474c0ba941a1ba4afd38"
+           clone-depth="1"
+           groups="recovery" />
+  <project name="boyuandeng/Recovery_go2w"
+           path="reference_project/Recovery_go2w"
+           revision="e6424625011fbddebe74a2ea0b496fae324b6778"
+           clone-depth="1"
+           groups="recovery" />
+  <project name="nvidia-isaac/WBC-AGILE"
+           path="reference_project/WBC-AGILE"
+           revision="6830cf995714e81c91ce63247e8e016d36e28f14"
+           clone-depth="1"
+           groups="recovery" />
+  <project name="2350575870/getup_gym"
+           path="reference_project/getup_gym"
+           revision="238d2962a0fee8e3da4da914cadcea2be00ce402"
+           clone-depth="1"
+           groups="recovery" />
+  <project name="RunpeiDong/HumanUP"
+           path="reference_project/HumanUP"
+           revision="7516e0f27e6f4d1e7365cf64ea577a78247bd8cb"
+           clone-depth="1"
+           groups="recovery" />
+
+  <!-- 局部实现对照 -->
+  <project name="limxdynamics/tron2_rl_lab"
+           path="reference_project/tron2_rl_lab"
+           revision="db021b4016648a6ddc97fb0acbe5df882cd53fc5"
+           clone-depth="1"
+           groups="reference" />
+  <project name="LauraMQuiros/b2w-rl"
+           path="reference_project/b2w-rl"
+           revision="ad82b971bf69a84170f027035c1e2e3bf97e4ef9"
+           clone-depth="1"
+           groups="reference" />
+  <project name="zyicome/Wheel-Legged-Lab"
+           path="reference_project/Wheel-Legged-Lab"
+           revision="e61bfe1fb05aac638ba33e41f91b4eddf3c3c1e7"
+           clone-depth="1"
+           groups="reference" />
+
+</manifest>

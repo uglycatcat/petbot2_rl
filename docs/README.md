@@ -1,23 +1,31 @@
-# PetBot 文档索引
+# 文档索引
 
-当前独立仓库：`/home/anna/petbot2_ws/RL_ws`。本目录记录需求和工程规划，现阶段不提供共享环境或 Python 管理方案；后续运行参考项目时分别创建专用容器。
+本目录是项目的**细节文档**（"肋骨"）目录。[AGENTS.md](../AGENTS.md) 里的**进度报告是主线**——先看进度，再按需翻这里的某一篇。
 
-## 当前有效文档
+所有文档面向"下一个 agent / 新会话"：只写结论与必要证据，不留对话痕迹。
 
-1. [项目入口](../README.md)：目录、现状与已有演示。
-2. [Agent 接手说明](../AGENTS.md)：快速理解已定决策和工作边界。
-3. [当前需求基线](current_scope.md)：目标、动作接口、范围与待定项。
-4. [工程实施说明](engineering_handoff.md)：训练设计、sim2sim 契约、阶段验收。
-5. [参考项目索引](../reference_project/README.md)：上游用途、源码入口和快照版本。
-6. [recovery 运行验证记录](reference_recovery_validation.md)：轮足倒地起身参考项目的克隆、容器内跑通与训练实测，含本机硬件限制。
-7. [机器人模型](../robot_description/README.md) 与 [键盘演示](../robot_controller_demo/README.md)。
+## 当前文档
+
+| 文档 | 作用 |
+|---|---|
+| [current_scope.md](current_scope.md) | 需求基线：目标、动作接口、边界与待定项 |
+| [engineering_handoff.md](engineering_handoff.md) | 工程实施：接口契约、恢复任务设计、阶段验收 |
+| [reference_recovery_validation.md](reference_recovery_validation.md) | 参考项目 recovery 的**完整记录**：结论、判据、实验矩阵、产物与查询、坑、参数速查 |
+
+## 仓库根目录的相关文档
+
+| 文档 | 作用 |
+|---|---|
+| [AGENTS.md](../AGENTS.md) | agent 入口：设备判断、全局规则、**进度报告（主线）** |
+| [README.md](../README.md) | 人类入口：目录与职责、文档地图、如何配置 |
 
 ## 历史资料
 
-[2026-09-24 网页报告](reports/petbot_self_righting_20260924/index.html) 保留模型观察、配图与论文资料；[模型快照](reports/petbot_self_righting_20260924/model_snapshot.json) 记录当时的物理参数和文件哈希。
-
-旧报告里的本地训练算力约束、MuJoCo 训练主线、直接力矩 action 和当前阶段实机辨识建议均已被后续讨论取代。旧容器和 Python 环境配置也已撤销。阅读时以当前需求基线为准；配图不是已训练策略的演示，快照不会随当前模型自动更新。
+[reports/](reports/) 是 2026-09-24 的网页调研报告与当时的模型快照，只用于模型与文献追溯；其中的参数与结论不随当前模型更新，也不代表当前方案。
 
 ## 维护约定
 
-`current_scope.md` 记录已确认需求；`engineering_handoff.md` 记录候选实现与待定参数；实际完成状态同时更新项目 README 和 AGENTS。文档链接使用仓库内相对路径，运行命令默认从仓库根目录执行。
+- 结构是**鱼骨**：进度报告（主线，在 AGENTS.md）→ 按需下钻到这里的某一篇细节文档。
+- 需求写进 `current_scope.md`；工程实现与待定参数写进 `engineering_handoff.md`；参考项目的实测与结论写进对应的参考项目文档。
+- 关键节点与结果**先写入进度报告**（带日期，一行一条），细节再展开到对应文档。
+- 文档内使用相对路径；不写主机地址、账号、密码与凭据（本仓库公开）。
