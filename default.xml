@@ -18,6 +18,8 @@
   - 如果某个项目被我们改过（补丁 / 魔改），把改后的内容推到本仓库的一个专用分支，
     再把该项目的 remote/revision 指向那条分支，这样 repo sync 能直接拿到修改后的版本。
     分支命名约定：refproj/<项目名>，例如 refproj/recovery。
+  - 我方自建的工具、脚本与实验定义也在同一命名空间下备份（例如 refproj/recovery-tools，
+    内容在 tools/recovery_trial/），但它们不是上游项目，因此不写进本清单。
 -->
 <manifest>
 
@@ -42,9 +44,12 @@
            groups="deploy" />
 
   <!-- 轮足倒地起身：当前试训对象及其相关参考 -->
-  <project name="Kitjesen/recovery"
+  <!-- recovery 我们改过（论文口径补丁 + dump_pickle 兼容）：内容改取本仓库分支 refproj/recovery；
+       原始上游为 Kitjesen/recovery @ 5b57477598963695be27474c0ba941a1ba4afd38（来源见 manifest.json） -->
+  <project name="petbot2_rl"
            path="reference_project/recovery"
-           revision="5b57477598963695be27474c0ba941a1ba4afd38"
+           remote="ours"
+           revision="refproj/recovery"
            clone-depth="1"
            groups="recovery" />
   <project name="boyuandeng/Recovery_go2w"

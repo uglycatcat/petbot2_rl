@@ -1,6 +1,6 @@
 # 本地参考项目
 
-此处保留 9 个上游仓库快照（robot_lab、rl_sar、recovery、WBC-AGILE、getup_gym、HumanUP、tron2_rl_lab、b2w-rl、Wheel-Legged-Lab），此外，论文作者的部署栈 Recovery_go2w 也在 `default.xml` 清单里，目前只在一台设备（训练服务器）上物化过。
+此处按仓库根 [default.xml](../default.xml) 这份 repo 清单物化上游快照（浅克隆、锁在确定 commit 上）。**清单里有 10 个项目（9 个上游 + 论文作者的部署栈 Recovery_go2w）；当前训练服务器上实际物化的只有 `recovery` 与 `Recovery_go2w`**，其余 8 个需要 `repo sync` 才会出现 —— 因此在未物化的机器上，本文件里指向那 8 个项目的链接是死链，属于预期现象。
 
 除 rl_sar、recovery 外只保存调研源码，不安装各仓库依赖，也不代表这些项目能直接解决 PetBot 的完整翻倒恢复。rl_sar 已构建并运行，用于验证「训练产物离开 Isaac Sim 后还能看到效果」这条链路（在桌面机上做，因为 MuJoCo 渲染是桌面机的职责）；recovery 正在训练服务器上试训，汇总见 [recovery 试训汇总](../docs/reference_recovery_validation.md)。
 
@@ -12,11 +12,11 @@
 
 | 项目 | 用途 | 复用边界 |
 |---|---|---|
-| [robot_lab](robot_lab/README.md) | 首选训练框架 | 复用 Isaac Lab 扩展、Go2W 混合 action、RSL-RL 训练 / 导出；恢复任务需要新增。 |
+| [robot_lab](robot_lab/README.md) | 混合动作与训练工程参考 | 复用 Isaac Lab 扩展、Go2W 混合 action、RSL-RL 训练 / 导出；恢复任务需要新增。 |
 | [rl_sar](rl_sar/README.md) | 策略验证与部署入口 | 复用 TorchScript / ONNX 推理、MuJoCo 与 Gazebo 仿真、真机部署；本身不做训练，策略须来自 robot_lab `play.py` 导出，且关节顺序要与 robot_lab cfg 的 `joint_names` 一致。 |
-| [recovery](recovery/README.md) | 当前试训对象 | 唯一同时满足轮足 / Isaac Lab / SO(3) 全姿态随机 / 零参考动作；自带 Thunder 的 URDF 与 STL、ED/CW 动态塑形奖励、非对称 actor-critic。需比 2.3.2 更新的 Isaac Lab（`dump_pickle`），只提供 Isaac Lab 通路、无 MuJoCo。试训结论见 [recovery 试训汇总](../docs/reference_recovery_validation.md)。 |
-| Recovery_go2w | 作者部署栈 | 论文作者的公开实现，含 `model_7999.pt` 权重与 `simulate_python/` 运行入口；**在清单里，目前只在一台设备上物化过**。可用于对照「作者自己的检查点能否站起」，但权重可用性、观测 / 动作维度一致性与许可证均未核实。 |
-| [WBC-AGILE](WBC-AGILE/README.md) | 恢复任务参考 | 倒地状态数据集、stand_up 奖励与课程；当前 Lab 3 beta API 需适配。 |
+| [recovery](recovery/README.md) | 当前试训对象 | 唯一同时满足轮足 / Isaac Lab / SO(3) 全姿态随机 / 零参考动作；自带 Thunder 的 URDF 与 STL、ED/CW 动态塑形奖励、非对称 actor-critic。**我们已改（论文口径补丁 + `dump_pickle` 兼容 —— 该 API 在任何已发布 Isaac Lab 中都不存在），修改版取自本仓库分支 `refproj/recovery`**；只提供 Isaac Lab 通路、无 MuJoCo。试训结论见 [recovery 试训汇总](../docs/reference_recovery_validation.md)。 |
+| Recovery_go2w | 作者部署栈 | 论文作者的公开实现，含 `model_7999.pt` 权重与 `simulate_python/` 运行入口；**在清单里，目前只在一台设备上物化过**。服务器已核对权重网络结构与部署契约，并在 MuJoCo 的 32 个随机倒地初态上测得平台自适应成功率 37.5%；许可证仍未核实，见[试训记录](../docs/reference_recovery_validation.md)。 |
+| [WBC-AGILE](WBC-AGILE/README.md) | 恢复任务接入优先候选（待实测） | 倒地状态数据集、stand_up 奖励与课程；当前 Lab 3 beta API 需适配。 |
 | [getup_gym](getup_gym/README.md) | 轮足恢复方法 | FTSR 力辅助探索、教师学生与分阶段奖励；基于 Isaac Gym。 |
 | [HumanUP](HumanUP/README.md) | 恢复与平滑方法 | 先发现恢复动作再优化平滑性；G1 / Isaac Gym 代码需按 PetBot 适配。 |
 | [tron2_rl_lab](tron2_rl_lab/README.md) | 轮足工程对照 | 轮足配置、动作 / 观测组织及训练与部署工程；不是 PetBot 恢复成品。 |
@@ -49,7 +49,7 @@
 |---|---|---|---|
 | robot_lab | [robot_lab](https://github.com/fan-ziqi/robot_lab) | `main` | `500399ed75f510aeaff28705a8ce736c514dbec3` |
 | rl_sar | [rl_sar](https://github.com/fan-ziqi/rl_sar) | `main` | `376d42c9b128f963ab08579762d5a216a976ce39` |
-| recovery | [recovery](https://github.com/Kitjesen/recovery) | `main` | `5b57477598963695be27474c0ba941a1ba4afd38` |
+| recovery（本地修改在本仓库分支 `refproj/recovery`） | [recovery](https://github.com/Kitjesen/recovery) | `main` | `5b57477598963695be27474c0ba941a1ba4afd38`（原始上游） |
 | Recovery_go2w（仅服务器） | [Recovery_go2w](https://github.com/boyuandeng/Recovery_go2w) | `main` | `e6424625011fbddebe74a2ea0b496fae324b6778` |
 | WBC-AGILE | [WBC-AGILE](https://github.com/nvidia-isaac/WBC-AGILE) | `main` | `6830cf995714e81c91ce63247e8e016d36e28f14` |
 | getup_gym | [getup_gym](https://github.com/2350575870/getup_gym) | `master` | `238d2962a0fee8e3da4da914cadcea2be00ce402` |
@@ -81,7 +81,7 @@ repo sync                 # 物化/更新全部；只取某类：repo sync -g re
 
 - 清单是**唯一来源**：新增、删除或变更某个项目的 pin 时，必须同步更新 `default.xml` 与 [manifest.json](manifest.json)。
 - 每个项目浅克隆并锁在确定的 commit 上；`clone-depth` 只能写在 `<project>` 上（写在 `<default>` 上会被 repo 忽略，已实测）。
-- **被我们改过的参考项目**：把改后的内容推到本仓库的 `refproj/<项目名>` 分支（如 `refproj/recovery`），并把 `default.xml` 中该项目的 `remote` 指向 `ours`、`revision` 指向该分支。这样 `repo sync` 直接得到修改后的版本，改动不会丢在忽略目录里。
+- **被我们改过的参考项目**：把改后的内容推到本仓库的 `refproj/<项目名>` 分支（如 `refproj/recovery`），并把 `default.xml` 中该项目的 `remote` 指向 `ours`、`revision` 指向该分支。这样 `repo sync` 直接得到修改后的版本，改动不会丢在忽略目录里。recovery 已经这样做：清单里该项为 `remote="ours"`、`revision="refproj/recovery"`；**我方自建的工具与实验定义**同样备份在 `refproj/recovery-tools`（内容在 `tools/recovery_trial/`，见其 `INDEX.md`），它不是上游项目，不写进清单。
 - `groups` 划分：`framework`（robot_lab）、`deploy`（rl_sar）、`recovery`（recovery / Recovery_go2w / WBC-AGILE / getup_gym / HumanUP）、`reference`（tron2_rl_lab / b2w-rl / Wheel-Legged-Lab）。
 
 ## rl_sar 构建与验证记录
@@ -98,3 +98,16 @@ repo sync                 # 物化/更新全部；只取某类：repo sync -g re
 ## recovery 试训记录
 
 在训练服务器上试训，是当前唯一同时满足轮足 / Isaac Lab / SO(3) 全姿态随机 / 零参考动作的候选实现。**完整记录**（结论、判据 A/B/C、实验矩阵、产物与查询、坑、参数速查）见 [recovery 试训记录](../docs/reference_recovery_validation.md)。
+
+## 我方试训工具箱（参考分支）
+
+跑 recovery 试训时写的脚本、补丁与全部实验定义，**实际使用副本**在训练服务器的 `reference_project/recovery_env/`（被 `.gitignore` 排除、不进版本管理）；**版本化记录**在本仓库的参考分支 **`refproj/recovery-tools`**（路径 `tools/recovery_trial/`），内容：环境入口与容器编排、评估（判据 A/B/C）、批量评估、`summary.sh`、看门狗与自动续训、Go2-W 转换与官方权重验证、**每个实验的完整 diff**（`variant_diffs/*.patch`）、关键结果 JSON 与数字留档。
+
+这些工具是**给 recovery 这个参考项目用的**，因此随它一起放在 `refproj/` 命名空间下。项目不在机器之间搬（工作区由 `git pull` 维护，参考项目由 `repo sync` 按 `default.xml` 物化），所以**不需要 checkout**；要看内容或历史直接用：
+
+```bash
+git show refproj/recovery-tools:tools/recovery_trial/env.sh   # 看单个文件
+git log --oneline refproj/recovery-tools                      # 看改动历史
+```
+
+内容清单与实验代际说明见该分支的 `tools/recovery_trial/INDEX.md`。
