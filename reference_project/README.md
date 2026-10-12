@@ -12,7 +12,7 @@
 |---|---|---|
 | [robot_lab](robot_lab/README.md) | 首选训练框架 | 复用 Isaac Lab 扩展、Go2W 混合 action、RSL-RL 训练 / 导出；恢复任务需要新增。 |
 | [rl_sar](rl_sar/README.md) | 策略验证与部署入口 | 复用 TorchScript / ONNX 推理、MuJoCo 与 Gazebo 仿真、真机部署；本身不做训练，策略须来自 robot_lab `play.py` 导出，且关节顺序要与 robot_lab cfg 的 `joint_names` 一致。 |
-| [recovery](recovery/README.md) | 当前试训对象 | 唯一同时满足轮足 / Isaac Lab / SO(3) 全姿态随机 / 零参考动作；自带 Thunder 的 URDF 与 STL、ED/CW 动态塑形奖励、非对称 actor-critic。需比 2.3.2 更新的 Isaac Lab（`dump_pickle`），只提供 Isaac Lab 通路、无 MuJoCo。试训结论见 [recovery 试训汇总](../docs/reference_recovery_validation.md)。 |
+| [recovery](recovery/README.md) | 当前试训对象 | 唯一同时满足轮足 / Isaac Lab / SO(3) 全姿态随机 / 零参考动作；自带 Thunder 的 URDF 与 STL、ED/CW 动态塑形奖励、非对称 actor-critic。**我们已改（论文口径补丁 + `dump_pickle` 兼容 —— 该 API 在任何已发布 Isaac Lab 中都不存在），修改版取自本仓库分支 `refproj/recovery`**；只提供 Isaac Lab 通路、无 MuJoCo。试训结论见 [recovery 试训汇总](../docs/reference_recovery_validation.md)。 |
 | Recovery_go2w | 作者部署栈 | 论文作者的公开实现，含 `model_7999.pt` 权重与 `simulate_python/` 运行入口；**在清单里，目前只在一台设备上物化过**。可用于对照「作者自己的检查点能否站起」，但权重可用性、观测 / 动作维度一致性与许可证均未核实。 |
 | [WBC-AGILE](WBC-AGILE/README.md) | 恢复任务参考 | 倒地状态数据集、stand_up 奖励与课程；当前 Lab 3 beta API 需适配。 |
 | [getup_gym](getup_gym/README.md) | 轮足恢复方法 | FTSR 力辅助探索、教师学生与分阶段奖励；基于 Isaac Gym。 |
@@ -47,7 +47,7 @@
 |---|---|---|---|
 | robot_lab | [robot_lab](https://github.com/fan-ziqi/robot_lab) | `main` | `500399ed75f510aeaff28705a8ce736c514dbec3` |
 | rl_sar | [rl_sar](https://github.com/fan-ziqi/rl_sar) | `main` | `376d42c9b128f963ab08579762d5a216a976ce39` |
-| recovery | [recovery](https://github.com/Kitjesen/recovery) | `main` | `5b57477598963695be27474c0ba941a1ba4afd38` |
+| recovery（本地修改在本仓库分支 `refproj/recovery`） | [recovery](https://github.com/Kitjesen/recovery) | `main` | `5b57477598963695be27474c0ba941a1ba4afd38`（原始上游） |
 | Recovery_go2w（仅服务器） | [Recovery_go2w](https://github.com/boyuandeng/Recovery_go2w) | `main` | `e6424625011fbddebe74a2ea0b496fae324b6778` |
 | WBC-AGILE | [WBC-AGILE](https://github.com/nvidia-isaac/WBC-AGILE) | `main` | `6830cf995714e81c91ce63247e8e016d36e28f14` |
 | getup_gym | [getup_gym](https://github.com/2350575870/getup_gym) | `master` | `238d2962a0fee8e3da4da914cadcea2be00ce402` |
@@ -79,7 +79,7 @@ repo sync                 # 物化/更新全部；只取某类：repo sync -g re
 
 - 清单是**唯一来源**：新增、删除或变更某个项目的 pin 时，必须同步更新 `default.xml` 与 [manifest.json](manifest.json)。
 - 每个项目浅克隆并锁在确定的 commit 上；`clone-depth` 只能写在 `<project>` 上（写在 `<default>` 上会被 repo 忽略，已实测）。
-- **被我们改过的参考项目**：把改后的内容推到本仓库的 `refproj/<项目名>` 分支（如 `refproj/recovery`），并把 `default.xml` 中该项目的 `remote` 指向 `ours`、`revision` 指向该分支。这样 `repo sync` 直接得到修改后的版本，改动不会丢在忽略目录里。
+- **被我们改过的参考项目**：把改后的内容推到本仓库的 `refproj/<项目名>` 分支（如 `refproj/recovery`），并把 `default.xml` 中该项目的 `remote` 指向 `ours`、`revision` 指向该分支。这样 `repo sync` 直接得到修改后的版本，改动不会丢在忽略目录里。recovery 已经这样做：清单里该项为 `remote="ours"`、`revision="refproj/recovery"`；**我方自建的工具与实验定义**同样备份在 `refproj/recovery-tools`（内容在 `tools/recovery_trial/`，见其 `INDEX.md`），它不是上游项目，不写进清单。
 - `groups` 划分：`framework`（robot_lab）、`deploy`（rl_sar）、`recovery`（recovery / Recovery_go2w / WBC-AGILE / getup_gym / HumanUP）、`reference`（tron2_rl_lab / b2w-rl / Wheel-Legged-Lab）。
 
 ## rl_sar 构建与验证记录
@@ -96,3 +96,14 @@ repo sync                 # 物化/更新全部；只取某类：repo sync -g re
 ## recovery 试训记录
 
 在训练服务器上试训，是当前唯一同时满足轮足 / Isaac Lab / SO(3) 全姿态随机 / 零参考动作的候选实现。**完整记录**（结论、判据 A/B/C、实验矩阵、产物与查询、坑、参数速查）见 [recovery 试训记录](../docs/reference_recovery_validation.md)。
+
+## 我方试训工具箱（备份分支）
+
+跑 recovery 试训时写的脚本、补丁与全部实验定义，平时位于训练服务器的 `reference_project/recovery_env/` 与 `recovery_variants/`（被忽略、不进版本管理），已备份到本仓库分支 **`refproj/recovery-tools`**（路径 `tools/recovery_trial/`）：环境入口与容器编排、评估（判据 A/B/C）、批量评估、看门狗与自动续训、Go2-W 转换与官方权重验证、**每个实验的完整 diff**（`variant_diffs/*.patch`）、关键结果 JSON。
+
+```bash
+git show refproj/recovery-tools:tools/recovery_trial/env.sh > env.sh     # 取回单个文件
+git checkout refproj/recovery-tools -- tools/recovery_trial              # 整目录取回
+```
+
+内容清单与实验代际说明见该分支的 `tools/recovery_trial/INDEX.md`。

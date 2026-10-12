@@ -47,7 +47,7 @@
 10. **不确定就问**：规则之间若出现冲突，或需求含义不明，先问用户再动手。
 11. **主动维护进度报告**：每完成一件事，就按日期把关键节点、实测结果和失败的尝试追加到本文件的[进度报告](#进度报告文档主线)，需要时再展开写进对应的细节文档。
 12. **参考项目由 `default.xml` 清单管理**：`reference_project/` 下的项目通过 `repo` 物化。新增、删除或改变某个项目的 pin，必须在同一次改动中同步更新 `default.xml` 与 `reference_project/manifest.json`，保持清单与目录一致。
-13. **参考项目的本地修改不能丢**：在服务器上跑 demo 时若改了某个参考项目的代码，要把**该项目**提交到本仓库的一个专用分支（命名 `refproj/<项目名>`，如 `refproj/recovery`），并把 `default.xml` 里该项目的 `remote`/`revision` 指向那条分支；在完成这一步之前，不要删除或覆盖那个 checkout。
+13. **参考项目的本地修改不能丢**：在服务器上跑 demo 时若改了某个参考项目的代码，要把**该项目**提交到本仓库的一个专用分支（命名 `refproj/<项目名>`，如 `refproj/recovery`），并把 `default.xml` 里该项目的 `remote`/`revision` 指向那条分支；在完成这一步之前，不要删除或覆盖那个 checkout。**我方自建的工具、脚本与实验定义**（只存在于被忽略的 `reference_project/` 下）同样要推到 `refproj/` 备份分支（如 `refproj/recovery-tools`，内容在 `tools/recovery_trial/`），避免丢失；这类备份分支不写进 `default.xml`（它不是上游项目）。
 
 ## 沟通与交付
 
@@ -70,12 +70,19 @@
 | 2026-10-10 | recovery 上游原配置训练跑满：**完全失败**（成功率 0.00%） | 见 [recovery 试训记录](docs/reference_recovery_validation.md) |
 | 2026-10-10 | 按论文口径改 8 项偏差后启动 6 个并行实验（1 个论文口径基线 + 5 个变体） | 进行中，见 [recovery 试训记录](docs/reference_recovery_validation.md) |
 | 2026-10-10 | 追加 Recovery_go2w 到清单；仓库远程迁至 `petbot2_rl`，文档重整为鱼骨结构 | 本文件与 [README.md](README.md) |
+| 2026-10-11 | 第一轮 6 个实验跑满 10000 iteration：论文口径 C 全部 0.00%；但论文口径的 `paper_v1` 确实学会从倒地起身（倒置初态 46.8%、侧躺 38.2%），同时"站不静"（末态腿关节速度 p50 7.63 rad/s，论文要求 < 0.1） | [recovery 试训记录](docs/reference_recovery_validation.md) |
+| 2026-10-11 | 定位根因（对照论文原文）：上游把课程权重 CW 实现成**衰减** `0.3×0.968^i`（第 1000 iteration 即 1e−14，行为惩罚全被关掉），论文 Eq.3 是**递增** `cw←cw^β`（0.3 → 1）；episode 应为 **5 s @ 50 Hz**；行为惩罚组按 Eq.4 只乘 CW、不含 DS | 同上 |
+| 2026-10-11 | **接入论文平台**：论文用的 Go2-W / KYON 模型没有随上游发布；已从作者部署仓库取 Go2-W 模型转进 Isaac Lab（修 3 处 USD 转换问题），启动论文标准训练 | 同上 |
+| 2026-10-11 | 用作者官方权重 `model_7999.pt` 在 MuJoCo（作者 MJCF + 作者推理契约）验证：**确实能自行翻身站稳**（倾角 p50 11.3°、末段最大关节速度 p50 0.010 rad/s），平台自适应判据成功率 37.5% —— 作为本机训练的**复现基准**；同时澄清"高度 > 0.42 m"是 KYON 口径，Go2-W 站姿仅 0.30~0.36 m，套用必然 0% | 同上 |
+| 2026-10-12 | 第三代论文标准口径实验运行中（Thunder 3 个 + 经验延续 1 个 + **Go2-W 2 个**）；Go2-W @2000 站姿达标 25.2%、末态高度 p50 0.407 m 已超官方权重（0.323 m），同口径 Thunder 仅 10.2%、关节速度 10.6 rad/s —— 瓶颈指向**被训平台**（49.3 kg + 硬伺服）而非论文方法 | 同上 |
+| 2026-10-12 | 仓库治理：改过的 recovery 推为分支 **`refproj/recovery`**（`default.xml` 的 recovery 项已改指向它）；我方试训工具、补丁与全部实验定义推为分支 **`refproj/recovery-tools`**（`tools/recovery_trial/`）；文档按最新结果同步更新 | 本文件、[README.md](README.md)、[参考项目索引](reference_project/README.md) |
 
 细节写进对应文档，本表只保留一行结论。
 
 ## 当前实现状态
 
 - **已有**：机器人模型（MJCF + 10 个 STL）、参考项目快照、训练服务器上的容器与训练 / 评估 / 渲染链路、recovery 的完整训练与评估结果。
+- **备份分支**：`refproj/recovery`（上游 recovery + 我们的论文口径补丁，`default.xml` 已指向）、`refproj/recovery-tools`（我方试训脚本、补丁与全部实验定义，见该分支 `tools/recovery_trial/INDEX.md`）。
 - **尚无**：PetBot 的 Isaac Lab 任务、恢复策略、策略导出、MuJoCo 策略推理入口。
 - PetBot 动作接口（已定）：**5 个关节位置目标（`head` / `left_ear` / `right_ear` / `left_frame` / `right_frame`）+ 2 个后轮速度目标（`left_rear_wheel` / `right_rear_wheel`）**，由仿真内部伺服闭环执行；左右前轮被动；头、耳、车架与身体均可触地支撑。
 

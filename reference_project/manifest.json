@@ -1,6 +1,6 @@
 {
   "captured_at": "2026-09-29T10:13:21.448539+00:00",
-  "updated_at": "2026-10-10T12:00:00+00:00",
+  "updated_at": "2026-10-12T12:30:00+00:00",
   "purpose": "Source references only; not installed as project dependencies, except rl_sar (built and run locally for policy verification) and recovery (installed and trained locally for fall-recovery verification).",
   "clone_options": [
     "--depth",
@@ -46,6 +46,18 @@
       "captured_at": "2026-09-30T11:08:00+00:00",
       "installed": true,
       "pyproject_version": "0.1.0",
+      "local_modifications": {
+        "branch": "refproj/recovery",
+        "patches": ["patches/upstream_dump_pickle.patch", "patches/paper_repro_v1.patch"],
+        "files": [
+          "scripts/train.py",
+          "src/thunder_recovery/config/method1_deng/env_cfg.py",
+          "src/thunder_recovery/mdp/_utils.py",
+          "src/thunder_recovery/mdp/method1_deng/rewards.py"
+        ],
+        "note": "dump_pickle 兼容补丁（Isaac Lab 无此 API）+ 论文口径修正（CW 递增、DS 原式、Table I 奖励、Eq.4 组合、DR、动作噪声 σ=0.02）。default.xml 的 recovery 项已改指向该分支；原始上游 commit 见本条目 commit 字段。"
+      },
+      "tools_backup_branch": "refproj/recovery-tools",
       "shallow": true,
       "lfs_downloaded": false,
       "submodules_initialized": false

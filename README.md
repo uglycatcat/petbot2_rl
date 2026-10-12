@@ -34,5 +34,6 @@ repo sync                 # 按 default.xml 里锁定的 revision 对齐
 
 - [`default.xml`](default.xml) 是参考项目的**唯一清单**：新增、删除或改变某个项目的 pin，必须在同一次改动里同步更新它和 [`reference_project/manifest.json`](reference_project/manifest.json)。
 - 参考项目默认浅克隆并锁在确定的 commit 上；它们**不进本仓库的版本管理**（见 [.gitignore](.gitignore)）。
+- 上游的**本地修改**与我方**试训工具**分别保存在分支 `refproj/recovery` 与 `refproj/recovery-tools`（后者内容在 `tools/recovery_trial/`）；不要只留在被忽略的目录里。
 - 训练与实验在**训练服务器**上进行；桌面机不训练，只在最后做效果验证（两台设备的判断方法见 [AGENTS.md](AGENTS.md)）。
 - 参考项目的用途、来源与使用边界见 [reference_project/README.md](reference_project/README.md)。
