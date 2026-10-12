@@ -156,16 +156,28 @@ def _get_ed_norm(env: ManagerBasedRLEnv, k: int = 3) -> torch.Tensor:
 
 
 def _get_cw(env: ManagerBasedRLEnv, beta: float = 0.3, decay: float = 0.968) -> float:
-    """Curriculum Weight (paper Eq. 3): CW(i) = β · decay^i.
+    """Curriculum Weight（论文 Eq.3：cw ← cw^β），即 CW(i) = β^(decay^i)，**递增**。
 
-    i = training iteration, approximated as
-        common_step_counter / RECOVERY_STEPS_PER_ITER.
-    At β=0.3, decay=0.968: CW=0.1 around iter 35, ~0.01 around iter 100.
-    Behavior penalties are strong for a few dozen iterations, then fade as
-    the policy stabilises and task/ED shaping takes over.
+    i = 训练迭代数，近似为 common_step_counter / RECOVERY_STEPS_PER_ITER。
+    β = 0.3、decay = 0.968 时 CW 缓慢升到 1：
+
+        iteration:    0     10     35     100    200    500+
+        CW:         0.300  0.419  0.680  0.955  0.998  ~1.000
+
+    与论文描述一致：早期行为惩罚权重低（先快速学到任务行为），后期接近满权重
+    （动作更平滑）。
+
+    ⚠ 上游原实现（同名函数）返回 `beta * (decay ** iteration)`，是**衰减到 0**
+    （iter 200 已 4.5e−4、iter 1000 为 2.3e−15），与论文 Eq.3 语义相反 —— 行为惩罚
+    在训练早期就被全部关掉，导致"站得住但还在晃"（关节速度 p50 7.6 rad/s）。
+    本分支已改为递增语义；函数签名保留 `beta` / `decay` 两个参数仅为兼容调用方。
+
+    关于更新时点：论文写 "update it before each environment reset"。本实现按**每个训练
+    迭代更新一次**处理（向量化环境里"每次重置"会发生数千次/迭代，CW 会瞬间饱和，
+    与论文描述的"缓慢变化"不符）。
     """
     if hasattr(env, "common_step_counter"):
         iteration = env.common_step_counter / RECOVERY_STEPS_PER_ITER
     else:
         iteration = 0
-    return beta * (decay ** iteration)
+    return beta ** (decay ** iteration)   # 同 w1，另把 episode 改回论文 §IV-A 的 5 s @ 50 Hz

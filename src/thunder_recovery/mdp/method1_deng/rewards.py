@@ -159,10 +159,10 @@ def recovery_support_state(
     magnitude = torch.norm(forces, dim=-1)[:, sensor_cfg.body_ids]
     all_feet = (magnitude > threshold).all(dim=1)
 
-    asset: Articulation = env.scene[asset_cfg.name]
-    base_up = asset.data.root_pos_w[:, 2] > min_base_height
-
-    return (all_feet & base_up & ~freefall).float()
+    # 论文 §III-E 原文：support state = “all four wheels are in contact with
+    # the ground simultaneously”，没有高度条件（0.30 m 门是第三方复现仓库自加的，
+    # 见变体 p5 作为对照）。
+    return (all_feet & ~freefall).float()
 
 
 # ── Behavior rewards (× CW) ──
@@ -209,7 +209,7 @@ def recovery_action_rate_legs(
     prev_action = env.action_manager.prev_action
     leg_diff = torch.sum(torch.square(action[:, leg_ids] - prev_action[:, leg_ids]), dim=1)
     # 论文 Eq.4：行为组乘 CW，其中 action_rate 再乘 DS
-    return _get_cw(env) * _get_ed(env) * leg_diff
+    return _get_cw(env) * leg_diff
 
 
 # ── Constant penalties (legs only — wheels have dedicated terms) ──
@@ -223,7 +223,7 @@ def recovery_joint_velocity(
     asset: Articulation = env.scene[asset_cfg.name]
     leg_ids, _ = _get_joint_split(env, asset)
     # 论文 Eq.4：joint_velocity 属于行为组 → ×CW×DS
-    return _get_cw(env) * _get_ed(env) * torch.sum(torch.square(asset.data.joint_vel[:, leg_ids]), dim=1)
+    return _get_cw(env) * torch.sum(torch.square(asset.data.joint_vel[:, leg_ids]), dim=1)
 
 
 def recovery_torques(
@@ -234,7 +234,7 @@ def recovery_torques(
     asset: Articulation = env.scene[asset_cfg.name]
     leg_ids, _ = _get_joint_split(env, asset)
     # 论文 Eq.4：torques 属于行为组 → ×CW×DS
-    return _get_cw(env) * _get_ed(env) * torch.sum(torch.square(asset.data.applied_torque[:, leg_ids]), dim=1)
+    return _get_cw(env) * torch.sum(torch.square(asset.data.applied_torque[:, leg_ids]), dim=1)
 
 
 def recovery_joint_acceleration(
@@ -245,7 +245,7 @@ def recovery_joint_acceleration(
     asset: Articulation = env.scene[asset_cfg.name]
     leg_ids, _ = _get_joint_split(env, asset)
     # 论文 Eq.4：joint_acceleration 属于行为组 → ×CW×DS
-    return _get_cw(env) * _get_ed(env) * torch.sum(torch.square(asset.data.joint_acc[:, leg_ids]), dim=1)
+    return _get_cw(env) * torch.sum(torch.square(asset.data.joint_acc[:, leg_ids]), dim=1)
 
 
 def recovery_wheel_velocity(

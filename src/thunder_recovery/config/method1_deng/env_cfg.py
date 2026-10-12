@@ -40,6 +40,7 @@ from isaaclab.utils.noise import UniformNoiseCfg as Unoise
 
 from thunder_recovery import mdp as recovery_mdp
 from thunder_recovery.config.asset import THUNDER_NOHEAD_CFG
+from thunder_recovery.mdp import noisy_actions
 
 
 # -- Joint / body naming ------------------------------------------------
@@ -116,7 +117,7 @@ class RecoveryActionsCfg:
       wheels:       0.8   (paper Section C: reduced wheel scale for recovery)
     """
 
-    joint_pos = mdp_core.JointPositionActionCfg(
+    joint_pos = noisy_actions.NoisyJointPositionActionCfg(
         asset_name="robot",
         joint_names=LEG_JOINT_NAMES,
         # 论文/作者实现：作者部署栈（Recovery_go2w runtest.py）用统一的
@@ -127,7 +128,7 @@ class RecoveryActionsCfg:
         clip={".*": (-100.0, 100.0)},
         preserve_order=True,
     )
-    joint_vel = mdp_core.JointVelocityActionCfg(
+    joint_vel = noisy_actions.NoisyJointVelocityActionCfg(
         asset_name="robot",
         joint_names=WHEEL_JOINT_NAMES,
         scale=0.5,   # 作者栈同样用 0.5（论文只说 s_v < 1.0）
@@ -360,9 +361,11 @@ class RecoveryEventsCfg:
         mode="startup",
         params={
             "asset_cfg": SceneEntityCfg("robot"),
-            "operation": "scale",
-            "stiffness_distribution_params": (0.85, 1.15),
-            "damping_distribution_params": (0.6, 1.4),
+            # 论文 §IV-A 原文：actuator stiffness and damping are perturbed by
+            # ±1.0 and ±0.1 respectively（绝对量，非百分比）→ 用 add 操作。
+            "operation": "add",
+            "stiffness_distribution_params": (-1.0, 1.0),
+            "damping_distribution_params": (-0.1, 0.1),
         },
     )
 
@@ -442,11 +445,8 @@ class RecoveryRewardsCfg:
     )
 
     # Wheel-leg coordination (paper core contribution, early-phase only)
-    recovery_wheel_leg_coord = RewTerm(
-        func=recovery_mdp.recovery_wheel_leg_coord,
-        weight=5.0,
-        params={"asset_cfg": SceneEntityCfg("robot"), "max_wheel_speed": 40.0},
-    )
+    # （论文 Table I 与 Eq.4 中没有 wheel_leg_coord 项；该项是第三方复现仓库
+    #   自加的对论文思想的工程解释，故论文标准口径下删除。）
 
     # （已移除）recovery_joint_deviation：该项不在论文 Table I / Eq.4 中，
     # 是上游自加的常驻关节偏差惩罚，会与论文的 (×DS) stand_joint_pos 叠加。
@@ -501,11 +501,12 @@ class ThunderRecoveryEnvCfg(ManagerBasedRLEnvCfg):
 
     def __post_init__(self):
         # -- Sim --
-        # 论文 §IV-A：episode 4 s、控制 100 Hz。本环境物理步 0.005 s × decimation 4
-        # = 0.02 s（50 Hz），与作者部署栈的策略周期（0.002 s × 10 步）一致，
-        # 因此保持 50 Hz、把 episode 长度改为论文的 4 s（200 控制步）。
+        # 论文 §IV-A 原文：'Each episode lasts 5 seconds (at a control rate of 50Hz)'。
+        # 本环境物理步 0.005 s × decimation 4 = 0.02 s（50 Hz，250 控制步），
+        # 与作者部署栈的策略周期（0.002 s × 10 步 = 50 Hz）一致。
+        # 注：第一轮曾按论文另一处文字错改成 4 s @ 100 Hz，现已改回本节原文的 5 s @ 50 Hz。
         self.decimation = 4
-        self.episode_length_s = 4.0
+        self.episode_length_s = 5.0
         self.sim.dt = 0.005
         self.sim.render_interval = self.decimation
 

@@ -1,0 +1,504 @@
+diff --git a/scripts/train.py b/scripts/train.py
+index 320234e..222ef37 100644
+--- a/scripts/train.py
++++ b/scripts/train.py
+@@ -76,11 +76,20 @@ from rsl_rl.runners import OnPolicyRunner
+ 
+ from isaaclab.envs import ManagerBasedRLEnvCfg
+ from isaaclab.utils.dict import print_dict
+-from isaaclab.utils.io import dump_pickle, dump_yaml
++from isaaclab.utils.io import dump_yaml
+ from isaaclab_rl.rsl_rl import RslRlOnPolicyRunnerCfg, RslRlVecEnvWrapper
+ from isaaclab_tasks.utils import get_checkpoint_path
+ from isaaclab_tasks.utils.hydra import hydra_task_config
+ 
++
++# [本地补丁] isaaclab.utils.io 不提供 dump_pickle（2.3.2 及所有已发布版本都没有该 API），
++# 用标准库补齐，语义与上游调用处一致：把 cfg 对象 pickle 到 params/*.pkl。
++def dump_pickle(filename: str, data) -> None:
++    import pickle
++
++    with open(filename, "wb") as f:
++        pickle.dump(data, f)
++
+ # Register thunder_recovery gym task.
+ import thunder_recovery  # noqa: F401
+ 
+diff --git a/src/thunder_recovery/config/method1_deng/env_cfg.py b/src/thunder_recovery/config/method1_deng/env_cfg.py
+index acf18fd..7402fee 100644
+--- a/src/thunder_recovery/config/method1_deng/env_cfg.py
++++ b/src/thunder_recovery/config/method1_deng/env_cfg.py
+@@ -40,6 +40,7 @@ from isaaclab.utils.noise import UniformNoiseCfg as Unoise
+ 
+ from thunder_recovery import mdp as recovery_mdp
+ from thunder_recovery.config.asset import THUNDER_NOHEAD_CFG
++from thunder_recovery.mdp import noisy_actions
+ 
+ 
+ # -- Joint / body naming ------------------------------------------------
+@@ -116,21 +117,21 @@ class RecoveryActionsCfg:
+       wheels:       0.8   (paper Section C: reduced wheel scale for recovery)
+     """
+ 
+-    joint_pos = mdp_core.JointPositionActionCfg(
++    joint_pos = noisy_actions.NoisyJointPositionActionCfg(
+         asset_name="robot",
+         joint_names=LEG_JOINT_NAMES,
+-        scale={
+-            ".*_hip_joint": 0.125,
+-            "^(?!.*_hip_joint).*": 0.25,
+-        },
++        # 论文/作者实现：作者部署栈（Recovery_go2w runtest.py）用统一的
++        # actions*0.5 + default_dof_pos；上游原实现用 hip 0.125 / thigh·calf 0.25，
++        # 探索幅度只有一半到四分之一，是复现失败的首要嫌疑。
++        scale=0.5,
+         use_default_offset=True,
+         clip={".*": (-100.0, 100.0)},
+         preserve_order=True,
+     )
+-    joint_vel = mdp_core.JointVelocityActionCfg(
++    joint_vel = noisy_actions.NoisyJointVelocityActionCfg(
+         asset_name="robot",
+         joint_names=WHEEL_JOINT_NAMES,
+-        scale=0.8,
++        scale=0.5,   # 作者栈同样用 0.5（论文只说 s_v < 1.0）
+         use_default_offset=True,
+         clip={".*": (-100.0, 100.0)},
+         preserve_order=True,
+@@ -312,8 +313,8 @@ class RecoveryEventsCfg:
+         mode="startup",
+         params={
+             "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
+-            "static_friction_range": (0.3, 1.0),
+-            "dynamic_friction_range": (0.3, 0.8),
++            "static_friction_range": (0.7, 1.3),   # 论文 §IV-A：静摩擦 U[0.7, 1.3]
++            "dynamic_friction_range": (0.7, 1.3),
+             "restitution_range": (0.0, 0.5),
+             "num_buckets": 64,
+         },
+@@ -333,25 +334,38 @@ class RecoveryEventsCfg:
+         params={"asset_cfg": SceneEntityCfg("robot")},
+     )
+ 
+-    # 4. Reset: base mass DR +-10 % (paper IV-A)
+-    randomize_mass = EventTerm(
++    # 4. Reset: 论文 §IV-A 的域随机化 —— 基座质量 ±5 kg、连杆质量 ±10%、
++    #    执行器刚度 ±15 / 阻尼 ±2（刚度基准 100 → 0.85~1.15 倍；阻尼基准 5 → 0.6~1.4 倍）
++    randomize_base_mass = EventTerm(
+         func=mdp_core.randomize_rigid_body_mass,
+         mode="reset",
+         params={
+             "asset_cfg": SceneEntityCfg("robot", body_names=BASE_LINK_NAME),
++            "mass_distribution_params": (-5.0, 5.0),
++            "operation": "add",
++        },
++    )
++
++    randomize_link_mass = EventTerm(
++        func=mdp_core.randomize_rigid_body_mass,
++        mode="startup",
++        params={
++            "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
+             "mass_distribution_params": (0.9, 1.1),
+             "operation": "scale",
+         },
+     )
+ 
+-    # 5. Reset: external force/torque perturbation
+-    apply_external_force = EventTerm(
+-        func=mdp_core.apply_external_force_torque,
+-        mode="reset",
++    randomize_actuator_gains = EventTerm(
++        func=mdp_core.randomize_actuator_gains,
++        mode="startup",
+         params={
+-            "asset_cfg": SceneEntityCfg("robot", body_names=BASE_LINK_NAME),
+-            "force_range": (-10.0, 10.0),
+-            "torque_range": (-10.0, 10.0),
++            "asset_cfg": SceneEntityCfg("robot"),
++            # 论文 §IV-A 原文：actuator stiffness and damping are perturbed by
++            # ±1.0 and ±0.1 respectively（绝对量，非百分比）→ 用 add 操作。
++            "operation": "add",
++            "stiffness_distribution_params": (-1.0, 1.0),
++            "damping_distribution_params": (-0.1, 0.1),
+         },
+     )
+ 
+@@ -363,13 +377,7 @@ class RecoveryEventsCfg:
+         params={"asset_cfg": SceneEntityCfg("robot")},
+     )
+ 
+-    # 7. Interval: periodic push (paper IV-A DR)
+-    push_robot = EventTerm(
+-        func=mdp_core.push_by_setting_velocity,
+-        mode="interval",
+-        interval_range_s=(10.0, 15.0),
+-        params={"velocity_range": {"x": (-0.5, 0.5), "y": (-0.5, 0.5)}},
+-    )
++    # 7. (已移除) 周期性推力：论文 §IV-A 的 DR 清单里没有它
+ 
+ 
+ # -- Rewards (paper Table I + support_state + wheel-leg coord) ----------
+@@ -401,17 +409,15 @@ class RecoveryRewardsCfg:
+     )
+     recovery_base_orientation = RewTerm(
+         func=recovery_mdp.recovery_base_orientation,
+-        weight=50.0,
++        # Table I 的 scale 是 50、定义式是 (g_b − e_z)^2（惩罚）→ 权重取 −50
++        weight=-50.0,
+         params={"asset_cfg": SceneEntityCfg("robot")},
+     )
+ 
+-    # Behavior rewards (xCW, paper Table I) — weights reduced 5x from paper
+-    # default so the policy is not discouraged from the large motions
+-    # needed to actually stand up. Paper weights were tuned on KYON and
+-    # over-penalise Thunder's joint dynamics.
++    # Behavior rewards（论文 Table I 原值；上游曾整体下调 5~7 倍）
+     recovery_body_collision = RewTerm(
+         func=recovery_mdp.recovery_body_collision,
+-        weight=-1e-2,
++        weight=-5e-2,
+         params={
+             "sensor_cfg": SceneEntityCfg("contact_forces", body_names=COLLISION_BODY_REGEXES),
+             "force_clip": 50.0,
+@@ -419,7 +425,7 @@ class RecoveryRewardsCfg:
+     )
+     recovery_action_rate_legs = RewTerm(
+         func=recovery_mdp.recovery_action_rate_legs,
+-        weight=-2e-3,
++        weight=-1e-2,
+     )
+ 
+     # Support state — 4 feet contact AND base held above min_base_height.
+@@ -439,48 +445,31 @@ class RecoveryRewardsCfg:
+     )
+ 
+     # Wheel-leg coordination (paper core contribution, early-phase only)
+-    recovery_wheel_leg_coord = RewTerm(
+-        func=recovery_mdp.recovery_wheel_leg_coord,
+-        weight=5.0,
+-        params={"asset_cfg": SceneEntityCfg("robot"), "max_wheel_speed": 40.0},
+-    )
++    # （论文 Table I 与 Eq.4 中没有 wheel_leg_coord 项；该项是第三方复现仓库
++    #   自加的对论文思想的工程解释，故论文标准口径下删除。）
+ 
+-    # Constant penalty: joint deviation from default pose (not ED-gated).
+-    # Unlike recovery_stand_joint_pos (xED, only active late), this penalty
+-    # is always on post-freefall, giving the policy a persistent gradient
+-    # signal to move joints towards the standing pose even when ED is small.
+-    # Free-fall steps are masked (stiffness=0, joints uncontrollable).
+-    recovery_joint_deviation = RewTerm(
+-        func=recovery_mdp.recovery_joint_deviation,
+-        weight=-2e-3,
+-        params={"asset_cfg": SceneEntityCfg("robot")},
+-    )
++    # （已移除）recovery_joint_deviation：该项不在论文 Table I / Eq.4 中，
++    # 是上游自加的常驻关节偏差惩罚，会与论文的 (×DS) stand_joint_pos 叠加。
+ 
+-    # Constant penalties — weights reduced from paper default so the
+-    # policy is not punished for the large-amplitude motions required
+-    # to stand up. At paper's -2e-2, `recovery_joint_velocity` reached
+-    # -1.0/episode at iter 300 (single biggest term), driving the policy
+-    # toward a low-motion local optimum. Reducing these lets the robot
+-    # "move freely" to stand; success criteria still require max|q_dot|
+-    # < 0.1 rad/s in the last 1 s so convergence is not lost.
++    # 常量惩罚（论文 Table I 原值；上游曾以"防止低运动量局部最优"为下调至 1/5~1/7）
+     recovery_joint_velocity = RewTerm(
+         func=recovery_mdp.recovery_joint_velocity,
+-        weight=-3e-3,
++        weight=-2e-2,
+         params={"asset_cfg": SceneEntityCfg("robot")},
+     )
+     recovery_torques = RewTerm(
+         func=recovery_mdp.recovery_torques,
+-        weight=-5e-6,
++        weight=-2.5e-5,
+         params={"asset_cfg": SceneEntityCfg("robot")},
+     )
+     recovery_joint_acceleration = RewTerm(
+         func=recovery_mdp.recovery_joint_acceleration,
+-        weight=-5e-8,
++        weight=-2.5e-7,
+         params={"asset_cfg": SceneEntityCfg("robot")},
+     )
+     recovery_wheel_velocity = RewTerm(
+         func=recovery_mdp.recovery_wheel_velocity,
+-        weight=-3e-3,
++        weight=-2e-2,
+         params={"asset_cfg": SceneEntityCfg("robot")},
+     )
+ 
+@@ -495,7 +484,7 @@ class RecoveryTerminationsCfg:
+ # -- Main env cfg -------------------------------------------------------
+ @configclass
+ class ThunderRecoveryEnvCfg(ManagerBasedRLEnvCfg):
+-    """Standalone recovery env — 5 s episodes, 50 Hz control, flat plane."""
++    """Standalone recovery env — 4 s episodes (paper §IV-A), 50 Hz control, flat plane."""
+ 
+     # Scene
+     scene: RecoverySceneCfg = RecoverySceneCfg(num_envs=4096, env_spacing=2.5)
+@@ -512,7 +501,10 @@ class ThunderRecoveryEnvCfg(ManagerBasedRLEnvCfg):
+ 
+     def __post_init__(self):
+         # -- Sim --
+-        # 50 Hz control (decimation 4 x 0.005 s physics = 0.02 s)
++        # 论文 §IV-A 原文：'Each episode lasts 5 seconds (at a control rate of 50Hz)'。
++        # 本环境物理步 0.005 s × decimation 4 = 0.02 s（50 Hz，250 控制步），
++        # 与作者部署栈的策略周期（0.002 s × 10 步 = 50 Hz）一致。
++        # 注：第一轮曾按论文另一处文字错改成 4 s @ 100 Hz，现已改回本节原文的 5 s @ 50 Hz。
+         self.decimation = 4
+         self.episode_length_s = 5.0
+         self.sim.dt = 0.005
+diff --git a/src/thunder_recovery/mdp/_utils.py b/src/thunder_recovery/mdp/_utils.py
+index 1cbdb07..7100dee 100644
+--- a/src/thunder_recovery/mdp/_utils.py
++++ b/src/thunder_recovery/mdp/_utils.py
+@@ -125,13 +125,28 @@ def _env_dt(env: ManagerBasedRLEnv) -> float:
+ # ── ED / CW (paper Eq. 1 / Eq. 3) ──
+ 
+ def _get_ed(env: ManagerBasedRLEnv, k: int = 3) -> torch.Tensor:
+-    """Episode-based Dynamic factor (paper Eq. 1, normalised).
++    """论文 Eq.1 原式：DS(t) = ((a·t)/T)^k，a = T/2，k = 3（t、T 以秒计）。
+ 
+-    ED(t) = (t / T)^k ∈ [0, 1], k = 3.
+-    t = per-env step count in seconds, T = episode length in seconds.
++    展开即 DS(t) = (t/2)^k：自由落体结束（t = 2 s）时 DS = 1.0，episode 末尾
++    DS = 8.0。论文明确写 "we set a = T/2, according to the expected recovery
++    time" —— 即把 DS ≈ 1 对齐到恢复动作开始的时刻。
+ 
+-    Normalising to [0, 1] lets paper Table I weights apply directly and
+-    makes the gating factors `ED` and `1-ED` self-documenting.
++    上游原实现把该式归一化成 (t/T)^k ∈ [0,1]（见 _get_ed_norm），导致起身阶段
++    任务奖励弱约 15 倍、末尾弱 8 倍，是本轮复现失败的主要嫌疑之一。
++    """
++    _ensure_step_counter(env)
++    dt = _env_dt(env)
++    t_sec = env._recovery_step_count.float() * dt
++    T_sec = float(env.max_episode_length) * dt
++    a = T_sec / 2.0
++    return ((a * t_sec) / T_sec).clamp_(min=0.0) ** k
++
++
++def _get_ed_norm(env: ManagerBasedRLEnv, k: int = 3) -> torch.Tensor:
++    """归一化版 ED(t) = (t/T)^k ∈ [0, 1]。
++
++    只用于 (1 − ED) 形式的早阶段门控：论文的 Eq.4 里没有 wheel-leg
++    coordination 项，该项是上游自己对论文贡献的解释，需要一个 [0,1] 的衰减门。
+     """
+     _ensure_step_counter(env)
+     dt = _env_dt(env)
+@@ -141,16 +156,28 @@ def _get_ed(env: ManagerBasedRLEnv, k: int = 3) -> torch.Tensor:
+ 
+ 
+ def _get_cw(env: ManagerBasedRLEnv, beta: float = 0.3, decay: float = 0.968) -> float:
+-    """Curriculum Weight (paper Eq. 3): CW(i) = β · decay^i.
++    """Curriculum Weight（论文 Eq.3：cw ← cw^β），即 CW(i) = β^(decay^i)，**递增**。
++
++    i = 训练迭代数，近似为 common_step_counter / RECOVERY_STEPS_PER_ITER。
++    β = 0.3、decay = 0.968 时 CW 缓慢升到 1：
++
++        iteration:    0     10     35     100    200    500+
++        CW:         0.300  0.419  0.680  0.955  0.998  ~1.000
++
++    与论文描述一致：早期行为惩罚权重低（先快速学到任务行为），后期接近满权重
++    （动作更平滑）。
++
++    ⚠ 上游原实现（同名函数）返回 `beta * (decay ** iteration)`，是**衰减到 0**
++    （iter 200 已 4.5e−4、iter 1000 为 2.3e−15），与论文 Eq.3 语义相反 —— 行为惩罚
++    在训练早期就被全部关掉，导致"站得住但还在晃"（关节速度 p50 7.6 rad/s）。
++    本分支已改为递增语义；函数签名保留 `beta` / `decay` 两个参数仅为兼容调用方。
+ 
+-    i = training iteration, approximated as
+-        common_step_counter / RECOVERY_STEPS_PER_ITER.
+-    At β=0.3, decay=0.968: CW=0.1 around iter 35, ~0.01 around iter 100.
+-    Behavior penalties are strong for a few dozen iterations, then fade as
+-    the policy stabilises and task/ED shaping takes over.
++    关于更新时点：论文写 "update it before each environment reset"。本实现按**每个训练
++    迭代更新一次**处理（向量化环境里"每次重置"会发生数千次/迭代，CW 会瞬间饱和，
++    与论文描述的"缓慢变化"不符）。
+     """
+     if hasattr(env, "common_step_counter"):
+         iteration = env.common_step_counter / RECOVERY_STEPS_PER_ITER
+     else:
+         iteration = 0
+-    return beta * (decay ** iteration)
++    return beta ** (decay ** iteration)   # 同 w1，另把 episode 改回论文 §IV-A 的 5 s @ 50 Hz
+diff --git a/src/thunder_recovery/mdp/method1_deng/rewards.py b/src/thunder_recovery/mdp/method1_deng/rewards.py
+index 58c7709..1afe71d 100644
+--- a/src/thunder_recovery/mdp/method1_deng/rewards.py
++++ b/src/thunder_recovery/mdp/method1_deng/rewards.py
+@@ -49,6 +49,7 @@ from .._utils import (
+     _ensure_step_counter,
+     _get_cw,
+     _get_ed,
++    _get_ed_norm,
+     _get_joint_split,
+     _is_freefall,
+ )
+@@ -100,23 +101,26 @@ def recovery_base_height(
+     asset: Articulation = env.scene[asset_cfg.name]
+     height_error = torch.clamp(target_height - asset.data.root_pos_w[:, 2], min=0.0)
+     raw = torch.exp(-torch.square(height_error) / (sigma ** 2))
+-    return _get_ed(env) * raw
++    # 论文 Eq.4：base height 项不受 DS 缩放（上游原实现乘了 ED）
++    return raw
+ 
+ 
+ def recovery_base_orientation(
+     env: ManagerBasedRLEnv,
+     asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+ ) -> torch.Tensor:
+-    """ED · exp(-‖g_body − [0, 0, -1]‖²). Table I scale = 50.
++    """论文 Table I 定义：‖g_body − e_z‖²（二次偏差），惩罚项。
+ 
+-    Paper: "penalizes gravitational-projection misalignment for roll/pitch".
+-    The ‖⋅‖² form is zero when upright and ~4 upside-down.
++    Table I 给出的 scale 是 50、定义式是 (g_b − e_z)²，而 Eq.4 里写作 +r_base_ori，
++    因此该项只能理解为惩罚（否则会奖励倾倒）。cfg 里权重取 −50。
++    上游原实现用 exp(−‖·‖²)（有界奖励，倒置时奖励归零、无梯度推力），
++    与论文的二次惩罚差别很大——倒置姿态下论文代价可达 −200。
+     """
+     asset: Articulation = env.scene[asset_cfg.name]
+     ideal = torch.tensor([0.0, 0.0, -1.0], device=env.device)
+     error = torch.sum(torch.square(asset.data.projected_gravity_b - ideal), dim=1)
+-    raw = torch.exp(-error)
+-    return _get_ed(env) * raw
++    # 论文 Eq.4：不受 DS 缩放
++    return error
+ 
+ 
+ # ── Support state (paper §E, per-step binary) ──
+@@ -155,10 +159,10 @@ def recovery_support_state(
+     magnitude = torch.norm(forces, dim=-1)[:, sensor_cfg.body_ids]
+     all_feet = (magnitude > threshold).all(dim=1)
+ 
+-    asset: Articulation = env.scene[asset_cfg.name]
+-    base_up = asset.data.root_pos_w[:, 2] > min_base_height
+-
+-    return (all_feet & base_up & ~freefall).float()
++    # 论文 §III-E 原文：support state = “all four wheels are in contact with
++    # the ground simultaneously”，没有高度条件（0.30 m 门是第三方复现仓库自加的，
++    # 见变体 p5 作为对照）。
++    return (all_feet & ~freefall).float()
+ 
+ 
+ # ── Behavior rewards (× CW) ──
+@@ -204,6 +208,7 @@ def recovery_action_rate_legs(
+     action = env.action_manager.action
+     prev_action = env.action_manager.prev_action
+     leg_diff = torch.sum(torch.square(action[:, leg_ids] - prev_action[:, leg_ids]), dim=1)
++    # 论文 Eq.4：行为组乘 CW，其中 action_rate 再乘 DS
+     return _get_cw(env) * leg_diff
+ 
+ 
+@@ -217,7 +222,8 @@ def recovery_joint_velocity(
+     wheel-leg coordination reward in the exploration phase."""
+     asset: Articulation = env.scene[asset_cfg.name]
+     leg_ids, _ = _get_joint_split(env, asset)
+-    return torch.sum(torch.square(asset.data.joint_vel[:, leg_ids]), dim=1)
++    # 论文 Eq.4：joint_velocity 属于行为组 → ×CW×DS
++    return _get_cw(env) * torch.sum(torch.square(asset.data.joint_vel[:, leg_ids]), dim=1)
+ 
+ 
+ def recovery_torques(
+@@ -227,7 +233,8 @@ def recovery_torques(
+     """Σ τ² over leg joints."""
+     asset: Articulation = env.scene[asset_cfg.name]
+     leg_ids, _ = _get_joint_split(env, asset)
+-    return torch.sum(torch.square(asset.data.applied_torque[:, leg_ids]), dim=1)
++    # 论文 Eq.4：torques 属于行为组 → ×CW×DS
++    return _get_cw(env) * torch.sum(torch.square(asset.data.applied_torque[:, leg_ids]), dim=1)
+ 
+ 
+ def recovery_joint_acceleration(
+@@ -237,7 +244,8 @@ def recovery_joint_acceleration(
+     """Σ q̈² over leg joints."""
+     asset: Articulation = env.scene[asset_cfg.name]
+     leg_ids, _ = _get_joint_split(env, asset)
+-    return torch.sum(torch.square(asset.data.joint_acc[:, leg_ids]), dim=1)
++    # 论文 Eq.4：joint_acceleration 属于行为组 → ×CW×DS
++    return _get_cw(env) * torch.sum(torch.square(asset.data.joint_acc[:, leg_ids]), dim=1)
+ 
+ 
+ def recovery_wheel_velocity(
+@@ -250,7 +258,8 @@ def recovery_wheel_velocity(
+     asset: Articulation = env.scene[asset_cfg.name]
+     _, wheel_ids = _get_joint_split(env, asset)
+     penalty = torch.sum(torch.square(asset.data.joint_vel[:, wheel_ids]), dim=1)
+-    return _get_ed(env) * penalty
++    # 论文 Eq.4：wheel velocity 项不受 DS 缩放（上游原实现乘了 ED）
++    return penalty
+ 
+ 
+ # ── Wheel-leg coordination (paper core contribution) ──
+@@ -303,7 +312,7 @@ def recovery_wheel_leg_coord(
+     """
+     asset: Articulation = env.scene[asset_cfg.name]
+     _, wheel_ids = _get_joint_split(env, asset)
+-    early_gate = 1.0 - _get_ed(env)
++    early_gate = 1.0 - _get_ed_norm(env)
+     wheel_speed = torch.sum(torch.abs(asset.data.joint_vel[:, wheel_ids]), dim=1)
+     wheel_speed = torch.clamp(wheel_speed, max=max_wheel_speed) / max_wheel_speed
+     tilt = torch.clamp(torch.norm(asset.data.projected_gravity_b[:, :2], dim=1), 0.0, 1.0)
+diff --git a/src/thunder_recovery/mdp/noisy_actions.py b/src/thunder_recovery/mdp/noisy_actions.py
+new file mode 100644
+index 0000000..01adf61
+--- /dev/null
++++ b/src/thunder_recovery/mdp/noisy_actions.py
+@@ -0,0 +1,56 @@
++"""论文 §IV-A 的动作噪声（action noise, σ = 0.02）。
++
++论文原文（§IV-A Simulation Setup）：
++    "Additionally, action noise characterized by a zero mean and a standard
++     deviation of 0.02 is incorporated."
++
++实现方式：继承 Isaac Lab 的位置/速度动作项，在 ``process_actions`` 里对**策略输出的
++原始动作**叠加零均值高斯噪声（σ=0.02），再交给父类做 scale + default_offset + clip。
++这样噪声作用在"动作"上，与论文表述一致；自由落体阶段（零力矩）由
++``zero_action_freefall`` 事件直接钉住 PD 目标，不受本项影响。
++"""
++
++from __future__ import annotations
++
++import torch
++
++from isaaclab.envs.mdp.actions import JointPositionAction, JointVelocityAction
++from isaaclab.envs.mdp.actions.actions_cfg import (
++    JointPositionActionCfg,
++    JointVelocityActionCfg,
++)
++from isaaclab.utils import configclass
++
++ACTION_NOISE_STD = 0.02  # 论文 §IV-A
++
++
++class _NoisyActionMixin:
++    """在动作上叠加零均值高斯噪声（σ 见 cfg.action_noise_std）。"""
++
++    cfg: object
++
++    def process_actions(self, actions: torch.Tensor) -> None:
++        std = float(getattr(self.cfg, "action_noise_std", 0.0))
++        if std > 0.0:
++            actions = actions + torch.randn_like(actions) * std
++        super().process_actions(actions)
++
++
++class NoisyJointPositionAction(_NoisyActionMixin, JointPositionAction):
++    """位置动作 + 论文动作噪声。"""
++
++
++class NoisyJointVelocityAction(_NoisyActionMixin, JointVelocityAction):
++    """速度（轮）动作 + 论文动作噪声。"""
++
++
++@configclass
++class NoisyJointPositionActionCfg(JointPositionActionCfg):
++    class_type: type = NoisyJointPositionAction
++    action_noise_std: float = ACTION_NOISE_STD
++
++
++@configclass
++class NoisyJointVelocityActionCfg(JointVelocityActionCfg):
++    class_type: type = NoisyJointVelocityAction
++    action_noise_std: float = ACTION_NOISE_STD
