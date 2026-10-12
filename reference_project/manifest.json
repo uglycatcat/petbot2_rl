@@ -48,14 +48,16 @@
       "pyproject_version": "0.1.0",
       "local_modifications": {
         "branch": "refproj/recovery",
-        "patches": ["patches/upstream_dump_pickle.patch", "patches/paper_repro_v1.patch"],
+        "content": "论文标准口径（第三代）= 上游 + 论文 §III / §IV-A / Table I / Eq.1-4 对齐；与实验 p1_paper_exact 同源，差异仅两处注释更正",
+        "patches": ["patches/paper_standard.patch", "patches/paper_repro_v1.patch", "patches/upstream_dump_pickle.patch"],
         "files": [
           "scripts/train.py",
           "src/thunder_recovery/config/method1_deng/env_cfg.py",
           "src/thunder_recovery/mdp/_utils.py",
-          "src/thunder_recovery/mdp/method1_deng/rewards.py"
+          "src/thunder_recovery/mdp/method1_deng/rewards.py",
+          "src/thunder_recovery/mdp/noisy_actions.py"
         ],
-        "note": "dump_pickle 兼容补丁（Isaac Lab 无此 API）+ 论文口径修正（CW 递增、DS 原式、Table I 奖励、Eq.4 组合、DR、动作噪声 σ=0.02）。default.xml 的 recovery 项已改指向该分支；原始上游 commit 见本条目 commit 字段。"
+        "note": "dump_pickle 兼容补丁（该 API 在任何已发布 Isaac Lab 中都不存在）+ 论文口径修正：CW 改为 Eq.3 的递增语义 β^(decay^i)（上游是衰减到 0）、DS 用 Eq.1 原式、Table I 奖励与 Eq.4 组合、episode 5 s @ 50 Hz、DR 按 §IV-A、动作噪声 σ=0.02。default.xml 的 recovery 项已改指向该分支；原始上游 commit 见本条目 commit 字段。"
       },
       "tools_backup_branch": "refproj/recovery-tools",
       "shallow": true,
