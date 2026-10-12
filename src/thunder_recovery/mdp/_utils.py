@@ -125,13 +125,28 @@ def _env_dt(env: ManagerBasedRLEnv) -> float:
 # ── ED / CW (paper Eq. 1 / Eq. 3) ──
 
 def _get_ed(env: ManagerBasedRLEnv, k: int = 3) -> torch.Tensor:
-    """Episode-based Dynamic factor (paper Eq. 1, normalised).
+    """论文 Eq.1 原式：DS(t) = ((a·t)/T)^k，a = T/2，k = 3（t、T 以秒计）。
 
-    ED(t) = (t / T)^k ∈ [0, 1], k = 3.
-    t = per-env step count in seconds, T = episode length in seconds.
+    展开即 DS(t) = (t/2)^k：自由落体结束（t = 2 s）时 DS = 1.0，episode 末尾
+    DS = 8.0。论文明确写 "we set a = T/2, according to the expected recovery
+    time" —— 即把 DS ≈ 1 对齐到恢复动作开始的时刻。
 
-    Normalising to [0, 1] lets paper Table I weights apply directly and
-    makes the gating factors `ED` and `1-ED` self-documenting.
+    上游原实现把该式归一化成 (t/T)^k ∈ [0,1]（见 _get_ed_norm），导致起身阶段
+    任务奖励弱约 15 倍、末尾弱 8 倍，是本轮复现失败的主要嫌疑之一。
+    """
+    _ensure_step_counter(env)
+    dt = _env_dt(env)
+    t_sec = env._recovery_step_count.float() * dt
+    T_sec = float(env.max_episode_length) * dt
+    a = T_sec / 2.0
+    return ((a * t_sec) / T_sec).clamp_(min=0.0) ** k
+
+
+def _get_ed_norm(env: ManagerBasedRLEnv, k: int = 3) -> torch.Tensor:
+    """归一化版 ED(t) = (t/T)^k ∈ [0, 1]。
+
+    只用于 (1 − ED) 形式的早阶段门控：论文的 Eq.4 里没有 wheel-leg
+    coordination 项，该项是上游自己对论文贡献的解释，需要一个 [0,1] 的衰减门。
     """
     _ensure_step_counter(env)
     dt = _env_dt(env)

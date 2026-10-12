@@ -49,6 +49,7 @@ from .._utils import (
     _ensure_step_counter,
     _get_cw,
     _get_ed,
+    _get_ed_norm,
     _get_joint_split,
     _is_freefall,
 )
@@ -100,23 +101,26 @@ def recovery_base_height(
     asset: Articulation = env.scene[asset_cfg.name]
     height_error = torch.clamp(target_height - asset.data.root_pos_w[:, 2], min=0.0)
     raw = torch.exp(-torch.square(height_error) / (sigma ** 2))
-    return _get_ed(env) * raw
+    # 论文 Eq.4：base height 项不受 DS 缩放（上游原实现乘了 ED）
+    return raw
 
 
 def recovery_base_orientation(
     env: ManagerBasedRLEnv,
     asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
 ) -> torch.Tensor:
-    """ED · exp(-‖g_body − [0, 0, -1]‖²). Table I scale = 50.
+    """论文 Table I 定义：‖g_body − e_z‖²（二次偏差），惩罚项。
 
-    Paper: "penalizes gravitational-projection misalignment for roll/pitch".
-    The ‖⋅‖² form is zero when upright and ~4 upside-down.
+    Table I 给出的 scale 是 50、定义式是 (g_b − e_z)²，而 Eq.4 里写作 +r_base_ori，
+    因此该项只能理解为惩罚（否则会奖励倾倒）。cfg 里权重取 −50。
+    上游原实现用 exp(−‖·‖²)（有界奖励，倒置时奖励归零、无梯度推力），
+    与论文的二次惩罚差别很大——倒置姿态下论文代价可达 −200。
     """
     asset: Articulation = env.scene[asset_cfg.name]
     ideal = torch.tensor([0.0, 0.0, -1.0], device=env.device)
     error = torch.sum(torch.square(asset.data.projected_gravity_b - ideal), dim=1)
-    raw = torch.exp(-error)
-    return _get_ed(env) * raw
+    # 论文 Eq.4：不受 DS 缩放
+    return error
 
 
 # ── Support state (paper §E, per-step binary) ──
@@ -204,7 +208,8 @@ def recovery_action_rate_legs(
     action = env.action_manager.action
     prev_action = env.action_manager.prev_action
     leg_diff = torch.sum(torch.square(action[:, leg_ids] - prev_action[:, leg_ids]), dim=1)
-    return _get_cw(env) * leg_diff
+    # 论文 Eq.4：行为组乘 CW，其中 action_rate 再乘 DS
+    return _get_cw(env) * _get_ed(env) * leg_diff
 
 
 # ── Constant penalties (legs only — wheels have dedicated terms) ──
@@ -217,7 +222,8 @@ def recovery_joint_velocity(
     wheel-leg coordination reward in the exploration phase."""
     asset: Articulation = env.scene[asset_cfg.name]
     leg_ids, _ = _get_joint_split(env, asset)
-    return torch.sum(torch.square(asset.data.joint_vel[:, leg_ids]), dim=1)
+    # 论文 Eq.4：joint_velocity 属于行为组 → ×CW×DS
+    return _get_cw(env) * _get_ed(env) * torch.sum(torch.square(asset.data.joint_vel[:, leg_ids]), dim=1)
 
 
 def recovery_torques(
@@ -227,7 +233,8 @@ def recovery_torques(
     """Σ τ² over leg joints."""
     asset: Articulation = env.scene[asset_cfg.name]
     leg_ids, _ = _get_joint_split(env, asset)
-    return torch.sum(torch.square(asset.data.applied_torque[:, leg_ids]), dim=1)
+    # 论文 Eq.4：torques 属于行为组 → ×CW×DS
+    return _get_cw(env) * _get_ed(env) * torch.sum(torch.square(asset.data.applied_torque[:, leg_ids]), dim=1)
 
 
 def recovery_joint_acceleration(
@@ -237,7 +244,8 @@ def recovery_joint_acceleration(
     """Σ q̈² over leg joints."""
     asset: Articulation = env.scene[asset_cfg.name]
     leg_ids, _ = _get_joint_split(env, asset)
-    return torch.sum(torch.square(asset.data.joint_acc[:, leg_ids]), dim=1)
+    # 论文 Eq.4：joint_acceleration 属于行为组 → ×CW×DS
+    return _get_cw(env) * _get_ed(env) * torch.sum(torch.square(asset.data.joint_acc[:, leg_ids]), dim=1)
 
 
 def recovery_wheel_velocity(
@@ -250,7 +258,8 @@ def recovery_wheel_velocity(
     asset: Articulation = env.scene[asset_cfg.name]
     _, wheel_ids = _get_joint_split(env, asset)
     penalty = torch.sum(torch.square(asset.data.joint_vel[:, wheel_ids]), dim=1)
-    return _get_ed(env) * penalty
+    # 论文 Eq.4：wheel velocity 项不受 DS 缩放（上游原实现乘了 ED）
+    return penalty
 
 
 # ── Wheel-leg coordination (paper core contribution) ──
@@ -303,7 +312,7 @@ def recovery_wheel_leg_coord(
     """
     asset: Articulation = env.scene[asset_cfg.name]
     _, wheel_ids = _get_joint_split(env, asset)
-    early_gate = 1.0 - _get_ed(env)
+    early_gate = 1.0 - _get_ed_norm(env)
     wheel_speed = torch.sum(torch.abs(asset.data.joint_vel[:, wheel_ids]), dim=1)
     wheel_speed = torch.clamp(wheel_speed, max=max_wheel_speed) / max_wheel_speed
     tilt = torch.clamp(torch.norm(asset.data.projected_gravity_b[:, :2], dim=1), 0.0, 1.0)

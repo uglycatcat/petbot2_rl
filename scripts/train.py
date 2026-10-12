@@ -76,10 +76,19 @@ from rsl_rl.runners import OnPolicyRunner
 
 from isaaclab.envs import ManagerBasedRLEnvCfg
 from isaaclab.utils.dict import print_dict
-from isaaclab.utils.io import dump_pickle, dump_yaml
+from isaaclab.utils.io import dump_yaml
 from isaaclab_rl.rsl_rl import RslRlOnPolicyRunnerCfg, RslRlVecEnvWrapper
 from isaaclab_tasks.utils import get_checkpoint_path
 from isaaclab_tasks.utils.hydra import hydra_task_config
+
+
+# [本地补丁] isaaclab.utils.io 不提供 dump_pickle（2.3.2 及所有已发布版本都没有该 API），
+# 用标准库补齐，语义与上游调用处一致：把 cfg 对象 pickle 到 params/*.pkl。
+def dump_pickle(filename: str, data) -> None:
+    import pickle
+
+    with open(filename, "wb") as f:
+        pickle.dump(data, f)
 
 # Register thunder_recovery gym task.
 import thunder_recovery  # noqa: F401

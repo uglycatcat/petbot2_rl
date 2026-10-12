@@ -119,10 +119,10 @@ class RecoveryActionsCfg:
     joint_pos = mdp_core.JointPositionActionCfg(
         asset_name="robot",
         joint_names=LEG_JOINT_NAMES,
-        scale={
-            ".*_hip_joint": 0.125,
-            "^(?!.*_hip_joint).*": 0.25,
-        },
+        # 论文/作者实现：作者部署栈（Recovery_go2w runtest.py）用统一的
+        # actions*0.5 + default_dof_pos；上游原实现用 hip 0.125 / thigh·calf 0.25，
+        # 探索幅度只有一半到四分之一，是复现失败的首要嫌疑。
+        scale=0.5,
         use_default_offset=True,
         clip={".*": (-100.0, 100.0)},
         preserve_order=True,
@@ -130,7 +130,7 @@ class RecoveryActionsCfg:
     joint_vel = mdp_core.JointVelocityActionCfg(
         asset_name="robot",
         joint_names=WHEEL_JOINT_NAMES,
-        scale=0.8,
+        scale=0.5,   # 作者栈同样用 0.5（论文只说 s_v < 1.0）
         use_default_offset=True,
         clip={".*": (-100.0, 100.0)},
         preserve_order=True,
@@ -312,8 +312,8 @@ class RecoveryEventsCfg:
         mode="startup",
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
-            "static_friction_range": (0.3, 1.0),
-            "dynamic_friction_range": (0.3, 0.8),
+            "static_friction_range": (0.7, 1.3),   # 论文 §IV-A：静摩擦 U[0.7, 1.3]
+            "dynamic_friction_range": (0.7, 1.3),
             "restitution_range": (0.0, 0.5),
             "num_buckets": 64,
         },
@@ -333,25 +333,36 @@ class RecoveryEventsCfg:
         params={"asset_cfg": SceneEntityCfg("robot")},
     )
 
-    # 4. Reset: base mass DR +-10 % (paper IV-A)
-    randomize_mass = EventTerm(
+    # 4. Reset: 论文 §IV-A 的域随机化 —— 基座质量 ±5 kg、连杆质量 ±10%、
+    #    执行器刚度 ±15 / 阻尼 ±2（刚度基准 100 → 0.85~1.15 倍；阻尼基准 5 → 0.6~1.4 倍）
+    randomize_base_mass = EventTerm(
         func=mdp_core.randomize_rigid_body_mass,
         mode="reset",
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names=BASE_LINK_NAME),
+            "mass_distribution_params": (-5.0, 5.0),
+            "operation": "add",
+        },
+    )
+
+    randomize_link_mass = EventTerm(
+        func=mdp_core.randomize_rigid_body_mass,
+        mode="startup",
+        params={
+            "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
             "mass_distribution_params": (0.9, 1.1),
             "operation": "scale",
         },
     )
 
-    # 5. Reset: external force/torque perturbation
-    apply_external_force = EventTerm(
-        func=mdp_core.apply_external_force_torque,
-        mode="reset",
+    randomize_actuator_gains = EventTerm(
+        func=mdp_core.randomize_actuator_gains,
+        mode="startup",
         params={
-            "asset_cfg": SceneEntityCfg("robot", body_names=BASE_LINK_NAME),
-            "force_range": (-10.0, 10.0),
-            "torque_range": (-10.0, 10.0),
+            "asset_cfg": SceneEntityCfg("robot"),
+            "operation": "scale",
+            "stiffness_distribution_params": (0.85, 1.15),
+            "damping_distribution_params": (0.6, 1.4),
         },
     )
 
@@ -363,13 +374,7 @@ class RecoveryEventsCfg:
         params={"asset_cfg": SceneEntityCfg("robot")},
     )
 
-    # 7. Interval: periodic push (paper IV-A DR)
-    push_robot = EventTerm(
-        func=mdp_core.push_by_setting_velocity,
-        mode="interval",
-        interval_range_s=(10.0, 15.0),
-        params={"velocity_range": {"x": (-0.5, 0.5), "y": (-0.5, 0.5)}},
-    )
+    # 7. (已移除) 周期性推力：论文 §IV-A 的 DR 清单里没有它
 
 
 # -- Rewards (paper Table I + support_state + wheel-leg coord) ----------
@@ -401,17 +406,15 @@ class RecoveryRewardsCfg:
     )
     recovery_base_orientation = RewTerm(
         func=recovery_mdp.recovery_base_orientation,
-        weight=50.0,
+        # Table I 的 scale 是 50、定义式是 (g_b − e_z)^2（惩罚）→ 权重取 −50
+        weight=-50.0,
         params={"asset_cfg": SceneEntityCfg("robot")},
     )
 
-    # Behavior rewards (xCW, paper Table I) — weights reduced 5x from paper
-    # default so the policy is not discouraged from the large motions
-    # needed to actually stand up. Paper weights were tuned on KYON and
-    # over-penalise Thunder's joint dynamics.
+    # Behavior rewards（论文 Table I 原值；上游曾整体下调 5~7 倍）
     recovery_body_collision = RewTerm(
         func=recovery_mdp.recovery_body_collision,
-        weight=-1e-2,
+        weight=-5e-2,
         params={
             "sensor_cfg": SceneEntityCfg("contact_forces", body_names=COLLISION_BODY_REGEXES),
             "force_clip": 50.0,
@@ -419,7 +422,7 @@ class RecoveryRewardsCfg:
     )
     recovery_action_rate_legs = RewTerm(
         func=recovery_mdp.recovery_action_rate_legs,
-        weight=-2e-3,
+        weight=-1e-2,
     )
 
     # Support state — 4 feet contact AND base held above min_base_height.
@@ -445,42 +448,28 @@ class RecoveryRewardsCfg:
         params={"asset_cfg": SceneEntityCfg("robot"), "max_wheel_speed": 40.0},
     )
 
-    # Constant penalty: joint deviation from default pose (not ED-gated).
-    # Unlike recovery_stand_joint_pos (xED, only active late), this penalty
-    # is always on post-freefall, giving the policy a persistent gradient
-    # signal to move joints towards the standing pose even when ED is small.
-    # Free-fall steps are masked (stiffness=0, joints uncontrollable).
-    recovery_joint_deviation = RewTerm(
-        func=recovery_mdp.recovery_joint_deviation,
-        weight=-2e-3,
-        params={"asset_cfg": SceneEntityCfg("robot")},
-    )
+    # （已移除）recovery_joint_deviation：该项不在论文 Table I / Eq.4 中，
+    # 是上游自加的常驻关节偏差惩罚，会与论文的 (×DS) stand_joint_pos 叠加。
 
-    # Constant penalties — weights reduced from paper default so the
-    # policy is not punished for the large-amplitude motions required
-    # to stand up. At paper's -2e-2, `recovery_joint_velocity` reached
-    # -1.0/episode at iter 300 (single biggest term), driving the policy
-    # toward a low-motion local optimum. Reducing these lets the robot
-    # "move freely" to stand; success criteria still require max|q_dot|
-    # < 0.1 rad/s in the last 1 s so convergence is not lost.
+    # 常量惩罚（论文 Table I 原值；上游曾以"防止低运动量局部最优"为下调至 1/5~1/7）
     recovery_joint_velocity = RewTerm(
         func=recovery_mdp.recovery_joint_velocity,
-        weight=-3e-3,
+        weight=-2e-2,
         params={"asset_cfg": SceneEntityCfg("robot")},
     )
     recovery_torques = RewTerm(
         func=recovery_mdp.recovery_torques,
-        weight=-5e-6,
+        weight=-2.5e-5,
         params={"asset_cfg": SceneEntityCfg("robot")},
     )
     recovery_joint_acceleration = RewTerm(
         func=recovery_mdp.recovery_joint_acceleration,
-        weight=-5e-8,
+        weight=-2.5e-7,
         params={"asset_cfg": SceneEntityCfg("robot")},
     )
     recovery_wheel_velocity = RewTerm(
         func=recovery_mdp.recovery_wheel_velocity,
-        weight=-3e-3,
+        weight=-2e-2,
         params={"asset_cfg": SceneEntityCfg("robot")},
     )
 
@@ -495,7 +484,7 @@ class RecoveryTerminationsCfg:
 # -- Main env cfg -------------------------------------------------------
 @configclass
 class ThunderRecoveryEnvCfg(ManagerBasedRLEnvCfg):
-    """Standalone recovery env — 5 s episodes, 50 Hz control, flat plane."""
+    """Standalone recovery env — 4 s episodes (paper §IV-A), 50 Hz control, flat plane."""
 
     # Scene
     scene: RecoverySceneCfg = RecoverySceneCfg(num_envs=4096, env_spacing=2.5)
@@ -512,9 +501,11 @@ class ThunderRecoveryEnvCfg(ManagerBasedRLEnvCfg):
 
     def __post_init__(self):
         # -- Sim --
-        # 50 Hz control (decimation 4 x 0.005 s physics = 0.02 s)
+        # 论文 §IV-A：episode 4 s、控制 100 Hz。本环境物理步 0.005 s × decimation 4
+        # = 0.02 s（50 Hz），与作者部署栈的策略周期（0.002 s × 10 步）一致，
+        # 因此保持 50 Hz、把 episode 长度改为论文的 4 s（200 控制步）。
         self.decimation = 4
-        self.episode_length_s = 5.0
+        self.episode_length_s = 4.0
         self.sim.dt = 0.005
         self.sim.render_interval = self.decimation
 
