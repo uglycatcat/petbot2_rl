@@ -1,0 +1,12 @@
+检查点: /workspace/variants/g1_go2w_paper/assets/model_7999.pt
+顶层键: ['infos', 'iter', 'model_state_dict', 'optimizer_state_dict']
+iter: 7999
+参数张量形状（2 维以上）：
+  actor.0.weight                   (128, 78)
+  actor.2.weight                   (128, 128)
+  actor.4.weight                   (128, 128)
+  actor.6.weight                   (16, 128)
+  critic.0.weight                  (128, 103)
+  critic.2.weight                  (128, 128)
+  critic.4.weight                  (128, 128)
+  critic.6.weight                  (1, 128)
