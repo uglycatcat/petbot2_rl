@@ -135,7 +135,7 @@
 | 来源 | `reference_project/Recovery_go2w`（`boyuandeng/Recovery_go2w@e6424625`，在 `default.xml` 清单里，目前只在训练服务器物化） |
 | 模型（上游原件） | `unitree_robots/go2w/go2w.xml` + `assets/` 网格（作者自己使用的 MuJoCo 模型） |
 | 模型（实际使用的副本） | 训练 / 验证都走副本：`reference_project/recovery_variants/g1_go2w_paper/assets/go2w/{go2w.xml,scene.xml}`；转出的 USD 在同目录 `assets/usd/`；权重副本 `assets/model_7999.pt` 与 `recovery_env/models/model_7999.pt` |
-| 权重（上游原件） | `simulate_python/test/log/model_7999.pt`（作者在 Go2-W 上训练的策略；actor `78 → 16`、MLP `[128,128,128]`）—— **许可证未核实，不进本仓库** |
+| 权重（上游原件） | `simulate_python/test/log/model_7999.pt`（作者在 Go2-W 上训练的策略，`iter=7999`；**网络结构已实测核对**：actor `78 → [128,128,128] → 16`、critic `103 → [128,128,128] → 1`，留档 `recovery_env/go2w_checkpoint_shapes.out`）—— **许可证未核实，不进本仓库** |
 | 机器人数值 | `nq/nv/nu = 23/22/16`（1 个浮动基座关节 + 16 个驱动关节 = 4 腿 × hip/thigh/calf/wheel）；总质量 **19.1264 kg**；力矩上限来自 MJCF 的 `<motor ctrlrange>`（hip/thigh 23.7、calf 45.43、轮 15；`forcerange` 未设）—— 数值留档 `recovery_env/go2w_model_facts.out` |
 | 部署契约（`runtest.py`） | 动作 `a×0.5 + q_default`、腿 `Kp 25 / Kd 0.5`、轮 `Kd 0.1`、策略 50 Hz；obs 布局 `16+3+3+12+12+4+12+12+4`（与我们 Thunder 任务同构） |
 
@@ -211,6 +211,7 @@
 | `watchdog.sh` + `watchdog.log` | 看门狗：定时巡检 + 崩溃自动续训（`--resume`）+ 定期自动评估 |
 | `go2w_policy_check.py` | 官方权重在 MuJoCo 上的验证（含录像） |
 | `go2w_model_facts.py` + `.out` | Go2-W 模型客观数值留档：总质量 19.1264 kg、力矩上限（`<motor ctrlrange>` 23.7 / 45.43 / 15）、`nq/nv/nu = 23/22/16` |
+| `go2w_checkpoint_shapes.py` + `.out` | 作者权重网络结构留档：actor `78→[128,128,128]→16`、critic `103→[128,128,128]→1`、`iter=7999` |
 | `go2w_stance_probe.out` | Go2-W 默认姿态在作者 PD 下的稳态站姿高度实测留档（**0.299 m**，即 0.42 m 判据对该平台不适用的依据）。注：该探针只跑 1 episode，仅用于测站姿高度；成功率数字以 32 episodes 的 `go2w_check3.json` 为准 |
 | `convert_go2w.py` / `fix_go2w_usd.py` | Go2-W MJCF → Isaac Lab USD 转换与修复 |
 | `parallel_pull.py` / `direct_proxy_7890.py` | 镜像拉取与 docker 代理绕行 |
