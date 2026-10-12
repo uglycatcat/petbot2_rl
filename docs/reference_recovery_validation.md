@@ -207,8 +207,8 @@
 | `eval_variant.sh` | 对某实验最新检查点做一次论文口径评估：`./eval_variant.sh p1_paper_exact 512 1` |
 | `eval_batch.py` | 批量评估与汇总表（`--parse-only` 重算已有日志） |
 | `launch_variants.sh` | 启动 / 重启实验 |
-| `summary.sh` | 各实验进度与奖励趋势一屏 |
-| `watchdog.sh` + `watchdog.log` | 看门狗：定时巡检 + 崩溃自动续训（`--resume`）+ 定期自动评估 |
+| `summary.sh` | 各实验进度与奖励趋势一屏（清单需与实验一起更新；日志带 ANSI 转义，脚本内已剥离） |
+| `watchdog.sh` + `watchdog.log` | 巡检 / 自动续训 / 定期评估脚本（每 tick 记录一行进度）。**当前未启用**（用户决定不常驻）：因此没有自动续训与定期自动评估，崩溃的训练需要手动处理（`./watchdog.sh once` 做一轮巡检并自动续训，`./watchdog.sh start` 才常驻） |
 | `go2w_policy_check.py` | 官方权重在 MuJoCo 上的验证（含录像） |
 | `go2w_model_facts.py` + `.out` | Go2-W 模型客观数值留档：总质量 19.1264 kg、力矩上限（`<motor ctrlrange>` 23.7 / 45.43 / 15）、`nq/nv/nu = 23/22/16` |
 | `go2w_checkpoint_shapes.py` + `.out` | 作者权重网络结构留档：actor `78→[128,128,128]→16`、critic `103→[128,128,128]→1`、`iter=7999` |
@@ -221,14 +221,15 @@
 常用命令（在 `reference_project/recovery_env/` 下）：
 
 ```bash
-./summary.sh                          # 各实验进度与奖励趋势
-./watchdog.sh status | ./watchdog.sh log 50
-./eval_variant.sh g1_go2w_paper 512 1 # 立刻评估某个实验
-./launch_variants.sh <代号>            # 启动/重启
+./summary.sh                          # 当前实验的进度与奖励趋势（一屏）
+./eval_variant.sh g1_go2w_paper 512 1 # 立刻评估某个实验（论文口径 C 判据）
+./launch_variants.sh <代号>            # 启动/重启某实验（脚本内含 GPU/seed/env 数）
+./watchdog.sh once                    # 一轮巡检：发现死掉的实验就用最新检查点自动续训
+./watchdog.sh status                  # 只有在常驻启用时才有意义（当前不启用）
 ./env.sh shell train                  # 进训练容器
 ```
 
-注意事项：**评估必须用与训练同一份代码**（`eval_variant.sh` 自动设 `PYTHONPATH`）；**不要并发跑评估**（多个 Isaac Sim 实例同卡会 OOM，实测三个 1024 envs 并发即失败，串行每个 512 envs 约 3 GB）；主机重启后要手动 `./watchdog.sh start` 与 `./launch_variants.sh`；**不要用日志里的 `recovery_success_rate` 判成败**（恒为 0.0000）。
+注意事项：**评估必须用与训练同一份代码**（`eval_variant.sh` 自动设 `PYTHONPATH`）；**不要并发跑评估**（多个 Isaac Sim 实例同卡会 OOM，实测三个 1024 envs 并发即失败，串行每个 512 envs 约 3 GB）；**看门狗当前不常驻**，所以主机重启或崩溃后没有任何自动恢复：训练进程要手动用 `./launch_variants.sh <代号>` 拉起（**会从头开始**），想从最近检查点续训用 `./watchdog.sh once`（它走 `--resume`）；**不要用日志里的 `recovery_success_rate` 判成败**（恒为 0.0000）。
 
 ## 踩过的坑
 
@@ -247,6 +248,8 @@
 13. **Go2-W USD 转换三处修复**（多 articulation root / 缺 ContactReportAPI / prim 层级）见上一节；4096 envs 会因网格碰撞体初始化失败，用 2048。
 14. **MuJoCo 无头渲染**要 `MUJOCO_GL=egl`。
 15. **`rsl_rl` 的 `--resume` 下 `--max_iterations` 是"再加多少迭代"**，不是在总数上截断：`w3_cw_rise_5s` 从 `model_3200.pt` 续训后目标是 **13200**（3200 + 10000），不是 10000。续训时想控制总长要按剩余量传参。
+16. **训练日志带 ANSI 颜色转义**（`^[[1m` / `^[[0m`）：按字段位置解析会取错列（`summary.sh` 曾因此把迭代数显示成 `iteration/10000`）。正确做法是先 `sed -r 's/\x1b\[[0-9;]*[A-Za-z]//g'` 剥掉，再按 `数字/数字` 这种 token 匹配。
+17. **看门狗可能被静默杀掉**（日志无报错、无退出码；实测 2026-10-12 正常跑 7 个 tick 后消失）。它当前不常驻启用；若某次启用了，要定期 `./watchdog.sh status` 确认还活着。
 
 ## 关键参数速查
 

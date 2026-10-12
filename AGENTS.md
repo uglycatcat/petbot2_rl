@@ -78,6 +78,7 @@
 | 2026-10-12 | 仓库治理：改过的 recovery 推为分支 **`refproj/recovery`**（`default.xml` 的 recovery 项已改指向它）；我方试训工具、补丁与全部实验定义推为分支 **`refproj/recovery-tools`**（`tools/recovery_trial/`）；文档按最新结果同步更新 | 本文件、[README.md](README.md)、[参考项目索引](reference_project/README.md) |
 | 2026-10-12 | 文档自检：逐条对照磁盘/远程修正 6 处不符（Go2-W 站姿实测 0.299 m、单 run 4.4~4.9 核、开销按日志重算、参考项目物化状态、`env.sh` 子命令清单、Go2-W 资产路径）；补 3 组数字留档（模型数值 / 站姿探针 / 权重网络结构） | [recovery 试训记录](docs/reference_recovery_validation.md) |
 | 2026-10-12 | 训练服务器上验证 **repo 清单链路**：`repo init -b main --repo-url <TUNA> -m default.xml` + `repo manifest` 解析通过（10 项，recovery→`ours`/`refproj/recovery`）；同时发现并记录两个环境参数（repo 工具本体需国内镜像源、`-b main` 必带） | [README.md](README.md) 的「如何配置」 |
+| 2026-10-12 | 工具与状态澄清：`summary.sh` 的实验清单与 ANSI 解析修正（原来监控的是上一批已结束实验）；**看门狗按用户决定不常驻启用**，文档同步为"无自动续训 / 无定期自动评估"，并补 2 条坑（ANSI 转义、看门狗被静默杀死） | [recovery 试训记录](docs/reference_recovery_validation.md) |
 
 细节写进对应文档，本表只保留一行结论。
 
