@@ -1,6 +1,6 @@
 # 本地参考项目
 
-此处保留 9 个上游仓库快照（robot_lab、rl_sar、recovery、WBC-AGILE、getup_gym、HumanUP、tron2_rl_lab、b2w-rl、Wheel-Legged-Lab），此外，论文作者的部署栈 Recovery_go2w 也在 `default.xml` 清单里，目前只在一台设备（训练服务器）上物化过。
+此处按仓库根 [default.xml](../default.xml) 这份 repo 清单物化上游快照（浅克隆、锁在确定 commit 上）。**清单里有 10 个项目（9 个上游 + 论文作者的部署栈 Recovery_go2w）；当前训练服务器上实际物化的只有 `recovery` 与 `Recovery_go2w`**，其余 8 个需要 `repo sync` 才会出现 —— 因此在未物化的机器上，本文件里指向那 8 个项目的链接是死链，属于预期现象。
 
 除 rl_sar、recovery 外只保存调研源码，不安装各仓库依赖，也不代表这些项目能直接解决 PetBot 的完整翻倒恢复。rl_sar 已构建并运行，用于验证「训练产物离开 Isaac Sim 后还能看到效果」这条链路（在桌面机上做，因为 MuJoCo 渲染是桌面机的职责）；recovery 正在训练服务器上试训，汇总见 [recovery 试训汇总](../docs/reference_recovery_validation.md)。
 

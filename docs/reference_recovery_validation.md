@@ -37,7 +37,7 @@
 
 评估脚本 `eval_recovery.py` 三套一起输出，自动识别 episode 长度与关节数，并按初始倒地姿态（直立 / 侧躺 / 斜躺 / 倒置）分层。
 
-**关于 0.42 m 的适用范围**：论文那 0.42 m 出现在 KYON 的章节，**不能套到其他平台**。实测 Go2-W（作者自己的 MJCF）站姿高度只有 **0.30 ~ 0.36 m**，用 0.42 m 判定必然 0%。评估 Go2-W 时用"平台自适应判据"：高度 > 92% 该平台实测站姿高度 + 倾角 < 20° + 腿关节偏差 ≤ 0.5 rad + 最后 1 s 最大关节速度 < 0.1 rad/s。
+**关于 0.42 m 的适用范围**：论文那 0.42 m 出现在 KYON 的章节，**不能套到其他平台**。实测：Go2-W 在作者 PD（Kp 25 / Kd 0.5）下保持默认姿态的稳态基座高度是 **0.299 m**（留档 `recovery_env/go2w_stance_probe.out`），作者策略末态高度 p50 = 0.323 m、p90 = 0.374 m；用 0.42 m 判定实测成功率为 **0.00%**。评估 Go2-W 时用"平台自适应判据"：高度 > 92% 该平台实测站姿高度（0.299 m）+ 倾角 < 20° + 腿关节偏差 ≤ 0.5 rad + 最后 1 s 最大关节速度 < 0.1 rad/s。
 
 ## 上游实现的两个缺陷（已定位）
 
@@ -67,9 +67,9 @@
 
 ## 实验矩阵与实测结果
 
-统一配置：`--num_envs 4096 --max_iterations 10000 --headless`，seed 42（复现性实验换种子），Thunder 任务 50 Hz 控制。
-单 run 约吃 **10 核 / 5.5 GB 显存 / 10 GB 内存**；**6 路并发是平衡点**（GPU 利用率 50~84%）。
-**8 路并发会把 64 核压到 load 99**，迭代耗时从 6.6 s 涨到 11~12 s，聚合吞吐反而下降 —— 已验证，不要超过 6 路。
+统一配置：`--max_iterations 10000 --headless`，seed 42（复现性实验换种子），Thunder 任务 50 Hz 控制；**Thunder 用 4096 envs，Go2-W 用 2048 envs**（4096 下 Go2-W 的网格碰撞体会让 PhysX 初始化失败）。
+
+资源实测（2026-10-12 在 6 路并发下测）：单 run 约 **4.4~4.9 个核**（`450%~490%` CPU）、**2.6~5.0 GB 显存**；两卡各约 14.4 GB / 24.6 GB（利用率 53%~57%）。迭代耗时随并发数与同机他人负载波动：**单跑 4.42 s**（4096 envs，历史实测均值）、6 路并发时 **Thunder(4096 envs) 6.6~10.6 s、Go2-W(2048 envs) 6.8~7.4 s**。曾试过 8 路并发（当时 load 达到 ~99、迭代从 6.6 s 涨到 11~12 s，聚合吞吐反而下降）→ **以 6 路为准**。
 
 ### 第一代：上游原配置（跑满 10000 iter）—— 失败基线
 
@@ -81,7 +81,7 @@
 | 末态高度中位数 | 0.203 m（Thunder 站立需 0.426 m） |
 | 腿关节偏差 / 最大速度中位数 | 0.762 rad / 1.118 rad/s |
 
-**学会"保持站立"，不会从倒地起身。** 已排除"判据的锅"（只看腿关节仍 0）与"训练量不足"（跑满 19.7 亿样本，奖励 iter 99 后趋平）。开销：44,440 steps/s，12 h 16 min，51 个检查点。
+**学会"保持站立"，不会从倒地起身。** 已排除"判据的锅"（只看腿关节仍 0）与"训练量不足"（跑满 19.7 亿样本，奖励 iter 99 后趋平）。开销：日志 10000 次 iteration time 均值 4.42 s → ≈44.4k steps/s、总时长 ≈12.3 h；51 个检查点。
 
 ### 第二代：论文口径 6 个并行实验（第一轮，全部跑满）
 
@@ -104,14 +104,14 @@
 
 差异 = 表「论文与实现的语义差异」全部改成论文原义，并补上动作噪声 σ=0.02。包含：Eq.3 递增 CW、Eq.4 组合、5 s @ 50 Hz、Table I 权重与二次姿态项、§IV-A 的 DR、删除论文没有的项（`wheel_leg_coord` 全删；`support_state` 去掉高度门，另留一门控对照）。
 
-| 实验 | 平台 | 说明 | 进度（2026-10-12 20:00） |
+| 实验 | 平台 | 说明 | 进度（2026-10-12 21:00 实测） |
 |---|---|---|---|
-| `p1_paper_exact` | Thunder | 论文标准，seed 42 | ~2800 / 10000 |
-| `p3_paper_exact_s123` | Thunder | 论文标准，seed 123 | ~2800 / 10000 |
-| `p4_paper_baseline_noED` | Thunder | 论文 §IV-B 的 Baseline（DS 关闭） | ~2700 / 10000 |
-| `w3_cw_rise_5s` | Thunder | 上一代延续：5 s + 递增 CW（无动作噪声） | ~3300 / 10000 |
-| **`g1_go2w_paper`** | **Go2-W** | 论文机器人 + 论文标准口径，2048 envs，seed 42 | ~2200 / 10000 |
-| **`g2_go2w_paper_s7`** | **Go2-W** | 同上，seed 7 | ~2200 / 10000 |
+| `p1_paper_exact` | Thunder | 论文标准，seed 42 | 3295 / 10000 |
+| `p3_paper_exact_s123` | Thunder | 论文标准，seed 123 | 3252 / 10000 |
+| `p4_paper_baseline_noED` | Thunder | 论文 §IV-B 的 Baseline（DS 关闭） | 3219 / 10000 |
+| `w3_cw_rise_5s` | Thunder | 上一代延续：5 s + 递增 CW（无动作噪声） | 3717 / 13200（续训后目标，见坑 15） |
+| **`g1_go2w_paper`** | **Go2-W** | 论文机器人 + 论文标准口径，2048 envs，seed 42 | 2846 / 10000 |
+| **`g2_go2w_paper_s7`** | **Go2-W** | 同上，seed 7 | 2791 / 10000 |
 
 中途评估（论文口径 C 仍 0.00%，属该进度下的正常区间）：
 
@@ -133,9 +133,10 @@
 | 项 | 值 |
 |---|---|
 | 来源 | `reference_project/Recovery_go2w`（`boyuandeng/Recovery_go2w@e6424625`，在 `default.xml` 清单里，目前只在训练服务器物化） |
-| 模型 | `unitree_robots/go2w/go2w.xml` + 网格（作者自己使用的 MuJoCo 模型） |
-| 权重 | `simulate_python/test/log/model_7999.pt`（作者在 Go2-W 上训练的策略；actor `78 → 16`、MLP `[128,128,128]`）—— **许可证未核实，不进本仓库** |
-| 机器人数值 | 16 关节（4 腿 × hip/thigh/calf/wheel），总质量 **19.13 kg**；力矩上限 hip/thigh 23.7、calf 45.43、轮 15 |
+| 模型（上游原件） | `unitree_robots/go2w/go2w.xml` + `assets/` 网格（作者自己使用的 MuJoCo 模型） |
+| 模型（实际使用的副本） | 训练 / 验证都走副本：`reference_project/recovery_variants/g1_go2w_paper/assets/go2w/{go2w.xml,scene.xml}`；转出的 USD 在同目录 `assets/usd/`；权重副本 `assets/model_7999.pt` 与 `recovery_env/models/model_7999.pt` |
+| 权重（上游原件） | `simulate_python/test/log/model_7999.pt`（作者在 Go2-W 上训练的策略；actor `78 → 16`、MLP `[128,128,128]`）—— **许可证未核实，不进本仓库** |
+| 机器人数值 | `nq/nv/nu = 23/22/16`（1 个浮动基座关节 + 16 个驱动关节 = 4 腿 × hip/thigh/calf/wheel）；总质量 **19.1264 kg**；力矩上限来自 MJCF 的 `<motor ctrlrange>`（hip/thigh 23.7、calf 45.43、轮 15；`forcerange` 未设）—— 数值留档 `recovery_env/go2w_model_facts.out` |
 | 部署契约（`runtest.py`） | 动作 `a×0.5 + q_default`、腿 `Kp 25 / Kd 0.5`、轮 `Kd 0.1`、策略 50 Hz；obs 布局 `16+3+3+12+12+4+12+12+4`（与我们 Thunder 任务同构） |
 
 **官方权重在 MuJoCo（作者 MJCF + 作者推理契约，32 个随机倒地初态）上的实测**：
@@ -209,6 +210,8 @@
 | `summary.sh` | 各实验进度与奖励趋势一屏 |
 | `watchdog.sh` + `watchdog.log` | 看门狗：定时巡检 + 崩溃自动续训（`--resume`）+ 定期自动评估 |
 | `go2w_policy_check.py` | 官方权重在 MuJoCo 上的验证（含录像） |
+| `go2w_model_facts.py` + `.out` | Go2-W 模型客观数值留档：总质量 19.1264 kg、力矩上限（`<motor ctrlrange>` 23.7 / 45.43 / 15）、`nq/nv/nu = 23/22/16` |
+| `go2w_stance_probe.out` | Go2-W 默认姿态在作者 PD 下的稳态站姿高度实测留档（**0.299 m**，即 0.42 m 判据对该平台不适用的依据）。注：该探针只跑 1 episode，仅用于测站姿高度；成功率数字以 32 episodes 的 `go2w_check3.json` 为准 |
 | `convert_go2w.py` / `fix_go2w_usd.py` | Go2-W MJCF → Isaac Lab USD 转换与修复 |
 | `parallel_pull.py` / `direct_proxy_7890.py` | 镜像拉取与 docker 代理绕行 |
 | `render_test.py` / `make_demo_preview.py` | 离屏渲染验证 / 演示拼图 |
