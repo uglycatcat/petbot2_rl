@@ -242,6 +242,7 @@
 12. **浅克隆（depth 1）不能推送到完整仓库**：`remote unpack failed: index-pack failed`。先 `git fetch --unshallow` 再推。
 13. **Go2-W USD 转换三处修复**（多 articulation root / 缺 ContactReportAPI / prim 层级）见上一节；4096 envs 会因网格碰撞体初始化失败，用 2048。
 14. **MuJoCo 无头渲染**要 `MUJOCO_GL=egl`。
+15. **`rsl_rl` 的 `--resume` 下 `--max_iterations` 是"再加多少迭代"**，不是在总数上截断：`w3_cw_rise_5s` 从 `model_3200.pt` 续训后目标是 **13200**（3200 + 10000），不是 10000。续训时想控制总长要按剩余量传参。
 
 ## 关键参数速查
 
