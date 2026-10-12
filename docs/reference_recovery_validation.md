@@ -281,7 +281,7 @@
 2. **若拉起** → 取最好检查点录单机 demo 视频 → 交付 demo；随后按 `docs/engineering_handoff.md` 进入 PetBot 移植（换资产 + 7 维动作契约 + 位置伺服）。
 3. **若 Go2-W 仍为 0** → 说明问题不在已列出的语义差异，下一轮候选：奖励尺度 / 归一化（论文公式使 reward 为大负数，可能影响 PPO 价值学习）、value loss 与 KL 是否发散、延长到 20000 iteration、或核对作者训练配置（作者训练代码未公开，只能靠部署栈反推）。
 4. Thunder 线的结论已足够：**它不适合作为复现论文的平台**（49.3 kg + 硬伺服，同口径下行为显著差于 Go2-W）；若后续要它，需单独设计奖励而非照搬论文。
-5. 中期可做：把我们的工具箱从备份分支提升到主仓库受版本管理的位置（当前在 `refproj/recovery-tools`）。
+5. 工具箱保持在参考分支 `refproj/recovery-tools`（它是**给 recovery 这个参考项目用的**工具，不进主仓库主线，也不用 `git checkout` 去取；实际使用副本就是训练服务器的 `reference_project/recovery_env/`）。
 
 ## 未决 / 未验证
 

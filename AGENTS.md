@@ -47,7 +47,7 @@
 10. **不确定就问**：规则之间若出现冲突，或需求含义不明，先问用户再动手。
 11. **主动维护进度报告**：每完成一件事，就按日期把关键节点、实测结果和失败的尝试追加到本文件的[进度报告](#进度报告文档主线)，需要时再展开写进对应的细节文档。
 12. **参考项目由 `default.xml` 清单管理**：`reference_project/` 下的项目通过 `repo` 物化。新增、删除或改变某个项目的 pin，必须在同一次改动中同步更新 `default.xml` 与 `reference_project/manifest.json`，保持清单与目录一致。
-13. **参考项目的本地修改不能丢**：在服务器上跑 demo 时若改了某个参考项目的代码，要把**该项目**提交到本仓库的一个专用分支（命名 `refproj/<项目名>`，如 `refproj/recovery`），并把 `default.xml` 里该项目的 `remote`/`revision` 指向那条分支；在完成这一步之前，不要删除或覆盖那个 checkout。**我方自建的工具、脚本与实验定义**（只存在于被忽略的 `reference_project/` 下）同样要推到 `refproj/` 备份分支（如 `refproj/recovery-tools`，内容在 `tools/recovery_trial/`），避免丢失；这类备份分支不写进 `default.xml`（它不是上游项目）。
+13. **参考项目的本地修改不能丢**：在服务器上跑 demo 时若改了某个参考项目的代码，要把**该项目**提交到本仓库的一个专用分支（命名 `refproj/<项目名>`，如 `refproj/recovery`），并把 `default.xml` 里该项目的 `remote`/`revision` 指向那条分支；在完成这一步之前，不要删除或覆盖那个 checkout。**为某个参考项目写的工具、脚本与实验定义**同样推到该项目的 `refproj/` 分支（如 `refproj/recovery-tools`，内容在 `tools/recovery_trial/`）；这类分支不写进 `default.xml`（它不是上游项目）。参考项目由 `repo sync` 按 `default.xml` 物化，**不要用 `git checkout <分支>` 去换工作区**。
 
 ## 沟通与交付
 
@@ -85,7 +85,7 @@
 ## 当前实现状态
 
 - **已有**：机器人模型（MJCF + 10 个 STL）、参考项目快照、训练服务器上的容器与训练 / 评估 / 渲染链路、recovery 的完整训练与评估结果。
-- **备份分支**：`refproj/recovery`（上游 recovery + 我们的论文口径补丁，`default.xml` 已指向）、`refproj/recovery-tools`（我方试训脚本、补丁与全部实验定义，见该分支 `tools/recovery_trial/INDEX.md`）。
+- **参考分支**：`refproj/recovery`（上游 recovery + 我们的论文口径补丁，`default.xml` 已指向）、`refproj/recovery-tools`（给 recovery 试训用的脚本、补丁与全部实验定义，见该分支 `tools/recovery_trial/INDEX.md`）。
 - **尚无**：PetBot 的 Isaac Lab 任务、恢复策略、策略导出、MuJoCo 策略推理入口。
 - PetBot 动作接口（已定）：**5 个关节位置目标（`head` / `left_ear` / `right_ear` / `left_frame` / `right_frame`）+ 2 个后轮速度目标（`left_rear_wheel` / `right_rear_wheel`）**，由仿真内部伺服闭环执行；左右前轮被动；头、耳、车架与身体均可触地支撑。
 

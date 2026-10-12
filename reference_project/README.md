@@ -97,13 +97,15 @@ repo sync                 # 物化/更新全部；只取某类：repo sync -g re
 
 在训练服务器上试训，是当前唯一同时满足轮足 / Isaac Lab / SO(3) 全姿态随机 / 零参考动作的候选实现。**完整记录**（结论、判据 A/B/C、实验矩阵、产物与查询、坑、参数速查）见 [recovery 试训记录](../docs/reference_recovery_validation.md)。
 
-## 我方试训工具箱（备份分支）
+## 我方试训工具箱（参考分支）
 
-跑 recovery 试训时写的脚本、补丁与全部实验定义，平时位于训练服务器的 `reference_project/recovery_env/` 与 `recovery_variants/`（被忽略、不进版本管理），已备份到本仓库分支 **`refproj/recovery-tools`**（路径 `tools/recovery_trial/`）：环境入口与容器编排、评估（判据 A/B/C）、批量评估、看门狗与自动续训、Go2-W 转换与官方权重验证、**每个实验的完整 diff**（`variant_diffs/*.patch`）、关键结果 JSON。
+跑 recovery 试训时写的脚本、补丁与全部实验定义，**实际使用副本**在训练服务器的 `reference_project/recovery_env/`（被 `.gitignore` 排除、不进版本管理）；**版本化记录**在本仓库的参考分支 **`refproj/recovery-tools`**（路径 `tools/recovery_trial/`），内容：环境入口与容器编排、评估（判据 A/B/C）、批量评估、`summary.sh`、看门狗与自动续训、Go2-W 转换与官方权重验证、**每个实验的完整 diff**（`variant_diffs/*.patch`）、关键结果 JSON 与数字留档。
+
+这些工具是**给 recovery 这个参考项目用的**，因此随它一起放在 `refproj/` 命名空间下。项目不在机器之间搬（工作区由 `git pull` 维护，参考项目由 `repo sync` 按 `default.xml` 物化），所以**不需要 checkout**；要看内容或历史直接用：
 
 ```bash
-git show refproj/recovery-tools:tools/recovery_trial/env.sh > env.sh     # 取回单个文件
-git checkout refproj/recovery-tools -- tools/recovery_trial              # 整目录取回
+git show refproj/recovery-tools:tools/recovery_trial/env.sh   # 看单个文件
+git log --oneline refproj/recovery-tools                      # 看改动历史
 ```
 
 内容清单与实验代际说明见该分支的 `tools/recovery_trial/INDEX.md`。
