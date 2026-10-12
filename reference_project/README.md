@@ -6,7 +6,9 @@
 
 ## 选用关系
 
-训练框架优先参考 **robot_lab / Go2W**，完整恢复任务重点参考 **WBC-AGILE / stand_up**，方法上补充 **getup_gym、HumanUP**，策略验证与部署走 **rl_sar**，轮足全姿态起身的唯一可运行实现是 **recovery**；作者自己的部署栈是 **Recovery_go2w**。其余三项用于局部实现对照。需求见 [当前需求基线](../docs/current_scope.md)，仓库边界见 [项目 README](../README.md)。
+2026-10-12 源码核查建议：以接入 PetBot 恢复任务的代码改动成本为首要标准，优先复现 WBC-AGILE / StandUp-T1-v0；robot_lab / Go2W 用于混合动作实现参考，环境更换不作为主要排序因素。此为待实测建议，详见[选择依据与边界](../docs/reference_selection.md)。
+
+按当前接入成本标准，完整恢复任务与训练底座优先评估 **WBC-AGILE / stand_up**，混合动作参考 **robot_lab / Go2W**，方法上补充 **getup_gym、HumanUP**，策略验证与部署走 **rl_sar**，轮足全姿态起身的唯一可运行实现是 **recovery**；作者自己的部署栈是 **Recovery_go2w**。其余三项用于局部实现对照。需求见 [当前需求基线](../docs/current_scope.md)，仓库边界见 [项目 README](../README.md)。
 
 | 项目 | 用途 | 复用边界 |
 |---|---|---|

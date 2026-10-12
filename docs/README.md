@@ -10,6 +10,7 @@
 |---|---|
 | [current_scope.md](current_scope.md) | 需求基线：目标、动作接口、边界与待定项 |
 | [engineering_handoff.md](engineering_handoff.md) | 工程实施：接口契约、恢复任务设计、阶段验收 |
+| [reference_selection.md](reference_selection.md) | 参考项目选择建议、源码证据、接入成本与待验证步骤 |
 | [reference_recovery_validation.md](reference_recovery_validation.md) | 参考项目 recovery 的**完整记录**：结论、判据、实验矩阵、产物与查询、坑、参数速查 |
 
 ## 仓库根目录的相关文档
