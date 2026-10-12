@@ -1,0 +1,26 @@
+Only in reference_project/recovery: .git
+Only in reference_project/recovery_variants/w3_cw_rise_5s/outputs: 2026-10-12
+Only in reference_project/recovery: patches
+Only in reference_project/recovery: PATCHES.md
+diff -ru '--exclude=logs' '--exclude=assets' '--exclude=__pycache__' '--exclude=*.pyc' reference_project/recovery/src/thunder_recovery/config/method1_deng/env_cfg.py reference_project/recovery_variants/w3_cw_rise_5s/src/thunder_recovery/config/method1_deng/env_cfg.py
+--- reference_project/recovery/src/thunder_recovery/config/method1_deng/env_cfg.py	2026-10-10 13:12:34.193884083 +0800
++++ reference_project/recovery_variants/w3_cw_rise_5s/src/thunder_recovery/config/method1_deng/env_cfg.py	2026-10-12 11:44:51.932452824 +0800
+@@ -505,7 +505,8 @@
+         # = 0.02 s（50 Hz），与作者部署栈的策略周期（0.002 s × 10 步）一致，
+         # 因此保持 50 Hz、把 episode 长度改为论文的 4 s（200 控制步）。
+         self.decimation = 4
+-        self.episode_length_s = 4.0
++        # 变体 w3：论文 §IV-A 原文 'Each episode lasts 5 seconds (at 50Hz)'
++        self.episode_length_s = 5.0
+         self.sim.dt = 0.005
+         self.sim.render_interval = self.decimation
+ 
+diff -ru '--exclude=logs' '--exclude=assets' '--exclude=__pycache__' '--exclude=*.pyc' reference_project/recovery/src/thunder_recovery/mdp/_utils.py reference_project/recovery_variants/w3_cw_rise_5s/src/thunder_recovery/mdp/_utils.py
+--- reference_project/recovery/src/thunder_recovery/mdp/_utils.py	2026-10-10 13:11:44.370188345 +0800
++++ reference_project/recovery_variants/w3_cw_rise_5s/src/thunder_recovery/mdp/_utils.py	2026-10-12 11:44:51.932452824 +0800
+@@ -168,4 +168,4 @@
+         iteration = env.common_step_counter / RECOVERY_STEPS_PER_ITER
+     else:
+         iteration = 0
+-    return beta * (decay ** iteration)
++    return beta ** (decay ** iteration)   # 同 w1，另把 episode 改回论文 §IV-A 的 5 s @ 50 Hz

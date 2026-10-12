@@ -1,0 +1,13 @@
+Only in reference_project/recovery: .git
+Only in reference_project/recovery_variants/w1_cw_rise/outputs: 2026-10-12
+Only in reference_project/recovery: patches
+Only in reference_project/recovery: PATCHES.md
+diff -ru '--exclude=logs' '--exclude=assets' '--exclude=__pycache__' '--exclude=*.pyc' reference_project/recovery/src/thunder_recovery/mdp/_utils.py reference_project/recovery_variants/w1_cw_rise/src/thunder_recovery/mdp/_utils.py
+--- reference_project/recovery/src/thunder_recovery/mdp/_utils.py	2026-10-10 13:11:44.370188345 +0800
++++ reference_project/recovery_variants/w1_cw_rise/src/thunder_recovery/mdp/_utils.py	2026-10-12 11:44:51.932452824 +0800
+@@ -168,4 +168,4 @@
+         iteration = env.common_step_counter / RECOVERY_STEPS_PER_ITER
+     else:
+         iteration = 0
+-    return beta * (decay ** iteration)
++    return beta ** (decay ** iteration)   # 论文 Eq.3：cw ← cw^β，每 episode 重置前更新 → 0.3 缓慢升到 1（行为惩罚变强）

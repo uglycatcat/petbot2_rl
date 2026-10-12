@@ -1,0 +1,34 @@
+Only in reference_project/recovery: .git
+Only in reference_project/recovery_variants/v2_exp_ori/outputs/2026-10-10: 05-20-03
+Only in reference_project/recovery/outputs/2026-10-10: 06-46-58
+Only in reference_project/recovery/outputs/2026-10-10: 07-56-34
+Only in reference_project/recovery: patches
+Only in reference_project/recovery: PATCHES.md
+diff -ru '--exclude=logs' '--exclude=assets' '--exclude=__pycache__' '--exclude=*.pyc' reference_project/recovery/src/thunder_recovery/config/method1_deng/env_cfg.py reference_project/recovery_variants/v2_exp_ori/src/thunder_recovery/config/method1_deng/env_cfg.py
+--- reference_project/recovery/src/thunder_recovery/config/method1_deng/env_cfg.py	2026-10-10 13:12:34.193884083 +0800
++++ reference_project/recovery_variants/v2_exp_ori/src/thunder_recovery/config/method1_deng/env_cfg.py	2026-10-10 13:19:01.511628233 +0800
+@@ -406,8 +406,8 @@
+     )
+     recovery_base_orientation = RewTerm(
+         func=recovery_mdp.recovery_base_orientation,
+-        # Table I 的 scale 是 50、定义式是 (g_b − e_z)^2（惩罚）→ 权重取 −50
+-        weight=-50.0,
++        # 变体 v2：姿态项恢复上游的 exp 整形 → 权重 +50
++        weight=50.0,
+         params={"asset_cfg": SceneEntityCfg("robot")},
+     )
+ 
+diff -ru '--exclude=logs' '--exclude=assets' '--exclude=__pycache__' '--exclude=*.pyc' reference_project/recovery/src/thunder_recovery/mdp/method1_deng/rewards.py reference_project/recovery_variants/v2_exp_ori/src/thunder_recovery/mdp/method1_deng/rewards.py
+--- reference_project/recovery/src/thunder_recovery/mdp/method1_deng/rewards.py	2026-10-10 13:12:03.870068770 +0800
++++ reference_project/recovery_variants/v2_exp_ori/src/thunder_recovery/mdp/method1_deng/rewards.py	2026-10-10 13:19:01.515628211 +0800
+@@ -119,8 +119,8 @@
+     asset: Articulation = env.scene[asset_cfg.name]
+     ideal = torch.tensor([0.0, 0.0, -1.0], device=env.device)
+     error = torch.sum(torch.square(asset.data.projected_gravity_b - ideal), dim=1)
+-    # 论文 Eq.4：不受 DS 缩放
+-    return error
++    # 变体 v2：保留上游的有界 exp 整形（只改这一项，测试论文的二次惩罚是否过狠）
++    return torch.exp(-error)
+ 
+ 
+ # ── Support state (paper §E, per-step binary) ──

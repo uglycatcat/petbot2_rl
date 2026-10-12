@@ -1,0 +1,191 @@
+Only in reference_project/recovery: .git
+Only in reference_project/recovery_variants/g2_go2w_paper_s7/outputs: 2026-10-12
+Only in reference_project/recovery: patches
+Only in reference_project/recovery: PATCHES.md
+Only in reference_project/recovery_variants/g2_go2w_paper_s7/src/thunder_recovery/config: asset_go2w.py
+diff -ru '--exclude=logs' '--exclude=assets' '--exclude=__pycache__' '--exclude=*.pyc' reference_project/recovery/src/thunder_recovery/config/method1_deng/env_cfg.py reference_project/recovery_variants/g2_go2w_paper_s7/src/thunder_recovery/config/method1_deng/env_cfg.py
+--- reference_project/recovery/src/thunder_recovery/config/method1_deng/env_cfg.py	2026-10-10 13:12:34.193884083 +0800
++++ reference_project/recovery_variants/g2_go2w_paper_s7/src/thunder_recovery/config/method1_deng/env_cfg.py	2026-10-12 14:31:57.497005487 +0800
+@@ -40,20 +40,24 @@
+ 
+ from thunder_recovery import mdp as recovery_mdp
+ from thunder_recovery.config.asset import THUNDER_NOHEAD_CFG
++from thunder_recovery.config.asset_go2w import GO2W_CFG
++from thunder_recovery.mdp import noisy_actions
+ 
+ 
+ # -- Joint / body naming ------------------------------------------------
++# Go2-W（论文平台）：顺序必须与作者策略的 12/4 维动作输出一致
++# —— 关节类型分组（hip → thigh → calf），腿序 FL→FR→RL→RR，轮序 FL→FR→RL→RR
++#    等价于 runtest.py 的置换 [3,0,9,6,4,1,10,7,5,2,11,8] 与 [13,12,15,14]
+ LEG_JOINT_NAMES = [
+-    "FR_hip_joint", "FR_thigh_joint", "FR_calf_joint",
+-    "FL_hip_joint", "FL_thigh_joint", "FL_calf_joint",
+-    "RR_hip_joint", "RR_thigh_joint", "RR_calf_joint",
+-    "RL_hip_joint", "RL_thigh_joint", "RL_calf_joint",
++    "FL_hip_joint", "FR_hip_joint", "RL_hip_joint", "RR_hip_joint",
++    "FL_thigh_joint", "FR_thigh_joint", "RL_thigh_joint", "RR_thigh_joint",
++    "FL_calf_joint", "FR_calf_joint", "RL_calf_joint", "RR_calf_joint",
+ ]
+ WHEEL_JOINT_NAMES = [
+-    "FR_foot_joint", "FL_foot_joint", "RR_foot_joint", "RL_foot_joint",
++    "FL_wheel_joint", "FR_wheel_joint", "RL_wheel_joint", "RR_wheel_joint",
+ ]
+ BASE_LINK_NAME = "base_link"
+-FOOT_LINK_REGEX = ".*_foot"          # bodies
++FOOT_LINK_REGEX = ".*_wheel_link"     # Go2-W 的轮体名（= 论文里的“四个轮同时触地”判据）
+ COLLISION_BODY_REGEXES = [BASE_LINK_NAME, ".*thigh.*", ".*calf.*"]
+ 
+ 
+@@ -77,10 +81,10 @@
+     )
+ 
+     # Robot: filled in via replace() to get {ENV_REGEX_NS} per-env prim path.
+-    robot: ArticulationCfg = THUNDER_NOHEAD_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
++    robot: ArticulationCfg = GO2W_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+ 
+     contact_forces = ContactSensorCfg(
+-        prim_path="{ENV_REGEX_NS}/Robot/.*",
++        prim_path="{ENV_REGEX_NS}/Robot/base_link/.*",   # MJCF 转换后体在 base_link 包装层下
+         history_length=3,
+         track_air_time=False,
+     )
+@@ -91,7 +95,7 @@
+     # when extending to rough terrain or benchmarking sim-to-real — the critic
+     # already consumes the signal.
+     height_scanner = RayCasterCfg(
+-        prim_path="{ENV_REGEX_NS}/Robot/" + BASE_LINK_NAME,
++        prim_path="{ENV_REGEX_NS}/Robot/base_link/" + BASE_LINK_NAME,   # 真正的 trunk 刚体
+         offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
+         ray_alignment="yaw",
+         pattern_cfg=patterns.GridPatternCfg(resolution=0.1, size=(1.6, 1.0)),
+@@ -116,7 +120,7 @@
+       wheels:       0.8   (paper Section C: reduced wheel scale for recovery)
+     """
+ 
+-    joint_pos = mdp_core.JointPositionActionCfg(
++    joint_pos = noisy_actions.NoisyJointPositionActionCfg(
+         asset_name="robot",
+         joint_names=LEG_JOINT_NAMES,
+         # 论文/作者实现：作者部署栈（Recovery_go2w runtest.py）用统一的
+@@ -127,7 +131,7 @@
+         clip={".*": (-100.0, 100.0)},
+         preserve_order=True,
+     )
+-    joint_vel = mdp_core.JointVelocityActionCfg(
++    joint_vel = noisy_actions.NoisyJointVelocityActionCfg(
+         asset_name="robot",
+         joint_names=WHEEL_JOINT_NAMES,
+         scale=0.5,   # 作者栈同样用 0.5（论文只说 s_v < 1.0）
+@@ -360,9 +364,11 @@
+         mode="startup",
+         params={
+             "asset_cfg": SceneEntityCfg("robot"),
+-            "operation": "scale",
+-            "stiffness_distribution_params": (0.85, 1.15),
+-            "damping_distribution_params": (0.6, 1.4),
++            # 论文 §IV-A 原文：actuator stiffness and damping are perturbed by
++            # ±1.0 and ±0.1 respectively（绝对量，非百分比）→ 用 add 操作。
++            "operation": "add",
++            "stiffness_distribution_params": (-1.0, 1.0),
++            "damping_distribution_params": (-0.1, 0.1),
+         },
+     )
+ 
+@@ -442,11 +448,8 @@
+     )
+ 
+     # Wheel-leg coordination (paper core contribution, early-phase only)
+-    recovery_wheel_leg_coord = RewTerm(
+-        func=recovery_mdp.recovery_wheel_leg_coord,
+-        weight=5.0,
+-        params={"asset_cfg": SceneEntityCfg("robot"), "max_wheel_speed": 40.0},
+-    )
++    # （论文 Table I 与 Eq.4 中没有 wheel_leg_coord 项；该项是第三方复现仓库
++    #   自加的对论文思想的工程解释，故论文标准口径下删除。）
+ 
+     # （已移除）recovery_joint_deviation：该项不在论文 Table I / Eq.4 中，
+     # 是上游自加的常驻关节偏差惩罚，会与论文的 (×DS) stand_joint_pos 叠加。
+@@ -505,7 +508,8 @@
+         # = 0.02 s（50 Hz），与作者部署栈的策略周期（0.002 s × 10 步）一致，
+         # 因此保持 50 Hz、把 episode 长度改为论文的 4 s（200 控制步）。
+         self.decimation = 4
+-        self.episode_length_s = 4.0
++        # 变体 w3：论文 §IV-A 原文 'Each episode lasts 5 seconds (at 50Hz)'
++        self.episode_length_s = 5.0
+         self.sim.dt = 0.005
+         self.sim.render_interval = self.decimation
+ 
+diff -ru '--exclude=logs' '--exclude=assets' '--exclude=__pycache__' '--exclude=*.pyc' reference_project/recovery/src/thunder_recovery/mdp/method1_deng/rewards.py reference_project/recovery_variants/g2_go2w_paper_s7/src/thunder_recovery/mdp/method1_deng/rewards.py
+--- reference_project/recovery/src/thunder_recovery/mdp/method1_deng/rewards.py	2026-10-10 13:12:03.870068770 +0800
++++ reference_project/recovery_variants/g2_go2w_paper_s7/src/thunder_recovery/mdp/method1_deng/rewards.py	2026-10-12 12:36:28.211295562 +0800
+@@ -159,10 +159,10 @@
+     magnitude = torch.norm(forces, dim=-1)[:, sensor_cfg.body_ids]
+     all_feet = (magnitude > threshold).all(dim=1)
+ 
+-    asset: Articulation = env.scene[asset_cfg.name]
+-    base_up = asset.data.root_pos_w[:, 2] > min_base_height
+-
+-    return (all_feet & base_up & ~freefall).float()
++    # 论文 §III-E 原文：support state = “all four wheels are in contact with
++    # the ground simultaneously”，没有高度条件（0.30 m 门是第三方复现仓库自加的，
++    # 见变体 p5 作为对照）。
++    return (all_feet & ~freefall).float()
+ 
+ 
+ # ── Behavior rewards (× CW) ──
+@@ -209,7 +209,7 @@
+     prev_action = env.action_manager.prev_action
+     leg_diff = torch.sum(torch.square(action[:, leg_ids] - prev_action[:, leg_ids]), dim=1)
+     # 论文 Eq.4：行为组乘 CW，其中 action_rate 再乘 DS
+-    return _get_cw(env) * _get_ed(env) * leg_diff
++    return _get_cw(env) * leg_diff
+ 
+ 
+ # ── Constant penalties (legs only — wheels have dedicated terms) ──
+@@ -223,7 +223,7 @@
+     asset: Articulation = env.scene[asset_cfg.name]
+     leg_ids, _ = _get_joint_split(env, asset)
+     # 论文 Eq.4：joint_velocity 属于行为组 → ×CW×DS
+-    return _get_cw(env) * _get_ed(env) * torch.sum(torch.square(asset.data.joint_vel[:, leg_ids]), dim=1)
++    return _get_cw(env) * torch.sum(torch.square(asset.data.joint_vel[:, leg_ids]), dim=1)
+ 
+ 
+ def recovery_torques(
+@@ -234,7 +234,7 @@
+     asset: Articulation = env.scene[asset_cfg.name]
+     leg_ids, _ = _get_joint_split(env, asset)
+     # 论文 Eq.4：torques 属于行为组 → ×CW×DS
+-    return _get_cw(env) * _get_ed(env) * torch.sum(torch.square(asset.data.applied_torque[:, leg_ids]), dim=1)
++    return _get_cw(env) * torch.sum(torch.square(asset.data.applied_torque[:, leg_ids]), dim=1)
+ 
+ 
+ def recovery_joint_acceleration(
+@@ -245,7 +245,7 @@
+     asset: Articulation = env.scene[asset_cfg.name]
+     leg_ids, _ = _get_joint_split(env, asset)
+     # 论文 Eq.4：joint_acceleration 属于行为组 → ×CW×DS
+-    return _get_cw(env) * _get_ed(env) * torch.sum(torch.square(asset.data.joint_acc[:, leg_ids]), dim=1)
++    return _get_cw(env) * torch.sum(torch.square(asset.data.joint_acc[:, leg_ids]), dim=1)
+ 
+ 
+ def recovery_wheel_velocity(
+Only in reference_project/recovery_variants/g2_go2w_paper_s7/src/thunder_recovery/mdp: noisy_actions.py
+diff -ru '--exclude=logs' '--exclude=assets' '--exclude=__pycache__' '--exclude=*.pyc' reference_project/recovery/src/thunder_recovery/mdp/_utils.py reference_project/recovery_variants/g2_go2w_paper_s7/src/thunder_recovery/mdp/_utils.py
+--- reference_project/recovery/src/thunder_recovery/mdp/_utils.py	2026-10-10 13:11:44.370188345 +0800
++++ reference_project/recovery_variants/g2_go2w_paper_s7/src/thunder_recovery/mdp/_utils.py	2026-10-12 14:32:30.073451340 +0800
+@@ -75,7 +75,7 @@
+ def _get_joint_split(
+     env: ManagerBasedRLEnv,
+     asset: Articulation,
+-    wheel_joint_regex: str = ".*foot.*",
++    wheel_joint_regex: str = ".*wheel.*",   # Go2-W：轮关节名为 <LEG>_wheel_joint
+ ) -> tuple[torch.Tensor, torch.Tensor]:
+     """Return (leg_ids, wheel_ids) as long tensors, cached on the env.
+ 
+@@ -168,4 +168,4 @@
+         iteration = env.common_step_counter / RECOVERY_STEPS_PER_ITER
+     else:
+         iteration = 0
+-    return beta * (decay ** iteration)
++    return beta ** (decay ** iteration)   # 同 w1，另把 episode 改回论文 §IV-A 的 5 s @ 50 Hz

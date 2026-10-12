@@ -1,0 +1,25 @@
+Only in reference_project/recovery: .git
+Only in reference_project/recovery_variants/v3_long_ep/outputs/2026-10-10: 05-20-03
+Only in reference_project/recovery_variants/v3_long_ep/outputs/2026-10-10: 05-25-16
+Only in reference_project/recovery/outputs/2026-10-10: 06-46-58
+Only in reference_project/recovery/outputs/2026-10-10: 07-56-34
+Only in reference_project/recovery: patches
+Only in reference_project/recovery: PATCHES.md
+diff -ru '--exclude=logs' '--exclude=assets' '--exclude=__pycache__' '--exclude=*.pyc' reference_project/recovery/src/thunder_recovery/config/method1_deng/env_cfg.py reference_project/recovery_variants/v3_long_ep/src/thunder_recovery/config/method1_deng/env_cfg.py
+--- reference_project/recovery/src/thunder_recovery/config/method1_deng/env_cfg.py	2026-10-10 13:12:34.193884083 +0800
++++ reference_project/recovery_variants/v3_long_ep/src/thunder_recovery/config/method1_deng/env_cfg.py	2026-10-10 13:19:05.775604207 +0800
+@@ -501,11 +501,10 @@
+ 
+     def __post_init__(self):
+         # -- Sim --
+-        # 论文 §IV-A：episode 4 s、控制 100 Hz。本环境物理步 0.005 s × decimation 4
+-        # = 0.02 s（50 Hz），与作者部署栈的策略周期（0.002 s × 10 步）一致，
+-        # 因此保持 50 Hz、把 episode 长度改为论文的 4 s（200 控制步）。
++        # 变体 v3：给 Thunder（49 kg、比 Go2-W 重）更长的恢复窗口 —— 8 s。
++        # 其它全部保持论文口径；DS 的 a=T/2 会随 T 自动把 DS≈1 对齐到 t=4 s。
+         self.decimation = 4
+-        self.episode_length_s = 4.0
++        self.episode_length_s = 8.0
+         self.sim.dt = 0.005
+         self.sim.render_interval = self.decimation
+ 

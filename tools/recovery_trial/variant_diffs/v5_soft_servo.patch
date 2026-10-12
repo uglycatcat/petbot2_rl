@@ -1,0 +1,42 @@
+Only in reference_project/recovery: .git
+Only in reference_project/recovery_variants/v5_soft_servo/outputs/2026-10-10: 06-26-20
+Only in reference_project/recovery/outputs/2026-10-10: 06-46-58
+Only in reference_project/recovery/outputs/2026-10-10: 07-56-34
+Only in reference_project/recovery: patches
+Only in reference_project/recovery: PATCHES.md
+diff -ru '--exclude=logs' '--exclude=assets' '--exclude=__pycache__' '--exclude=*.pyc' reference_project/recovery/src/thunder_recovery/config/asset.py reference_project/recovery_variants/v5_soft_servo/src/thunder_recovery/config/asset.py
+--- reference_project/recovery/src/thunder_recovery/config/asset.py	2026-10-09 14:45:32.532416975 +0800
++++ reference_project/recovery_variants/v5_soft_servo/src/thunder_recovery/config/asset.py	2026-10-10 14:25:56.131702523 +0800
+@@ -83,8 +83,8 @@
+             effort_limit=120.0,
+             saturation_effort=120.0,
+             velocity_limit=17.48,
+-            stiffness=100.0,
+-            damping=5.0,
++            stiffness=25.0,
++            damping=0.5,
+             friction=0.0,
+         ),
+         "thigh": DCMotorCfg(
+@@ -92,8 +92,8 @@
+             effort_limit=120.0,
+             saturation_effort=120.0,
+             velocity_limit=17.48,
+-            stiffness=100.0,
+-            damping=5.0,
++            stiffness=25.0,
++            damping=0.5,
+             friction=0.0,
+         ),
+         "calf": DCMotorCfg(
+@@ -101,8 +101,8 @@
+             effort_limit=120.0,
+             saturation_effort=120.0,
+             velocity_limit=17.48,
+-            stiffness=100.0,
+-            damping=5.0,
++            stiffness=25.0,
++            damping=0.5,
+             friction=0.0,
+         ),
+         "wheel": ImplicitActuatorCfg(

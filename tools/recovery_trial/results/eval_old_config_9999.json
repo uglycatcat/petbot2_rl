@@ -1,0 +1,91 @@
+{
+  "checkpoint": "/workspace/recovery/logs/rsl_rl/thunder_recovery/2026-10-09_10-42-27/model_9999.pt",
+  "num_envs": 2048,
+  "episodes": 3,
+  "samples": 6144,
+  "A_upstream_criterion": {
+    "success_last_second": 0.0,
+    "success_per_step_mean": 0.0,
+    "recovery_step_median": null
+  },
+  "B_leg_joints_only": {
+    "success_last_second": 0.0,
+    "success_per_step_mean": 0.0,
+    "recovery_step_median": null
+  },
+  "stand_up_height_and_orientation_at_end": 0.208984375,
+  "cond_pass_rate_last_second": {
+    "h": 0.2968392074108124,
+    "j_all": 0.0,
+    "v_all": 0.0,
+    "o": 0.20539388060569763,
+    "j_leg": 0.38588541746139526,
+    "v_leg": 6.510416824312415e-06
+  },
+  "cond_pass_rate_at_last_step": {
+    "h": 0.2945963442325592,
+    "j_all": 0.0,
+    "v_all": 0.0,
+    "o": 0.208984375,
+    "j_leg": 0.3898111879825592,
+    "v_leg": 0.0
+  },
+  "final_distributions": {
+    "base_height_m": {
+      "p10": 0.148,
+      "p50": 0.203,
+      "p90": 0.402
+    },
+    "orientation_err": {
+      "p10": 0.058,
+      "p50": 1.521,
+      "p90": 2.0
+    },
+    "leg_joint_dev_rad": {
+      "p10": 0.413,
+      "p50": 0.762,
+      "p90": 1.264
+    },
+    "all_joint_dev_rad": {
+      "p10": 1.965,
+      "p50": 3.723,
+      "p90": 6.458
+    },
+    "leg_max_joint_vel_rad_s": {
+      "p10": 0.553,
+      "p50": 1.118,
+      "p90": 2.176
+    },
+    "all_max_joint_vel_rad_s": {
+      "p10": 0.657,
+      "p50": 1.331,
+      "p90": 2.569
+    }
+  },
+  "by_initial_pose": {
+    "upright": {
+      "samples": 891,
+      "A_success": 0.0,
+      "B_success": 0.0,
+      "stand_at_end": 0.7789000868797302
+    },
+    "inverted": {
+      "samples": 925,
+      "A_success": 0.0,
+      "B_success": 0.0,
+      "stand_at_end": 0.0
+    },
+    "side": {
+      "samples": 3718,
+      "A_success": 0.0,
+      "B_success": 0.0,
+      "stand_at_end": 0.12963959574699402
+    },
+    "tilted": {
+      "samples": 610,
+      "A_success": 0.0,
+      "B_success": 0.0,
+      "stand_at_end": 0.1770491749048233
+    }
+  }
+}

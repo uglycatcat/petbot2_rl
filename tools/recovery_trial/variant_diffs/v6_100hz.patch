@@ -1,0 +1,41 @@
+Only in reference_project/recovery: .git
+Only in reference_project/recovery_variants/v6_100hz/outputs/2026-10-10: 06-30-41
+Only in reference_project/recovery/outputs/2026-10-10: 06-46-58
+Only in reference_project/recovery/outputs/2026-10-10: 07-56-34
+Only in reference_project/recovery: patches
+Only in reference_project/recovery: PATCHES.md
+diff -ru '--exclude=logs' '--exclude=assets' '--exclude=__pycache__' '--exclude=*.pyc' reference_project/recovery/src/thunder_recovery/config/method1_deng/env_cfg.py reference_project/recovery_variants/v6_100hz/src/thunder_recovery/config/method1_deng/env_cfg.py
+--- reference_project/recovery/src/thunder_recovery/config/method1_deng/env_cfg.py	2026-10-10 13:12:34.193884083 +0800
++++ reference_project/recovery_variants/v6_100hz/src/thunder_recovery/config/method1_deng/env_cfg.py	2026-10-10 14:26:02.215665602 +0800
+@@ -501,10 +501,9 @@
+ 
+     def __post_init__(self):
+         # -- Sim --
+-        # 论文 §IV-A：episode 4 s、控制 100 Hz。本环境物理步 0.005 s × decimation 4
+-        # = 0.02 s（50 Hz），与作者部署栈的策略周期（0.002 s × 10 步）一致，
+-        # 因此保持 50 Hz、把 episode 长度改为论文的 4 s（200 控制步）。
+-        self.decimation = 4
++        # 变体 v6：论文 §IV-A 明确写 "at a control rate of 100Hz" → 用 decimation 2
++        # （0.005 s × 2 = 0.01 s，100 Hz），episode 4 s = 400 控制步。
++        self.decimation = 2
+         self.episode_length_s = 4.0
+         self.sim.dt = 0.005
+         self.sim.render_interval = self.decimation
+diff -ru '--exclude=logs' '--exclude=assets' '--exclude=__pycache__' '--exclude=*.pyc' reference_project/recovery/src/thunder_recovery/mdp/_utils.py reference_project/recovery_variants/v6_100hz/src/thunder_recovery/mdp/_utils.py
+--- reference_project/recovery/src/thunder_recovery/mdp/_utils.py	2026-10-10 13:11:44.370188345 +0800
++++ reference_project/recovery_variants/v6_100hz/src/thunder_recovery/mdp/_utils.py	2026-10-10 14:26:02.215665602 +0800
+@@ -22,8 +22,12 @@
+ 
+ # ── Constants ──
+ 
+-FREEFALL_STEPS = 100
+-"""Duration of the torques=0 free-fall window in control steps (2 s @ 50 Hz)."""
++FREEFALL_STEPS = 200
++"""Duration of the torques=0 free-fall window in control steps.
++
++变体 v6：控制周期 100 Hz（decimation 2 × 0.005 s）→ 2 s = 200 步。
++上游原配置为 50 Hz 下的 100 步。
++"""
+ 
+ RECOVERY_STEPS_PER_ITER = 48
+ """Number of env.step() calls per PPO rollout iteration.

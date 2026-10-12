@@ -1,0 +1,154 @@
+Only in reference_project/recovery: .git
+Only in reference_project/recovery/outputs/2026-10-09/10-28-56: hydra.log
+Only in reference_project/recovery/outputs/2026-10-09/10-42-27: hydra.log
+Only in reference_project/recovery/outputs/2026-10-10/05-12-50: hydra.log
+Only in reference_project/recovery/outputs/2026-10-10/05-13-29: hydra.log
+Only in reference_project/recovery/outputs/2026-10-10/06-46-58: hydra.log
+Only in reference_project/recovery/outputs/2026-10-10/07-56-34: hydra.log
+Only in reference_project/recovery_variants/p4_paper_baseline_noED/outputs: 2026-10-12
+Only in reference_project/recovery: patches
+Only in reference_project/recovery: PATCHES.md
+diff -ru '--exclude=logs' '--exclude=assets' '--exclude=__pycache__' '--exclude=*.pyc' reference_project/recovery/src/thunder_recovery/config/method1_deng/env_cfg.py reference_project/recovery_variants/p4_paper_baseline_noED/src/thunder_recovery/config/method1_deng/env_cfg.py
+--- reference_project/recovery/src/thunder_recovery/config/method1_deng/env_cfg.py	2026-10-10 13:12:34.193884083 +0800
++++ reference_project/recovery_variants/p4_paper_baseline_noED/src/thunder_recovery/config/method1_deng/env_cfg.py	2026-10-12 12:36:28.211295562 +0800
+@@ -40,6 +40,7 @@
+ 
+ from thunder_recovery import mdp as recovery_mdp
+ from thunder_recovery.config.asset import THUNDER_NOHEAD_CFG
++from thunder_recovery.mdp import noisy_actions
+ 
+ 
+ # -- Joint / body naming ------------------------------------------------
+@@ -116,7 +117,7 @@
+       wheels:       0.8   (paper Section C: reduced wheel scale for recovery)
+     """
+ 
+-    joint_pos = mdp_core.JointPositionActionCfg(
++    joint_pos = noisy_actions.NoisyJointPositionActionCfg(
+         asset_name="robot",
+         joint_names=LEG_JOINT_NAMES,
+         # 论文/作者实现：作者部署栈（Recovery_go2w runtest.py）用统一的
+@@ -127,7 +128,7 @@
+         clip={".*": (-100.0, 100.0)},
+         preserve_order=True,
+     )
+-    joint_vel = mdp_core.JointVelocityActionCfg(
++    joint_vel = noisy_actions.NoisyJointVelocityActionCfg(
+         asset_name="robot",
+         joint_names=WHEEL_JOINT_NAMES,
+         scale=0.5,   # 作者栈同样用 0.5（论文只说 s_v < 1.0）
+@@ -360,9 +361,11 @@
+         mode="startup",
+         params={
+             "asset_cfg": SceneEntityCfg("robot"),
+-            "operation": "scale",
+-            "stiffness_distribution_params": (0.85, 1.15),
+-            "damping_distribution_params": (0.6, 1.4),
++            # 论文 §IV-A 原文：actuator stiffness and damping are perturbed by
++            # ±1.0 and ±0.1 respectively（绝对量，非百分比）→ 用 add 操作。
++            "operation": "add",
++            "stiffness_distribution_params": (-1.0, 1.0),
++            "damping_distribution_params": (-0.1, 0.1),
+         },
+     )
+ 
+@@ -442,11 +445,8 @@
+     )
+ 
+     # Wheel-leg coordination (paper core contribution, early-phase only)
+-    recovery_wheel_leg_coord = RewTerm(
+-        func=recovery_mdp.recovery_wheel_leg_coord,
+-        weight=5.0,
+-        params={"asset_cfg": SceneEntityCfg("robot"), "max_wheel_speed": 40.0},
+-    )
++    # （论文 Table I 与 Eq.4 中没有 wheel_leg_coord 项；该项是第三方复现仓库
++    #   自加的对论文思想的工程解释，故论文标准口径下删除。）
+ 
+     # （已移除）recovery_joint_deviation：该项不在论文 Table I / Eq.4 中，
+     # 是上游自加的常驻关节偏差惩罚，会与论文的 (×DS) stand_joint_pos 叠加。
+@@ -505,7 +505,8 @@
+         # = 0.02 s（50 Hz），与作者部署栈的策略周期（0.002 s × 10 步）一致，
+         # 因此保持 50 Hz、把 episode 长度改为论文的 4 s（200 控制步）。
+         self.decimation = 4
+-        self.episode_length_s = 4.0
++        # 变体 w3：论文 §IV-A 原文 'Each episode lasts 5 seconds (at 50Hz)'
++        self.episode_length_s = 5.0
+         self.sim.dt = 0.005
+         self.sim.render_interval = self.decimation
+ 
+diff -ru '--exclude=logs' '--exclude=assets' '--exclude=__pycache__' '--exclude=*.pyc' reference_project/recovery/src/thunder_recovery/mdp/method1_deng/rewards.py reference_project/recovery_variants/p4_paper_baseline_noED/src/thunder_recovery/mdp/method1_deng/rewards.py
+--- reference_project/recovery/src/thunder_recovery/mdp/method1_deng/rewards.py	2026-10-10 13:12:03.870068770 +0800
++++ reference_project/recovery_variants/p4_paper_baseline_noED/src/thunder_recovery/mdp/method1_deng/rewards.py	2026-10-12 12:36:28.211295562 +0800
+@@ -159,10 +159,10 @@
+     magnitude = torch.norm(forces, dim=-1)[:, sensor_cfg.body_ids]
+     all_feet = (magnitude > threshold).all(dim=1)
+ 
+-    asset: Articulation = env.scene[asset_cfg.name]
+-    base_up = asset.data.root_pos_w[:, 2] > min_base_height
+-
+-    return (all_feet & base_up & ~freefall).float()
++    # 论文 §III-E 原文：support state = “all four wheels are in contact with
++    # the ground simultaneously”，没有高度条件（0.30 m 门是第三方复现仓库自加的，
++    # 见变体 p5 作为对照）。
++    return (all_feet & ~freefall).float()
+ 
+ 
+ # ── Behavior rewards (× CW) ──
+@@ -209,7 +209,7 @@
+     prev_action = env.action_manager.prev_action
+     leg_diff = torch.sum(torch.square(action[:, leg_ids] - prev_action[:, leg_ids]), dim=1)
+     # 论文 Eq.4：行为组乘 CW，其中 action_rate 再乘 DS
+-    return _get_cw(env) * _get_ed(env) * leg_diff
++    return _get_cw(env) * leg_diff
+ 
+ 
+ # ── Constant penalties (legs only — wheels have dedicated terms) ──
+@@ -223,7 +223,7 @@
+     asset: Articulation = env.scene[asset_cfg.name]
+     leg_ids, _ = _get_joint_split(env, asset)
+     # 论文 Eq.4：joint_velocity 属于行为组 → ×CW×DS
+-    return _get_cw(env) * _get_ed(env) * torch.sum(torch.square(asset.data.joint_vel[:, leg_ids]), dim=1)
++    return _get_cw(env) * torch.sum(torch.square(asset.data.joint_vel[:, leg_ids]), dim=1)
+ 
+ 
+ def recovery_torques(
+@@ -234,7 +234,7 @@
+     asset: Articulation = env.scene[asset_cfg.name]
+     leg_ids, _ = _get_joint_split(env, asset)
+     # 论文 Eq.4：torques 属于行为组 → ×CW×DS
+-    return _get_cw(env) * _get_ed(env) * torch.sum(torch.square(asset.data.applied_torque[:, leg_ids]), dim=1)
++    return _get_cw(env) * torch.sum(torch.square(asset.data.applied_torque[:, leg_ids]), dim=1)
+ 
+ 
+ def recovery_joint_acceleration(
+@@ -245,7 +245,7 @@
+     asset: Articulation = env.scene[asset_cfg.name]
+     leg_ids, _ = _get_joint_split(env, asset)
+     # 论文 Eq.4：joint_acceleration 属于行为组 → ×CW×DS
+-    return _get_cw(env) * _get_ed(env) * torch.sum(torch.square(asset.data.joint_acc[:, leg_ids]), dim=1)
++    return _get_cw(env) * torch.sum(torch.square(asset.data.joint_acc[:, leg_ids]), dim=1)
+ 
+ 
+ def recovery_wheel_velocity(
+Only in reference_project/recovery_variants/p4_paper_baseline_noED/src/thunder_recovery/mdp: noisy_actions.py
+diff -ru '--exclude=logs' '--exclude=assets' '--exclude=__pycache__' '--exclude=*.pyc' reference_project/recovery/src/thunder_recovery/mdp/_utils.py reference_project/recovery_variants/p4_paper_baseline_noED/src/thunder_recovery/mdp/_utils.py
+--- reference_project/recovery/src/thunder_recovery/mdp/_utils.py	2026-10-10 13:11:44.370188345 +0800
++++ reference_project/recovery_variants/p4_paper_baseline_noED/src/thunder_recovery/mdp/_utils.py	2026-10-12 12:36:46.211233510 +0800
+@@ -134,7 +134,10 @@
+     上游原实现把该式归一化成 (t/T)^k ∈ [0,1]（见 _get_ed_norm），导致起身阶段
+     任务奖励弱约 15 倍、末尾弱 8 倍，是本轮复现失败的主要嫌疑之一。
+     """
+-    _ensure_step_counter(env)
++    # 论文 §IV-B 的 Baseline：关闭 episode-based dynamic reward shaping（DS ≡ 1）
++    return 1.0
++
++    _ensure_step_counter(env)  # noqa: unreachable
+     dt = _env_dt(env)
+     t_sec = env._recovery_step_count.float() * dt
+     T_sec = float(env.max_episode_length) * dt
+@@ -168,4 +171,4 @@
+         iteration = env.common_step_counter / RECOVERY_STEPS_PER_ITER
+     else:
+         iteration = 0
+-    return beta * (decay ** iteration)
++    return beta ** (decay ** iteration)   # 同 w1，另把 episode 改回论文 §IV-A 的 5 s @ 50 Hz
