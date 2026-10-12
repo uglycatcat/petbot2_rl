@@ -1,0 +1,20 @@
+模型: /workspace/variants/g1_go2w_paper/assets/go2w/scene.xml
+nq, nv, nu = 23 22 16
+关节数 = 17 （其中自由/球关节: 1 ）
+总质量 = 19.1264 kg
+  actuator  0 FR_hip                   ctrlrange [  -23.70,    23.70]  forcerange [  0.00,   0.00]
+  actuator  1 FR_thigh                 ctrlrange [  -23.70,    23.70]  forcerange [  0.00,   0.00]
+  actuator  2 FR_calf                  ctrlrange [  -45.43,    45.43]  forcerange [  0.00,   0.00]
+  actuator  3 FL_hip                   ctrlrange [  -23.70,    23.70]  forcerange [  0.00,   0.00]
+  actuator  4 FL_thigh                 ctrlrange [  -23.70,    23.70]  forcerange [  0.00,   0.00]
+  actuator  5 FL_calf                  ctrlrange [  -45.43,    45.43]  forcerange [  0.00,   0.00]
+  actuator  6 RR_hip                   ctrlrange [  -23.70,    23.70]  forcerange [  0.00,   0.00]
+  actuator  7 RR_thigh                 ctrlrange [  -23.70,    23.70]  forcerange [  0.00,   0.00]
+  actuator  8 RR_calf                  ctrlrange [  -45.43,    45.43]  forcerange [  0.00,   0.00]
+  actuator  9 RL_hip                   ctrlrange [  -23.70,    23.70]  forcerange [  0.00,   0.00]
+  actuator 10 RL_thigh                 ctrlrange [  -23.70,    23.70]  forcerange [  0.00,   0.00]
+  actuator 11 RL_calf                  ctrlrange [  -45.43,    45.43]  forcerange [  0.00,   0.00]
+  actuator 12 FR_wheel                 ctrlrange [  -15.00,    15.00]  forcerange [  0.00,   0.00]
+  actuator 13 FL_wheel                 ctrlrange [  -15.00,    15.00]  forcerange [  0.00,   0.00]
+  actuator 14 RR_wheel                 ctrlrange [  -15.00,    15.00]  forcerange [  0.00,   0.00]
+  actuator 15 RL_wheel                 ctrlrange [  -15.00,    15.00]  forcerange [  0.00,   0.00]

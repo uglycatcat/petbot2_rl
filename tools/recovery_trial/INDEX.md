@@ -21,7 +21,9 @@ git checkout refproj/recovery-tools -- tools/recovery_trial
 
 | 路径 | 说明 |
 |---|---|
-| `env.sh` | 环境入口：`fetch / build / up / install / verify / proxy / train / vis / status / down / shell` |
+| `env.sh` | 环境入口（实际子命令）：`fetch / up / install / status / proxy / verify / down / train / vis / shell` |
+| `go2w_model_facts.py` + `.out` | Go2-W 模型客观数值（质量 19.1264 kg、`<motor ctrlrange>` 力矩上限 23.7/45.43/15、`nq/nv/nu=23/22/16`），留档原件见 `evidence/` |
+| `go2w_stance_probe.out` / `.json` | Go2-W 默认姿态在作者 PD 下的稳态站姿高度实测（0.299 m）—— 0.42 m 判据不适用于该平台的依据 |
 | `parallel_pull.py` | 多连接镜像拉取器（分块续传 + sha256 → docker-load tarball）；本机 `docker pull` 默认失败（dockerd 死代理），走它或 `env.sh proxy start` |
 | `direct_proxy_7890.py` | 127.0.0.1:7890 直连隧道代理，绕开 dockerd 被写死的失效代理 |
 | `verify.py` | 容器内自检（版本、依赖 API、Isaac Sim 启动、task 注册） |
@@ -40,6 +42,7 @@ git checkout refproj/recovery-tools -- tools/recovery_trial
 | `patches/` | `upstream_dump_pickle.patch`（上游唯一必需补丁）、`paper_repro_v1.patch`（论文口径 8 项修正） |
 | `variant_diffs/*.patch` | **各实验的完整实验定义**：基准 = 上游 commit `5b574775`，用 `diff -ruN` 生成（**含新增文件**，如动作噪声模块），已实测 **17/17 可 `patch -p1` 干净应用**并复现出与实验树完全一致的内容 |
 | `results/*.json` | 关键评估结果：旧配置终局、`paper_v1` 中途、官方权重在 MuJoCo 的验证 |
+| `evidence/` | 数字留档原件：Go2-W 模型数值（`go2w_model_facts.py/.out`）、站姿高度探针（`go2w_stance_probe.out/.json`） |
 
 ## 实验代际（`variant_diffs/` 里每个文件 = 该实验相对基准的全部代码差异）
 

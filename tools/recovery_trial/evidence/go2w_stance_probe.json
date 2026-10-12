@@ -1,0 +1,16 @@
+{
+ "n": 1,
+ "success_rate": 0.0,
+ "rows": [
+  {
+   "height": 0.3739094513065385,
+   "leg_dev_max": 0.3623558361794039,
+   "max_leg_vel_last1s": 0.010020164723422735,
+   "max_leg_vel_final": 0.0043963031233777965,
+   "init_tilt_deg": 49.45473105544389,
+   "final_tilt_deg": 6.68157936552497,
+   "success": false,
+   "success_platform": true
+  }
+ ]
+}
