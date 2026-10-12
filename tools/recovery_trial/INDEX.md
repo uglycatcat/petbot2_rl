@@ -1,4 +1,4 @@
-# recovery 试训工具箱（备份分支 `refproj/recovery-tools`）
+# recovery 试训工具箱（参考分支 `refproj/recovery-tools`）
 
 本分支保存**我方自建的试训脚本、补丁、实验定义与结果**。它们在工作时位于训练服务器的
 `reference_project/recovery_env/` 与 `reference_project/recovery_variants/`（被 `.gitignore` 排除、不进版本管理），
@@ -8,13 +8,15 @@
 - 本分支只含工具与实验定义，**不含**：训练日志与检查点、Isaac Sim 缓存、镜像 tar、论文作者的 Go2-W 权重
   （权重许可证未核实，需从上游 `boyuandeng/Recovery_go2w` 获取）。
 
-## 取回办法
+## 位置与查看办法
+
+本机（训练服务器）上的**实际使用副本**就是 `reference_project/recovery_env/`（被 `.gitignore` 排除）；这里记录的是它的**版本化副本**。工具是给 recovery 这个参考项目用的，所以放在它的 `refproj/` 命名空间下。
+
+项目不在机器之间搬（工作区由 `git pull` 维护，参考项目由 `repo sync` 按 `default.xml` 物化），**不需要 checkout**：
 
 ```bash
-# 只取某个文件
-git show refproj/recovery-tools:tools/recovery_trial/env.sh > env.sh
-# 整目录取回（在训练服务器上放回 reference_project/recovery_env/）
-git checkout refproj/recovery-tools -- tools/recovery_trial
+git show refproj/recovery-tools:tools/recovery_trial/env.sh   # 看单个文件
+git log --oneline refproj/recovery-tools                      # 看改动历史
 ```
 
 ## 内容
