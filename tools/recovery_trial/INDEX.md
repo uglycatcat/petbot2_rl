@@ -38,7 +38,7 @@ git checkout refproj/recovery-tools -- tools/recovery_trial
 | `README.md` | 训练服务器上的环境记录（镜像、容器、挂载、坑） |
 | `paper_vs_impl.md` | 论文与上游实现的偏差清单（含逐项修正说明） |
 | `patches/` | `upstream_dump_pickle.patch`（上游唯一必需补丁）、`paper_repro_v1.patch`（论文口径 8 项修正） |
-| `variant_diffs/*.patch` | **各实验的完整实验定义**：与基准（= 上游 + `paper_repro_v1`）逐一 diff |
+| `variant_diffs/*.patch` | **各实验的完整实验定义**：基准 = 上游 commit `5b574775`，用 `diff -ruN` 生成（**含新增文件**，如动作噪声模块），已实测 **17/17 可 `patch -p1` 干净应用**并复现出与实验树完全一致的内容 |
 | `results/*.json` | 关键评估结果：旧配置终局、`paper_v1` 中途、官方权重在 MuJoCo 的验证 |
 
 ## 实验代际（`variant_diffs/` 里每个文件 = 该实验相对基准的全部代码差异）
@@ -53,7 +53,26 @@ git checkout refproj/recovery-tools -- tools/recovery_trial
 
 ## 复现一份实验
 
-1. 取上游代码：`repo sync -g recovery`（按 `default.xml`，得到 `refproj/recovery` 的内容）；
-2. 应用某个实验定义：`git apply variant_diffs/<代号>.patch`（在 `reference_project/recovery` 里）；
-3. 用 `launch_variants.sh <代号>` 常驻启动，`watchdog.sh` 会自动纳入巡检；
-4. 评估：`eval_variant.sh <代号> 512 1`。
+`variant_diffs/*.patch` 是**完整**的实验定义：基准是**上游 `Kitjesen/recovery` 的 commit `5b574775`**，用 `diff -ruN` 生成（含新增文件），因此可直接应用到一份干净的上游检出（已实测 17/17 全部干净应用）。
+
+```bash
+# 1. 取一份干净上游
+git clone --depth 1 https://github.com/Kitjesen/recovery.git recovery_test
+git -C recovery_test fetch --unshallow   # 浅克隆不能推/取任意 commit，补全历史
+git -C recovery_test checkout 5b57477598963695be27474c0ba941a1ba4afd38
+
+# 2. 应用某个实验定义（-p1）
+cd recovery_test && patch -p1 < /path/to/variant_diffs/<代号>.patch
+
+# 3. 放到训练服务器的 reference_project/recovery_variants/<代号>/（容器内即 /workspace/variants/<代号>）
+#    用脚本启动（脚本里已含每个变体的 GPU、seed、env 数）
+./launch_variants.sh <代号>
+./watchdog.sh                # 自动纳入巡检与定期评估
+
+# 4. 论文口径评估
+./eval_variant.sh <代号> 512 1
+```
+
+注意：Go2-W 的两个实验（`g1`/`g2`）在脚本里被设为 **2048 envs**（4096 下 Go2-W 的网格碰撞体会让 PhysX 初始化失败）；它们复用同一个任务 id，机器人替换发生在 `env_cfg.py`（`from thunder_recovery.config.asset_go2w import GO2W_CFG`）。
+
+论文标准口径本身（= `p1_paper_exact` 的代码，另含两处注释更正）同时保存在分支 **`refproj/recovery`**，`default.xml` 已指向它，`repo sync` 可直接得到。

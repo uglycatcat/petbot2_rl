@@ -28,17 +28,20 @@ declare -A GPU=(
 )
 
 declare -A SEED=( [p2_paper_exact_s7]=7 [p3_paper_exact_s123]=123 [g2_go2w_paper_s7]=7 )   # 其余统一 seed 42
+# 每个变体的 env 数：Go2-W 的网格碰撞体在 4096 envs 下会让 PhysX 初始化失败（已实测）→ 用 2048
+declare -A ENVS=( [g1_go2w_paper]=2048 [g2_go2w_paper_s7]=2048 )
 targets=("$@")
 [ ${#targets[@]} -eq 0 ] && targets=("${!GPU[@]}")
 
 for v in "${targets[@]}"; do
   g=${GPU[$v]:?未知变体 $v}
+  n=${ENVS[$v]:-$NUM_ENVS}
   docker exec -d "$CT" bash -lc "cd /workspace/variants/$v && mkdir -p logs && \
     CUDA_VISIBLE_DEVICES=$g PYTHONPATH=/workspace/variants/$v/src \
     setsid nohup /isaac-sim/python.sh scripts/train.py --task $TASK \
-      --num_envs $NUM_ENVS --headless --max_iterations $ITERS --seed ${SEED[$v]:-42} \
+      --num_envs $n --headless --max_iterations $ITERS --seed ${SEED[$v]:-42} \
       --run_name $v > logs/train_$v.out 2>&1 < /dev/null"
-  echo "已启动 $v（GPU $g，$NUM_ENVS envs × $ITERS iter）"
+  echo "已启动 $v（GPU $g，$n envs × $ITERS iter）"
 done
 
 sleep 20
