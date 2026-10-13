@@ -4,7 +4,7 @@
 
 ## 当前决定（2026-10-13）
 
-用户确认首个 demo 为 `recovery_agile_01`：基于当前 repo 清单版本的 WBC-AGILE 修改，借鉴 robot_lab 混合动作配置。服务器已为这两个参考项目各建独立容器并自检通过，**尚未开始训练**（2026-10-13 实测）；PetBot 实现可并行推进，不等待参考试训结束。目录与分支管理、随机落地沉降初始化及首版交付见[工程实施约定](engineering_handoff.md#petbot-demo-管理与首版交付2026-10-13-用户确认)。下文源码比较为选型依据与历史核查，不能当作实测效果。
+用户确认首个 demo 为 `recovery_agile_01`：基于当前 repo 清单版本的 WBC-AGILE 修改，借鉴 robot_lab 混合动作配置。AGILE 的 `StandUp-T1-v0` 标准训练已于 2026-10-13 启动（4096 envs、100k iteration），robot_lab 尚未开训；PetBot 实现可并行推进，不等待参考试训结束。目录与分支管理、随机落地沉降初始化及首版交付见[工程实施约定](engineering_handoff.md#petbot-demo-管理与首版交付2026-10-13-用户确认)。下文源码比较为选型依据与历史核查，不能当作实测效果。
 
 ## 结论与选择依据
 

@@ -2,7 +2,7 @@
 
 PetBot（轮足机器狗）在平地上被推倒、滚翻或跌落后，通过强化学习策略恢复到默认站立构型并保持稳定。
 
-- **当前阶段：参考试训与 PetBot 首版实现并行准备。** recovery 线已关闭。服务器已为 AGILE 与 robot_lab 各建专用容器并自检通过（2026-10-13 服务器实测：`StandUp-T1-v0` / Go2W 环境创建成功），**尚未开始参考训练**（同日实测：容器空闲、GPU 2/3 利用率 0%）。已确定以 AGILE 为底座、借鉴 robot_lab 混合动作配置实现 `demo_project/recovery_agile_01/`，无需等待参考试训结束。PetBot 首版代码已在本地实现并备份，9 项 CPU 测试通过，尚未运行 PhysX 或训练；见 [demo 索引](demo_project/README.md)。
+- **当前阶段：参考试训与 PetBot 首版实现并行准备。** recovery 线已关闭。AGILE 的**标准起身训练已于 2026-10-13 在服务器容器内启动**（`StandUp-T1-v0`、4096 envs、100k iteration；实测 ≈7.4 s/iteration → 约 8.8 天），robot_lab 容器就绪未开训。已确定以 AGILE 为底座、借鉴 robot_lab 混合动作配置实现 `demo_project/recovery_agile_01/`，无需等待参考试训结束。PetBot 首版代码已在本地实现并备份（容器 `petbot-train` 就绪），9 项 CPU 测试通过，尚未运行 PhysX 或训练；见 [demo 索引](demo_project/README.md)。
 - **与参考项目的本质区别**：PetBot 本来就能轻松站住；而轮足翻倒起身类参考项目默认连"站住"都还没解决 —— 它们的奖励权重、课程与成功判据不能直接照搬。
 - 主线：Isaac Lab + RSL-RL + PPO 训练 → 策略导出 → MuJoCo 做 sim2sim 验证。
 - **进度、全局规则与设备判断见 [AGENTS.md](AGENTS.md)（agent 请先读它）；文档索引见 [docs/README.md](docs/README.md)。**
