@@ -49,27 +49,46 @@ def prepare_mjcf(destination: Path | None = None) -> Path:
 
 
 def normalize_joint_names(stage) -> list[str]:
-    """Lab 3 的 MJCF 导入器在关节与其父 body 同名时给关节 prim 加 `_1` 后缀。
+    """把导入后的关节名对齐到控制契约。
 
-    本模型 9 个关节全部与父 body 同名（head/left_ear/.../right_rear_wheel），导入后变成
-    `head_1` 等，而动作项、观测、初态库与成功判据都使用源 MJCF 的关节名（`JOINT_ORDER`）。
-    这里按契约去掉后缀并校验，否则 Lab 会在 `init_state.joint_pos` 的正则匹配处直接报错。
+    Lab 3 的 MJCF 导入器在关节与其父 body 下**同名的 geom/mesh prim** 重名时，会给关节 prim 加
+    `_1` 后缀。本模型 9 个关节都与所在 body 的 geom 同名（head/left_ear/.../right_rear_wheel），
+    于是导入名变成 `head_1` 等，而动作项、观测、初态库与成功判据都用源 MJCF 的关节名
+    （`JOINT_ORDER`），Lab 会在 `init_state.joint_pos` 的正则匹配处直接报错。
+
+    这里只改 USD 的 prim 命名（几何、碰撞与物理参数不变）：先把这些同名 geom prim 让开
+    （改为 `<name>_geom`），再把关节改回契约名，最后校验关节名集合。
     """
     from pxr import Sdf, UsdPhysics
 
     expected = set(JOINT_ORDER)
-    edit = Sdf.BatchNamespaceEdit()
-    renamed = 0
-    for prim in stage.Traverse():
-        if not prim.IsA(UsdPhysics.Joint):
-            continue
-        name = prim.GetName()
-        if name.endswith("_1") and name[:-2] in expected:
-            edit.Add(prim.GetPath(), prim.GetPath().GetParentPath().AppendChild(name[:-2]))
-            renamed += 1
-    if renamed and not stage.GetRootLayer().Apply(edit):
-        raise RuntimeError("Failed to normalize imported joint names.")
-    names = sorted(prim.GetName() for prim in stage.Traverse() if prim.IsA(UsdPhysics.Joint))
+    parents = [p for p in stage.Traverse()]
+    joint_paths = sorted(
+        (p.GetPath() for p in parents if p.IsA(UsdPhysics.Joint) and p.GetName().endswith("_1") and p.GetName()[:-2] in expected),
+        key=str,
+    )
+    if joint_paths:
+        edit = Sdf.BatchNamespaceEdit()
+        for path in joint_paths:
+            base = path.name[:-2]
+            for prim in parents:
+                if prim.IsA(UsdPhysics.Joint) or prim.GetName() != base or prim.GetPath().GetParentPath() != path.GetParentPath():
+                    continue
+                # 让开同名 prim；若已经有 <name>_geom（同名多个）则继续加序号，避免二次重名。
+                index = 1
+                while stage.GetPrimAtPath(path.GetParentPath().AppendChild(f"{base}_geom" if index == 1 else f"{base}_geom{index}")):
+                    index += 1
+                suffix = "_geom" if index == 1 else f"_geom{index}"
+                edit.Add(prim.GetPath(), path.GetParentPath().AppendChild(base + suffix))
+        for path in joint_paths:
+            edit.Add(path, path.GetParentPath().AppendChild(path.name[:-2]))
+        if not stage.GetRootLayer().Apply(edit):
+            raise RuntimeError("Failed to normalize imported joint names.")
+    names = sorted(
+        prim.GetName()
+        for prim in stage.Traverse()
+        if prim.IsA(UsdPhysics.Joint) and prim.GetTypeName() != "PhysicsFixedJoint"
+    )
     if set(names) != expected:
         raise RuntimeError(f"Imported joint names differ from the control contract: {names}")
     return names
