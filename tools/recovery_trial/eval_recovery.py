@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 
 from isaaclab.app import AppLauncher
@@ -33,6 +34,11 @@ parser.add_argument("--num_envs", type=int, default=2048)
 parser.add_argument("--episodes", type=int, default=3)
 parser.add_argument("--seed", type=int, default=42)
 parser.add_argument("--out", default="/workspace/recovery/logs/eval_recovery.json")
+# 平台自适应判据：高度 > 0.92×平台站姿高度 + 倾角<20° + 腿偏差≤0.5 + 腿速度<0.1
+# （与作者官方权重 37.5% 基准同一规则；0.42 m 是 KYON 口径，对 Go2-W 不适用）
+parser.add_argument("--stance-height", type=float, default=0.299,
+                    help="平台实测站姿高度（m）；Go2-W 作者 MJCF 实测 0.299")
+parser.add_argument("--adaptive", action="store_true", help="额外输出平台自适应判据")
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
 app = AppLauncher(args).app
@@ -49,7 +55,7 @@ from thunder_recovery.config.method1_deng.env_cfg import LEG_JOINT_NAMES  # noqa
 
 T_VALID = 249
 LAST_SEC = 50
-CONDS = ["h30", "j_all", "v_all", "o", "j_leg", "v_leg", "h42"]
+CONDS = ["h30", "j_all", "v_all", "o", "j_leg", "v_leg", "h42", "h_adapt", "o20", "j_leg_max"]
 
 
 def main() -> int:
@@ -103,9 +109,14 @@ def main() -> int:
                 jdev_all < 0.5,
                 vmax_all < 0.1,
                 torch.norm(a.data.projected_gravity_b - ideal, dim=1) < 0.1,
-                jdev_leg < 0.5,
-                vmax_leg < 0.1,
-                a.data.root_pos_w[:, 2] > 0.42,   # 论文平地判据的高度阈
+                jdev_leg < 0.5,                      # 旧口径：12 关节 L2 范数（比论文严格）
+                vmax_leg < 0.1,                      # 逐关节最大速度（与论文一致）
+                a.data.root_pos_w[:, 2] > 0.42,   # 论文平地判据的高度阈（KYON 口径）
+                a.data.root_pos_w[:, 2] > 0.92 * args.stance_height,   # 平台自适应高度阈
+                torch.norm(a.data.projected_gravity_b - ideal, dim=1) < 2 * math.sin(math.radians(10)),
+                torch.max(torch.abs(a.data.joint_pos[:, lidx] - a.data.default_joint_pos[:, lidx]),
+                          dim=1).values < 0.5,       # 论文原文口径：逐关节最大偏差 < 0.5 rad
+                # ↑ 倾角 < 20° ⇔ ‖g_b−e_z‖ < 2·sin(10°) = 0.347
             ], dim=1).cpu()
         cond_all.append(conds)
         diag_all.append({
@@ -115,6 +126,8 @@ def main() -> int:
             "jdev_leg": jdev_leg.cpu().numpy(),
             "vmax_all": vmax_all.cpu().numpy(),
             "vmax_leg": vmax_leg.cpu().numpy(),
+            "jdev_leg_max": torch.max(torch.abs(a.data.joint_pos[:, lidx]
+                                                - a.data.default_joint_pos[:, lidx]), dim=1).values.cpu().numpy(),
         })
 
     conds = torch.cat(cond_all)              # (S, T, 6)
@@ -130,6 +143,9 @@ def main() -> int:
     step_all, strict_all = suite([0, 1, 2, 3])         # A: 上游原样
     step_leg, strict_leg = suite([0, 4, 5, 3])         # B: 腿关节版
     step_paper, strict_paper = suite([6, 4, 5])        # C: 论文平地判据（高度>0.42 + 腿关节）
+    step_c2, strict_c2 = suite([6, 9, 5])               # C2: 论文逐关节口径（高度>0.42 + 逐关节偏差 + 逐关节速度）
+    if args.adaptive:
+        step_ad, strict_ad = suite([7, 8, 9, 5])        # D: 平台自适应（高度/倾角/逐关节偏差/逐关节速度）
     stand = (conds[:, -1, 0] & conds[:, -1, 3])        # 最后一步：高度 + 姿态达标
 
     # 恢复时刻（严格口径 A / B）
@@ -210,6 +226,13 @@ def main() -> int:
     print(f"A) 上游判据(含轮关节)   : {A['success_last_second']*100:.2f}%", flush=True)
     print(f"B) 修正判据(只看腿关节) : {B['success_last_second']*100:.2f}%", flush=True)
     print(f"C) 论文判据(高度0.42+腿): {C['success_last_second']*100:.2f}%   ← 与论文 97.8%/99.1% 同口径", flush=True)
+    print(f"C2) 论文判据(逐关节口径)  : {strict_c2.float().mean().item()*100:.2f}%"
+          f"   ← 高度>0.42 + 逐关节最大偏差<0.5 + 逐关节最大速度<0.1", flush=True)
+    if args.adaptive:
+        print(f"D) 平台自适应判据         : {strict_ad.float().mean().item()*100:.2f}%"
+              f"   ← 高度>{0.92*args.stance_height:.3f}m(0.92×{args.stance_height}) "
+              f"+ 倾角<20° + 腿偏差≤0.5 + 腿速度<0.1", flush=True)
+        print(f"   （作者官方权重同规则基准 37.50%）", flush=True)
     print(f"高度+姿态达标(最后一步) : {res['stand_up_height_and_orientation_at_end']*100:.2f}%", flush=True)
     if C["recovery_step_median"] is not None:
         print(f"C 口径恢复耗时中位数    : {C['recovery_step_median']:.0f} 步 / 50 Hz = "

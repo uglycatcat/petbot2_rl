@@ -1,0 +1,102 @@
+{
+  "checkpoint": "/workspace/variants/v3_long_ep/logs/rsl_rl/thunder_recovery/2026-10-10_05-25-16_v3_long_ep/model_9999.pt",
+  "num_envs": 512,
+  "episodes": 1,
+  "samples": 512,
+  "A_upstream_criterion": {
+    "success_last_second": 0.0,
+    "success_per_step_mean": 0.0,
+    "recovery_step_median": null
+  },
+  "B_leg_joints_only": {
+    "success_last_second": 0.0,
+    "success_per_step_mean": 0.0,
+    "recovery_step_median": null
+  },
+  "C_paper_flat_terrain_criterion": {
+    "success_last_second": 0.0,
+    "success_per_step_mean": 0.0,
+    "recovery_step_median": null
+  },
+  "stand_up_height_and_orientation_at_end": 0.1796875,
+  "cond_pass_rate_last_second": {
+    "h30": 0.37523436546325684,
+    "j_all": 0.04058593884110451,
+    "v_all": 0.0,
+    "o": 0.17652343213558197,
+    "j_leg": 0.6222265362739563,
+    "v_leg": 3.9062499126885086e-05,
+    "h42": 0.2158203125
+  },
+  "cond_pass_rate_at_last_step": {
+    "h30": 0.375,
+    "j_all": 0.0390625,
+    "v_all": 0.0,
+    "o": 0.1796875,
+    "j_leg": 0.62109375,
+    "v_leg": 0.0,
+    "h42": 0.216796875
+  },
+  "final_distributions": {
+    "base_height_m": {
+      "p10": 0.148,
+      "p50": 0.215,
+      "p90": 0.447
+    },
+    "orientation_err": {
+      "p10": 0.072,
+      "p50": 1.612,
+      "p90": 2.0
+    },
+    "leg_joint_dev_rad": {
+      "p10": 0.172,
+      "p50": 0.257,
+      "p90": 3.427
+    },
+    "all_joint_dev_rad": {
+      "p10": 0.697,
+      "p50": 1.887,
+      "p90": 6.708
+    },
+    "leg_max_joint_vel_rad_s": {
+      "p10": 0.477,
+      "p50": 0.871,
+      "p90": 1.695
+    },
+    "all_max_joint_vel_rad_s": {
+      "p10": 0.544,
+      "p50": 0.94,
+      "p90": 1.898
+    }
+  },
+  "by_initial_pose": {
+    "upright": {
+      "samples": 66,
+      "A_success": 0.0,
+      "B_success": 0.0,
+      "C_success": 0.0,
+      "stand_at_end": 0.8333333134651184
+    },
+    "inverted": {
+      "samples": 77,
+      "A_success": 0.0,
+      "B_success": 0.0,
+      "C_success": 0.0,
+      "stand_at_end": 0.0
+    },
+    "side": {
+      "samples": 301,
+      "A_success": 0.0,
+      "B_success": 0.0,
+      "C_success": 0.0,
+      "stand_at_end": 0.08637873828411102
+    },
+    "tilted": {
+      "samples": 68,
+      "A_success": 0.0,
+      "B_success": 0.0,
+      "C_success": 0.0,
+      "stand_at_end": 0.1617647111415863
+    }
+  }
+}

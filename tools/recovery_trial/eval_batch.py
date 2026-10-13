@@ -40,7 +40,7 @@ def launch(variant: str, ckpt: str, gpu: int, host_tag: str):
         + (f"PYTHONPATH={pp} " if pp else "")
         + "/isaac-sim/python.sh /workspace/recovery_env/eval_recovery.py "
         + f"--checkpoint $(ls {root}/logs/rsl_rl/thunder_recovery/*{variant}*/{ckpt} | head -1) "
-        + f"--num_envs 512 --episodes 1 --out {root}/logs/eval_{variant}_{tag}.json "
+        + f"--num_envs {os.environ.get('EVAL_ENVS', '512')} --episodes {os.environ.get('EVAL_EPS', '1')} {os.environ.get('EVAL_EXTRA', '')} --out {root}/logs/eval_{variant}_{tag}.json "
         + f"> logs/eval_{variant}_{tag}.out 2>&1"
     )
     subprocess.run(["docker", "exec", "-d", ct, "bash", "-lc", inner], check=False)
