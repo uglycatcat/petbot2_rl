@@ -14,7 +14,7 @@
 |---|---|---|
 | [robot_lab](robot_lab/README.md) | 混合动作与训练工程参考 | 复用 Isaac Lab 扩展、Go2W 混合 action、RSL-RL 训练 / 导出；恢复任务需要新增。 |
 | [rl_sar](rl_sar/README.md) | 策略验证与部署入口 | 复用 TorchScript / ONNX 推理、MuJoCo 与 Gazebo 仿真、真机部署；本身不做训练，策略须来自 robot_lab `play.py` 导出，且关节顺序要与 robot_lab cfg 的 `joint_names` 一致。 |
-| [recovery](recovery/README.md) | 当前试训对象 | 唯一同时满足轮足 / Isaac Lab / SO(3) 全姿态随机 / 零参考动作；自带 Thunder 的 URDF 与 STL、ED/CW 动态塑形奖励、非对称 actor-critic。**我们已改（论文口径补丁 + `dump_pickle` 兼容 —— 该 API 在任何已发布 Isaac Lab 中都不存在），修改版取自本仓库分支 `refproj/recovery`**；只提供 Isaac Lab 通路、无 MuJoCo。试训结论见 [recovery 试训汇总](../docs/reference_recovery_validation.md)。 |
+| [recovery](recovery/README.md) | **已试训并收官**（2026-10-13 关闭） | 唯一同时满足轮足 / Isaac Lab / SO(3) 全姿态随机 / 零参考动作；自带 Thunder 的 URDF 与 STL、ED/CW 动态塑形奖励、非对称 actor-critic。**我们已改（论文口径补丁 + `dump_pickle` 兼容 —— 该 API 在任何已发布 Isaac Lab 中都不存在），修改版取自本仓库分支 `refproj/recovery`**；只提供 Isaac Lab 通路、无 MuJoCo。**试训结果：三代 15+ 实验在三种口径下均 0.00%（卡点"站定"），判断项目本身价值有限、停止投入**；结论见 [recovery 试训汇总](../docs/reference_recovery_validation.md)。 |
 | Recovery_go2w | 作者部署栈 | 论文作者的公开实现，含 `model_7999.pt` 权重与 `simulate_python/` 运行入口；**在清单里，目前只在一台设备上物化过**。服务器已核对权重网络结构与部署契约，并在 MuJoCo 的 32 个随机倒地初态上测得平台自适应成功率 37.5%；许可证仍未核实，见[试训记录](../docs/reference_recovery_validation.md)。 |
 | [WBC-AGILE](WBC-AGILE/README.md) | 恢复任务接入优先候选（待实测） | 倒地状态数据集、stand_up 奖励与课程；当前 Lab 3 beta API 需适配。 |
 | [getup_gym](getup_gym/README.md) | 轮足恢复方法 | FTSR 力辅助探索、教师学生与分阶段奖励；基于 Isaac Gym。 |
@@ -97,7 +97,7 @@ repo sync                 # 物化/更新全部；只取某类：repo sync -g re
 
 ## recovery 试训记录
 
-在训练服务器上试训，是当前唯一同时满足轮足 / Isaac Lab / SO(3) 全姿态随机 / 零参考动作的候选实现。**完整记录**（结论、判据 A/B/C、实验矩阵、产物与查询、坑、参数速查）见 [recovery 试训记录](../docs/reference_recovery_validation.md)。
+在训练服务器上完成试训（**已收官，2026-10-13 关闭本条线**）：它曾是唯一同时满足轮足 / Isaac Lab / SO(3) 全姿态随机 / 零参考动作的候选实现，但三代 15+ 个实验在三种判据下全部 0.00%（卡点"站定"——机器人能起身但停不下来），判断项目本身价值有限、停止投入。容器 `recovery-train` / `recovery-vis` 停用未删除。**完整记录**（结论、判据 A/B/C/C2/D、实验矩阵、产物与查询、坑、参数速查）见 [recovery 试训记录](../docs/reference_recovery_validation.md)。
 
 ## 我方试训工具箱（参考分支）
 

@@ -7,7 +7,7 @@
 - 目标：PetBot（轮足机器狗）在平地上被推倒、滚翻或跌落后，用强化学习策略恢复到默认站立构型并保持稳定。
 - 主线：Isaac Lab + RSL-RL + PPO 训练 → 策略导出 → MuJoCo 做 sim2sim 验证。
 - **已有能力与训练目的**：用户已验证 PetBot 可从任意摔倒姿势，通过几个固定姿态的转换恢复站立（测试细节尚未归档）；RL 用于学习更自然、连贯、平滑的恢复动作。默认轮足构型无需单独训练站立策略；策略采用 **5 路位置 + 2 路速度**混合输出；训练**不依赖参考动作流或示范轨迹数据**，已有固定姿态恢复经验不等同于训练数据。详见[需求基线](docs/current_scope.md#已有能力与强化学习的目的)。
-- **当前阶段：试跑参考项目、挑最佳参考项目。** 在训练服务器上试跑成熟的开源参考项目（当前是 `recovery`），**先选出最合适的参考项目**，再开始 PetBot 自身的任务与训练；**尚未开始 PetBot 训练**。
+- **当前阶段：试训参考项目。** `recovery` 试训已**收官并关闭**（2026-10-13：三代 15+ 实验未达论文判据，卡点"站定"，判断项目本身价值有限、停止投入；见[试训记录](docs/reference_recovery_validation.md#收官结论2026-10-13用户决定)）。下一步在训练服务器上试训下一个参考项目（首选候选 **WBC-AGILE / `StandUp-T1-v0`**，尚未实测，见[选型建议](docs/reference_selection.md)），之后才轮到 PetBot 自身的任务与训练；**尚未开始 PetBot 训练**。
 - **PetBot 与参考项目的本质区别**：PetBot **本来就能轻松站住**（默认站姿是四轮着地的静稳定姿态，站立不需要策略去学）；而 `recovery` 这类轮足翻倒起身项目，研究对象默认**连"站住"都还没解决** —— 它们的站立姿态是要学出来的，所以才有高度 / 姿态塑形、ED-CW 类课程，以及"站住了但还在晃"这种失败模式。**参考项目的奖励权重、课程与成功判据不能直接照搬。**
 
 ## 第一步：判断自己在哪台设备上
@@ -29,7 +29,7 @@
 |---|---|---|
 | 1 | 本文件的[进度报告](#进度报告文档主线) | **主线**：关键节点与结果的带日期记录 |
 | 2 | [README.md](README.md) | 目录与文件职责、文档地图、如何配置 |
-| 3 | [docs/reference_recovery_validation.md](docs/reference_recovery_validation.md) | 当前参考项目 recovery 的**完整记录**：结论、判据、实验、产物与查询、坑、参数速查 |
+| 3 | [docs/reference_recovery_validation.md](docs/reference_recovery_validation.md) | 已收官参考项目 recovery 的**完整记录**：结论（含关闭决定）、判据、实验、产物与查询、坑、参数速查 |
 | 4 | [docs/current_scope.md](docs/current_scope.md) | 需求基线：目标、动作接口、范围与待定项 |
 | 5 | [docs/engineering_handoff.md](docs/engineering_handoff.md) | 工程实施：接口契约、恢复任务设计、阶段验收 |
 | 6 | [reference_project/README.md](reference_project/README.md) | 上游快照索引、来源记录与使用边界 |

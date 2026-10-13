@@ -52,7 +52,7 @@ Isaac Lab 计划采用位置/速度 action term 与 `ImplicitActuatorCfg`，由�
 ## 技术路线
 
 - 平台：训练服务器上的 Isaac Lab + RSL-RL + PPO。
-- 论文型参考：`recovery`（轮足倒地起身，当前正在试训，见 [试训汇总](reference_recovery_validation.md)）。
+- 论文型参考：`recovery`（轮足倒地起身，**已试训并收官**：三代 15+ 实验未达论文判据、卡点"站定"，2026-10-13 关闭本条线，见 [试训汇总](reference_recovery_validation.md)）。
 - 训练工程参考：`robot_lab` 的 Go2W 混合动作与执行器配置。
 - 恢复任务参考：`WBC-AGILE` 的倒地状态采集、辅助探索、奖励与课程。
 - 方法补充：`getup_gym` 的轮足恢复、`HumanUP` 的动作发现与平滑优化。

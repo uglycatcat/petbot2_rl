@@ -2,7 +2,7 @@
 
 PetBot（轮足机器狗）在平地上被推倒、滚翻或跌落后，通过强化学习策略恢复到默认站立构型并保持稳定。
 
-- **当前阶段：试跑参考项目。** 正在训练服务器上试跑成熟的开源参考项目（当前是 `recovery`），**先挑出最合适的参考项目**，再开始 PetBot 自身的训练。
+- **当前阶段：试训参考项目。** `recovery` 试训已**收官并关闭**（2026-10-13）：三代 15+ 实验未达论文判据（卡点"站定"），判断项目本身价值有限、停止投入；结论见 [recovery 试训记录](docs/reference_recovery_validation.md)。下一步试训下一个参考项目（首选候选 WBC-AGILE / `StandUp-T1-v0`，见 [选型建议](docs/reference_selection.md)），之后再开始 PetBot 自身的训练。
 - **与参考项目的本质区别**：PetBot 本来就能轻松站住；而轮足翻倒起身类参考项目默认连"站住"都还没解决 —— 它们的奖励权重、课程与成功判据不能直接照搬。
 - 主线：Isaac Lab + RSL-RL + PPO 训练 → 策略导出 → MuJoCo 做 sim2sim 验证。
 - **进度、全局规则与设备判断见 [AGENTS.md](AGENTS.md)（agent 请先读它）；文档索引见 [docs/README.md](docs/README.md)。**
