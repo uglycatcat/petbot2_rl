@@ -17,24 +17,31 @@
 | 冒烟训练 64 envs × 5 iter | 通过：约 755 steps/s、2.7 s/iteration，写出 `model_0/model_4.pt` 与 TensorBoard 事件，`episode` 结束前 `Recovery/*` 与奖励项均正常记录 |
 | 首版规模 1024 envs × 5 iter | 通过：约 8000 steps/s、4.0 s/iteration，单卡（RTX 4090）显存峰值约 3.7 GB；据此推算 10000 iteration ≈ 11 h，另有一次性采集约 6 min。**首版口径已按用户决定改为 2048 envs**（见下） |
 
-## 首版训练方案（2026-10-13 用户决定）
+## 首版训练方案（2026-10-13 用户决定，已部署）
 
-口径：**2048 envs × 10000 iteration**（1024 太少），多组参数**并行同训**以一次性看清各因素影响；每组跑在**固定 commit 的独立副本**里（`git clone` 到 `demo_project/runs/<变体>/`，禁止对运行副本 `repo sync`），独立日志与检查点，TensorBoard 分别指向各组目录。
+口径：**2048 envs × 3000 iteration**，先宽扫积累经验，跑满后按曲线决定续训组；每组跑在**固定 commit 的独立副本** `demo_project/runs/<变体>/`（`git clone` 自本地裸库，禁止对运行副本 `repo sync`）。日志写 `demo_project/runs/_logs/<变体>.log`——**不能写在副本里**，副本根目录出现未跟踪文件会让 `pre_learn` 的脏树检查拒绝启动；检查点与 TensorBoard 在副本自己的 `logs/rsl_rl/recovery_agile_01/`。
 
-扫描轴（每组只动一个因素，便于归因）：
+调度：`demo_project/demo_env/launch_variants.sh {start|status|log <v>|stop}`（`runs_probe.sh` 统计容器内在跑的组与卡位）。按卡分配：**GPU3 上限 6 组、GPU2 上限 3 组**（GPU2 上还有 AGILE 标准训练，必须留显存），超出上限的自动排队补位；实测 9 组并行时 2048 envs 约 7~8 s/iteration。
 
-| 变体 | 相对默认的改动 | 目的 | 代价 |
-|---|---|---|---|
-| `base_s42` | 无（默认伺服增益 / 奖励 / 初态与容差） | 基线口径 | — |
-| `base_s43` | 无，仅 `--seed 43` | 量化种子方差（参考项目教训：同配置可差数倍） | — |
-| `gains2x_s42` | `POSITION_KP/KD` 提高到约 2 倍 | 五个位置增益是唯一未实测的工程初值，决定位置伺服响应与抖动 | 需重跑 `prepare`（资产身份含增益）+ 重新采集初态库 |
-| `reward_still_s42` | `still` 0.5→2.0、`action_rate` −0.01→−0.02、`effort` −0.002→−0.005（CLI 覆盖） | 针对"站住但晃"这一类失败模式 | 仅训练，无额外采集 |
-| `spawn1m_s42`（可选） | `spawn_height` 0.6→1.0 m（CLI 覆盖） | 更剧烈的落地初态，检验恢复范围 | 重新采集初态库 |
-| `ppo64_s42`（可选） | `num_steps_per_env` 32→64、`learning_rate` 3e-4→2e-4 | 检验采样效率与收敛速度 | — |
+| 变体 | 卡 | 相对默认的唯一改动 |
+|---|---|---|
+| `base_s42` / `base_s43` | 3 / 3 | 无 / 仅 seed 43（量化种子方差） |
+| `gains2x_s42` / `gains_down_s42` | 3 / 3 | kp/kd ×2 / ×0.5 → 构成 [0.5×, 1×, 2×] 增益扫描 |
+| `decimation5_s42` | 3 | 控制 100 Hz（默认 10 分频 = 50 Hz） |
+| `reward_still_s42` | 2 | `still` 0.5→2.0、`action_rate` −0.01→−0.02、`effort` −0.002→−0.005 |
+| `reward_config_heavy_s42` | 3 | `configuration` 3.0→6.0、`upright` 2.0→1.0 |
+| `episode15_s42` | 2 | episode 10 s → 15 s |
+| `spawn1m_s42`（排队） | 3 | 落地高度 0.6 → 1.0 m |
+| `ppo64_s42` | 2 | `num_steps_per_env` 32→64、`learning_rate` 3e-4→2e-4 |
+| `ppo_explore_s42`（排队） | 3 | `entropy_coef` 0.005→0.02、`init_noise_std` 0.7→1.0 |
 
-资源约束：0/1 号卡是他人负载、2 号卡跑 AGILE 标准训练，因此本组并行只钉 **GPU3**；每组 2048 envs 的显存与 CPU 占用需先实测再决定同卡并发数（并发上限 4 组）。并发时的已知坑：多个 Kit 实例共用缓存会打日志警告（无害）；**不要并发跑 `prepare`**（资产转换会互相竞争）。
+**CLI 覆盖的边界（实测）**：Hydra 只接受**runner（agent）配置**的覆盖（`agent.*`，如 `agent.petbot_collection.spawn_height=1.0`）；**env 配置字段不被接受**——`rewards.still.weight=2.0` 会报 `Could not override 'rewards.still.weight' … Key 'rewards' is not in struct`。因此奖励、`decimation`、`episode_length_s` 这类 env 字段一律做**代码副本**（改完在副本内 commit 保持干净），只有 actor-critic 侧参数用 `agent.*` 覆盖。
 
-评估：训练结束后对每组用 `scripts/petbot_eval.py`（独立 seed、`split=eval` 初态库）打分，报 `Recovery/success_rate`、`stable_at_end`、`time_to_success_s` 与分类（倒置 / 侧躺 / 已近站立）通过率；只有稳定的组才进入策略导出与 MuJoCo sim2sim。
+复现要点：`prepare`（资产转换）**串行**执行，之后把已备好的资产与初态库拷进各副本——资产身份只含源模型内容、适配器版本与位置增益，不含初态库与奖励，所以只有改了增益或模型、或改了初态/控制率的变体才需要自己重新采集初态库（每组约 5 min）。
+
+并发注意：多个 Kit 实例共用 `cache/kit` 会打 key-value 锁警告（无害）；不要并发跑 `prepare`。
+
+评估：跑满后对每组用 `scripts/petbot_eval.py`（独立 seed、`split=eval` 初态库）打分，报 `Recovery/success_rate`、`stable_at_end`、`time_to_success_s`，并**按初态分类**（倒置 / 侧躺 / 已近站立）拆开看——总成功率含"落地后已近站立"的样本，不能只看总数；只有稳定的组才进入策略导出与 MuJoCo sim2sim。
 
 两处服务器适配（已提交本分支）：
 
