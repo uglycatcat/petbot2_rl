@@ -7,7 +7,7 @@
 - 目标：PetBot（轮足机器狗）在平地上被推倒、滚翻或跌落后，用强化学习策略恢复到默认站立构型并保持稳定。
 - 主线：Isaac Lab + RSL-RL + PPO 训练 → 策略导出 → MuJoCo 做 sim2sim 验证。
 - **已有能力与训练目的**：用户已验证 PetBot 可从任意摔倒姿势，通过几个固定姿态的转换恢复站立（测试细节尚未归档）；RL 用于学习更自然、连贯、平滑的恢复动作。默认轮足构型无需单独训练站立策略；策略采用 **5 路位置 + 2 路速度**混合输出；训练**不依赖参考动作流或示范轨迹数据**，已有固定姿态恢复经验不等同于训练数据。详见[需求基线](docs/current_scope.md#已有能力与强化学习的目的)。
-- **当前阶段：参考试训与 PetBot 首版实现并行准备。** recovery 线已关闭。AGILE 的**标准起身训练已于 2026-10-13 在服务器容器内启动**（`StandUp-T1-v0`、4096 envs、100k iteration、seed 42、tensorboard；日志 `reference_project/agile_env/logs/`，检查点 `reference_project/WBC-AGILE/logs/rsl_rl/stand_up_t1/`，实测 ≈7.4 s/iteration → 约 8.8 天）；robot_lab 容器已就绪但尚未开始训练。已确定以 AGILE 为底座、借鉴 robot_lab 混合动作配置实现 `demo_project/recovery_agile_01/`，无需等待参考试训结束。PetBot 首版代码已在本地实现并推送 `demoproj/recovery_agile_01`，9 项 CPU 测试通过；训练/PhysX 尚未运行，本阶段只交付本地代码，见 [demo 索引](demo_project/README.md)。
+- **当前阶段：参考试训与 PetBot 首版实现并行准备。** recovery 线已关闭。AGILE 的**标准起身训练已于 2026-10-13 在服务器容器内启动**（`StandUp-T1-v0`、4096 envs、100k iteration、seed 42、tensorboard；日志 `reference_project/agile_env/logs/`，检查点 `reference_project/WBC-AGILE/logs/rsl_rl/stand_up_t1/`，实测 ≈7.4 s/iteration → 约 8.8 天）；robot_lab 容器已就绪但尚未开始训练。已确定以 AGILE 为底座、借鉴 robot_lab 混合动作配置实现 `demo_project/recovery_agile_01/`，无需等待参考试训结束。PetBot 首版代码已推送 `demoproj/recovery_agile_01`；2026-10-13 在服务器 `petbot-train` 容器内跑通资产转换、PhysX 导入、pre-learn 与冒烟训练，首版口径按用户决定改为 **2048 envs**，并行多组参数同训（未跑满 iteration、未评估），见 [demo 索引](demo_project/README.md)。
 - **PetBot 与参考项目的本质区别**：PetBot **本来就能轻松站住**（默认站姿是四轮着地的静稳定姿态，站立不需要策略去学）；而 `recovery` 这类轮足翻倒起身项目，研究对象默认**连"站住"都还没解决** —— 它们的站立姿态是要学出来的，所以才有高度 / 姿态塑形、ED-CW 类课程，以及"站住了但还在晃"这种失败模式。**参考项目的奖励权重、课程与成功判据不能直接照搬。**
 
 ## 第一步：判断自己在哪台设备上
@@ -96,6 +96,8 @@
 | 2026-10-13 | 服务器建好 AGILE / robot_lab / PetBot demo 的专用容器（见下几行）；**AGILE 标准起身训练已启动**：`StandUp-T1-v0`、4096 envs、100k iteration、seed 42、tensorboard；实测 ≈7.4 s/iteration（≈8.8 天），倒地库 pre-learn 完成（65536 状态，缓存 16 MB） | AGILE 底座 + robot_lab 混合动作；全方向随机落地沉降后控制；首版训练与 TensorBoard；`demo_project/` + `demoproj/` 分支由 repo 管理并严格双端同步，见[实施约定](docs/engineering_handoff.md#petbot-demo-管理与首版交付2026-10-13-用户确认) |
 
 | 2026-10-13 | 本地实现首个 PetBot demo `recovery_agile_01`，代码推送 `demoproj/recovery_agile_01`（`b009c06`），登记 repo 清单与 demo 索引 | 9 项 CPU 测试、静态检查与语法检查通过；源模型未改，未连接服务器/运行训练；USD/PhysX 和学习效果待验证，见 [demo 说明](demo_project/recovery_agile_01/PETBOT.md) |
+| 2026-10-13 | **服务器验证 PetBot demo**（容器 `petbot-train`）：资产转换、PhysX 导入、任务实例化、pre-learn（默认站姿探针 + 倒地初态采集）、冒烟训练全部跑通；修两处适配后推送 `demoproj/recovery_agile_01`（`5622024`、`c5bc149`）；同步 demo 索引与清单 | 默认站姿实测 0.08427 m、初态库 16384/16384（接受率约 80%）；64 envs 2.7 s/iter、1024 envs 4.0 s/iter（≈8000 steps/s、显存 3.7 GB ⇒ 10000 iteration ≈ 11 h）；两处适配：容器内 git 需复刻宿主相对层级、导入关节名被加 `_1` 后缀；**未跑满 iteration、未评估、未导出**，见 [PETBOT.md](demo_project/recovery_agile_01/PETBOT.md#服务器验证记录2026-10-13) |
+| 2026-10-13 | 用户决定首版训练口径：**2048 envs**（1024 太少），并**并行多组参数同训**，用于一次性比较伺服增益、奖励权重与种子方差 | 见[训练方案](demo_project/recovery_agile_01/PETBOT.md#首版训练方案2026-10-13-用户决定) |
 
 细节写进对应文档，本表只保留一行结论。
 
@@ -105,7 +107,7 @@
 - **已有**：机器人模型（MJCF + 10 个 STL）、参考项目快照、训练服务器上的容器与训练 / 评估 / 渲染链路、recovery 的完整训练与评估结果。
 - **已有恢复能力（用户验证）**：通过几个固定姿态转换实现任意摔倒姿势下的站立恢复；测试细节尚未归档，尚无 RL 自然恢复动作的评估结果。
 - **参考分支**：`refproj/recovery`（上游 recovery + 我们的论文口径补丁，`default.xml` 已指向）、`refproj/recovery-tools`（给 recovery 试训用的脚本、补丁与全部实验定义，见该分支 `tools/recovery_trial/INDEX.md`）、`refproj/agile-tools` 与 `refproj/robot_lab-tools`（两个参考项目容器环境的版本化副本，见各自 `tools/agile_trial/`、`tools/robot_lab_trial/`）。
-- **PetBot 代码已有、运行待验证**：`demo_project/recovery_agile_01/` 的资产适配、混合伺服配置、随机落地初态库、PPO 任务、TensorBoard 指标和独立评估入口；见 [PETBOT.md](demo_project/recovery_agile_01/PETBOT.md)。尚无已训练 PetBot 策略、策略导出或 MuJoCo 策略推理验证。
+- **PetBot 代码已有、服务器链路已跑通**：`demo_project/recovery_agile_01/` 的资产适配、混合伺服配置、随机落地初态库、PPO 任务、TensorBoard 指标和独立评估入口；见 [PETBOT.md](demo_project/recovery_agile_01/PETBOT.md)。尚未跑满 iteration、无独立评估结果、尚无策略导出或 MuJoCo 策略推理验证。
 - PetBot 动作接口（已定）：**5 个关节位置目标（`head` / `left_ear` / `right_ear` / `left_frame` / `right_frame`）+ 2 个后轮速度目标（`left_rear_wheel` / `right_rear_wheel`）**，由仿真内部伺服闭环执行；左右前轮被动；头、耳、车架与身体均可触地支撑。
 
 ## 目录职责
