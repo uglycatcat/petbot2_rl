@@ -8,15 +8,15 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/recovery_agile_01",
-      "verified_commit": "b009c06d359ba6fdce7caaa5864d6941f25009d4",
+      "verified_commit": "5622024fbf8d0f563dc422129333cf8d5b6541ae",
       "upstream_url": "https://github.com/nvidia-isaac/WBC-AGILE.git",
       "upstream_commit": "6830cf995714e81c91ce63247e8e016d36e28f14",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "local_code_checked; simulator_and_training_not_run",
-      "local_validation": "9 CPU tests, ruff and Python syntax checks passed",
+      "status": "server_smoke_verified; iterations_and_evaluation_not_run",
+      "local_validation": "9 CPU tests, ruff and Python syntax checks passed; server container petbot-train: prepare/USD/PhysX/pre-learn passed, smoke train 64 envs 2.7 s/iter and 1024 envs 4.0 s/iter (~8000 steps/s, 3.7 GB)",
       "task": "PetBot-Recovery-AGILE-v0",
       "usage": "PETBOT.md"
     }
