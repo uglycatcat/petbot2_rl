@@ -16,7 +16,7 @@ PetBot 在平地运动时可能被推倒或从高处落下。目标是从多样�
 
 ## PetBot demo 管理与首版交付（2026-10-13 用户确认）
 
-首个项目为 `demo_project/recovery_agile_01/`，基于当前 repo 清单锁定的 WBC-AGILE `6830cf995714e81c91ce63247e8e016d36e28f14` 派生，借鉴 robot_lab 的位置/速度 action 分组；不拼接两套训练框架。参考项目试训与 PetBot 实现可以并行，不以参考项目完整复现通过为开工前提。用户同步服务器已分别在独立容器开始 AGILE 和 robot_lab 参考训练、版本为当前 repo 清单版本；这些运行进展尚未推送，本地未核验结果。
+首个项目为 `demo_project/recovery_agile_01/`，基于当前 repo 清单锁定的 WBC-AGILE `6830cf995714e81c91ce63247e8e016d36e28f14` 派生，借鉴 robot_lab 的位置/速度 action 分组；不拼接两套训练框架。参考项目试训与 PetBot 实现可以并行，不以参考项目完整复现通过为开工前提。服务器已为 AGILE 与 robot_lab 各建独立容器并自检通过（2026-10-13 服务器实测：`StandUp-T1-v0` / Go2W 环境创建成功），**尚未开始参考训练**（同日实测容器空闲、GPU 2/3 利用率 0%）。
 
 ### 版本管理与双端协作
 
