@@ -104,11 +104,21 @@ repo sync                 # 物化/更新全部；只取某类：repo sync -g re
 
 跑 recovery 试训时写的脚本、补丁与全部实验定义，**实际使用副本**在训练服务器的 `reference_project/recovery_env/`（被 `.gitignore` 排除、不进版本管理）；**版本化记录**在本仓库的参考分支 **`refproj/recovery-tools`**（路径 `tools/recovery_trial/`），内容：环境入口与容器编排、评估（判据 A/B/C）、批量评估、`summary.sh`、看门狗与自动续训、Go2-W 转换与官方权重验证、**每个实验的完整 diff**（`variant_diffs/*.patch`）、关键结果 JSON 与数字留档。
 
-这些工具是**给 recovery 这个参考项目用的**，因此随它一起放在 `refproj/` 命名空间下。项目不在机器之间搬（工作区由 `git pull` 维护，参考项目由 `repo sync` 按 `default.xml` 物化），所以**不需要 checkout**；要看内容或历史直接用：
+### 其它参考项目的容器环境（2026-10-13 建好）
+
+| 参考项目 | 实际使用副本 | 版本化分支（`tools/<名字>_trial/`） | 容器 | 自检 |
+|---|---|---|---|---|
+| WBC-AGILE（`StandUp-T1-v0`） | `reference_project/agile_env/` | **`refproj/agile-tools`**（`tools/agile_trial/`） | `agile-train`（Isaac Lab 3.0.0-beta2 基础镜像） | `./env.sh verify` → PASS：`StandUp-T1-v0` 环境创建成功，action_dim=23 = 全关节位置 + `lift` |
+| robot_lab（Go2W 混合动作参考） | `reference_project/robot_lab_env/` | **`refproj/robot_lab-tools`**（`tools/robot_lab_trial/`） | `robotlab-train`（复用本机 `isaac-lab:2.3.2`） | `./env.sh verify` → PASS：Go2W 环境创建成功，action_dim=16 = 腿位置 + 轮速 |
+
+三个项目的容器**彼此独立、不混用**（各自的容器名、挂载点与工作目录）；用法与实测结果见各自目录的 `README.md`。
+
+这些工具是**给对应参考项目用的**，因此随它一起放在 `refproj/` 命名空间下。项目不在机器之间搬（工作区由 `git pull` 维护，参考项目由 `repo sync` 按 `default.xml` 物化），所以**不需要 checkout**；要看内容或历史直接用：
 
 ```bash
-git show refproj/recovery-tools:tools/recovery_trial/env.sh   # 看单个文件
-git log --oneline refproj/recovery-tools                      # 看改动历史
+git show refproj/recovery-tools:tools/recovery_trial/env.sh      # 看单个文件
+git show refproj/agile-tools:tools/agile_trial/env.sh
+git log --oneline refproj/agile-tools                            # 看改动历史
 ```
 
 内容清单与实验代际说明见该分支的 `tools/recovery_trial/INDEX.md`。
