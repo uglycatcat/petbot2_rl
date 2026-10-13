@@ -22,3 +22,8 @@ fallen_states_cache/
 docs/build/
 .venv/
 .agile_python/
+
+# PetBot generated assets, state libraries and local checks
+/artifacts/
+/.pytest_cache/
+/.ruff_cache/

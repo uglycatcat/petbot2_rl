@@ -1,0 +1,52 @@
+"""Called by AGILE train/play before the first policy rollout."""
+
+from __future__ import annotations
+
+import subprocess
+from dataclasses import asdict
+
+import torch
+
+from .collection import collect, probe_standing
+from .model import JOINT_ORDER, POSITION_JOINTS, PROJECT_ROOT, REAR_WHEELS, load_model
+
+
+def pre_learn(env, task_name, agent_cfg):
+    def git(*args):
+        return subprocess.check_output(["git", "-C", str(PROJECT_ROOT), *args], text=True).strip()
+
+    # A run must reference a reproducible demo revision, including the first run.
+    if git("status", "--porcelain"):
+        raise RuntimeError("Commit the demo changes before starting a run; use a fixed, clean code checkout.")
+    robot = env.scene["robot"]
+    if set(robot.joint_names) != set(JOINT_ORDER) or env.action_manager.total_action_dim != 7:
+        raise RuntimeError(f"Unexpected imported articulation/action layout: {robot.joint_names}")
+    position = env.action_manager.get_term("joint_position")
+    rear = env.action_manager.get_term("rear_velocity")
+    if position._joint_names != list(POSITION_JOINTS) or rear._joint_names != list(REAR_WHEELS):
+        raise RuntimeError("Resolved action order differs from PetBot control contract.")
+    env.petbot_standing_height = probe_standing(env)
+    cfg = agent_cfg.petbot_collection
+    env.petbot_dataset, metadata, relative_path = collect(env, cfg)
+    env.petbot_reset_rng = torch.Generator().manual_seed(agent_cfg.seed + (100000 if cfg.split == "eval" else 0))
+    env.petbot_ready = True
+    env.reset()
+
+    env.petbot_provenance = {
+        "task": task_name,
+        "demo_commit": git("rev-parse", "HEAD"),
+        "working_tree_dirty": False,
+        "source_model": load_model(),
+        "standing_height_m": env.petbot_standing_height,
+        "action_order": list(POSITION_JOINTS + REAR_WHEELS),
+        "observation_joint_velocity_order": list(JOINT_ORDER),
+        "actor_dim": 27,
+        "critic_dim": 35,
+        "physics_dt": env.physics_dt,
+        "policy_dt": env.step_dt,
+        "success_thresholds": asdict(env.cfg.success),
+        "initial_states": relative_path,
+        "collection": metadata,
+    }
+    env.petbot_source_diff = git("diff", "HEAD", "--", ".")
+    print(f"[PetBot] default standing height: {env.petbot_standing_height:.5f} m; initial states: {relative_path}")

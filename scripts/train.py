@@ -209,8 +209,16 @@ def main(
     dump_yaml(os.path.join(log_dir, "params", "env.yaml"), env_cfg)
     dump_yaml(os.path.join(log_dir, "params", "agent.yaml"), agent_cfg)
 
+    # PetBot records the source model, measured stance and initial-state identity with each run.
+    if hasattr(env.unwrapped, "petbot_provenance"):
+        import json
+        Path(log_dir, "params", "petbot.json").write_text(
+            json.dumps(env.unwrapped.petbot_provenance, indent=2) + "\n"
+        )
+        Path(log_dir, "params", "petbot_source.diff").write_text(env.unwrapped.petbot_source_diff)
+
     # run training
-    runner.learn(num_learning_iterations=agent_cfg.max_iterations, init_at_random_ep_len=True)
+    runner.learn(num_learning_iterations=agent_cfg.max_iterations, init_at_random_ep_len=not hasattr(env.unwrapped, "petbot_provenance"))
 
     # close the simulator
     env.close()
