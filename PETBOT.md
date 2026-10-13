@@ -15,7 +15,26 @@
 | 默认站姿探针 | 通过（≥90% 环境连续稳定 0.5 s），实测默认站姿高度 **0.08427 m** |
 | 倒地初态采集 | 64 envs：256/256（5 批）；1024 envs：16384/16384（20 批，接受率约 80%），缓存于 `artifacts/fallen_states/` |
 | 冒烟训练 64 envs × 5 iter | 通过：约 755 steps/s、2.7 s/iteration，写出 `model_0/model_4.pt` 与 TensorBoard 事件，`episode` 结束前 `Recovery/*` 与奖励项均正常记录 |
-| 首版规模 1024 envs × 5 iter | 通过：约 8000 steps/s、4.0 s/iteration，单卡（RTX 4090）显存峰值约 3.7 GB；据此推算 10000 iteration ≈ 11 h，另有一次性采集约 6 min |
+| 首版规模 1024 envs × 5 iter | 通过：约 8000 steps/s、4.0 s/iteration，单卡（RTX 4090）显存峰值约 3.7 GB；据此推算 10000 iteration ≈ 11 h，另有一次性采集约 6 min。**首版口径已按用户决定改为 2048 envs**（见下） |
+
+## 首版训练方案（2026-10-13 用户决定）
+
+口径：**2048 envs × 10000 iteration**（1024 太少），多组参数**并行同训**以一次性看清各因素影响；每组跑在**固定 commit 的独立副本**里（`git clone` 到 `demo_project/runs/<变体>/`，禁止对运行副本 `repo sync`），独立日志与检查点，TensorBoard 分别指向各组目录。
+
+扫描轴（每组只动一个因素，便于归因）：
+
+| 变体 | 相对默认的改动 | 目的 | 代价 |
+|---|---|---|---|
+| `base_s42` | 无（默认伺服增益 / 奖励 / 初态与容差） | 基线口径 | — |
+| `base_s43` | 无，仅 `--seed 43` | 量化种子方差（参考项目教训：同配置可差数倍） | — |
+| `gains2x_s42` | `POSITION_KP/KD` 提高到约 2 倍 | 五个位置增益是唯一未实测的工程初值，决定位置伺服响应与抖动 | 需重跑 `prepare`（资产身份含增益）+ 重新采集初态库 |
+| `reward_still_s42` | `still` 0.5→2.0、`action_rate` −0.01→−0.02、`effort` −0.002→−0.005（CLI 覆盖） | 针对"站住但晃"这一类失败模式 | 仅训练，无额外采集 |
+| `spawn1m_s42`（可选） | `spawn_height` 0.6→1.0 m（CLI 覆盖） | 更剧烈的落地初态，检验恢复范围 | 重新采集初态库 |
+| `ppo64_s42`（可选） | `num_steps_per_env` 32→64、`learning_rate` 3e-4→2e-4 | 检验采样效率与收敛速度 | — |
+
+资源约束：0/1 号卡是他人负载、2 号卡跑 AGILE 标准训练，因此本组并行只钉 **GPU3**；每组 2048 envs 的显存与 CPU 占用需先实测再决定同卡并发数（并发上限 4 组）。并发时的已知坑：多个 Kit 实例共用缓存会打日志警告（无害）；**不要并发跑 `prepare`**（资产转换会互相竞争）。
+
+评估：训练结束后对每组用 `scripts/petbot_eval.py`（独立 seed、`split=eval` 初态库）打分，报 `Recovery/success_rate`、`stable_at_end`、`time_to_success_s` 与分类（倒置 / 侧躺 / 已近站立）通过率；只有稳定的组才进入策略导出与 MuJoCo sim2sim。
 
 两处服务器适配（已提交本分支）：
 
@@ -49,9 +68,9 @@ python scripts/train.py --task PetBot-Recovery-AGILE-v0 --headless \
   --num_envs 64 --max_iterations 5 --logger tensorboard \
   agent.petbot_collection.num_states=256
 
-# 正式首版初值，尚未验证吞吐和显存。
+# 正式首版口径（2026-10-13 用户决定：2048 envs）。1024 envs 实测 4.0 s/iteration、显存 3.7 GB。
 python scripts/train.py --task PetBot-Recovery-AGILE-v0 --headless \
-  --num_envs 1024 --max_iterations 10000 --seed 42 --logger tensorboard
+  --num_envs 2048 --max_iterations 10000 --seed 42 --logger tensorboard
 
 # RSL-RL 续训，iterations 是本次继续学习的迭代数。
 python scripts/train.py --task PetBot-Recovery-AGILE-v0 --headless \
