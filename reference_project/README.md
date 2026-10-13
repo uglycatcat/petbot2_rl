@@ -1,8 +1,8 @@
 # 本地参考项目
 
-此处按仓库根 [default.xml](../default.xml) 这份 repo 清单物化上游快照（浅克隆、锁在确定 commit 上）。**清单里有 10 个项目（9 个上游 + 论文作者的部署栈 Recovery_go2w）；当前训练服务器上实际物化的只有 `recovery` 与 `Recovery_go2w`**，其余 8 个需要 `repo sync` 才会出现 —— 因此在未物化的机器上，本文件里指向那 8 个项目的链接是死链，属于预期现象。
+此处按仓库根 [default.xml](../default.xml) 这份 repo 清单物化上游快照（浅克隆、锁在确定 commit 上）。**清单里有 10 个项目（9 个上游 + 论文作者的部署栈 Recovery_go2w）；训练服务器上 10 个已全部物化**（2026-10-13 `repo sync` 完成，各 checkout 的 HEAD 与清单 pin 逐一核对一致）。未执行 `repo sync` 的机器上只有部分项目，那里指向缺失项目的链接是死链，属于预期现象。
 
-除 rl_sar、recovery 外只保存调研源码，不安装各仓库依赖，也不代表这些项目能直接解决 PetBot 的完整翻倒恢复。rl_sar 已构建并运行，用于验证「训练产物离开 Isaac Sim 后还能看到效果」这条链路（在桌面机上做，因为 MuJoCo 渲染是桌面机的职责）；recovery 正在训练服务器上试训，汇总见 [recovery 试训汇总](../docs/reference_recovery_validation.md)。
+除 rl_sar、recovery 外只保存调研源码，不安装各仓库依赖，也不代表这些项目能直接解决 PetBot 的完整翻倒恢复。rl_sar 已构建并运行，用于验证「训练产物离开 Isaac Sim 后还能看到效果」这条链路（在桌面机上做，因为 MuJoCo 渲染是桌面机的职责）；recovery 已在训练服务器上试训并**收官**（2026-10-13 关闭本条线），汇总见 [recovery 试训汇总](../docs/reference_recovery_validation.md)。
 
 ## 选用关系
 
@@ -61,7 +61,8 @@
 ## 本地使用与版本管理
 
 - 使用浅克隆（depth 1、single branch）；除 rl_sar 外未初始化 submodule，并跳过 Git LFS 对象下载。源码可阅读，部分大型资产或权重可能仍是 LFS 指针，不保证每个上游项目都能直接启动。
-- rl_sar 已初始化其 6 个 submodule（各厂商 robot SDK 与 joystick），并下载了运行库与机器人描述（`library/`、`cmake_build/`、`src/rl_sar_zoo/`），在本目录中既可读也可跑。
+- **LFS 指针实测（2026-10-13，服务器）**：WBC-AGILE 的 `agile/data/policy/**/*.pt` 与 `docs/videos/*.gif/**/*.mp4` 都是 131 B 指针，不用来推理；其 T1 资产走 Isaac Nucleus（`ISAAC_NUCLEUS_DIR`），另有 `agile-download-assets`（`scripts` 入口 `agile.evaluation.external_assets`）从 `BoosterRobotics/booster_assets`、`unitreerobotics/unitree_mujoco` 稀疏拉取仿真资产。
+- **桌面机**上的 rl_sar 已初始化其 6 个 submodule（各厂商 robot SDK 与 joystick），并下载了运行库与机器人描述（`library/`、`cmake_build/`、`src/rl_sar_zoo/`），在那里既可读也可跑；训练服务器 `repo sync` 得到的 rl_sar 只有源码（submodule 未初始化、无 `library/` 与 `cmake_build/`），要跑需按 [rl_sar 构建与验证记录](#rl_sar-构建与验证记录)重新构建。
 - recovery 无 submodule 与 LFS 依赖，其 `thunder_recovery` 包已在容器内以 `pip install -e .` 安装。
 - 子目录保留各自 `.git`，由本目录 [.gitignore](.gitignore) 排除，避免作为主仓库的嵌套仓库提交；主仓库只管理本索引、manifest 与忽略规则。
 - 参考项目 checkout **不随主仓库同步**。可按 manifest 记录的上游 URL、分支与 commit 重新克隆；要严格恢复旧快照，应 fetch 对应 commit 后 checkout，并用 `git rev-parse HEAD` 对照。
