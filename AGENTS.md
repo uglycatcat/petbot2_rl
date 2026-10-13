@@ -7,7 +7,7 @@
 - 目标：PetBot（轮足机器狗）在平地上被推倒、滚翻或跌落后，用强化学习策略恢复到默认站立构型并保持稳定。
 - 主线：Isaac Lab + RSL-RL + PPO 训练 → 策略导出 → MuJoCo 做 sim2sim 验证。
 - **已有能力与训练目的**：用户已验证 PetBot 可从任意摔倒姿势，通过几个固定姿态的转换恢复站立（测试细节尚未归档）；RL 用于学习更自然、连贯、平滑的恢复动作。默认轮足构型无需单独训练站立策略；策略采用 **5 路位置 + 2 路速度**混合输出；训练**不依赖参考动作流或示范轨迹数据**，已有固定姿态恢复经验不等同于训练数据。详见[需求基线](docs/current_scope.md#已有能力与强化学习的目的)。
-- **当前阶段：试训参考项目。** `recovery` 试训已**收官并关闭**（2026-10-13：三代 15+ 实验未达论文判据，卡点"站定"，判断项目本身价值有限、停止投入；见[试训记录](docs/reference_recovery_validation.md#收官结论2026-10-13用户决定)）。下一步在训练服务器上试训下一个参考项目（首选候选 **WBC-AGILE / `StandUp-T1-v0`**，尚未实测，见[选型建议](docs/reference_selection.md)），之后才轮到 PetBot 自身的任务与训练；**尚未开始 PetBot 训练**。
+- **当前阶段：参考试训与 PetBot 首版实现并行准备。** recovery 线已关闭。2026-10-13 用户同步：服务器已在各自容器内开始 AGILE 与 robot_lab 参考训练，版本为当前 repo 清单版本，相关进展尚未推送；本地未核验运行结果。已确定以 AGILE 为底座、借鉴 robot_lab 混合动作配置实现 `demo_project/recovery_agile_01/`，无需等待参考试训结束。PetBot 首版代码已在本地实现并推送 `demoproj/recovery_agile_01`，9 项 CPU 测试通过；训练/PhysX 尚未运行，本阶段只交付本地代码，见 [demo 索引](demo_project/README.md)。
 - **PetBot 与参考项目的本质区别**：PetBot **本来就能轻松站住**（默认站姿是四轮着地的静稳定姿态，站立不需要策略去学）；而 `recovery` 这类轮足翻倒起身项目，研究对象默认**连"站住"都还没解决** —— 它们的站立姿态是要学出来的，所以才有高度 / 姿态塑形、ED-CW 类课程，以及"站住了但还在晃"这种失败模式。**参考项目的奖励权重、课程与成功判据不能直接照搬。**
 
 ## 第一步：判断自己在哪台设备上
@@ -50,6 +50,8 @@
 12. **参考项目由 `default.xml` 清单管理**：`reference_project/` 下的项目通过 `repo` 物化。新增、删除或改变某个项目的 pin，必须在同一次改动中同步更新 `default.xml` 与 `reference_project/manifest.json`，保持清单与目录一致。
 13. **参考项目的本地修改不能丢**：在服务器上跑 demo 时若改了某个参考项目的代码，要把**该项目**提交到本仓库的一个专用分支（命名 `refproj/<项目名>`，如 `refproj/recovery`），并把 `default.xml` 里该项目的 `remote`/`revision` 指向那条分支；在完成这一步之前，不要删除或覆盖那个 checkout。**为某个参考项目写的工具、脚本与实验定义**同样推到该项目的 `refproj/` 分支（如 `refproj/recovery-tools`，内容在 `tools/recovery_trial/`）；这类分支不写进 `default.xml`（它不是上游项目）。参考项目由 `repo sync` 按 `default.xml` 物化，**不要为取用参考项目或工具分支而切换主仓库工作区**；这不限制第 1 条允许的任务分支。
 
+14. **PetBot demo 独立管理**：`demo_project/<项目名>/` 由同一 `default.xml` 通过 repo 物化，代码在 `demoproj/<项目名>` 分支版本化，main 不重复跟踪嵌套 checkout。修改前同步、完整修改后及时提交并推送；双端同一 demo 单端写入，训练固定 commit。清单、demo 索引与 manifest 同步维护；细则见[工程实施说明](docs/engineering_handoff.md#版本管理与双端协作)。
+
 ## 沟通与交付
 
 - 只要结论 + 最小必要证据，不要过程叙述，不要重复验证已经验证过的东西。
@@ -90,15 +92,19 @@
 | 2026-10-13 | 文档自检（收官后）：对照 git 与磁盘修正 3 处过时表述 —— 工具分支改动"尚未推送"（实为已推送，tip `06f8fd7`）、`p3`/`w3` 的 C2/D "待补"（实为已完成、6 实验三种口径全 0.00%）、种子方差"6 倍 / 11.5% vs 65.6%"（终局为 8 倍 / 7.4% vs 63.7%） | [recovery 试训记录](docs/reference_recovery_validation.md) |
 | 2026-10-13 | **参考项目在服务器全部物化**：首次实际执行 `repo sync`（`-j4`，排除已存在的 recovery/Recovery_go2w），8 个待物化项目全部到位，10 个 checkout 的 HEAD 与 `default.xml` pin 逐一核对一致；同步记录 WBC-AGILE 的预训练权重与视频只是 LFS 指针（T1 资产走 Nucleus + `agile-download-assets`）、服务器上的 rl_sar 无 submodule/构建产物 | [参考项目索引](reference_project/README.md) |
 
+| 2026-10-13 | 用户同步 AGILE / robot_lab 已在服务器各自容器开始参考训练（进展未推送，未本地核验）；确认并行准备 PetBot 首个 demo `recovery_agile_01` | AGILE 底座 + robot_lab 混合动作；全方向随机落地沉降后控制；首版训练与 TensorBoard；`demo_project/` + `demoproj/` 分支由 repo 管理并严格双端同步，见[实施约定](docs/engineering_handoff.md#petbot-demo-管理与首版交付2026-10-13-用户确认) |
+
+| 2026-10-13 | 本地实现首个 PetBot demo `recovery_agile_01`，代码推送 `demoproj/recovery_agile_01`（`b009c06`），登记 repo 清单与 demo 索引 | 9 项 CPU 测试、静态检查与语法检查通过；源模型未改，未连接服务器/运行训练；USD/PhysX 和学习效果待验证，见 [demo 说明](demo_project/recovery_agile_01/PETBOT.md) |
+
 细节写进对应文档，本表只保留一行结论。
 
 ## 当前实现状态
 
-- **参考项目试训状态**：**recovery 线已关闭（2026-10-13）** —— 三代 15+ 实验在三种判据下全部 0.00%，卡点定位为"站定"（速度项通过率 0~0.6%）；判断项目本身价值有限、停止投入。容器 `recovery-train` / `recovery-vis` **停用未删除**，检查点、日志与工具保留在 `reference_project/` 下。下一个待试项目见[参考项目选择建议](docs/reference_selection.md)（首选 WBC-AGILE / `StandUp-T1-v0`，未实测）。
+- **参考项目与 PetBot 状态**：recovery 已关闭；AGILE 与 robot_lab 已开始服务器容器参考训练（用户同步，运行结果未核验）。PetBot 首个 demo `recovery_agile_01` 已实现本地代码并备份，尚未验证 PhysX 或启动训练；详见[实施约定](docs/engineering_handoff.md#petbot-demo-管理与首版交付2026-10-13-用户确认)。
 - **已有**：机器人模型（MJCF + 10 个 STL）、参考项目快照、训练服务器上的容器与训练 / 评估 / 渲染链路、recovery 的完整训练与评估结果。
 - **已有恢复能力（用户验证）**：通过几个固定姿态转换实现任意摔倒姿势下的站立恢复；测试细节尚未归档，尚无 RL 自然恢复动作的评估结果。
 - **参考分支**：`refproj/recovery`（上游 recovery + 我们的论文口径补丁，`default.xml` 已指向）、`refproj/recovery-tools`（给 recovery 试训用的脚本、补丁与全部实验定义，见该分支 `tools/recovery_trial/INDEX.md`）。
-- **尚无**：PetBot 的 Isaac Lab 任务、恢复策略、策略导出、MuJoCo 策略推理入口。
+- **PetBot 代码已有、运行待验证**：`demo_project/recovery_agile_01/` 的资产适配、混合伺服配置、随机落地初态库、PPO 任务、TensorBoard 指标和独立评估入口；见 [PETBOT.md](demo_project/recovery_agile_01/PETBOT.md)。尚无已训练 PetBot 策略、策略导出或 MuJoCo 策略推理验证。
 - PetBot 动作接口（已定）：**5 个关节位置目标（`head` / `left_ear` / `right_ear` / `left_frame` / `right_frame`）+ 2 个后轮速度目标（`left_rear_wheel` / `right_rear_wheel`）**，由仿真内部伺服闭环执行；左右前轮被动；头、耳、车架与身体均可触地支撑。
 
 ## 目录职责
@@ -107,12 +113,13 @@
 |---|---|---|
 | `robot_description/` | 机器人模型来源（MJCF + STL 网格） | 模型、物理参数与网格**只读**；`README.md` 的文字描述可更新 |
 | `docs/` | 项目文档：需求、工程、参考项目进度 | 可改 |
-| `reference_project/` | 上游快照与训练产物 | 不受版本管理；但**不放 PetBot 自有的唯一副本** |
+| `reference_project/` | 上游快照与训练产物 | 不受主线版本管理；但**不放 PetBot 自有的唯一副本** |
+| `demo_project/` | PetBot 自有实验项目，由 repo 物化 | 嵌套代码在 `demoproj/` 分支版本化，清单与索引在 main |
 | `robot_controller_demo/` | 早期手动键盘 demo | **已废弃**：AI 无需阅读、参考或运行 |
 | `AGENTS.md` / `README.md` | agent 入口 / 人类入口 | 可改 |
 
 ## 检查与交接
 
-- 仓库当前**没有需要执行的自动化测试**；`robot_controller_demo/` 下的测试属于已废弃 demo，不必运行。
+- demo 的本地测试：在 `demo_project/recovery_agile_01/` 运行 `python -m pytest -q --confcutdir=petbot_tests petbot_tests`（CPU Torch / MuJoCo 等依赖见 PETBOT.md）；它不启动 Isaac Sim 或训练。`robot_controller_demo/` 下的旧测试不必运行。
 - 每次工作结束前：核对重要信息与进展是否已同步至本文件「进度报告」及对应主题文档；实现状态发生变化时同步更新「当前实现状态」。明确区分用户确认、实测与未验证内容；无新增重要信息时无需为留痕而改文档。
 - `docs/reports/` 是 2026-09-24 的历史调研资料，只作模型与文献追溯，不代表当前方案。

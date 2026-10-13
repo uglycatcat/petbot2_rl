@@ -38,3 +38,6 @@ events.out.tfevents.*
 Thumbs.db
 *.swp
 *.swo
+
+# PetBot demo checkouts are versioned on demoproj/* and managed by repo.
+/demo_project/*/

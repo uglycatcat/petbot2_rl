@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  参考项目清单（repo manifest）。
+  参考项目与 PetBot demo 清单（repo manifest）。
 
-  用途：统一管理 reference_project/ 下的多个上游仓库 —— 一条命令物化 / 更新全部，
-  并用 revision 把每个项目锁在确定的 commit 上。
+  用途：统一管理 reference_project/ 的上游仓库和 demo_project/ 的实验项目 —— 一条命令物化 / 更新全部，
+  并用 revision 指定上游 commit 或我方专用分支。
 
   用法（在本仓库根目录执行）：
       repo init -u <本仓库的远端 URL> -m default.xml
       repo sync
 
-  被管理的项目会检出到 reference_project/<name>/（该目录被 .gitignore 排除）。
+  项目按 path 检出到 reference_project/ 或 demo_project/ 的子目录（被主线 .gitignore 排除）。
 
   注意：clone-depth 只对 <project> 生效，写在 <default> 上会被 repo 忽略（已实测）。
 
@@ -17,17 +17,26 @@
   - 新增 / 删除 / 改变某个参考项目的 pin，必须在同一次改动中更新本文件与 reference_project/manifest.json。
   - 如果某个项目被我们改过（补丁 / 魔改），把改后的内容推到本仓库的一个专用分支，
     再把该项目的 remote/revision 指向那条分支，这样 repo sync 能直接拿到修改后的版本。
-    分支命名约定：refproj/<项目名>，例如 refproj/recovery。
+    参考分支命名 refproj/<项目名>，自有 demo 分支命名 demoproj/<项目名>。
+  - demo 变更同步更新 demo_project/manifest.json；初始分支必须先推送后登记清单。
   - 我方自建的工具、脚本与实验定义也在同一命名空间下备份（例如 refproj/recovery-tools，
     内容在 tools/recovery_trial/），但它们不是上游项目，因此不写进本清单。
 -->
 <manifest>
 
   <remote name="github" fetch="https://github.com/" review="https://github.com/" />
-  <!-- 我们自己的仓库：用于存放被改过的参考项目（refproj/* 分支） -->
+  <!-- 我们自己的仓库：用于存放参考项目修改（refproj/*）和自有实验（demoproj/*） -->
   <remote name="ours" fetch="https://github.com/uglycatcat/" review="https://github.com/" />
 
   <default remote="github" revision="main" sync-j="4" />
+
+  <!-- PetBot 自有实验：代码已推送到专用分支；开发 checkout 保留完整历史，便于提交/推送。
+       同步来源与版本记录见 demo_project/manifest.json。禁止直接同步正在训练的代码副本。 -->
+  <project name="petbot2_rl"
+           path="demo_project/recovery_agile_01"
+           remote="ours"
+           revision="demoproj/recovery_agile_01"
+           groups="demo" />
 
   <!-- 训练框架 / 工程参考 -->
   <project name="fan-ziqi/robot_lab"
