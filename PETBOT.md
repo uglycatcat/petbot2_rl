@@ -5,7 +5,22 @@
 
 ## 当前验证边界
 
-本阶段只在桌面编写与检查代码，不连接服务器、不启动训练。CPU 测试覆盖源模型/派生模型物理参数一致性、动作配置、SO(3) 采样、成功保持、采集伺服关闭恢复及重置日志。**USD 转换、PhysX 导入与接触、任务实例化和训练尚需服务器容器验证**；不能据此宣称训练已跑通或策略已有效。
+2026-10-13 在训练服务器 `petbot-train` 容器内验证：**USD 转换、PhysX 导入、任务实例化、pre-learn（默认站姿探针 + 倒地初态采集）与冒烟训练全部跑通**。仍未验证的是训练效果本身——没有跑满 iteration、没有独立评估、没有策略导出或 MuJoCo 推理，因此不能宣称策略有效。
+
+### 服务器验证记录（2026-10-13）
+
+| 步骤 | 结果 |
+|---|---|
+| `prepare --headless` | 通过。派生资产 `artifacts/petbot_asset/<identity>/`：USD `usd/robot_description/robot_description.usda`、11 个刚体、质量 **1.65254 kg**（与 MJCF 一致）、9 个关节名等于契约名 |
+| 默认站姿探针 | 通过（≥90% 环境连续稳定 0.5 s），实测默认站姿高度 **0.08427 m** |
+| 倒地初态采集 | 64 envs：256/256（5 批）；1024 envs：16384/16384（20 批，接受率约 80%），缓存于 `artifacts/fallen_states/` |
+| 冒烟训练 64 envs × 5 iter | 通过：约 755 steps/s、2.7 s/iteration，写出 `model_0/model_4.pt` 与 TensorBoard 事件，`episode` 结束前 `Recovery/*` 与奖励项均正常记录 |
+| 首版规模 1024 envs × 5 iter | 通过：约 8000 steps/s、4.0 s/iteration，单卡（RTX 4090）显存峰值约 3.7 GB；据此推算 10000 iteration ≈ 11 h，另有一次性采集约 6 min |
+
+两处服务器适配（已提交本分支）：
+
+1. **容器内 git 可用性**：本 demo 的 `.git` 是 repo 的**相对**符号链接（`../../.repo/projects/demo_project/...`），bare repo 的 `objects/hooks/rr-cache` 又指向 `../../../project-objects/petbot2_rl.git/...`，而 `pre_learn` 开头的脏树检查会调用 git。容器内必须复刻宿主相对层级（demo 挂到 `/workspace/demo_project/recovery_agile_01`，并挂 `/workspace/.repo/projects/demo_project`、`/workspace/.repo/project-objects`），否则训练在 pre_learn 处直接失败。
+2. **导入关节名**：Lab 3 的 MJCF 导入器在关节与所在 body 下**同名的 geom prim** 重名时给关节加 `_1` 后缀（本模型 9 个关节全部如此），任务会在 `init_state.joint_pos` 的正则匹配处报错。`adapt_usd` 现在只改 USD 的 prim 命名：把同名 geom 让到 `<name>_geom`，再把关节改回契约名，并校验非 fixed 关节名集合等于 `JOINT_ORDER`；几何、碰撞与物理参数不变（派生 MJCF 的 `worldbody` 与源保持逐字节一致）。
 
 ## 目录与版本
 
@@ -16,9 +31,9 @@
 - 原始 MJCF/STL 从工作区根的 `robot_description/` **只读**加载。可以整体挂载工作区；单独挂载源模型时设置 `PETBOT_MODEL_DIR`。代码无宿主绝对路径。
 - demo 分支 `demoproj/recovery_agile_01`，由主仓库 `default.xml` 检出到 `demo_project/recovery_agile_01`。修改前同步，完整修改后提交推送；同一 demo 单端修改，在跑实验使用固定 commit 的独立副本。禁止对运行副本直接 `repo sync`。训练入口在采集前拒绝有未提交改动的 demo。
 
-## 容器内使用（本次不执行）
+## 容器内使用
 
-使用与上游 pin 匹配的 Python 3.12 / Isaac Lab 3.0.0b2 / Isaac Sim 6 / RSL-RL 5.4.1 环境；安装见原 README、pyproject.toml、uv.lock 和官方 workflows/Dockerfile。必须让容器导入**当前 demo**的 agile 包，而不是 reference_project 下的另一份；可在当前目录 `python -m pip install --no-deps -e .`，并运行上游 `python scripts/verify_rsl_rl.py` 核查补丁。首版不额外修改依赖锁。
+使用与上游 pin 匹配的 Python 3.12 / Isaac Lab 3.0.0b2 / Isaac Sim 6 / RSL-RL 5.4.1 环境；安装见原 README、pyproject.toml、uv.lock 和官方 workflows/Dockerfile。必须让容器导入**当前 demo**的 agile 包，而不是 reference_project 下的另一份；可在当前目录 `python -m pip install --no-deps -e .`，并运行上游 `python scripts/verify_rsl_rl.py` 核查补丁。首版不额外修改依赖锁。训练容器与挂载约定见工作区 `demo_project/demo_env/env.sh`（未纳入版本管理）；容器以 root 运行（3.0.0-beta2 镜像默认 uid 1000，否则写不了宿主属主的 checkout），因此生成的 `artifacts/`、`logs/` 在宿主侧属于 root，从宿主删除需经由容器执行。
 
 在 demo 根目录运行：
 
@@ -73,7 +88,7 @@ actor 为 27 维：本体角速度×0.2、投影重力、五关节相对默认�
 
 ## 模型转换边界
 
-派生 MJCF 只更换五个 motor 为原生 position servo，保留源力矩上限、几何/质量/惯量/关节参数和接触规则。USD 使用凸分解碰撞体，导入后检查总质量和轮名称，明确过滤轮子与机器人自身的碰撞。PhysX 不完全等价于 MuJoCo：用 minimum 材料组合匹配各部位对地滑动摩擦（机体/前轮 0.1、后轮 1.4），自接触摩擦、扭转/滚动摩擦和凸分解碰撞几何需要后续检验；这是转换限制，不是源模型调参。若模型或转换代码改变，必须重新生成资产和初态库。
+派生 MJCF 只更换五个 motor 为原生 position servo，保留源力矩上限、几何/质量/惯量/关节参数和接触规则。USD 使用凸分解碰撞体，导入后检查总质量和轮名称，明确过滤轮子与机器人自身的碰撞；导入器给同名关节加的 `_1` 后缀在 `adapt_usd` 里通过改名同名 geom prim 消除（见「服务器验证记录」）。PhysX 不完全等价于 MuJoCo：用 minimum 材料组合匹配各部位对地滑动摩擦（机体/前轮 0.1、后轮 1.4），自接触摩擦、扭转/滚动摩擦和凸分解碰撞几何需要后续检验；这是转换限制，不是源模型调参。若模型或转换代码改变，必须重新生成资产和初态库。
 
 ## 本地检查
 
