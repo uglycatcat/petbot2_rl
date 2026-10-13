@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from .model import (
+    JOINT_ORDER,
     POSITION_JOINTS,
     POSITION_KD,
     POSITION_KP,
@@ -47,10 +48,38 @@ def prepare_mjcf(destination: Path | None = None) -> Path:
     return target
 
 
+def normalize_joint_names(stage) -> list[str]:
+    """Lab 3 的 MJCF 导入器在关节与其父 body 同名时给关节 prim 加 `_1` 后缀。
+
+    本模型 9 个关节全部与父 body 同名（head/left_ear/.../right_rear_wheel），导入后变成
+    `head_1` 等，而动作项、观测、初态库与成功判据都使用源 MJCF 的关节名（`JOINT_ORDER`）。
+    这里按契约去掉后缀并校验，否则 Lab 会在 `init_state.joint_pos` 的正则匹配处直接报错。
+    """
+    from pxr import Sdf, UsdPhysics
+
+    expected = set(JOINT_ORDER)
+    edit = Sdf.BatchNamespaceEdit()
+    renamed = 0
+    for prim in stage.Traverse():
+        if not prim.IsA(UsdPhysics.Joint):
+            continue
+        name = prim.GetName()
+        if name.endswith("_1") and name[:-2] in expected:
+            edit.Add(prim.GetPath(), prim.GetPath().GetParentPath().AppendChild(name[:-2]))
+            renamed += 1
+    if renamed and not stage.GetRootLayer().Apply(edit):
+        raise RuntimeError("Failed to normalize imported joint names.")
+    names = sorted(prim.GetName() for prim in stage.Traverse() if prim.IsA(UsdPhysics.Joint))
+    if set(names) != expected:
+        raise RuntimeError(f"Imported joint names differ from the control contract: {names}")
+    return names
+
+
 def adapt_usd(path: Path, spec: dict) -> dict:
     from pxr import PhysxSchema, Usd, UsdPhysics, UsdShade
 
     stage = Usd.Stage.Open(str(path))
+    joint_names = normalize_joint_names(stage)
     bodies = [p for p in stage.Traverse() if p.HasAPI(UsdPhysics.RigidBodyAPI)]
     by_name = {p.GetName(): p for p in bodies}
     if len(by_name) != len(bodies) or not set(WHEELS).issubset(by_name):
@@ -89,7 +118,12 @@ def adapt_usd(path: Path, spec: dict) -> dict:
             if owner == body and prim.HasAPI(UsdPhysics.CollisionAPI):
                 UsdShade.MaterialBindingAPI.Apply(prim).Bind(material, materialPurpose="physics")
     stage.GetRootLayer().Save()
-    return {"mass_kg": mass, "body_names": list(by_name), "articulation_root": str(roots[0].GetPath())}
+    return {
+        "mass_kg": mass,
+        "body_names": list(by_name),
+        "joint_names": joint_names,
+        "articulation_root": str(roots[0].GetPath()),
+    }
 
 
 def main():
