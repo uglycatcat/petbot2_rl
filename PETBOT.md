@@ -5,7 +5,7 @@
 
 ## 当前验证边界
 
-2026-10-13 在训练服务器 `petbot-train` 容器内验证：**USD 转换、PhysX 导入、任务实例化、pre-learn（默认站姿探针 + 倒地初态采集）与冒烟训练全部跑通**。仍未验证的是训练效果本身——没有跑满 iteration、没有独立评估、没有策略导出或 MuJoCo 推理，因此不能宣称策略有效。
+2026-10-13 在训练服务器 `petbot-train` 容器内验证：**USD 转换、PhysX 导入、任务实例化、pre-learn（默认站姿探针 + 倒地初态采集）与冒烟训练全部跑通**；2026-10-13/14 又完成首轮 11 组（2048 envs × 3000 iteration）扫描与确定性独立评估。**已实测的结论是训练效果尚未出现**（最好 5 组仅与开环"保持默认构型"地板基线持平），详见[首版扫描记录](PETBOT_SWEEP_01.md)。仍无策略导出与 MuJoCo 策略推理验证。
 
 ### 服务器验证记录（2026-10-13）
 
@@ -17,62 +17,19 @@
 | 冒烟训练 64 envs × 5 iter | 通过：约 755 steps/s、2.7 s/iteration，写出 `model_0/model_4.pt` 与 TensorBoard 事件，`episode` 结束前 `Recovery/*` 与奖励项均正常记录 |
 | 首版规模 1024 envs × 5 iter | 通过：约 8000 steps/s、4.0 s/iteration，单卡（RTX 4090）显存峰值约 3.7 GB；据此推算 10000 iteration ≈ 11 h，另有一次性采集约 6 min。**首版口径已按用户决定改为 2048 envs**（见下） |
 
-## 首版训练方案（2026-10-13 用户决定，已部署）
+## 首版训练与扫描（2026-10-13/14）
 
-口径：**2048 envs × 3000 iteration**，先宽扫积累经验，跑满后按曲线决定续训组；每组跑在**固定 commit 的独立副本** `demo_project/runs/<变体>/`（`git clone` 自本地裸库，禁止对运行副本 `repo sync`）。日志写 `demo_project/runs/_logs/<变体>.log`——**不能写在副本里**，副本根目录出现未跟踪文件会让 `pre_learn` 的脏树检查拒绝启动；检查点与 TensorBoard 在副本自己的 `logs/rsl_rl/recovery_agile_01/`。
+- 口径（用户决定）：**2048 envs × 3000 iteration**（1024 太少），11 组变体各跑**固定 commit 的独立副本** `demo_project/runs/<变体>/`，先宽扫积累经验；9 组并行约 10 h 跑满，调度与探活脚本为工作区 `demo_project/demo_env/{launch_variants.sh,runs_probe.sh}`。
+- 结果：**没有任何一组学到"从倒地起身"**。最好 5 组确定性评估 0.225~0.227，而"恒定把 5 个关节指令到默认角、后轮不转"的开环地板基线就有 **0.213**（恒定零动作 0.000）；其余 6 组 0.000~0.084，且大量 episode 因越界/非法状态提前结束。
+- 三条机制（均为实测）：① 训练期 `Recovery/success_rate` 测的是带探索噪声的策略，不能用于组间比较，比较必须用确定性独立评估；② 约 21% 初态本就满足成功判据 → 成功率与 `stable` 奖励可被"不动"拿到，需加"必须发生恢复"的门控；③ 伺服增益（0.5×/1×/2×）不是瓶颈，控制率、回合长度、加重静止惩罚、更大探索噪声都更差。
+- 设计思路、执行现象、实现坑与复现清单见 **[首版扫描记录 PETBOT_SWEEP_01.md](PETBOT_SWEEP_01.md)**。
 
-调度：`demo_project/demo_env/launch_variants.sh {start|status|log <v>|stop}`（`runs_probe.sh` 统计容器内在跑的组与卡位）。按卡分配：**GPU3 上限 6 组、GPU2 上限 3 组**（GPU2 上还有 AGILE 标准训练，必须留显存），超出上限的自动排队补位；实测 9 组并行时 2048 envs 约 7~8 s/iteration。
+两条与实验设计强相关的边界：
 
-| 变体 | 卡 | 相对默认的唯一改动 |
-|---|---|---|
-| `base_s42` / `base_s43` | 3 / 3 | 无 / 仅 seed 43（量化种子方差） |
-| `gains2x_s42` / `gains_down_s42` | 3 / 3 | kp/kd ×2 / ×0.5 → 构成 [0.5×, 1×, 2×] 增益扫描 |
-| `decimation5_s42` | 3 | 控制 100 Hz（默认 10 分频 = 50 Hz） |
-| `reward_still_s42` | 2 | `still` 0.5→2.0、`action_rate` −0.01→−0.02、`effort` −0.002→−0.005 |
-| `reward_config_heavy_s42` | 3 | `configuration` 3.0→6.0、`upright` 2.0→1.0 |
-| `episode15_s42` | 2 | episode 10 s → 15 s |
-| `spawn1m_s42`（排队） | 3 | 落地高度 0.6 → 1.0 m |
-| `ppo64_s42` | 2 | `num_steps_per_env` 32→64、`learning_rate` 3e-4→2e-4 |
-| `ppo_explore_s42`（排队） | 3 | `entropy_coef` 0.005→0.02、`init_noise_std` 0.7→1.0 |
+- **CLI 覆盖只对 runner（agent）侧有效**（`agent.*`）；env 字段（`rewards.*`、`decimation`、`episode_length_s`）Hydra 不接受，且这类字段在 `__post_init__` 里赋值、覆盖顺序不可靠 → 这类变体一律做**代码副本**并在副本内 commit（保持工作区干净，`pre_learn` 会拒绝脏树）。
+- 日志必须写在副本**之外**（`demo_project/runs/_logs/<变体>.log`）：副本根目录出现未跟踪文件同样会被脏树检查拒绝。
 
-**CLI 覆盖的边界（实测）**：Hydra 只接受**runner（agent）配置**的覆盖（`agent.*`，如 `agent.petbot_collection.spawn_height=1.0`）；**env 配置字段不被接受**——`rewards.still.weight=2.0` 会报 `Could not override 'rewards.still.weight' … Key 'rewards' is not in struct`。因此奖励、`decimation`、`episode_length_s` 这类 env 字段一律做**代码副本**（改完在副本内 commit 保持干净），只有 actor-critic 侧参数用 `agent.*` 覆盖。
-
-复现要点：`prepare`（资产转换）**串行**执行，之后把已备好的资产与初态库拷进各副本——资产身份只含源模型内容、适配器版本与位置增益，不含初态库与奖励，所以只有改了增益或模型、或改了初态/控制率的变体才需要自己重新采集初态库（每组约 5 min）。
-
-并发注意：多个 Kit 实例共用 `cache/kit` 会打 key-value 锁警告（无害）；不要并发跑 `prepare`。
-
-评估：跑满后对每组用 `scripts/petbot_eval.py`（独立 seed、`split=eval` 初态库）打分，报 `Recovery/success_rate`、`stable_at_end`、`time_to_success_s`，并**按初态分类**（倒置 / 侧躺 / 已近站立）拆开看——总成功率含"落地后已近站立"的样本，不能只看总数；只有稳定的组才进入策略导出与 MuJoCo sim2sim。
-
-## 首版并行扫描结果（2026-10-14）
-
-11 组各跑满 2048 envs × 3000 iteration（约 6.6 亿步，8~9 组并行约 10 h），随后对每组用**确定性策略**做独立评估（`scripts/petbot_eval.py`，`split=eval` 初态库、512 episodes、seed 20261014）：
-
-| 变体 | 确定性评估成功率 | 侧躺类 | 中位成功用时 | 末态稳定 |
-|---|---|---|---|---|
-| `base_s42` / `gains2x_s42` / `gains_down_s42` / `ppo64_s42` | 0.227 | 0.249 | 1.42–1.48 s | 0.21–0.23 |
-| `base_s43` | 0.225 | 0.247 | 1.48 s | 0.213 |
-| `reward_config_heavy_s42` | 0.084 | 0.094 | 3.10 s | 0.018 |
-| `spawn1m_s42` | 0.053 | 0.059 | 2.62 s | 0.006 |
-| `reward_still_s42` / `episode15_s42` / `decimation5_s42` / `ppo_explore_s42` | 0.000 | 0.000 | — | 0.000 |
-
-两组基线（**同一批 512 初态**，用来判断上面的数字意味着什么）：
-
-| 基线 | 成功率 |
-|---|---|
-| 恒定零动作（`demo_env/zero_action_eval.py`，动作全 0） | 0.000 |
-| **恒定保持默认构型**（关节指令默认角、后轮不转，开环，动作 `-0,-0.5,-0.5,0,0,0,0`） | **0.213**（侧躺类 0.234） |
-
-**结论：最好的 5 组（0.225~0.227）与"什么都不学、只把 5 个关节摆回默认角再不动"的开环基线（0.213）没有实质差别**；其余 6 组低于该基线（0~0.084，其中 4 组为 0，且相当多 episode 因越界 / 非法状态提前结束，说明策略在乱动）。即 3000 iteration 内**没有任何一组学到"站起来"**——评估成功率主要来自初态库中本来就站得住的约 21%~23% 状态。
-
-三点实测机制（对下一轮设计有直接约束）：
-
-1. **训练期 `Recovery/success_rate` 不能用来比较变体**：训练动作是采样的（`init_noise_std=0.7` 的探索噪声），"所有条件连续 1 s"在噪声下几乎不可达，11 组里只有 `base_s43` 出现过非零（0.175），其余恒 0；而同一检查点在**确定性**评估下是 0.225~0.227。比较必须用独立评估，报告里要区分"探索策略"与"确定性策略"。
-2. **约 21% 的初态本来就满足成功条件**（零动作不行，但"保持默认构型不动"就行）→ 当前的 `Recovery/success_rate` 与 `stable` 奖励（权重 5.0，最大正项）都可以被"不动"拿到。这与 PetBot 的目标冲突（要的是"从倒地起身"，不是"站住"），需要给指标与奖励加"必须发生恢复"的门控：例如按初态分类统计、排除初态即满足条件 / 近直立的样本，或只在"初始未满足条件"的样本上计分。
-3. **伺服增益不是当前瓶颈**：kp/kd ×0.5、×2 与默认落在同一水平（0.227）；控制率 100 Hz、回合 15 s、加大静止/动作率惩罚这几种改法反而更差（0~0.084）。另外 `ppo_explore`（更大探索噪声）为 0，与第 1 点的噪声结论一致。
-
-评估脚本的两个坑（一个已修、一个已知无碍）：`restore_cfg` 会因类型不匹配丢弃 `seed` 与整个 `scene` 段（评估跑在同一代码副本里，`scene` 默认值一致，故当前无影响）；`petbot_eval.py` 的入口块 `try: main() finally: app.close()` 会在异常时吞掉 traceback 并静默退出，排查时用 `demo_env/run_eval_debug.py` 包装运行。
-
-下一轮建议：训练预算提到 10000+，并同时修第 1、2 两点信号问题（探索噪声衰减课程 + 成功/奖励门控只在"初态未满足条件"的样本上给分），再用同一规模扫描一次。
+评估口径：确定性策略 + `split=eval` 初态库 + 独立 seed + 512 episodes，按初态分类（直立 / 倒置 / 侧躺）拆分，并**始终与两个地板基线对比**（恒定零动作、恒定保持默认构型）；总成功率含"落地后已近站立"的样本，只看总数会被"不动"骗过。
 
 两处服务器适配（已提交本分支）：
 
@@ -160,4 +117,4 @@ ruff check agile/petbot agile/rl_env/tasks/stand_up/petbot petbot_tests scripts/
 
 - Isaac Lab API 源码核对版本：`v3.0.0-beta2`，commit `28a37cecdd433c22d9eabd6a5954add9f13a8951`；包括 MJCF converter、implicit actuator、joint action、manager reset 顺序与 ProxyArray 的 `.torch` 接口。
 - [官方 Lab 3 迁移说明](https://isaac-sim.github.io/IsaacLab/v3.0.0-beta2/source/migration/migrating_to_isaaclab_3-0.html)。具体配置以该 tag 的源码为准。
-- 初始配置与性能均待服务器验证；本地检查记录不替代部署结果。
+- 初始配置与性能已在服务器实测（见[首版扫描记录](PETBOT_SWEEP_01.md)）；本地检查记录不替代部署结果。
