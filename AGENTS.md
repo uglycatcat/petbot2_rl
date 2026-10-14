@@ -7,7 +7,7 @@
 - 目标：PetBot（轮足机器狗）在平地上被推倒、滚翻或跌落后，用强化学习策略恢复到默认站立构型并保持稳定。
 - 主线：Isaac Lab + RSL-RL + PPO 训练 → 策略导出 → MuJoCo 做 sim2sim 验证。
 - **已有能力与训练目的**：用户已验证 PetBot 可从任意摔倒姿势，通过几个固定姿态的转换恢复站立（测试细节尚未归档）；RL 用于学习更自然、连贯、平滑的恢复动作。默认轮足构型无需单独训练站立策略；策略采用 **5 路位置 + 2 路速度**混合输出；训练**不依赖参考动作流或示范轨迹数据**，已有固定姿态恢复经验不等同于训练数据。详见[需求基线](docs/current_scope.md#已有能力与强化学习的目的)。
-- **当前阶段：参考试训与 PetBot 首版实现并行准备。** recovery 线已关闭。AGILE 的**标准起身训练已于 2026-10-13 在服务器容器内启动**（`StandUp-T1-v0`、4096 envs、100k iteration、seed 42、tensorboard；日志 `reference_project/agile_env/logs/`，检查点 `reference_project/WBC-AGILE/logs/rsl_rl/stand_up_t1/`，实测 ≈7.4 s/iteration → 约 8.8 天）；robot_lab 容器已就绪但尚未开始训练。已确定以 AGILE 为底座、借鉴 robot_lab 混合动作配置实现 `demo_project/recovery_agile_01/`，无需等待参考试训结束。PetBot 首版代码已推送 `demoproj/recovery_agile_01`；2026-10-13 在服务器 `petbot-train` 容器内跑通资产转换、PhysX 导入、pre-learn 与冒烟训练，首版口径按用户决定改为 **2048 envs**，并行多组参数同训（未跑满 iteration、未评估），见 [demo 索引](demo_project/README.md)。
+- **当前阶段：参考试训与 PetBot 首版实现并行准备。** recovery 线已关闭。AGILE 的**标准起身训练已于 2026-10-13 在服务器容器内启动**（`StandUp-T1-v0`、4096 envs、100k iteration、seed 42、tensorboard；日志 `reference_project/agile_env/logs/`，检查点 `reference_project/WBC-AGILE/logs/rsl_rl/stand_up_t1/`，实测 ≈7.4 s/iteration → 约 8.8 天）；robot_lab 容器已就绪但尚未开始训练。已确定以 AGILE 为底座、借鉴 robot_lab 混合动作配置实现 `demo_project/recovery_agile_01/`，无需等待参考试训结束。PetBot 首版代码已推送 `demoproj/recovery_agile_01`；2026-10-13 在服务器 `petbot-train` 容器内跑通资产转换、PhysX 导入、pre-learn 与冒烟训练，首版口径按用户决定改为 **2048 envs**，首轮 11 组并行扫描已跑满 3000 iteration 并完成确定性评估（尚未学出有效起身能力），见 [demo 索引](demo_project/README.md)。
 - **PetBot 与参考项目的本质区别**：PetBot **本来就能轻松站住**（默认站姿是四轮着地的静稳定姿态，站立不需要策略去学）；而 `recovery` 这类轮足翻倒起身项目，研究对象默认**连"站住"都还没解决** —— 它们的站立姿态是要学出来的，所以才有高度 / 姿态塑形、ED-CW 类课程，以及"站住了但还在晃"这种失败模式。**参考项目的奖励权重、课程与成功判据不能直接照搬。**
 
 ## 第一步：判断自己在哪台设备上
@@ -44,7 +44,7 @@
 6. **参考项目不进版本管理**：`reference_project/*/` 是上游快照与训练产物，被 `.gitignore` 排除；项目文档、配置与 PetBot 自有代码正常提交。
 7. **不拿旧设备记录当基线**：桌面机上的历史运行记录（RTX 2080Ti 等）与训练无关，不作为任何结论依据。
 8. **路径**：程序用相对路径加载模型与资源，不硬编码宿主机或容器绝对路径。
-9. **文档写法**：面向"下一个 agent"，只写结论与必要证据，不留对话痕迹；过时内容直接改掉或标明日期，不与新结论并列陈述。
+9. **文档写法**：根目录 `README.md` 面向人类，主要用于部署与使用，不同步实验进度；进度维护在本文件与对应实验文档。面向"下一个 agent"，只写结论与必要证据，不留对话痕迹；过时内容直接改掉或标明日期，不与新结论并列陈述。
 10. **不确定就问**：规则之间若出现冲突，或需求含义不明，先问用户再动手。
 11. **主动沉淀重要信息与进度**：agent 必须在交流、排查和实施过程中自行判断新增信息是否影响后续决策、执行或交接；凡涉及目标与背景、需求或约束变化、已确认的决策及依据、关键进展、实测结果、重要失败经验或阻塞项，都应及时同步到对应文档，不等待用户提醒，也不以完成代码修改为前提。关键节点按日期写入本文件的[进度报告](#进度报告文档主线)，长期有效的信息更新到对应主题文档；同步修正受影响的旧表述。只保留结论与必要证据，区分用户确认、实测和待验证推测，不记录对话流水或无实质变化的重复检查。
 12. **参考项目由 `default.xml` 清单管理**：`reference_project/` 下的项目通过 `repo` 物化。新增、删除或改变某个项目的 pin，必须在同一次改动中同步更新 `default.xml` 与 `reference_project/manifest.json`，保持清单与目录一致。
@@ -99,12 +99,18 @@
 | 2026-10-13 | **服务器验证 PetBot demo**（容器 `petbot-train`）：资产转换、PhysX 导入、任务实例化、pre-learn（默认站姿探针 + 倒地初态采集）、冒烟训练全部跑通；修两处适配后推送 `demoproj/recovery_agile_01`（`5622024`、`c5bc149`）；同步 demo 索引与清单 | 默认站姿实测 0.08427 m、初态库 16384/16384（接受率约 80%）；64 envs 2.7 s/iter、1024 envs 4.0 s/iter（≈8000 steps/s、显存 3.7 GB ⇒ 10000 iteration ≈ 11 h）；两处适配：容器内 git 需复刻宿主相对层级、导入关节名被加 `_1` 后缀；**未跑满 iteration、未评估、未导出**，见 [PETBOT.md](demo_project/recovery_agile_01/PETBOT.md#服务器验证记录2026-10-13) |
 | 2026-10-13 | 用户决定首版训练口径：**2048 envs**（1024 太少），并**并行多组参数同训**，用于一次性比较伺服增益、奖励权重与种子方差 | 见[首版训练与扫描](demo_project/recovery_agile_01/PETBOT.md#首版训练与扫描2026-10-1314) |
 | 2026-10-13 | PetBot 首版并行扫描**已部署**：11 组变体各跑固定 commit 的独立副本（`demo_project/runs/`），2048 envs × 3000 iter，**GPU3 6 组 + GPU2 3 组**并行、2 组排队（10-14 01:00/02:10 补位，08:38 全部跑满）；调度与探活脚本 `demo_project/demo_env/{launch_variants.sh,runs_probe.sh}` | 实测 Hydra 只接受 `agent.*` 覆盖，env 字段（奖励 / decimation / 回合长度）必须做代码副本；首个初态库被 6 组复用（缓存命中）；9 组并行约 7~8 s/iteration |
-| 2026-10-14 | **首版扫描 + 确定性独立评估完成，结论：没有一组学到起身**。最好 5 组 0.225~0.227，而开环"恒定保持默认构型"地板基线就有 **0.213**（恒定零动作 0.000）；`reward_config_heavy` 0.084、`spawn1m` 0.053、其余 4 组 0.000（且大量 episode 因越界/非法状态提前结束） | 三条机制：① 训练期 `Recovery/success_rate` 测的是探索噪声下的策略，不能比较变体，必须用确定性评估；② 约 21% 初态本就满足成功判据 → 成功率与 `stable` 奖励（权重 5.0）可被"不动"拿到，需加"必须发生恢复"的门控；③ 伺服增益 0.5×~2× 不是瓶颈，控制率/回合长度/加重静止惩罚/更大噪声都更差。设计与现象见[首版扫描记录](demo_project/recovery_agile_01/PETBOT_SWEEP_01.md) |
+| 2026-10-14 | **首版扫描 + 确定性独立评估完成，结论：没有一组学到起身**。最好 5 组 0.225~0.227，而开环"恒定保持默认构型"地板基线就有 **0.213**（恒定零动作 0.000）；`reward_config_heavy` 0.084、`spawn1m` 0.053、其余 4 组 0.000（且大量 episode 因越界/非法状态提前结束） | 三条机制：① 训练期 `Recovery/success_rate` 测的是探索噪声下的策略，不能比较变体，必须用确定性评估；② 开环保持默认构型可达 21.3%，不等于初态已满足成功判据；需区分开环可恢复样本与需要学习动态恢复的样本；③ 伺服增益 0.5×~2× 不是瓶颈，控制率/回合长度/加重静止惩罚/更大噪声都更差。设计与现象见[首版扫描记录](demo_project/recovery_agile_01/PETBOT_SWEEP_01.md) |
 | 2026-10-14 | 服务器工具**版本化**：新增孤儿分支 `demoproj/recovery_agile_01-tools`（内容 `tools/petbot_trial/`，含容器挂载约定、并行调度、确定性评估、地板基线与调试脚本，脚本改为向上查找 `default.xml` 定位仓库根） | 双端可复现本轮扫描；demo 仓库带 git-lfs，基于 demo 历史开分支推送需上传全部 LFS 对象，故工具分支独立成孤儿分支（`git fetch ours demoproj/recovery_agile_01-tools` 后取 `tools/petbot_trial/`，其 `INDEX.md` 是工具入口） |
+
+| 2026-10-14 | 15:03 服务器复核：PetBot 11 组均有 `model_2999.pt`，评估 JSON 与首轮汇总一致；AGILE 日志到 10774/100000，最新检查点 `model_10750.pt`，仍在推进，尚无独立效果评估 | 修正入口过时状态；21.3% 是开环控制后的成功率，不是初态成功率，见 [复核边界](demo_project/README.md#首轮结果复核与解释边界2026-10-14) |
+
+| 2026-10-14 | 明确文档职责与下一步验证安排 | 根 README 用于人类部署/使用，不同步进度；文档使用正式项目名。先由用户在 `contrller/` 实现传统固定姿态恢复，再结合构型、接触与恢复过程推进 RL 优化；服务器尚无该目录，实现及验证结果待提供，见[工程实施说明](docs/engineering_handoff.md#固定姿态恢复参照2026-10-14) |
 
 细节写进对应文档，本表只保留一行结论。
 
 ## 当前实现状态
+
+- **下一步（2026-10-14 用户确认）**：先在 `contrller/` 实现传统固定姿态恢复方案，作为理解构型与诊断恢复过程的参照，再推进 RL 优化；当前服务器未有该目录，代码及验证待用户提供。详见[实施安排](docs/engineering_handoff.md#固定姿态恢复参照2026-10-14)。
 
 - **参考项目与 PetBot 状态**：recovery 已关闭；AGILE 容器内 `StandUp-T1-v0` 标准训练**运行中**（2026-10-13 启动，4096 envs / 100k iteration，检查点与 TensorBoard 见上方进度行），robot_lab 容器已就绪未开训。PetBot `recovery_agile_01` 服务器链路已跑通，首轮 11 组扫描与确定性评估已完成——**没有一组学到从倒地起身**（最好 5 组与开环地板基线持平），详见[首版扫描记录](demo_project/recovery_agile_01/PETBOT_SWEEP_01.md)与[实施约定](docs/engineering_handoff.md#petbot-demo-管理与首版交付2026-10-13-用户确认)。
 - **已有**：机器人模型（MJCF + 10 个 STL）、参考项目快照、训练服务器上的容器与训练 / 评估 / 渲染链路、recovery 的完整训练与评估结果。

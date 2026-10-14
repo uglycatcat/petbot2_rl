@@ -18,3 +18,11 @@
 在 repo 创建的 checkout 里，先检查 `git remote -v`；清单 remote 名为 `ours`，本机首次 clone 的 remote 名为 `origin`，不要假定两者相同。首次开发可用 `git switch -c demoproj/recovery_agile_01 --track ours/demoproj/recovery_agile_01` 建立跟踪分支；若已有同名分支，切回已有分支，不要覆盖。干净工作区内 `git pull --ff-only` 后开始修改，分叉则保全并处理。
 
 当前桌面 checkout 是独立 clone；清单已登记，后续由 repo 按同一路径物化。完整控制契约、容器内命令与验证边界见项目 [PETBOT.md](recovery_agile_01/PETBOT.md)。2026-10-13 在训练服务器 `petbot-train` 容器内跑通资产转换、PhysX 导入、任务实例化、pre-learn 与冒烟训练（证据与两处适配见 PETBOT.md 的「服务器验证记录」）。
+
+## 首轮结果复核与解释边界（2026-10-14）
+
+15:03 在训练服务器核对磁盘产物：11 个变体均保存了 `model_2999.pt`，每组确定性评估为 512 episodes，结果与首轮汇总一致。`base_s42` 为 116/512（22.65625%），同批初态的开环默认构型基线为 109/512（21.28906%），零动作基线为 0/512。尚不能据此宣称已学到有效的动态起身能力。
+
+**解释边界**：21.3% 是持续发送默认构型指令后的成功率，不能解释为“21% 初态已满足成功判据”或机器人完全不运动。扫描记录同时报告初态构型条件通过率为 0；因此仅排除初始已成功样本，未必能排除这些开环可恢复样本。奖励信号、探索噪声与初态分布是待进一步对照验证的原因，当前数据不充分排除训练预算或其它因素。嵌套 demo 的 PETBOT.md / PETBOT_SWEEP_01.md 中相关强因果表述应按此边界理解。
+
+AGILE 同时在继续训练：日志 `reference_project/agile_env/logs/agile_standup_20261013_1742.log` 到 10774/100000，iteration time 7.47 s，日志 ETA 约 7 天 7 小时；最新检查点为 `reference_project/WBC-AGILE/logs/rsl_rl/stand_up_t1/2026-10-13_09-42-56_stand_up_t1/model_10750.pt`。这些是训练进度，不能替代独立恢复成功率评估。
