@@ -40,3 +40,20 @@ class PetBotPpoRunnerCfg(RslRlOnPolicyRunnerCfg):
         desired_kl=0.01,
         max_grad_norm=1.0,
     )
+
+
+@configclass
+class PetBotSweep2RunnerCfg(PetBotPpoRunnerCfg):
+    """Reward/exploration redesign; all A/B/C runs share these PPO settings."""
+    def __post_init__(self):
+        self.num_steps_per_env = 64
+        self.max_iterations = 3000
+        self.save_interval = 250
+        self.policy.init_noise_std = 0.35
+        self.policy.noise_std_type = "log"
+        self.policy.noise_std_range = (0.15, 0.6)
+        self.algorithm.gamma = 0.995
+        self.algorithm.learning_rate = 2e-4
+        self.algorithm.entropy_coef = 0.002
+        from agile.rl_env.rsl_rl import RslRlRewardNormalizationCfg
+        self.algorithm.reward_normalization_cfg = RslRlRewardNormalizationCfg()

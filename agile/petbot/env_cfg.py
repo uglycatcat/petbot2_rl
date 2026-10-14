@@ -138,3 +138,41 @@ class PetBotRecoveryEnvCfg(ManagerBasedRLEnvCfg):
         self.scene.contact_forces.update_period = self.sim.dt
         self.viewer.eye = (0.8, -0.8, 0.6)
         self.viewer.lookat = (0.0, 0.0, 0.1)
+
+
+@configclass
+class Sweep2RewardsCfg:
+    progress = RewTerm(func=mdp.sweep2_reward, weight=3.0, params={"kind": "progress"})
+    success = RewTerm(func=mdp.sweep2_reward, weight=20.0, params={"kind": "success"})
+    stable = RewTerm(func=mdp.sweep2_reward, weight=4.0, params={"kind": "stable"})
+    time = RewTerm(func=mdp.sweep2_reward, weight=-0.2, params={"kind": "time"})
+    failure = RewTerm(func=mdp.sweep2_reward, weight=-20.0, params={"kind": "failure"})
+    action_rate = RewTerm(func=mdp.sweep2_reward, weight=-0.001, params={"kind": "action_rate"})
+    effort = RewTerm(func=mdp.sweep2_reward, weight=-0.0005, params={"kind": "effort"})
+
+
+@configclass
+class PetBotSweep2EnvCfg(PetBotRecoveryEnvCfg):
+    rewards = Sweep2RewardsCfg()
+    sweep2: bool = True
+    shaping_gamma: float = 0.995
+    reset_curriculum: bool = False
+    history_steps: int = 1
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.scene.num_envs = 2048
+        self.observations.policy.history_length = self.history_steps
+        self.observations.policy.flatten_history_dim = True
+        self.observations.critic.history_length = self.history_steps
+        self.observations.critic.flatten_history_dim = True
+
+
+@configclass
+class PetBotSweep2HistoryEnvCfg(PetBotSweep2EnvCfg):
+    history_steps: int = 10
+
+
+@configclass
+class PetBotSweep2CurriculumEnvCfg(PetBotSweep2HistoryEnvCfg):
+    reset_curriculum: bool = True

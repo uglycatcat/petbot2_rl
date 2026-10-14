@@ -49,6 +49,9 @@ class RslRlPpoActorCriticCfg:
     noise_std_type: Literal["scalar", "log"] = "scalar"
     """The type of noise standard deviation for the policy. Default is scalar."""
 
+    noise_std_range: tuple[float, float] = (1e-6, 1e6)
+    """Bounds used inside the Gaussian distribution, including log-probability calculation."""
+
     actor_hidden_dims: list[int] = MISSING
     """The hidden dimensions of the actor network."""
 
@@ -321,6 +324,7 @@ def _distribution_cfg(policy: dict) -> dict:
         "class_name": "GaussianDistribution",
         "init_std": policy["init_noise_std"],
         "std_type": noise_std_type,
+        "std_range": policy.get("noise_std_range", (1e-6, 1e6)),
     }
 
 

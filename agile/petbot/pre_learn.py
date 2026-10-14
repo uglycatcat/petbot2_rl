@@ -8,6 +8,7 @@ from dataclasses import asdict
 import torch
 
 from .collection import collect, probe_standing
+from .core import reset_pool_indices
 from .model import JOINT_ORDER, POSITION_JOINTS, PROJECT_ROOT, REAR_WHEELS, load_model
 
 
@@ -29,6 +30,14 @@ def pre_learn(env, task_name, agent_cfg):
     cfg = agent_cfg.petbot_collection
     env.petbot_dataset, metadata, relative_path = collect(env, cfg)
     env.petbot_reset_rng = torch.Generator().manual_seed(agent_cfg.seed + (100000 if cfg.split == "eval" else 0))
+    env.petbot_eval_mode = cfg.split == "eval"
+    env.petbot_eval_cursor = 0
+    env.petbot_success_ema = 0.0
+    env.petbot_curriculum_pool = reset_pool_indices(env.petbot_dataset["root"])
+    if getattr(env.cfg, "sweep2", False):
+        if abs(agent_cfg.algorithm.gamma - env.cfg.shaping_gamma) > 1e-9:
+            raise ValueError("PPO and potential shaping discounts must match")
+        env.petbot_previous_potential = torch.zeros(env.num_envs, device=env.device)
     env.petbot_ready = True
     env.reset()
 
@@ -40,8 +49,8 @@ def pre_learn(env, task_name, agent_cfg):
         "standing_height_m": env.petbot_standing_height,
         "action_order": list(POSITION_JOINTS + REAR_WHEELS),
         "observation_joint_velocity_order": list(JOINT_ORDER),
-        "actor_dim": 27,
-        "critic_dim": 35,
+        "actor_dim": 27 * getattr(env.cfg, "history_steps", 1),
+        "critic_dim": 35 * getattr(env.cfg, "history_steps", 1),
         "physics_dt": env.physics_dt,
         "policy_dt": env.step_dt,
         "success_thresholds": asdict(env.cfg.success),

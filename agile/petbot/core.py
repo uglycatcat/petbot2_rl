@@ -84,3 +84,24 @@ def sample_joints(count, names, spec, device, generator=None):
 
 def observation_vector(gravity, angular_velocity, joint_error, joint_velocity, previous_action):
     return torch.cat((angular_velocity * 0.2, gravity, joint_error, joint_velocity * 0.05, previous_action), dim=-1)
+
+
+def recovery_potential(gravity, joint_error):
+    """Bounded shaping potential, not a sustained upright/configuration payment."""
+    upright = ((1 - gravity[:, 2]) * 0.5).clamp(0, 1)
+    configuration = torch.exp(-joint_error.square().mean(-1) / 0.25)
+    return 0.5 * upright * (1 + configuration)
+
+
+def discounted_progress(previous, current, gamma, terminated):
+    # True terminal states have zero continuation potential. Timeouts bootstrap.
+    final = torch.where(terminated, torch.zeros_like(current), current)
+    return gamma * final - previous
+
+
+def reset_pool_indices(root):
+    """Negative-pitch fallen states are a curriculum proxy, not proven easy states."""
+    w, x, y, z = root[:, 3:7].unbind(-1)
+    sin_pitch = 2 * (w * y - z * x)
+    up = 1 - 2 * (x.square() + y.square())
+    return torch.nonzero((sin_pitch < -0.2) & (up < 0.7), as_tuple=False).flatten()

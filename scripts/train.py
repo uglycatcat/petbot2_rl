@@ -197,6 +197,12 @@ def main(
 
     # create runner from rsl-rl
     runner = make_rsl_rl_runner(env, agent_cfg, log_dir=log_dir, device=agent_cfg.device)
+    if getattr(env.unwrapped.cfg, "sweep2", False):
+        env.unwrapped.petbot_distribution = runner.alg.actor.distribution
+        print(f"[PetBot sweep2] std bounds={runner.alg.actor.distribution.std_range}; "
+              f"reward_normalizer={type(runner.alg.reward_normalizer).__name__}", flush=True)
+        assert runner.alg.reward_normalizer is not None
+        assert runner.alg.actor.distribution.std_range == [0.15, 0.6]
     # write git state to logs
     runner.add_git_repo_to_log(__file__)
     # load the checkpoint
