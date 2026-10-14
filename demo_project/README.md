@@ -4,7 +4,7 @@
 
 | 项目 | 底座 | 分支 | 状态 |
 |---|---|---|---|
-| [recovery_agile_01](recovery_agile_01/PETBOT.md) | WBC-AGILE `6830cf9`，借鉴 robot_lab 混合动作 | `demoproj/recovery_agile_01` | 本地 9 项 CPU 测试通过；2026-10-13 服务器容器内跑通 USD/PhysX/任务实例化/pre-learn/冒烟训练（未跑满 iteration、未评估）；见 [PETBOT.md](recovery_agile_01/PETBOT.md#服务器验证记录2026-10-13) |
+| [recovery_agile_01](recovery_agile_01/PETBOT.md) | WBC-AGILE `6830cf9`，借鉴 robot_lab 混合动作 | `demoproj/recovery_agile_01` | 服务器链路跑通；首轮 11 组 2048×3000 扫描 + 确定性独立评估完成：**无一组学到起身**（最好 5 组 0.225~0.227 与开环地板基线 0.213 持平）；见[首版扫描记录](recovery_agile_01/PETBOT_SWEEP_01.md) |
 
 ## 同步与开发纪律
 
