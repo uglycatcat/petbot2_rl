@@ -202,7 +202,7 @@ def main(
         print(f"[PetBot sweep2] std bounds={runner.alg.actor.distribution.std_range}; "
               f"reward_normalizer={type(runner.alg.reward_normalizer).__name__}", flush=True)
         assert runner.alg.reward_normalizer is not None
-        assert runner.alg.actor.distribution.std_range == [0.15, 0.6]
+        assert runner.alg.actor.distribution.std_range == list(agent_cfg.policy.noise_std_range)
     # write git state to logs
     runner.add_git_repo_to_log(__file__)
     # load the checkpoint

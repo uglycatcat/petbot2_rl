@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import subprocess
 from dataclasses import asdict
+from pathlib import Path
 
 import torch
 
-from .collection import collect, probe_standing
+from .collection import collect, probe_standing, validate_dataset
 from .core import reset_pool_indices
 from .model import JOINT_ORDER, POSITION_JOINTS, PROJECT_ROOT, REAR_WHEELS, load_model
 
@@ -28,7 +29,23 @@ def pre_learn(env, task_name, agent_cfg):
         raise RuntimeError("Resolved action order differs from PetBot control contract.")
     env.petbot_standing_height = probe_standing(env)
     cfg = agent_cfg.petbot_collection
-    env.petbot_dataset, metadata, relative_path = collect(env, cfg)
+    external = getattr(agent_cfg, "petbot_eval_dataset", None)
+    if external:
+        if cfg.split != "eval":
+            raise ValueError("External evaluation states cannot be used for training")
+        payload = torch.load(external, map_location="cpu", weights_only=True)
+        metadata = payload["metadata"]
+        if metadata["model"] != load_model()["source_sha256"]:
+            raise ValueError("External state library model differs")
+        if metadata["joint_names"] != list(robot.joint_names):
+            raise ValueError("External state library joint order differs")
+        if metadata["collection"]["seed"] != cfg.seed or metadata["collection"]["split"] != "eval":
+            raise ValueError("External state library is not the requested independent evaluation split")
+        env.petbot_dataset = payload["states"]
+        validate_dataset(env.petbot_dataset, robot.joint_names, cfg.num_states)
+        relative_path = Path(external).name
+    else:
+        env.petbot_dataset, metadata, relative_path = collect(env, cfg)
     env.petbot_reset_rng = torch.Generator().manual_seed(agent_cfg.seed + (100000 if cfg.split == "eval" else 0))
     env.petbot_eval_mode = cfg.split == "eval"
     env.petbot_eval_cursor = 0

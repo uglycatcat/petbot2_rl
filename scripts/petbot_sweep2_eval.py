@@ -9,6 +9,8 @@ from isaaclab.app import AppLauncher
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--checkpoint')
+parser.add_argument('--dataset')
+parser.add_argument('--save-dataset')
 parser.add_argument('--task', default='PetBot-Recovery-Sweep2-A-v0')
 parser.add_argument('--mode', choices=['policy', 'default', 'zero', 'sequence'], default='policy')
 parser.add_argument('--episodes', type=int, default=512)
@@ -26,7 +28,7 @@ def main():
     import torch
     import agile.rl_env.tasks.stand_up.petbot  # noqa: F401
     from agile.petbot.core import as_torch
-    from agile.petbot.model import POSITION_JOINTS, JOINT_ORDER, load_model
+    from agile.petbot.model import POSITION_JOINTS, load_model
     from agile.petbot.pre_learn import pre_learn
     from agile.rl_env.rsl_rl import RslRlVecEnvWrapper, make_rsl_rl_runner
     from isaaclab_tasks.utils import load_cfg_from_registry
@@ -50,7 +52,13 @@ def main():
     agent_cfg.petbot_collection.num_states = args.episodes
     env = gym.make(task, cfg=env_cfg)
     base = env.unwrapped
+    if args.dataset:
+        agent_cfg.petbot_eval_dataset = args.dataset
     pre_learn(base, task, agent_cfg)
+    if args.save_dataset:
+        path = Path(args.save_dataset)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        torch.save({"states": base.petbot_dataset, "metadata": base.petbot_provenance["collection"]}, path)
     # Hash actual tensors, not a cache path, so independent run copies can be compared.
     digest = hashlib.sha256()
     for key in ('root', 'joint_pos', 'joint_vel'):
