@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-13",
+  "updated_at": "2026-10-14",
   "purpose": "PetBot experimental training projects. Code is versioned on dedicated demoproj branches; checkouts are managed by default.xml.",
   "repositories": [
     {
@@ -8,15 +8,15 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/recovery_agile_01",
-      "verified_commit": "64059a252a798d8fe0e6495a293e62aaa9609b1f",
+      "verified_commit": "9553fef0a5c7c8782b9c09ab494b594e910171d1",
       "upstream_url": "https://github.com/nvidia-isaac/WBC-AGILE.git",
       "upstream_commit": "6830cf995714e81c91ce63247e8e016d36e28f14",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "first_sweep_and_deterministic_eval_done; recovery_not_learned",
-      "local_validation": "9 CPU tests and ruff/syntax checks pass; server petbot-train: asset/USD/PhysX/pre-learn/smoke verified; 11-variant sweep 2048 envs x 3000 iter with deterministic eval (512 episodes, split=eval): best 5 variants 0.225-0.227 vs open-loop hold-default floor 0.213 (zero-action 0.000); details in PETBOT_SWEEP_01.md",
+      "status": "sweep2_launching; first_sweep_recovery_not_learned",
+      "local_validation": "9 CPU tests and ruff/syntax checks pass; server petbot-train: asset/USD/PhysX/pre-learn/smoke verified; 11-variant sweep 2048 envs x 3000 iter with deterministic eval (512 episodes, split=eval): best 5 variants 0.225-0.227 vs open-loop hold-default floor 0.213 (zero-action 0.000); details in PETBOT_SWEEP_01.md; sweep2: 13 CPU tests pass, C 64 envs x 10 iterations smoke and 64 independent-state deterministic evaluation exit 0; effect unverified",
       "task": "PetBot-Recovery-AGILE-v0",
       "usage": "PETBOT.md"
     }

@@ -104,16 +104,23 @@
 | 2026-10-14 | 明确文档职责与下一步验证安排 | 根 README 用于人类部署/使用，不同步进度；文档使用正式项目名。先在 `robot_controller_demo/` 实现传统固定姿态恢复，再结合构型、接触与恢复过程推进 RL 优化 |
 | 2026-10-14 | **被动沉降姿态统计**（本机 MuJoCo，执行器关闭）：1000 套停稳，55 次超时后补抽。身体 +Z 与世界 +Z 的夹角最大 **121.7°**，130° 以上为 0；左侧躺、右侧躺、倒立探针都离开初始朝向 | 主簇在 110°–120°（584 套）。均匀朝向、贴地 1 cm 放下。采集与分档见 [固定姿态恢复](docs/fixed_pose_recovery.md#被动沉降) |
 | 2026-10-14 | **固定姿态恢复动作组**（本机 MuJoCo，`pose_recover_demo`）：用户试过，效果可用，不能覆盖所有摔倒；没有全姿态成功率 | 未摔倒 1 s 回初始角。摔倒且 pitch < 0 为 4 s。摔倒且 pitch ≥ 0 为 8 s：车架先走 4 s，再接上负 pitch 那套。动作表见 [固定姿态恢复](docs/fixed_pose_recovery.md) |
+| 2026-10-14 | 用户澄清实机经验与 MuJoCo 演示边界 | 实机更全面程序可按“车架调整后倒并使高摩擦后轮触地 → 轮驱动 → 急停翻身”恢复其测试过的所有场景；当前演示缺少部分转换，非实机版本，其覆盖不足不代表该思路无效。实机测试明细未归档，见[恢复思路](docs/fixed_pose_recovery.md#恢复思路与实机经验的边界2026-10-14-用户补充) |
+| 2026-10-14 | 核对首轮最终探索标准差日志 | 最好五组 `Mean action std` 已降至 0.01–0.08；增强探索组达到 188.59。存在收缩与发散两种现象，不能仅看初始标准差或一律提高 entropy；见[探索复核](demo_project/README.md#探索标准差复核2026-10-14) |
+
+| 2026-10-14 | 第二轮 PetBot 训练代码、测试与过夜调度已部署 | 固定 `9553fef`，13 项 CPU 测试、C 配置 64×10 冒烟与 64 初态独立评估通过；8 组 2048×3000 正在错峰启动，尚无效果结论；见[第二轮记录](demo_project/README.md#第二轮过夜训练2026-10-14) |
 
 细节写进对应文档，本表只保留一行结论。
 
 ## 当前实现状态
+
+- **第二轮训练（2026-10-14 晚）**：固定 `9553fef`，8 组对照已进入部署，首组 20:15 启动。潜势差/回报归一化/有界探索为共同修正，比较历史、采样课程与探索下限；CPU/Isaac 冒烟及独立评估链路已验证，训练效果待评估。[调度与产物](demo_project/README.md#第二轮过夜训练2026-10-14)。
 
 - **固定姿态恢复（2026-10-14，用户试操）**：`robot_controller_demo/pose_recover_demo/` 已实现。未摔倒用 1 s 回到初始角；摔倒后按 pitch 符号走 4 s 或 8 s 动作组。用户确认效果可用、思路明确，但不能覆盖所有摔倒情况。没有全姿态成功率统计。动作、判据和被动沉降数字见 [固定姿态恢复](docs/fixed_pose_recovery.md)。该动作组是构型与接触的参照，不是训练示范数据。
 - **被动静止姿态（2026-10-14 实测）**：执行器关闭、均匀朝向贴地放下后，1000 套停稳，倾斜角最大 121.7°，130° 以上为 0。侧躺与倒立初态都会离开初始朝向。原始数据在 `robot_controller_demo/test/fall_pose_statistics/output/`。
 
 - **参考项目与 PetBot 状态**：recovery 已关闭；AGILE 容器内 `StandUp-T1-v0` 标准训练**运行中**（2026-10-13 启动，4096 envs / 100k iteration，检查点与 TensorBoard 见上方进度行），robot_lab 容器已就绪未开训。PetBot `recovery_agile_01` 服务器链路已跑通，首轮 11 组扫描与确定性评估已完成——**没有一组学到从倒地起身**（最好 5 组与开环地板基线持平），详见[首版扫描记录](demo_project/recovery_agile_01/PETBOT_SWEEP_01.md)与[实施约定](docs/engineering_handoff.md#petbot-demo-管理与首版交付2026-10-13-用户确认)。
 - **已有**：机器人模型（MJCF + 10 个 STL）、参考项目快照、训练服务器上的容器与训练 / 评估 / 渲染链路、recovery 的完整训练与评估结果。
+- **实机恢复经验（2026-10-14 用户确认）**：更全面的实机程序可按后轮触地、轮驱动及急停翻身思路恢复其测试过的所有场景；当前 MuJoCo 程序是简化参照，非实机版本。实机测试明细尚未归档。
 - **已有恢复能力（2026-10-14 用户试操）**：本机 MuJoCo 固定姿态动作组有可用恢复效果，分支按是否摔倒和 pitch 符号选择；用户确认不能覆盖所有摔倒情况。尚无该动作组的全姿态成功率，也尚无 RL 自然恢复动作的评估结果。见 [固定姿态恢复](docs/fixed_pose_recovery.md)。
 - **参考分支**：`refproj/recovery`（上游 recovery + 我们的论文口径补丁，`default.xml` 已指向）、`refproj/recovery-tools`（给 recovery 试训用的脚本、补丁与全部实验定义，见该分支 `tools/recovery_trial/INDEX.md`）、`refproj/agile-tools` 与 `refproj/robot_lab-tools`（两个参考项目容器环境的版本化副本，见各自 `tools/agile_trial/`、`tools/robot_lab_trial/`）、`demoproj/recovery_agile_01-tools`（PetBot demo 的服务器工具：容器挂载约定、并行扫描调度、确定性评估与地板基线，见该分支 `tools/petbot_trial/INDEX.md`；**独立孤儿分支**，只含 `tools/`，因为 demo 仓库带 git-lfs，基于 demo 历史开分支推送要上传全部 LFS 对象）。
 - **PetBot 首轮扫描已完成、训练效果未出现**：`demo_project/recovery_agile_01/` 的资产适配、混合伺服配置、随机落地初态库、PPO 任务、TensorBoard 指标与独立评估入口；2026-10-13/14 跑完 11 组（2048 envs × 3000 iter）并做确定性独立评估——最好 5 组与开环"保持默认构型"地板基线持平，**没有一组学到从倒地起身**，见 [首版扫描记录](demo_project/recovery_agile_01/PETBOT_SWEEP_01.md)。尚无跑满 10000 iteration 的对照、无策略导出、无 MuJoCo 策略推理验证。

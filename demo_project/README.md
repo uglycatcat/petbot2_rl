@@ -4,7 +4,7 @@
 
 | 项目 | 底座 | 分支 | 状态 |
 |---|---|---|---|
-| [recovery_agile_01](recovery_agile_01/PETBOT.md) | WBC-AGILE `6830cf9`，借鉴 robot_lab 混合动作 | `demoproj/recovery_agile_01` | 服务器链路跑通；首轮 11 组 2048×3000 扫描 + 确定性独立评估完成：**无一组学到起身**（最好 5 组 0.225~0.227 与开环地板基线 0.213 持平）；见[首版扫描记录](recovery_agile_01/PETBOT_SWEEP_01.md) |
+| [recovery_agile_01](recovery_agile_01/PETBOT.md) | WBC-AGILE `6830cf9`，借鉴 robot_lab 混合动作 | `demoproj/recovery_agile_01` | 第二轮 8 组正在部署，见[第二轮记录](#第二轮过夜训练2026-10-14)；首轮 11 组 2048×3000 扫描 + 确定性独立评估完成：**无一组学到起身**（最好 5 组 0.225~0.227 与开环地板基线 0.213 持平）；见[首版扫描记录](recovery_agile_01/PETBOT_SWEEP_01.md) |
 
 ## 同步与开发纪律
 
@@ -26,3 +26,17 @@
 **解释边界**：21.3% 是持续发送默认构型指令后的成功率，不能解释为“21% 初态已满足成功判据”或机器人完全不运动。扫描记录同时报告初态构型条件通过率为 0；因此仅排除初始已成功样本，未必能排除这些开环可恢复样本。奖励信号、探索噪声与初态分布是待进一步对照验证的原因，当前数据不充分排除训练预算或其它因素。嵌套 demo 的 PETBOT.md / PETBOT_SWEEP_01.md 中相关强因果表述应按此边界理解。
 
 AGILE 同时在继续训练：日志 `reference_project/agile_env/logs/agile_standup_20261013_1742.log` 到 10774/100000，iteration time 7.47 s，日志 ETA 约 7 天 7 小时；最新检查点为 `reference_project/WBC-AGILE/logs/rsl_rl/stand_up_t1/2026-10-13_09-42-56_stand_up_t1/model_10750.pt`。这些是训练进度，不能替代独立恢复成功率评估。
+
+### 探索标准差复核（2026-10-14）
+
+读取 `demo_project/runs/_logs/<变体>.log` 最后一次 `Mean action std`：base_s42=0.04、base_s43=0.01、gains2x=0.03、gains_down=0.08、ppo64=0.06；decimation5=0.05、reward_config_heavy=0.08、spawn1m=0.10、reward_still=0.30、episode15=0.95、ppo_explore=188.59。这些是日志打印的动作标准差均值，不是逐通道检查点分析。最好五组的探索已明显收缩，但不是严格为零；增强探索组则出现标准差极大，与动作裁剪到 [-1,1] 的配置并存，需要核查饱和比例。后续须同时控制探索收缩与发散，不能只增加 entropy 或根据初始标准差推断训练末期状态。
+
+## 第二轮过夜训练（2026-10-14）
+
+代码固定为 `9553fef0a5c7c8782b9c09ab494b594e910171d1`，已推送 demo 分支。共同调整为潜势差塑形、首次连续成功奖励、回报归一化、有上下界的探索分布与渐增动作惩罚；A 无历史/课程，B 加 10 帧历史，C 再加负 pitch 倒地采样课程，每种 seed 42/43；另加 C 的探索下限 0.03 双种子，共 8 组。每组 2048 envs × 3000 iteration，从头训练。机制与边界见 [PETBOT_SWEEP_02.md](recovery_agile_01/PETBOT_SWEEP_02.md)。
+
+实测：13 项 CPU 测试通过；完整 C 配置 64 envs × 10 iteration 冒烟通过，actor/critic 270/350 维、std≈0.35、回报归一化已启用；64 初态确定性策略评估退出码 0、成功率 0，仅用于验证链路。尚无本轮有效起身结论。
+
+20:10 定时消息已返回会话。20:15 从具备 Docker 权限的会话启动独立调度进程，首组进入 2048 环境初始化，其余等待首组初态库就绪后错峰启动。早先 systemd user 服务调用 Docker 因 socket 权限失败，未启动训练，失败记录保留。未修改系统权限。
+
+运行副本 `demo_project/runs/sweep2_*` 固定 commit，不同步或覆盖；只使用 `petbot-train` 的 GPU2/3，AGILE 原训练继续。调度工具已推送 `demoproj/recovery_agile_01-tools`（`52bd740`）。`demo_project/runs/_sweep2/status.json` 与各训练日志用于核查；评估计划为相同 512 个独立初态上的 default/zero/sequence 基线与 750/1500/2999 检查点，按数据 hash 配对，汇总 `SUMMARY.md` / `summary.json`，区分救回开环失败样本和丢失开环成功样本。评估自动排队，失败不会自动重训。
