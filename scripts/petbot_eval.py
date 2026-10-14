@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 from isaaclab.app import AppLauncher
@@ -28,6 +29,28 @@ from agile.petbot.pre_learn import pre_learn
 from agile.rl_env.rsl_rl import RslRlVecEnvWrapper, make_rsl_rl_runner
 
 
+def restore_cfg(cfg, data):
+    """还原训练时记录的配置。
+
+    Isaac Lab 的 `from_dict` 对类型不匹配的字段直接报错——实测 `params/env.yaml` 里的
+    `seed: 42` 会因当前值为 `None` 而抛 `Incorrect type under namespace: /seed`。
+    这里按报错信息逐项丢弃无法还原的顶层键（并打印），保证评估仍能用记录的其余配置。
+    """
+    data = dict(data)
+    for _ in range(20):
+        try:
+            cfg.from_dict(data)
+            return
+        except ValueError as exc:
+            match = re.search(r"namespace: /([A-Za-z0-9_]+)", str(exc))
+            if match is None:
+                raise
+            key = match.group(1)
+            print(f"[eval] 跳过无法还原的配置项: {key}", flush=True)
+            data.pop(key, None)
+    raise RuntimeError("无法还原训练配置")
+
+
 def main():
     checkpoint = Path(args.checkpoint).resolve()
     saved = json.loads((checkpoint.parent / "params/petbot.json").read_text())
@@ -39,8 +62,8 @@ def main():
     # Restore the training configuration rather than evaluating with current default hyperparameters.
     env_cfg = load_cfg_from_registry("PetBot-Recovery-AGILE-v0", "env_cfg_entry_point")
     agent_cfg = load_cfg_from_registry("PetBot-Recovery-AGILE-v0", "rsl_rl_cfg_entry_point")
-    env_cfg.from_dict(load_yaml(str(checkpoint.parent / "params/env.yaml")))
-    agent_cfg.from_dict(load_yaml(str(checkpoint.parent / "params/agent.yaml")))
+    restore_cfg(env_cfg, load_yaml(str(checkpoint.parent / "params/env.yaml")))
+    restore_cfg(agent_cfg, load_yaml(str(checkpoint.parent / "params/agent.yaml")))
     env_cfg.scene.num_envs = min(args.num_envs, args.episodes)
     env_cfg.seed = args.seed
     env_cfg.sim.device = args.device or "cuda:0"
