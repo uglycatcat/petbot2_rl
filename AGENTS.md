@@ -100,7 +100,7 @@
 | 2026-10-13 | 用户决定首版训练口径：**2048 envs**（1024 太少），并**并行多组参数同训**，用于一次性比较伺服增益、奖励权重与种子方差 | 见[首版训练与扫描](demo_project/recovery_agile_01/PETBOT.md#首版训练与扫描2026-10-1314) |
 | 2026-10-13 | PetBot 首版并行扫描**已部署**：11 组变体各跑固定 commit 的独立副本（`demo_project/runs/`），2048 envs × 3000 iter，**GPU3 6 组 + GPU2 3 组**并行、2 组排队（10-14 01:00/02:10 补位，08:38 全部跑满）；调度与探活脚本 `demo_project/demo_env/{launch_variants.sh,runs_probe.sh}` | 实测 Hydra 只接受 `agent.*` 覆盖，env 字段（奖励 / decimation / 回合长度）必须做代码副本；首个初态库被 6 组复用（缓存命中）；9 组并行约 7~8 s/iteration |
 | 2026-10-14 | **首版扫描 + 确定性独立评估完成，结论：没有一组学到起身**。最好 5 组 0.225~0.227，而开环"恒定保持默认构型"地板基线就有 **0.213**（恒定零动作 0.000）；`reward_config_heavy` 0.084、`spawn1m` 0.053、其余 4 组 0.000（且大量 episode 因越界/非法状态提前结束） | 三条机制：① 训练期 `Recovery/success_rate` 测的是探索噪声下的策略，不能比较变体，必须用确定性评估；② 约 21% 初态本就满足成功判据 → 成功率与 `stable` 奖励（权重 5.0）可被"不动"拿到，需加"必须发生恢复"的门控；③ 伺服增益 0.5×~2× 不是瓶颈，控制率/回合长度/加重静止惩罚/更大噪声都更差。设计与现象见[首版扫描记录](demo_project/recovery_agile_01/PETBOT_SWEEP_01.md) |
-| 2026-10-14 | 服务器工具**版本化**：新增孤儿分支 `demoproj/recovery_agile_01-tools`（内容 `tools/petbot_trial/`，含容器挂载约定、并行调度、确定性评估、地板基线与调试脚本，脚本改为向上查找 `default.xml` 定位仓库根） | 双端可复现本轮扫描；demo 仓库带 git-lfs，基于 demo 历史开分支推送需上传全部 LFS 对象，故工具分支独立成孤儿分支；见[工具索引](demo_project/recovery_agile_01/tools/petbot_trial/INDEX.md)（该路径在 tools 分支上） |
+| 2026-10-14 | 服务器工具**版本化**：新增孤儿分支 `demoproj/recovery_agile_01-tools`（内容 `tools/petbot_trial/`，含容器挂载约定、并行调度、确定性评估、地板基线与调试脚本，脚本改为向上查找 `default.xml` 定位仓库根） | 双端可复现本轮扫描；demo 仓库带 git-lfs，基于 demo 历史开分支推送需上传全部 LFS 对象，故工具分支独立成孤儿分支（`git fetch ours demoproj/recovery_agile_01-tools` 后取 `tools/petbot_trial/`，其 `INDEX.md` 是工具入口） |
 
 细节写进对应文档，本表只保留一行结论。
 

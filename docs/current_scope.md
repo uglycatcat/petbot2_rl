@@ -82,7 +82,7 @@ Isaac Lab 计划采用位置/速度 action term 与 `ImplicitActuatorCfg`，由�
 4. 基线训练与策略导出。
 5. MuJoCo 推理适配及 sim2sim 验证。
 
-PetBot 首个 demo 的训练任务代码已实现并通过本地 CPU 检查；尚未运行 PhysX/训练、取得恢复策略或建立 MuJoCo 策略推理闭环。
+PetBot 首个 demo 的训练任务代码已实现，并在服务器容器内跑通资产转换、PhysX 导入、pre-learn 与训练/评估链路；首轮 11 组扫描（2048 envs × 3000 iteration）加确定性独立评估已完成，**结论是尚未学出恢复能力**（最好 5 组与开环"保持默认构型"地板基线持平），仍未建立策略导出与 MuJoCo 策略推理闭环。设计与现象见[首版扫描记录](../demo_project/recovery_agile_01/PETBOT_SWEEP_01.md)。
 
 ## 已定与待定的区别
 
