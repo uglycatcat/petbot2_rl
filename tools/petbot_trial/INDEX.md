@@ -35,3 +35,11 @@ PETBOT_MAX_ITERS=3000 ./launch_variants.sh start     # 后台跑：terminal back
 - 变体日志必须写在副本**之外**（`demo_project/runs/_logs/`）：副本根目录出现未跟踪文件会被 `pre_learn` 的脏树检查拒绝。
 - CLI 覆盖只对 runner（agent）侧有效（`agent.*`）；env 字段（`rewards.*`、`decimation`、`episode_length_s`）必须做**代码副本**并在副本内 commit（保持工作区干净）。
 - 容器以 root 运行 → 副本里的 `artifacts/`、`logs/` 在宿主侧属 root，删除需经 `docker exec`。
+
+## 第二轮训练与配对评估（2026-10-14）
+
+`sweep2_pipeline.py` 使用干净 demo HEAD 创建 8 个固定版本副本，GPU3 五组、GPU2 三组；每组 2048 envs × 3000 iteration。启动间隔至少 45 s，实际空闲显存不足时排队。首组完整训练初态库生成后复用，失败不自动重试。独立评估使用同一份 512 初态及状态张量 hash，比较默认构型、零动作、固定序列及策略的 750/1500/2999 检查点；汇总单独报告救回开环失败样本与丢失开环成功样本。
+
+从主仓库运行 `python3 demo_project/demo_env/sweep2_pipeline.py --prepare-only` 检查并准备副本；正式运行去掉 `--prepare-only`，用当前具有 Docker 权限的会话启动独立后台进程。用 `--status` 查看进度并更新汇总。输出在 `demo_project/runs/_sweep2/`：`status.json`、训练/评估日志、`summary.json`、`SUMMARY.md`。已有状态或进程锁会阻止重复启动。检查点和 TensorBoard 在各副本 `logs/rsl_rl/recovery_agile_01/`。
+
+服务器的 systemd user manager 未继承当前 shell 的 Docker 补充组，直接由它执行 docker 会报 socket permission denied；本轮已保存该次失败记录，改由已有 Docker 权限的 shell 派生独立进程，没有修改系统权限。状态文件须结合实际进程、日志和检查点核查。
