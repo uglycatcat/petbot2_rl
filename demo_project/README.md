@@ -12,6 +12,7 @@
 - 同一 demo 同时只由一端修改；另一端运行固定 commit 的独立副本。禁止同步正在训练的代码副本。
 - 修改前检查、同步远程分支；未提交/未推送的改动先保全，分叉先合并。repo 管理检出，提交与推送仍需在 demo checkout 中执行，不能在 detached HEAD 上遗留提交。
 - 每个完整修改及时 commit、push；阶段结束不得只留本机副本。首次分支推送成功后再写清单，新增/删除/改变来源或分支时同步更新本索引、manifest.json 和 default.xml。
+- **我方工具/脚本**（容器定义与挂载约定、并行扫描调度、确定性评估、地板基线）备份在 `demoproj/<项目名>-tools` 分支，内容放 `tools/petbot_trial/`，不进 `default.xml`。注意 demo 仓库带 git-lfs，**基于 demo 历史开新分支推送需要上传全部 LFS 对象**，所以工具分支做成**独立孤儿分支**（只含 `tools/`）；取用方式：`git fetch ours demoproj/<项目名>-tools` 后把 `tools/petbot_trial/` 拷到 `demo_project/demo_env/`。
 - 开发用完整 Git 历史；日志、检查点、生成资产与初态库不直接提交 Git，记录代码 commit、模型内容指纹、配置和产物位置。
 
 在 repo 创建的 checkout 里，先检查 `git remote -v`；清单 remote 名为 `ours`，本机首次 clone 的 remote 名为 `origin`，不要假定两者相同。首次开发可用 `git switch -c demoproj/recovery_agile_01 --track ours/demoproj/recovery_agile_01` 建立跟踪分支；若已有同名分支，切回已有分支，不要覆盖。干净工作区内 `git pull --ff-only` 后开始修改，分叉则保全并处理。
