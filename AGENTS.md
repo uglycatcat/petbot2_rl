@@ -97,7 +97,9 @@
 
 | 2026-10-13 | 本地实现首个 PetBot demo `recovery_agile_01`，代码推送 `demoproj/recovery_agile_01`（`b009c06`），登记 repo 清单与 demo 索引 | 9 项 CPU 测试、静态检查与语法检查通过；源模型未改，未连接服务器/运行训练；USD/PhysX 和学习效果待验证，见 [demo 说明](demo_project/recovery_agile_01/PETBOT.md) |
 | 2026-10-13 | **服务器验证 PetBot demo**（容器 `petbot-train`）：资产转换、PhysX 导入、任务实例化、pre-learn（默认站姿探针 + 倒地初态采集）、冒烟训练全部跑通；修两处适配后推送 `demoproj/recovery_agile_01`（`5622024`、`c5bc149`）；同步 demo 索引与清单 | 默认站姿实测 0.08427 m、初态库 16384/16384（接受率约 80%）；64 envs 2.7 s/iter、1024 envs 4.0 s/iter（≈8000 steps/s、显存 3.7 GB ⇒ 10000 iteration ≈ 11 h）；两处适配：容器内 git 需复刻宿主相对层级、导入关节名被加 `_1` 后缀；**未跑满 iteration、未评估、未导出**，见 [PETBOT.md](demo_project/recovery_agile_01/PETBOT.md#服务器验证记录2026-10-13) |
-| 2026-10-13 | 用户决定首版训练口径：**2048 envs**（1024 太少），并**并行多组参数同训**，用于一次性比较伺服增益、奖励权重与种子方差 | 见[训练方案](demo_project/recovery_agile_01/PETBOT.md#首版训练方案2026-10-13-用户决定) |
+| 2026-10-13 | 用户决定首版训练口径：**2048 envs**（1024 太少），并**并行多组参数同训**，用于一次性比较伺服增益、奖励权重与种子方差 | 见[首版训练与扫描](demo_project/recovery_agile_01/PETBOT.md#首版训练与扫描2026-10-1314) |
+| 2026-10-13 | PetBot 首版并行扫描**已部署**：11 组变体各跑固定 commit 的独立副本（`demo_project/runs/`），2048 envs × 3000 iter，**GPU3 6 组 + GPU2 3 组**并行、2 组排队（10-14 01:00/02:10 补位，08:38 全部跑满）；调度与探活脚本 `demo_project/demo_env/{launch_variants.sh,runs_probe.sh}` | 实测 Hydra 只接受 `agent.*` 覆盖，env 字段（奖励 / decimation / 回合长度）必须做代码副本；首个初态库被 6 组复用（缓存命中）；9 组并行约 7~8 s/iteration |
+| 2026-10-14 | **首版扫描 + 确定性独立评估完成，结论：没有一组学到起身**。最好 5 组 0.225~0.227，而开环"恒定保持默认构型"地板基线就有 **0.213**（恒定零动作 0.000）；`reward_config_heavy` 0.084、`spawn1m` 0.053、其余 4 组 0.000（且大量 episode 因越界/非法状态提前结束） | 三条机制：① 训练期 `Recovery/success_rate` 测的是探索噪声下的策略，不能比较变体，必须用确定性评估；② 约 21% 初态本就满足成功判据 → 成功率与 `stable` 奖励（权重 5.0）可被"不动"拿到，需加"必须发生恢复"的门控；③ 伺服增益 0.5×~2× 不是瓶颈，控制率/回合长度/加重静止惩罚/更大噪声都更差。设计与现象见[首版扫描记录](demo_project/recovery_agile_01/PETBOT_SWEEP_01.md) |
 
 细节写进对应文档，本表只保留一行结论。
 
@@ -107,7 +109,7 @@
 - **已有**：机器人模型（MJCF + 10 个 STL）、参考项目快照、训练服务器上的容器与训练 / 评估 / 渲染链路、recovery 的完整训练与评估结果。
 - **已有恢复能力（用户验证）**：通过几个固定姿态转换实现任意摔倒姿势下的站立恢复；测试细节尚未归档，尚无 RL 自然恢复动作的评估结果。
 - **参考分支**：`refproj/recovery`（上游 recovery + 我们的论文口径补丁，`default.xml` 已指向）、`refproj/recovery-tools`（给 recovery 试训用的脚本、补丁与全部实验定义，见该分支 `tools/recovery_trial/INDEX.md`）、`refproj/agile-tools` 与 `refproj/robot_lab-tools`（两个参考项目容器环境的版本化副本，见各自 `tools/agile_trial/`、`tools/robot_lab_trial/`）。
-- **PetBot 代码已有、服务器链路已跑通**：`demo_project/recovery_agile_01/` 的资产适配、混合伺服配置、随机落地初态库、PPO 任务、TensorBoard 指标和独立评估入口；见 [PETBOT.md](demo_project/recovery_agile_01/PETBOT.md)。尚未跑满 iteration、无独立评估结果、尚无策略导出或 MuJoCo 策略推理验证。
+- **PetBot 首轮扫描已完成、训练效果未出现**：`demo_project/recovery_agile_01/` 的资产适配、混合伺服配置、随机落地初态库、PPO 任务、TensorBoard 指标与独立评估入口；2026-10-13/14 跑完 11 组（2048 envs × 3000 iter）并做确定性独立评估——最好 5 组与开环"保持默认构型"地板基线持平，**没有一组学到从倒地起身**，见 [首版扫描记录](demo_project/recovery_agile_01/PETBOT_SWEEP_01.md)。尚无跑满 10000 iteration 的对照、无策略导出、无 MuJoCo 策略推理验证。
 - PetBot 动作接口（已定）：**5 个关节位置目标（`head` / `left_ear` / `right_ear` / `left_frame` / `right_frame`）+ 2 个后轮速度目标（`left_rear_wheel` / `right_rear_wheel`）**，由仿真内部伺服闭环执行；左右前轮被动；头、耳、车架与身体均可触地支撑。
 
 ## 目录职责
