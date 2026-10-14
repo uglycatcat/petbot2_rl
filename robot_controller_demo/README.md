@@ -1,20 +1,40 @@
-# PetBot 终端驾驶控制演示（已废弃）
+# robot_controller_demo
 
-> **这是一份废弃的早期 demo**：用终端键盘把 PetBot 开起来在 MuJoCo 里跑，与自恢复 RL 没有任何关系。代码与测试保留下来只作历史记录。
-> **AI 无需阅读、参考或运行它**；本仓库当前**没有**需要执行的自动化测试。
-> 后续 RL 的动作接口（5 路位置 + 2 路轮速）见 [需求基线](../docs/current_scope.md)。
+本机 MuJoCo 里的恢复参照和历史键盘驾驶。这里不训练。模型只读，各程序都加载 [`../robot_description/mjcf/scene.xml`](../robot_description/mjcf/scene.xml)，彼此不引用。
 
-## 它当年是什么
+图形程序需要本机显示器，以及已安装 MuJoCo 的 Python 环境。
 
-- 直接驾驶模型（加载 `../robot_description/mjcf/scene.xml`），有 Linux/X11 与 macOS 两个入口；macOS 需要 `mjpython` 承载图形主线程。
-- 按键：方向键前后 / 转向（可组合）；空格减速停车；`c` 在普通模式与控腿模式之间切换（Q/W 调左车架、E/R 调右车架的目标角，以 0.5 rad/s 连续变化，限位 `[-1.0, 1.2] rad`）；`Esc` 或 `Ctrl+C` 退出。
-- 头、双耳、左右车架由**外部位置 PID 力矩闭环**驱动 —— 不是策略输出，也不是仿真内部的原生位置伺服；左右前轮保持被动。
-- 默认最高目标线速度 `0.35 m/s`、最高偏航角速度 `1.5 rad/s`；其余参数在 `control.py` 的 `DriveConfig`。
-- 需要本机图形终端（X11，或 Wayland 下经 XWayland 起的 X11 终端），不适用于 SSH / 无图形环境。
+| 路径 | 内容 |
+|---|---|
+| [pose_recover_demo/](pose_recover_demo/) | 固定姿态恢复。动作组与试操结论见 [固定姿态恢复](../docs/fixed_pose_recovery.md) |
+| [test/fall_pose_statistics/](test/fall_pose_statistics/) | 执行器关闭后的被动沉降。结果见同一篇文档的[被动沉降](../docs/fixed_pose_recovery.md#被动沉降) |
+| [driver_demo/](driver_demo/README.md) | 早期终端键盘驾驶。历史记录 |
 
-## 与当前项目的关系
+## pose_recover_demo
 
-- 它**不是**恢复链路的一部分：没有策略、没有训练或评估入口、没有原生位置伺服。
-- `robot_description/` 现在**只读**。这个 demo 曾经把前轮滑动摩擦调成 `0.1`（当时实际使用的 `0.05` 的两倍），属于**历史模型改动**，不要再据此改动模型。
-- 目录里的 `test_*.py` 只覆盖这个 demo 自身的键盘与驾驶逻辑，不是本项目的检查项。
-- 依赖声明见 [requirements.txt](requirements.txt)。曾经用过的共享开发容器与 Compose 配置已不再使用，不要恢复。
+MuJoCo 窗口加一个英文状态界面。启动后停在 RECOVER，默认站姿被保持。PASSIVE、TRACK、RECOVER 三者互斥。STAND UP 接管当前模式，结束后回到进入前的模式。只有 TRACK 能拖三条 bar：左右车架、左右耳、两个后轮，两侧使用同一带符号目标。
+
+按下 STAND UP 时：未摔倒用 1 秒把关节收回初始角；摔倒且 pitch < 0 走 4 秒动作；摔倒且 pitch ≥ 0 走 8 秒动作。界面不标出是哪一套。完整时间表、增益和摔倒阈值见 [固定姿态恢复](../docs/fixed_pose_recovery.md)。
+
+右侧坐标系是 `lower_body` 上 IMU 的姿态。摔倒看 IMU +Z 与世界 +Z 的夹角：达到 45° 标为 FALLEN，回到 35° 以下才清除。在 MuJoCo 窗口里双击机体，再按住 Ctrl 拖拽，可改变空间姿态。
+
+```bash
+python robot_controller_demo/pose_recover_demo/main.py
+python -m unittest discover -s robot_controller_demo/pose_recover_demo -q
+```
+
+## 被动沉降统计
+
+`collect_resting_poses.py` 关闭执行器，把机器人以均匀朝向贴地放下，并加入侧躺、倒立、头朝下、头朝上探针，记录停稳后的姿态。1000 套停稳，倾斜角最大 121.7°。说明与分档见 [被动沉降](../docs/fixed_pose_recovery.md#被动沉降)，原始数据在 `test/fall_pose_statistics/output/`。
+
+```bash
+python robot_controller_demo/test/fall_pose_statistics/collect_resting_poses.py
+```
+
+## driver_demo
+
+方向键驾驶、空格刹车、`c` 切换控腿。头、耳、车架用外部位置 PID 出力矩。说明见 [driver_demo/README.md](driver_demo/README.md)。
+
+```bash
+python robot_controller_demo/driver_demo/main.py
+```

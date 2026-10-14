@@ -14,7 +14,7 @@ PetBot（轮足机器狗）在平地上被推倒、滚翻或跌落后，通过�
 | [docs/](docs/README.md) | 需求基线、工程实施、参考项目试训记录 |
 | `reference_project/` | 上游参考项目，由根目录 [default.xml](default.xml) 清单管理；不进版本管理 |
 | [demo_project/](demo_project/README.md) | PetBot 实验项目，首个为 `recovery_agile_01`；同一 repo 清单管理，代码备份到 `demoproj/` 分支，见 [实施约定](docs/engineering_handoff.md#版本管理与双端协作) |
-| `robot_controller_demo/` | 早期手动键盘 demo，**已废弃**，无需阅读或参考 |
+| [robot_controller_demo/](robot_controller_demo/README.md) | 本机 MuJoCo 固定姿态恢复与被动沉降统计。早期键盘驾驶只作历史记录 |
 
 ## 如何配置
 

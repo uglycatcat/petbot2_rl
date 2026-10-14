@@ -36,7 +36,7 @@ def main():
     else:
         from keyboard_macos import MacTerminalKeyboard as TerminalKeyboard
 
-    model_path = Path(__file__).resolve().parents[1] / 'robot_description/mjcf/scene.xml'
+    model_path = Path(__file__).resolve().parents[2] / 'robot_description/mjcf/scene.xml'
     model = mujoco.MjModel.from_xml_path(str(model_path))
     configure_simulation(model)
     data = mujoco.MjData(model)

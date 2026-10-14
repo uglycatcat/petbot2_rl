@@ -6,7 +6,7 @@
 
 - 目标：PetBot（轮足机器狗）在平地上被推倒、滚翻或跌落后，用强化学习策略恢复到默认站立构型并保持稳定。
 - 主线：Isaac Lab + RSL-RL + PPO 训练 → 策略导出 → MuJoCo 做 sim2sim 验证。
-- **已有能力与训练目的**：用户已验证 PetBot 可从任意摔倒姿势，通过几个固定姿态的转换恢复站立（测试细节尚未归档）；RL 用于学习更自然、连贯、平滑的恢复动作。默认轮足构型无需单独训练站立策略；策略采用 **5 路位置 + 2 路速度**混合输出；训练**不依赖参考动作流或示范轨迹数据**，已有固定姿态恢复经验不等同于训练数据。详见[需求基线](docs/current_scope.md#已有能力与强化学习的目的)。
+- **已有能力与训练目的**：本机 MuJoCo 固定姿态恢复已实现。用户于 2026-10-14 确认当前动作组效果可用、按是否摔倒和 pitch 符号分支的思路明确，但不能覆盖所有摔倒情况；没有全姿态成功率统计。RL 用于学习更自然、连贯、平滑的恢复动作。默认轮足构型无需单独训练站立策略；策略采用 **5 路位置 + 2 路速度**混合输出；训练**不依赖参考动作流或示范轨迹数据**，这套固定姿态恢复不是训练数据。详见[固定姿态恢复](docs/fixed_pose_recovery.md)与[需求基线](docs/current_scope.md#已有能力与强化学习的目的)。
 - **当前阶段：参考试训与 PetBot 首版实现并行准备。** recovery 线已关闭。AGILE 的**标准起身训练已于 2026-10-13 在服务器容器内启动**（`StandUp-T1-v0`、4096 envs、100k iteration、seed 42、tensorboard；日志 `reference_project/agile_env/logs/`，检查点 `reference_project/WBC-AGILE/logs/rsl_rl/stand_up_t1/`，实测 ≈7.4 s/iteration → 约 8.8 天）；robot_lab 容器已就绪但尚未开始训练。已确定以 AGILE 为底座、借鉴 robot_lab 混合动作配置实现 `demo_project/recovery_agile_01/`，无需等待参考试训结束。PetBot 首版代码已推送 `demoproj/recovery_agile_01`；2026-10-13 在服务器 `petbot-train` 容器内跑通资产转换、PhysX 导入、pre-learn 与冒烟训练，首版口径按用户决定改为 **2048 envs**，首轮 11 组并行扫描已跑满 3000 iteration 并完成确定性评估（尚未学出有效起身能力），见 [demo 索引](demo_project/README.md)。
 - **PetBot 与参考项目的本质区别**：PetBot **本来就能轻松站住**（默认站姿是四轮着地的静稳定姿态，站立不需要策略去学）；而 `recovery` 这类轮足翻倒起身项目，研究对象默认**连"站住"都还没解决** —— 它们的站立姿态是要学出来的，所以才有高度 / 姿态塑形、ED-CW 类课程，以及"站住了但还在晃"这种失败模式。**参考项目的奖励权重、课程与成功判据不能直接照搬。**
 
@@ -33,6 +33,7 @@
 | 4 | [docs/current_scope.md](docs/current_scope.md) | 需求基线：目标、动作接口、范围与待定项 |
 | 5 | [docs/engineering_handoff.md](docs/engineering_handoff.md) | 工程实施：接口契约、恢复任务设计、阶段验收 |
 | 6 | [reference_project/README.md](reference_project/README.md) | 上游快照索引、来源记录与使用边界 |
+| 7 | [docs/fixed_pose_recovery.md](docs/fixed_pose_recovery.md) | 本机 MuJoCo 固定姿态恢复动作组，以及被动沉降姿态的采集与结果 |
 
 ## 全局规则（硬约束）
 
@@ -104,17 +105,20 @@
 
 | 2026-10-14 | 15:03 服务器复核：PetBot 11 组均有 `model_2999.pt`，评估 JSON 与首轮汇总一致；AGILE 日志到 10774/100000，最新检查点 `model_10750.pt`，仍在推进，尚无独立效果评估 | 修正入口过时状态；21.3% 是开环控制后的成功率，不是初态成功率，见 [复核边界](demo_project/README.md#首轮结果复核与解释边界2026-10-14) |
 
-| 2026-10-14 | 明确文档职责与下一步验证安排 | 根 README 用于人类部署/使用，不同步进度；文档使用正式项目名。先由用户在 `robot_controller_demo/` 实现传统固定姿态恢复，再结合构型、接触与恢复过程推进 RL 优化；传统恢复实现及验证结果待提供，见[工程实施说明](docs/engineering_handoff.md#固定姿态恢复参照2026-10-14) |
+| 2026-10-14 | 明确文档职责与下一步验证安排 | 根 README 用于人类部署/使用，不同步进度；文档使用正式项目名。先在 `robot_controller_demo/` 实现传统固定姿态恢复，再结合构型、接触与恢复过程推进 RL 优化 |
+| 2026-10-14 | **被动沉降姿态统计**（本机 MuJoCo，执行器关闭）：1000 套停稳，55 次超时后补抽。身体 +Z 与世界 +Z 的夹角最大 **121.7°**，130° 以上为 0；左侧躺、右侧躺、倒立探针都离开初始朝向 | 主簇在 110°–120°（584 套）。均匀朝向、贴地 1 cm 放下。采集与分档见 [固定姿态恢复](docs/fixed_pose_recovery.md#被动沉降) |
+| 2026-10-14 | **固定姿态恢复动作组**（本机 MuJoCo，`pose_recover_demo`）：用户试过，效果可用，不能覆盖所有摔倒；没有全姿态成功率 | 未摔倒 1 s 回初始角。摔倒且 pitch < 0 为 4 s。摔倒且 pitch ≥ 0 为 8 s：车架先走 4 s，再接上负 pitch 那套。动作表见 [固定姿态恢复](docs/fixed_pose_recovery.md) |
 
 细节写进对应文档，本表只保留一行结论。
 
 ## 当前实现状态
 
-- **下一步（2026-10-14 用户确认）**：先在 `robot_controller_demo/` 实现传统固定姿态恢复方案，作为理解构型与诊断恢复过程的参照，再推进 RL 优化；传统恢复代码及验证待用户提供。详见[实施安排](docs/engineering_handoff.md#固定姿态恢复参照2026-10-14)。
+- **固定姿态恢复（2026-10-14，用户试操）**：`robot_controller_demo/pose_recover_demo/` 已实现。未摔倒用 1 s 回到初始角；摔倒后按 pitch 符号走 4 s 或 8 s 动作组。用户确认效果可用、思路明确，但不能覆盖所有摔倒情况。没有全姿态成功率统计。动作、判据和被动沉降数字见 [固定姿态恢复](docs/fixed_pose_recovery.md)。该动作组是构型与接触的参照，不是训练示范数据。
+- **被动静止姿态（2026-10-14 实测）**：执行器关闭、均匀朝向贴地放下后，1000 套停稳，倾斜角最大 121.7°，130° 以上为 0。侧躺与倒立初态都会离开初始朝向。原始数据在 `robot_controller_demo/test/fall_pose_statistics/output/`。
 
 - **参考项目与 PetBot 状态**：recovery 已关闭；AGILE 容器内 `StandUp-T1-v0` 标准训练**运行中**（2026-10-13 启动，4096 envs / 100k iteration，检查点与 TensorBoard 见上方进度行），robot_lab 容器已就绪未开训。PetBot `recovery_agile_01` 服务器链路已跑通，首轮 11 组扫描与确定性评估已完成——**没有一组学到从倒地起身**（最好 5 组与开环地板基线持平），详见[首版扫描记录](demo_project/recovery_agile_01/PETBOT_SWEEP_01.md)与[实施约定](docs/engineering_handoff.md#petbot-demo-管理与首版交付2026-10-13-用户确认)。
 - **已有**：机器人模型（MJCF + 10 个 STL）、参考项目快照、训练服务器上的容器与训练 / 评估 / 渲染链路、recovery 的完整训练与评估结果。
-- **已有恢复能力（用户验证）**：通过几个固定姿态转换实现任意摔倒姿势下的站立恢复；测试细节尚未归档，尚无 RL 自然恢复动作的评估结果。
+- **已有恢复能力（2026-10-14 用户试操）**：本机 MuJoCo 固定姿态动作组有可用恢复效果，分支按是否摔倒和 pitch 符号选择；用户确认不能覆盖所有摔倒情况。尚无该动作组的全姿态成功率，也尚无 RL 自然恢复动作的评估结果。见 [固定姿态恢复](docs/fixed_pose_recovery.md)。
 - **参考分支**：`refproj/recovery`（上游 recovery + 我们的论文口径补丁，`default.xml` 已指向）、`refproj/recovery-tools`（给 recovery 试训用的脚本、补丁与全部实验定义，见该分支 `tools/recovery_trial/INDEX.md`）、`refproj/agile-tools` 与 `refproj/robot_lab-tools`（两个参考项目容器环境的版本化副本，见各自 `tools/agile_trial/`、`tools/robot_lab_trial/`）、`demoproj/recovery_agile_01-tools`（PetBot demo 的服务器工具：容器挂载约定、并行扫描调度、确定性评估与地板基线，见该分支 `tools/petbot_trial/INDEX.md`；**独立孤儿分支**，只含 `tools/`，因为 demo 仓库带 git-lfs，基于 demo 历史开分支推送要上传全部 LFS 对象）。
 - **PetBot 首轮扫描已完成、训练效果未出现**：`demo_project/recovery_agile_01/` 的资产适配、混合伺服配置、随机落地初态库、PPO 任务、TensorBoard 指标与独立评估入口；2026-10-13/14 跑完 11 组（2048 envs × 3000 iter）并做确定性独立评估——最好 5 组与开环"保持默认构型"地板基线持平，**没有一组学到从倒地起身**，见 [首版扫描记录](demo_project/recovery_agile_01/PETBOT_SWEEP_01.md)。尚无跑满 10000 iteration 的对照、无策略导出、无 MuJoCo 策略推理验证。
 - PetBot 动作接口（已定）：**5 个关节位置目标（`head` / `left_ear` / `right_ear` / `left_frame` / `right_frame`）+ 2 个后轮速度目标（`left_rear_wheel` / `right_rear_wheel`）**，由仿真内部伺服闭环执行；左右前轮被动；头、耳、车架与身体均可触地支撑。
@@ -127,11 +131,11 @@
 | `docs/` | 项目文档：需求、工程、参考项目进度 | 可改 |
 | `reference_project/` | 上游快照与训练产物 | 不受主线版本管理；但**不放 PetBot 自有的唯一副本** |
 | `demo_project/` | PetBot 自有实验项目，由 repo 物化 | 嵌套代码在 `demoproj/` 分支版本化，清单与索引在 main |
-| `robot_controller_demo/` | 手动控制演示与传统固定姿态恢复 | 用户先在此实现传统恢复，后续用于理解构型、接触与恢复过程；可按该任务阅读、参考，源模型只读约束不变 |
+| `robot_controller_demo/` | 本机 MuJoCo 固定姿态恢复与被动沉降统计；早期键盘驾驶只作历史记录 | 可按该任务阅读、参考；源模型只读约束不变 |
 | `AGENTS.md` / `README.md` | agent 入口 / 人类入口 | 可改 |
 
 ## 检查与交接
 
-- demo 的本地测试：在 `demo_project/recovery_agile_01/` 运行 `python -m pytest -q --confcutdir=petbot_tests petbot_tests`（CPU Torch / MuJoCo 等依赖见 PETBOT.md）；它不启动 Isaac Sim 或训练。`robot_controller_demo/` 下的旧测试不必运行。
+- demo 的本地测试：在 `demo_project/recovery_agile_01/` 运行 `python -m pytest -q --confcutdir=petbot_tests petbot_tests`（CPU Torch / MuJoCo 等依赖见 PETBOT.md）；它不启动 Isaac Sim 或训练。改 `pose_recover_demo/` 时运行 `python -m unittest discover -s robot_controller_demo/pose_recover_demo -q`。`driver_demo/` 的旧测试不必运行。
 - 每次工作结束前：核对重要信息与进展是否已同步至本文件「进度报告」及对应主题文档；实现状态发生变化时同步更新「当前实现状态」。明确区分用户确认、实测与未验证内容；无新增重要信息时无需为留痕而改文档。
 - `docs/reports/` 是 2026-09-24 的历史调研资料，只作模型与文献追溯，不代表当前方案。

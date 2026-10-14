@@ -1,4 +1,4 @@
-"""Run: python -m unittest discover -s robot_controller -v"""
+"""Run: python -m unittest discover -s robot_controller_demo/driver_demo -v"""
 
 from pathlib import Path
 import unittest
@@ -11,7 +11,7 @@ from control import DriveCommand, DriveConfig, RobotController, configure_simula
 from keyboard_macos import MacTerminalKeyboard
 
 
-SCENE = Path(__file__).resolve().parents[1] / 'robot_description/mjcf/scene.xml'
+SCENE = Path(__file__).resolve().parents[2] / 'robot_description/mjcf/scene.xml'
 
 
 class DrivingTests(unittest.TestCase):

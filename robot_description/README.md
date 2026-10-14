@@ -32,6 +32,6 @@
 
 ## 边界
 
-- 早期的手动键盘 demo（`robot_controller_demo/`，**已废弃**）曾用外部位置 PID 驱动那五个力矩执行器，与后续 RL 无关；它当年把前轮滑动摩擦调到 `0.1`，属历史模型改动，不要再据此改动模型。
+- 早期键盘驾驶在 `robot_controller_demo/driver_demo/`，曾用外部位置 PID 驱动那五个力矩执行器；它当年把前轮滑动摩擦调到 `0.1`，属历史模型改动，不要再据此改动模型。同目录的固定姿态恢复见 [fixed_pose_recovery.md](../docs/fixed_pose_recovery.md)，同样不改本目录的模型。
 - 本模型与另一个 ROS 工作区里用于 ToF/ROS 演示的机器人描述用途不同。
 - 历史报告（`docs/reports/`）中的参数与快照只作追溯，不随当前模型更新。

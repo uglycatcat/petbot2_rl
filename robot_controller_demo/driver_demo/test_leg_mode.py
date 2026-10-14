@@ -13,7 +13,7 @@ from keyboard_macos import MacTerminalKeyboard
 class LegModeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        scene = Path(__file__).resolve().parents[1] / 'robot_description/mjcf/scene.xml'
+        scene = Path(__file__).resolve().parents[2] / 'robot_description/mjcf/scene.xml'
         cls.model = mujoco.MjModel.from_xml_path(str(scene))
         configure_simulation(cls.model)
 
