@@ -43,3 +43,7 @@ PETBOT_MAX_ITERS=3000 ./launch_variants.sh start     # 后台跑：terminal back
 从主仓库运行 `python3 demo_project/demo_env/sweep2_pipeline.py --prepare-only` 检查并准备副本；正式运行去掉 `--prepare-only`，用当前具有 Docker 权限的会话启动独立后台进程。用 `--status` 查看进度并更新汇总。输出在 `demo_project/runs/_sweep2/`：`status.json`、训练/评估日志、`summary.json`、`SUMMARY.md`。已有状态或进程锁会阻止重复启动。检查点和 TensorBoard 在各副本 `logs/rsl_rl/recovery_agile_01/`。
 
 服务器的 systemd user manager 未继承当前 shell 的 Docker 补充组，直接由它执行 docker 会报 socket permission denied；本轮已保存该次失败记录，改由已有 Docker 权限的 shell 派生独立进程，没有修改系统权限。状态文件须结合实际进程、日志和检查点核查。
+
+## 复位姿态诊断（2026-10-15）
+
+`sweep2_sequence_xyzw_diagnostic.py` 基于训练代码 `9553fef` 的评估入口，独立使用 Lab 3 根姿态 **xyzw** 计算初始重力，打印缓存/直接计算的差异与倒地数量。仅用于排查，未修复训练任务中的课程与复位观测。运行时从 demo checkout 执行，设置 `PYTHONPATH` 为该 checkout；参数同 `petbot_sweep2_eval.py`，本次为 `--episodes 512 --mode sequence --dataset /workspace/runs/_sweep2/eval_states.pt`，输出 `sequence_xyzw_diagnostic.json`。已确认缓存 fallen=0、直接计算=509；修正序列成功 35/512。详细证据在主线 `docs/petbot_sweep2_results.md`。
