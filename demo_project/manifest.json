@@ -8,18 +8,21 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/recovery_agile_01",
-      "verified_commit": "3bca3152db79fce38a0b0cbed40c982862c6d45d",
+      "verified_commit": "88c4c5fb416b99e66a103c9b097329826ba8a357",
       "upstream_url": "https://github.com/nvidia-isaac/WBC-AGILE.git",
       "upstream_commit": "6830cf995714e81c91ce63247e8e016d36e28f14",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "sweep3_complete; no_new_recovery; sweep4_fixed_LR_precheck_running",
-      "local_validation": "PhysX stochastic standing 64/64; GPU probability/gradient/export checks; B/C 128 envs x 100 iteration and checkpoint reload passed. Independent untrained stochastic control 87/512 success, 84/512 stable. Training library 16384 with 2489 recoverable fallen curriculum samples. See docs/petbot_sweep3_training.md and PETBOT_SWEEP_03.md.",
+      "status": "sweep3_complete; sweep4_B_C_two_seeds_2048x1500_running_PPO_on_GPU2_3",
+      "local_validation": "Sweep4 fixed code 3bca315: GPU probability/gradient/JIT and PhysX standing 64/64; B/C 128x100 finite PPO with fixed LR 0.0002; paired reload each 85/512 success, 84/512 stable, rescued 0/lost 0; full curriculum pool 2489/16384. See docs/petbot_sweep4_training.md.",
       "task": "PetBot-Recovery-AGILE-v0",
       "usage": "PETBOT.md",
-      "active_tasks": []
+      "active_tasks": [
+        "PetBot-Recovery-Sweep4-B-v0",
+        "PetBot-Recovery-Sweep4-C-v0"
+      ]
     },
     {
       "name": "jump_rl_demo",
