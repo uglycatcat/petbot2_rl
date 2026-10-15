@@ -120,3 +120,5 @@ ruff check agile/petbot agile/rl_env/tasks/stand_up/petbot petbot_tests scripts/
 - Isaac Lab API 源码核对版本：`v3.0.0-beta2`，commit `28a37cecdd433c22d9eabd6a5954add9f13a8951`；包括 MJCF converter、implicit actuator、joint action、manager reset 顺序与 ProxyArray 的 `.torch` 接口。
 - [官方 Lab 3 迁移说明](https://isaac-sim.github.io/IsaacLab/v3.0.0-beta2/source/migration/migrating_to_isaaclab_3-0.html)。具体配置以该 tag 的源码为准。
 - 初始配置与性能已在服务器实测（见[首版扫描记录](PETBOT_SWEEP_01.md)）；本地检查记录不替代部署结果。
+
+第三轮任务、探索概率契约和课程定义见 [PETBOT_SWEEP_03.md](PETBOT_SWEEP_03.md)。
