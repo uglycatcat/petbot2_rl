@@ -182,8 +182,9 @@ def reset_from_dataset(env, env_ids):
         else:
             indices = torch.randint(len(dataset["root"]), (count,), device="cpu", generator=env.petbot_reset_rng)
             if getattr(env.cfg, "easy_reset_curriculum", False) and hasattr(env, "petbot_easy_pool"):
-                progress = min(env.petbot_region_ema / .8, env.petbot_low_speed_ema / .5,
-                               env.petbot_success_ema / .25, 1.)
+                progress = (.4 * min(env.petbot_region_ema / .8, 1.)
+                            + .4 * min(env.petbot_low_speed_ema / .5, 1.)
+                            + .2 * min(env.petbot_success_ema / .25, 1.))
                 fraction = .5 - .3 * progress
                 mask = torch.rand(count, generator=env.petbot_reset_rng) < fraction
                 pool = env.petbot_easy_pool
