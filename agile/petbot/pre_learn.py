@@ -61,11 +61,16 @@ def pre_learn(env, task_name, agent_cfg):
     env.petbot_eval_mode = cfg.split == "eval"
     env.petbot_eval_cursor = 0
     env.petbot_success_ema = 0.0
+    env.petbot_region_ema = 0.0
+    env.petbot_low_speed_ema = 0.0
     env.petbot_curriculum_pool = reset_pool_indices(env.petbot_dataset["root"])
     if getattr(env.cfg, "sweep2", False):
         if abs(agent_cfg.algorithm.gamma - env.cfg.shaping_gamma) > 1e-9:
             raise ValueError("PPO and potential shaping discounts must match")
         env.petbot_previous_potential = torch.zeros(env.num_envs, device=env.device)
+    if getattr(env.cfg, "easy_reset_curriculum", False) and not env.petbot_eval_mode:
+        from .curriculum import classify_easy_states
+        env.petbot_easy_pool, env.petbot_easy_metadata = classify_easy_states(env, metadata)
     env.petbot_ready = True
     env.reset()
 
@@ -87,5 +92,7 @@ def pre_learn(env, task_name, agent_cfg):
         "initial_states": relative_path,
         "collection": metadata,
     }
+    if hasattr(env, "petbot_easy_metadata"):
+        env.petbot_provenance["easy_curriculum"] = env.petbot_easy_metadata
     env.petbot_source_diff = git("diff", "HEAD", "--", ".")
     print(f"[PetBot] default standing height: {env.petbot_standing_height:.5f} m; initial states: {relative_path}")

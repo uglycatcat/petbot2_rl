@@ -52,6 +52,9 @@ class RslRlPpoActorCriticCfg:
     noise_std_range: tuple[float, float] = (1e-6, 1e6)
     """Bounds used inside the Gaussian distribution, including log-probability calculation."""
 
+    actor_model_override: str | None = None
+    """Optional native RSL-RL actor class; critic stays unchanged."""
+
     distribution_override: dict | None = None
     """Optional native RSL-RL distribution config; default preserves Gaussian behavior."""
 
@@ -335,6 +338,7 @@ def _distribution_cfg(policy: dict) -> dict:
 
 def _actor_model_cfg(policy: dict, empirical_normalization: bool) -> dict:
     class_name = "RNNModel" if policy.get("class_name") == "ActorCriticRecurrent" else "MLPModel"
+    class_name = policy.get("actor_model_override") or class_name
     cfg = {
         "class_name": class_name,
         "hidden_dims": policy["actor_hidden_dims"],

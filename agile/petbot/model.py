@@ -113,6 +113,6 @@ def prepared_asset() -> tuple[Path, dict]:
 
 def task_implementation_fingerprint() -> str:
     """Behavioral code identity independent of documentation-only commits."""
-    names = ("core.py", "mdp.py", "env_cfg.py", "asset_cfg.py", "collection.py", "distribution.py")
+    names = ("core.py", "mdp.py", "env_cfg.py", "asset_cfg.py", "collection.py", "distribution.py", "curriculum.py", "agents.py", "pre_learn.py")
     payload = {name: hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest() for name in names}
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()

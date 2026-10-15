@@ -39,3 +39,52 @@ class PetBotBetaDistribution(BetaDistribution):
     def entropy(self):
         # Upstream entropy omits the constant Jacobian for rescaling [0,1] -> [-1,1].
         return super().entropy + self.output_dim * math.log(2.)
+
+
+class PetBotRecoveryBetaDistribution(PetBotBetaDistribution):
+    """Preserve learned mean; concentrate exploration near the recovery configuration."""
+    def update(self, mlp_output):
+        alpha_raw, beta_raw = torch.unbind(mlp_output, dim=-2)
+        alpha = torch.nn.functional.softplus(alpha_raw) + 1.
+        beta = torch.nn.functional.softplus(beta_raw) + 1.
+        # The actor recomputes this from raw observations for BOTH rollout and PPO minibatches.
+        scale = self.recovery_scale
+        concentration = alpha + beta
+        multiplier = ((concentration + 1.) / scale.square() - 1.) / concentration
+        self._alpha = alpha * multiplier
+        self._beta = beta * multiplier
+        # Near-zero exploration needs large concentrations: evaluate special functions in fp64.
+        self._distribution = torch.distributions.Beta(self._alpha.double(), self._beta.double())
+
+    def sample(self):
+        return super().sample().float()
+
+    def log_prob(self, outputs):
+        return super().log_prob(outputs.double()).float()
+
+    @property
+    def entropy(self):
+        return super().entropy.float()
+
+    def kl_divergence(self, old_params, new_params):
+        return super().kl_divergence(tuple(p.double() for p in old_params),
+                                     tuple(p.double() for p in new_params)).float()
+
+
+from rsl_rl.models import MLPModel
+
+
+class PetBotRecoveryActor(MLPModel):
+    """State gate uses only deployed observations; deterministic export remains native MLP."""
+    def get_latent(self, obs, masks=None, hidden_state=None):
+        raw = torch.cat([obs[group] for group in self.obs_groups], dim=-1)
+        if raw.shape[-1] % 27:
+            raise ValueError("PetBot actor requires 27-value observation frames")
+        current = raw[..., -27:]
+        upright = ((-current[..., 5] - .85) / .13).clamp(0., 1.)
+        configuration = ((.6 - current[..., 6:11].abs().amax(-1)) / .48).clamp(0., 1.)
+        gate = upright * configuration
+        gate = gate.square() * (3. - 2. * gate)
+        floor = raw.new_tensor([.01] * 5 + [.005] * 2)
+        self.distribution.recovery_scale = 1. - gate.unsqueeze(-1) * (1. - floor)
+        return super().get_latent(obs, masks, hidden_state)

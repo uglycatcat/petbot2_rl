@@ -176,3 +176,21 @@ class PetBotSweep2HistoryEnvCfg(PetBotSweep2EnvCfg):
 @configclass
 class PetBotSweep2CurriculumEnvCfg(PetBotSweep2HistoryEnvCfg):
     reset_curriculum: bool = True
+
+
+@configclass
+class Sweep3RewardsCfg(Sweep2RewardsCfg):
+    recovery_region = RewTerm(func=mdp.sweep3_reward, weight=1., params={"kind": "region"})
+    low_speed = RewTerm(func=mdp.sweep3_reward, weight=2., params={"kind": "low_speed"})
+
+
+@configclass
+class PetBotSweep3EnvCfg(PetBotSweep2HistoryEnvCfg):
+    rewards = Sweep3RewardsCfg()
+    sweep3: bool = True
+    easy_reset_curriculum: bool = False
+
+
+@configclass
+class PetBotSweep3CurriculumEnvCfg(PetBotSweep3EnvCfg):
+    easy_reset_curriculum: bool = True

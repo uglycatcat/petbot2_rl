@@ -106,7 +106,7 @@ def main():
         if saved['actor_dim'] != 27 * getattr(env_cfg, 'history_steps', 1):
             raise ValueError('History/actor dimension mismatch')
         # Runner-only overrides (steps/lr/seeds) do not change policy architecture here.
-        for field in ('actor_hidden_dims', 'critic_hidden_dims', 'activation', 'noise_std_type', 'noise_std_range', 'distribution_override'):
+        for field in ('actor_hidden_dims', 'critic_hidden_dims', 'activation', 'noise_std_type', 'noise_std_range', 'distribution_override', 'actor_model_override'):
             if field in recorded_agent['policy']:
                 setattr(agent_cfg.policy, field, recorded_agent['policy'][field])
         runner = make_rsl_rl_runner(wrapped, agent_cfg, log_dir=None, device=agent_cfg.device)

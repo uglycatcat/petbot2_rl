@@ -6,6 +6,7 @@ from pathlib import Path
 
 from isaaclab.app import AppLauncher
 parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--task', default='PetBot-Recovery-Repair-v0')
 parser.add_argument('--dataset', required=True)
 parser.add_argument('--output', required=True)
 AppLauncher.add_app_launcher_args(parser)
@@ -25,7 +26,7 @@ def main():
     from agile.petbot.model import POSITION_JOINTS, load_model
     from agile.rl_env.rsl_rl import RslRlVecEnvWrapper, make_rsl_rl_runner
 
-    task='PetBot-Recovery-Repair-v0'
+    task=args.task
     cfg=load_cfg_from_registry(task,'env_cfg_entry_point');cfg.scene.num_envs=64;cfg.sim.device='cuda:0'
     agent=load_cfg_from_registry(task,'rsl_rl_cfg_entry_point');agent.device='cuda:0'
     agent.petbot_collection.split='eval';agent.petbot_collection.seed=20261015;agent.petbot_collection.num_states=512
@@ -107,6 +108,20 @@ def main():
     torch.testing.assert_close(actual,action,atol=1e-6,rtol=0)
     torch.testing.assert_close(robot.data.default_joint_pos.torch if hasattr(robot.data.default_joint_pos,'torch') else robot.data.default_joint_pos,home)
     checks.append('one_success_event_stable_reward_and_bounded_policy_home_initialization')
+    if getattr(base.cfg, 'sweep3', False):
+        # Test stochastic completion under the actual bounded distribution, not mean-only inference.
+        base.petbot_eval_cursor=0;env.reset()
+        obs=wrapped.get_observations()
+        for _ in range(150):
+            with torch.no_grad(): sampled=runner.alg.actor(obs,stochastic_output=True)
+            obs,rew,dones,extras=wrapped.step(sampled)
+        rate=base.petbot_hold.ever.float().mean().item()
+        assert rate >= .9, f'Standing stochastic positive control failed: {rate}'
+        assert base.petbot_region_ever.all() and base.petbot_low_speed_ever.all()
+        from agile.petbot.mdp import recovery_region
+        fake=state(base);fake['gravity']=torch.tensor([0.,0.,1.],device=dev).expand(n,3)
+        assert not recovery_region(fake,base.petbot_standing_height).any()
+        checks.append(f'state_gated_stochastic_standing_success_{rate:.3f}_and_zero_inverted_reward')
     output={'checks':checks,'passed':True,'state_contract':base.petbot_provenance['state_contract'],'demo_commit':base.petbot_provenance['demo_commit']}
     Path(args.output).write_text(json.dumps(output,indent=2)+'\n');print(json.dumps(output),flush=True)
     env.close()

@@ -42,3 +42,17 @@ gym.register(
         "pre_learn_entry_point": "agile.petbot.pre_learn:pre_learn",
     },
 )
+
+
+for suffix, config, runner in (
+    ("A", "PetBotSweep2HistoryEnvCfg", "PetBotRepairRunnerCfg"),
+    ("B", "PetBotSweep3EnvCfg", "PetBotSweep3RunnerCfg"),
+    ("C", "PetBotSweep3CurriculumEnvCfg", "PetBotSweep3RunnerCfg"),
+):
+    gym.register(
+        id=f"PetBot-Recovery-Sweep3-{suffix}-v0",
+        entry_point="agile.petbot.mdp:PetBotRecoveryEnv", disable_env_checker=True,
+        kwargs={"env_cfg_entry_point": f"agile.petbot.env_cfg:{config}",
+                "rsl_rl_cfg_entry_point": f"agile.petbot.agents:{runner}",
+                "pre_learn_entry_point": "agile.petbot.pre_learn:pre_learn"},
+    )

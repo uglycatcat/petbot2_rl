@@ -73,3 +73,12 @@ class PetBotRepairRunnerCfg(PetBotSweep2RunnerCfg):
             "initial_mean": mean,
             "initial_std": [.2, .2, .2, .2, .2, .1, .1],
         }
+
+
+@configclass
+class PetBotSweep3RunnerCfg(PetBotRepairRunnerCfg):
+    def __post_init__(self):
+        super().__post_init__()
+        self.algorithm.entropy_coef = .0002
+        self.policy.actor_model_override = "agile.petbot.distribution:PetBotRecoveryActor"
+        self.policy.distribution_override["class_name"] = "agile.petbot.distribution:PetBotRecoveryBetaDistribution"

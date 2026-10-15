@@ -113,6 +113,30 @@ def sweep2_reward(env, kind):
         raise ValueError(kind)
     return torch.nan_to_num(value, nan=0.0, posinf=0.0, neginf=0.0)
 
+def recovery_region(s, height):
+    # No reward for lying still: zero at >= 45 degree tilt.
+    upright = ((-s["gravity"][:, 2] - .7071) / (.98 - .7071)).clamp(0., 1.)
+    configuration = torch.exp(-s["joint_error"].square().mean(-1) / .12)
+    elevation = torch.exp(-((s["height"] - height) / .035).square())
+    return upright * configuration * elevation
+
+
+def sweep3_reward(env, kind):
+    s, _, _, _ = metrics(env)
+    region = recovery_region(s, env.petbot_standing_height)
+    speed = (s["lin_vel"].norm(dim=-1) / .10).square()
+    speed += (s["ang_vel"].norm(dim=-1) / .3).square()
+    speed += (s["pos_vel"].abs().amax(-1) / .3).square()
+    speed += (s["wheel_vel"].abs().amax(-1) / 1.).square()
+    low_speed = region * torch.exp(-speed)
+    if not hasattr(env, "petbot_region_ever"):
+        env.petbot_region_ever = torch.zeros(env.num_envs, device=env.device, dtype=torch.bool)
+        env.petbot_low_speed_ever = torch.zeros_like(env.petbot_region_ever)
+    env.petbot_region_ever |= region > .8
+    env.petbot_low_speed_ever |= low_speed > .5
+    return region if kind == "region" else low_speed
+
+
 def action_rate(env):
     return (env.action_manager.action - env.action_manager.prev_action).square().sum(dim=-1)
 
@@ -157,6 +181,14 @@ def reset_from_dataset(env, env_ids):
             env.petbot_eval_cursor += count
         else:
             indices = torch.randint(len(dataset["root"]), (count,), device="cpu", generator=env.petbot_reset_rng)
+            if getattr(env.cfg, "easy_reset_curriculum", False) and hasattr(env, "petbot_easy_pool"):
+                progress = min(env.petbot_region_ema / .8, env.petbot_low_speed_ema / .5,
+                               env.petbot_success_ema / .25, 1.)
+                fraction = .5 - .3 * progress
+                mask = torch.rand(count, generator=env.petbot_reset_rng) < fraction
+                pool = env.petbot_easy_pool
+                indices[mask] = pool[torch.randint(len(pool), (int(mask.sum()),), generator=env.petbot_reset_rng)]
+                env.petbot_easy_fraction = fraction
             if getattr(env.cfg, "reset_curriculum", False):
                 pool = env.petbot_curriculum_pool
                 fraction = max(0.2, 0.6 - 0.4 * min(env.petbot_success_ema / 0.35, 1.0))
@@ -223,6 +255,14 @@ class PetBotRecoveryEnv(ManagerBasedRLEnv):
                     alpha = 1 - (1 - 1/4096) ** len(ids)
                     self.petbot_success_ema = ((1-alpha) * self.petbot_success_ema
                                               + alpha * logs["Recovery/success_rate"].item())
+                if hasattr(self, "petbot_region_ever"):
+                    for name in ("region", "low_speed"):
+                        rate = getattr(self, f"petbot_{name}_ever")[ids].float().mean()
+                        logs[f"Recovery/{name}_reached_rate"] = rate
+                        if not self.petbot_eval_mode:
+                            old = getattr(self, f"petbot_{name}_ema")
+                            setattr(self, f"petbot_{name}_ema", (1-alpha)*old + alpha*rate.item())
+                    logs["Curriculum/easy_fraction"] = getattr(self, "petbot_easy_fraction", 0.)
                 logs["Recovery/stable_at_end"] = held[ids].float().mean()
                 times = self.petbot_hold.first_time[ids]
                 if torch.isfinite(times).any():
@@ -247,5 +287,8 @@ class PetBotRecoveryEnv(ManagerBasedRLEnv):
                 for name, condition in parts.items():
                     logs[f"Recovery/final_{name}_rate"] = condition[ids].float().mean()
             self.petbot_hold.reset(env_ids)
+            if hasattr(self, "petbot_region_ever"):
+                self.petbot_region_ever[env_ids] = False
+                self.petbot_low_speed_ever[env_ids] = False
         super()._reset_idx(env_ids)
         self.extras["log"].update(logs)
