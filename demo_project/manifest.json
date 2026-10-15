@@ -24,6 +24,23 @@
         "PetBot-Recovery-Sweep3-B-v0",
         "PetBot-Recovery-Sweep3-C-v0"
       ]
+    },
+    {
+      "name": "jump_rl_pro",
+      "path": "demo_project/jump_rl_pro",
+      "url": "https://github.com/uglycatcat/petbot2_rl.git",
+      "remote": "ours",
+      "branch": "demoproj/jump_rl_pro",
+      "verified_commit": "cf4e840a413f1f7a2e92e37243018ad44a24d849",
+      "groups": [
+        "demo"
+      ],
+      "shallow": false,
+      "status": "registered; training_code_not_started",
+      "local_validation": "Desktop MuJoCo front-wheel lift verified. The four-wheel jump sequence is not measured. See docs/jump_prestudy.md.",
+      "task": null,
+      "usage": "README.md",
+      "active_tasks": []
     }
   ]
 }

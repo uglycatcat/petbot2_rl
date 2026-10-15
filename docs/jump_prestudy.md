@@ -14,4 +14,4 @@
 
 没有测到四个轮子都离开地面，也没有测到「前轮先离地，四轮离地，前轮落地，后轮落地」这一整段。用户据此判断这种小跳显然可以做，并决定另开一条 demo 线，下一步再设计训练代码。这是决定，不是已完成的跳跃实验。
 
-目录 `demo_project/jump_rl_demo/` 只标出这条线。还没有 `demoproj/` 分支，也没有写入 `default.xml` 或 `demo_project/manifest.json`。训练代码、奖励、课程和服务器运行都还没有。
+目录由 repo 管理：`default.xml` 的 `demo_project/jump_rl_pro` 指向已推送的 `demoproj/jump_rl_pro`（`cf4e840`）。原先主线上的 `jump_rl_demo` 占位目录已去掉。训练代码、奖励、课程和服务器运行都还没有。

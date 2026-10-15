@@ -37,6 +37,11 @@
            remote="ours"
            revision="demoproj/recovery_agile_01"
            groups="demo" />
+  <project name="petbot2_rl"
+           path="demo_project/jump_rl_pro"
+           remote="ours"
+           revision="demoproj/jump_rl_pro"
+           groups="demo" />
 
   <!-- 训练框架 / 工程参考 -->
   <project name="fan-ziqi/robot_lab"

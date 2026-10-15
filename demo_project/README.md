@@ -5,7 +5,7 @@
 | 项目 | 底座 | 分支 | 状态 |
 |---|---|---|---|
 | [recovery_agile_01](recovery_agile_01/PETBOT.md) | WBC-AGILE `6830cf9`，借鉴 robot_lab 混合动作 | `demoproj/recovery_agile_01` | 第三轮六组 2048×1500 已启动（`cffc86d`），见[第三轮记录](../docs/petbot_sweep3_training.md)；第二轮 8 组全部跑满，24 次策略评估全部 0/512，见[第二轮记录](#第二轮过夜训练2026-10-14)；首轮 11 组 2048×3000 扫描 + 确定性独立评估完成：**无一组学到起身**（最好 5 组 0.225~0.227 与开环地板基线 0.213 持平）；见[首版扫描记录](recovery_agile_01/PETBOT_SWEEP_01.md) |
-| [jump_rl_demo](jump_rl_demo/README.md) | 未选 | 未建分支 | 2026-10-15 只建目录。本机已验证前轮可离地，见[跳跃预研](../docs/jump_prestudy.md)。训练代码未写，不在 `default.xml` / `manifest.json` |
+| [jump_rl_pro](jump_rl_pro/README.md) | 新线，不从上游派生 | `demoproj/jump_rl_pro` | 2026-10-15 已登记，`cf4e840`。本机已验证前轮可离地，见[跳跃预研](../docs/jump_prestudy.md)。训练代码未写 |
 
 ## 同步与开发纪律
 
