@@ -55,3 +55,7 @@ PETBOT_MAX_ITERS=3000 ./launch_variants.sh start     # 后台跑：terminal back
 `sweep3_prepare.py` 在容器内预先采集 2048 环境口径的训练库并测量可恢复倒地索引，不运行 PPO。正式副本可复用这些缓存，`pre_learn` 仍校验全部身份字段。`sweep3_gate.py --runs-root /workspace/runs --write-gate` 汇总 PhysX、概率、检查点重载及两组 100 iteration 短训的真实证据；未全部通过时拒绝写入启动门槛文件。
 
 `sweep3_launch_when_ready.py` 是一次性启动器：从清单根目录启动，等待 B/C 短训、检查点加载及全量训练库准备全部成功，再运行真实门槛检查并启动正式调度。任何前置失败立即退出；有独立锁、已有状态检查及两小时等待上限，不常驻自动重启训练。运行输出 `_sweep3_precheck/launcher.log`，正式调度状态仍为 `_sweep3/status.json`。
+
+## 第四轮候选（2026-10-15）
+
+`sweep4_kl_probe.py` 对比旧门控在倒地/终态的KL灵敏度，容器内、恢复demo的PYTHONPATH下运行。`sweep4_pipeline.py` 为B/C双种子2048×1500调度，需 `_sweep4_precheck/gate.json` 的实测门槛记录及第三轮 `finished_at` 后才允许启动；尚未启动正式第四轮。起立专用容器/显存保护/评估队列在 `demoproj/upright_rl_demo` 分支管理。主线进度见 `docs/tonight_training_20261015.md`。
