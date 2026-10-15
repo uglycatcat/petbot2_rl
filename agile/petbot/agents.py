@@ -89,5 +89,8 @@ class PetBotSweep4RunnerCfg(PetBotSweep3RunnerCfg):
     """Isolate the terminal mean/noise gate repair before adding task changes."""
     def __post_init__(self):
         super().__post_init__()
+        # The affine KL no longer artificially suppresses adaptive LR; retain the tested base rate.
+        self.algorithm.schedule='fixed'
+        self.algorithm.learning_rate=2e-4
         self.policy.actor_model_override='agile.petbot.distribution:PetBotResidualActor'
         self.policy.distribution_override['class_name']='agile.petbot.distribution:PetBotResidualBetaDistribution'
