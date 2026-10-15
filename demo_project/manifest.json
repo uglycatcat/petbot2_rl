@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-14",
+  "updated_at": "2026-10-15",
   "purpose": "PetBot experimental training projects. Code is versioned on dedicated demoproj branches; checkouts are managed by default.xml.",
   "repositories": [
     {
@@ -15,7 +15,7 @@
         "demo"
       ],
       "shallow": false,
-      "status": "sweep2_eight_runs_learning; automatic_paired_evaluations_active; effect_unverified",
+      "status": "sweep2_complete; all_24_policy_evaluations_zero_success; recovery_not_learned",
       "local_validation": "9 CPU tests and ruff/syntax checks pass; server petbot-train: asset/USD/PhysX/pre-learn/smoke verified; 11-variant sweep 2048 envs x 3000 iter with deterministic eval (512 episodes, split=eval): best 5 variants 0.225-0.227 vs open-loop hold-default floor 0.213 (zero-action 0.000); details in PETBOT_SWEEP_01.md; sweep2: 13 CPU tests pass, C 64 envs x 10 iterations smoke and 64 independent-state deterministic evaluation exit 0; effect unverified",
       "task": "PetBot-Recovery-AGILE-v0",
       "usage": "PETBOT.md"

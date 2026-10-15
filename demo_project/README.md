@@ -4,7 +4,7 @@
 
 | 项目 | 底座 | 分支 | 状态 |
 |---|---|---|---|
-| [recovery_agile_01](recovery_agile_01/PETBOT.md) | WBC-AGILE `6830cf9`，借鉴 robot_lab 混合动作 | `demoproj/recovery_agile_01` | 第二轮 8 组已错峰启动，见[第二轮记录](#第二轮过夜训练2026-10-14)；首轮 11 组 2048×3000 扫描 + 确定性独立评估完成：**无一组学到起身**（最好 5 组 0.225~0.227 与开环地板基线 0.213 持平）；见[首版扫描记录](recovery_agile_01/PETBOT_SWEEP_01.md) |
+| [recovery_agile_01](recovery_agile_01/PETBOT.md) | WBC-AGILE `6830cf9`，借鉴 robot_lab 混合动作 | `demoproj/recovery_agile_01` | 第二轮 8 组全部跑满，24 次策略评估全部 0/512，见[第二轮记录](#第二轮过夜训练2026-10-14)；首轮 11 组 2048×3000 扫描 + 确定性独立评估完成：**无一组学到起身**（最好 5 组 0.225~0.227 与开环地板基线 0.213 持平）；见[首版扫描记录](recovery_agile_01/PETBOT_SWEEP_01.md) |
 
 ## 同步与开发纪律
 
@@ -44,3 +44,7 @@ AGILE 同时在继续训练：日志 `reference_project/agile_env/logs/agile_sta
 64 初态 PhysX 预检查：固定目标序列与保持默认构型都成功 13/64（20.3125%），成功样本完全相同（新增救回 0、丢失 0），状态张量 hash `d5ee0125586f6358e9f28c9485e85d4d847e4baa144116147f99095098ce5667`。源 checkout 的 `artifacts/sweep2_{default64,sequence64,smoke_eval}.json` 留存逐样本与轨迹，日志在 `runs/_logs/sweep2_*`。这只说明该目标序列在当前 PhysX 隐式伺服与这 64 个初态下没有额外收益，不等价于 MuJoCo 外部 PD 或实机程序，也不能否定实机恢复思路。正式 512 初态仍按计划执行。
 
 正式 512 初态默认构型预检查已完成：85/512 成功（16.6015625%），84/512 末态稳定（16.40625%），见 `_sweep2/default_precheck.json`；状态 hash `1ee3c29a955f034c88d3d6f2f8f6f81c0443d714da6b56e086e65ec1c6e290ae`。这份库保存为 `_sweep2/eval_states.pt`，供自动评估复用。启动期实测约 24–53 s/iteration，20:38 八组均进入学习后最新约 23–26 s/iteration；按该速度估计 3000 次需要约 19–22 h，明早优先读取实际到达的 750/1500 中途检查点与评估，不宣称已跑满。自动调度已完成 default 复测（与预检查 512 条逐样本结果完全一致）并进入 zero；`summary.json`/`SUMMARY.md` 已生成，策略行需等待检查点评估。
+
+## 第二轮终局（2026-10-15）
+
+8 组全部完成 3000 iteration，750/1500/2999 检查点共 24 次评估全部 0/512，低于同初态默认构型基线 85/512。末次平均 std 0.15–0.54，但动作裁剪比例 23.92%–89.88%；课程成功率 EMA 无可见进展。完整结果、证据及推测边界见[终局报告](../docs/petbot_sweep2_results.md)。本节取代上面的运行中状态与耗时预测。

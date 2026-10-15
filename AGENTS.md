@@ -7,7 +7,7 @@
 - 目标：PetBot（轮足机器狗）在平地上被推倒、滚翻或跌落后，用强化学习策略恢复到默认站立构型并保持稳定。
 - 主线：Isaac Lab + RSL-RL + PPO 训练 → 策略导出 → MuJoCo 做 sim2sim 验证。
 - **已有能力与训练目的**：本机 MuJoCo 固定姿态恢复已实现。用户于 2026-10-14 确认当前动作组效果可用、按是否摔倒和 pitch 符号分支的思路明确，但不能覆盖所有摔倒情况；没有全姿态成功率统计。RL 用于学习更自然、连贯、平滑的恢复动作。默认轮足构型无需单独训练站立策略；策略采用 **5 路位置 + 2 路速度**混合输出；训练**不依赖参考动作流或示范轨迹数据**，这套固定姿态恢复不是训练数据。详见[固定姿态恢复](docs/fixed_pose_recovery.md)与[需求基线](docs/current_scope.md#已有能力与强化学习的目的)。
-- **当前阶段：参考试训与 PetBot 首版实现并行准备。** recovery 线已关闭。AGILE 的**标准起身训练已于 2026-10-13 在服务器容器内启动**（`StandUp-T1-v0`、4096 envs、100k iteration、seed 42、tensorboard；日志 `reference_project/agile_env/logs/`，检查点 `reference_project/WBC-AGILE/logs/rsl_rl/stand_up_t1/`，实测 ≈7.4 s/iteration → 约 8.8 天）；robot_lab 容器已就绪但尚未开始训练。已确定以 AGILE 为底座、借鉴 robot_lab 混合动作配置实现 `demo_project/recovery_agile_01/`，无需等待参考试训结束。PetBot 首版代码已推送 `demoproj/recovery_agile_01`；2026-10-13 在服务器 `petbot-train` 容器内跑通资产转换、PhysX 导入、pre-learn 与冒烟训练，首版口径按用户决定改为 **2048 envs**，首轮 11 组并行扫描已跑满 3000 iteration 并完成确定性评估（尚未学出有效起身能力）；2026-10-14 晚第二轮 8 组已错峰启动、训练效果待评估，见 [demo 索引](demo_project/README.md)。
+- **当前阶段：参考试训与 PetBot 首版实现并行准备。** recovery 线已关闭。AGILE 的**标准起身训练已于 2026-10-13 在服务器容器内启动**（`StandUp-T1-v0`、4096 envs、100k iteration、seed 42、tensorboard；日志 `reference_project/agile_env/logs/`，检查点 `reference_project/WBC-AGILE/logs/rsl_rl/stand_up_t1/`，实测 ≈7.4 s/iteration → 约 8.8 天）；robot_lab 容器已就绪但尚未开始训练。已确定以 AGILE 为底座、借鉴 robot_lab 混合动作配置实现 `demo_project/recovery_agile_01/`，无需等待参考试训结束。PetBot 首版代码已推送 `demoproj/recovery_agile_01`；2026-10-13 在服务器 `petbot-train` 容器内跑通资产转换、PhysX 导入、pre-learn 与冒烟训练，首版口径按用户决定改为 **2048 envs**，首轮 11 组并行扫描已跑满 3000 iteration 并完成确定性评估（尚未学出有效起身能力）；2026-10-15 第二轮 8 组全部跑满 3000 iteration，24 次策略评估均为 0/512，见 [demo 索引](demo_project/README.md)。
 - **PetBot 与参考项目的本质区别**：PetBot **本来就能轻松站住**（默认站姿是四轮着地的静稳定姿态，站立不需要策略去学）；而 `recovery` 这类轮足翻倒起身项目，研究对象默认**连"站住"都还没解决** —— 它们的站立姿态是要学出来的，所以才有高度 / 姿态塑形、ED-CW 类课程，以及"站住了但还在晃"这种失败模式。**参考项目的奖励权重、课程与成功判据不能直接照搬。**
 
 ## 第一步：判断自己在哪台设备上
@@ -108,12 +108,13 @@
 | 2026-10-14 | 核对首轮最终探索标准差日志 | 最好五组 `Mean action std` 已降至 0.01–0.08；增强探索组达到 188.59。存在收缩与发散两种现象，不能仅看初始标准差或一律提高 entropy；见[探索复核](demo_project/README.md#探索标准差复核2026-10-14) |
 
 | 2026-10-14 | 第二轮 PetBot 训练代码、测试与过夜调度已部署 | 固定 `9553fef`，13 项 CPU 测试、C 配置 64×10 冒烟与 64 初态独立评估通过；20:38 核查 8 组 2048×3000 全部进入 PPO；独立 512 初态默认基线 85/512，尚无训练效果结论；见[第二轮记录](demo_project/README.md#第二轮过夜训练2026-10-14) |
+| 2026-10-15 | 第二轮 8 组训练与 27 个评估任务全部完成 | 750/1500/2999 检查点共 24 次策略评估全为 0/512，同初态默认基线 85/512；动作饱和明显，未学出恢复能力，见[终局报告](docs/petbot_sweep2_results.md) |
 
 细节写进对应文档，本表只保留一行结论。
 
 ## 当前实现状态
 
-- **第二轮训练（2026-10-14 晚）**：固定 `9553fef`，8 组对照已错峰启动，首组 20:15 启动，20:38 核查全部进入 PPO（iteration 1–21），最新约 23–26 s/iteration。潜势差/回报归一化/有界探索为共同修正，比较历史、采样课程与探索下限；CPU/Isaac 冒烟及独立评估链路已验证，训练效果待评估。[调度与产物](demo_project/README.md#第二轮过夜训练2026-10-14)。
+- **第二轮训练已结束（2026-10-15）**：8 组全部完成 3000 iteration，24 次策略评估全为 0/512。标准差有界但动作饱和明显，课程成功率 EMA 无可见进展；尚无有效恢复策略。本轮没有追加训练。[结果与证据](docs/petbot_sweep2_results.md)。
 
 - **固定姿态恢复（2026-10-14，用户试操）**：`robot_controller_demo/pose_recover_demo/` 已实现。未摔倒用 1 s 回到初始角；摔倒后按 pitch 符号走 4 s 或 8 s 动作组。用户确认效果可用、思路明确，但不能覆盖所有摔倒情况。没有全姿态成功率统计。动作、判据和被动沉降数字见 [固定姿态恢复](docs/fixed_pose_recovery.md)。该动作组是构型与接触的参照，不是训练示范数据。
 - **被动静止姿态（2026-10-14 实测）**：执行器关闭、均匀朝向贴地放下后，1000 套停稳，倾斜角最大 121.7°，130° 以上为 0。侧躺与倒立初态都会离开初始朝向。原始数据在 `robot_controller_demo/test/fall_pose_statistics/output/`。
