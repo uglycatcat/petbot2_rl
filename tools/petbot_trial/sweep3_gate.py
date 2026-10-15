@@ -27,10 +27,11 @@ for kind in ('b','c'):
     complete=rcpath.exists() and rcpath.read_text().strip()=='0'
     checkpoints=list(logs[0].parent.parent.glob('model_99.pt'))
     ok=complete and bool(checkpoints) and all(k in values and values[k]['last20_mean']>0 and values[k]['last_step']>=99 for k in required)
-    ok=ok and all(v['finite'] for v in values.values())
+    all_finite=all(math.isfinite(e.value) for tag in tags for e in acc.Scalars(tag))
+    ok=ok and all_finite and all(v['finite'] for v in values.values())
     ok=ok and values.get('Actions/clipped_fraction',{}).get('max',1)==0
     if kind=='c':ok=ok and provenance.get('easy_curriculum',{}).get('count',0)>0
-    results[kind]={'passed':ok,'complete':complete,'metrics':values,'easy_count':provenance.get('easy_curriculum',{}).get('count')}
+    results[kind]={'passed':ok,'complete':complete,'all_scalars_finite':all_finite,'metrics':values,'easy_count':provenance.get('easy_curriculum',{}).get('count')}
     passed &= ok
 runtime=out/'runtime_v2.json'
 physics=runtime.exists() and json.loads(runtime.read_text()).get('passed',False)
