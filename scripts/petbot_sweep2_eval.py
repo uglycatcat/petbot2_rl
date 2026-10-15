@@ -13,6 +13,8 @@ parser.add_argument('--checkpoint')
 parser.add_argument('--allow-cross-version-checkpoint', action='store_true')
 parser.add_argument('--allow-legacy-xyzw-dataset', action='store_true')
 parser.add_argument('--untrained-policy', action='store_true')
+parser.add_argument('--stochastic-policy', action='store_true')
+parser.add_argument('--initial-noise-scale', type=float, default=1.0)
 parser.add_argument('--dataset')
 parser.add_argument('--save-dataset')
 parser.add_argument('--task', default='PetBot-Recovery-Sweep2-A-v0')
@@ -59,6 +61,10 @@ def main():
     env_cfg.scene.num_envs = args.episodes
     env_cfg.seed = args.seed
     env_cfg.sim.device = args.device or 'cuda:0'
+    if args.initial_noise_scale != 1.0:
+        if not args.untrained_policy or args.initial_noise_scale <= 0 or agent_cfg.policy.distribution_override is None:
+            raise ValueError('Initial noise scale requires an untrained bounded policy and a positive scale')
+        agent_cfg.policy.distribution_override['initial_std'] = [v*args.initial_noise_scale for v in agent_cfg.policy.distribution_override['initial_std']]
     agent_cfg.seed = args.seed
     agent_cfg.device = env_cfg.sim.device
     agent_cfg.petbot_allow_legacy_xyzw = args.allow_legacy_xyzw_dataset
@@ -109,6 +115,10 @@ def main():
     if args.untrained_policy and not checkpoint:
         runner = make_rsl_rl_runner(wrapped, agent_cfg, log_dir=None, device=wrapped.device)
         policy = runner.get_inference_policy(device=wrapped.device)
+    if args.stochastic_policy:
+        if args.mode != 'policy':
+            raise ValueError('Stochastic sampling is only valid in policy mode')
+        policy = lambda observation: runner.alg.actor(observation, stochastic_output=True)
     robot = base.scene['robot']
     ids = robot.find_joints(list(POSITION_JOINTS), preserve_order=True)[0]
     q_start = as_torch(robot.data.joint_pos)[:, ids].clone()
@@ -206,6 +216,8 @@ def main():
               'dataset_sha256': dataset_hash, 'evaluation': base.petbot_provenance,
               'training_provenance': saved if checkpoint else None,
               'untrained_policy': args.untrained_policy,
+              'stochastic_policy': args.stochastic_policy,
+              'initial_noise_scale': args.initial_noise_scale,
               'summary': summary, 'episodes': rows, 'action_stats': action_stats, 'traces_first8': traces}
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
