@@ -155,19 +155,35 @@ def main(
         log_dir += f"_{agent_cfg.run_name}"
     log_dir = os.path.join(log_root_path, log_dir)
 
-    # create isaac environment
-    env = gym.make(args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None)
-
-    # convert to single-agent instance if required by the RL algorithm
-    if isinstance(env.unwrapped, DirectMARLEnv):
-        env = multi_agent_to_single_agent(env)
-
     # save resume path before creating a new log_dir
     if agent_cfg.resume:
         if os.path.isfile(agent_cfg.load_checkpoint):
             resume_path = os.path.abspath(agent_cfg.load_checkpoint)
         else:
             resume_path = get_checkpoint_path(log_root_path, agent_cfg.load_run, agent_cfg.load_checkpoint)
+
+    saved_petbot = None
+    if agent_cfg.resume and args_cli.task.startswith("PetBot-"):
+        import json
+        from agile.petbot.model import load_model, task_implementation_fingerprint
+        saved_petbot = json.loads((Path(resume_path).parent / "params/petbot.json").read_text())
+        expected = {
+            "task": args_cli.task,
+            "state_contract": "lab3_xyzw_fresh_body_state_v2",
+            "task_implementation_sha256": task_implementation_fingerprint(),
+        }
+        for field, value in expected.items():
+            if saved_petbot.get(field) != value:
+                raise ValueError(f"PetBot resume contract mismatch: {field}; use the checkpoint's original code")
+        if saved_petbot["source_model"]["source_sha256"] != load_model()["source_sha256"]:
+            raise ValueError("PetBot resume source model mismatch")
+
+    # create isaac environment
+    env = gym.make(args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None)
+
+    # convert to single-agent instance if required by the RL algorithm
+    if isinstance(env.unwrapped, DirectMARLEnv):
+        env = multi_agent_to_single_agent(env)
 
     # wrap for video recording
     if args_cli.video:
@@ -191,6 +207,12 @@ def main(
         mod = importlib.import_module(mod_name)
         pre_learn_fn = getattr(mod, fn_name)
         pre_learn_fn(env.unwrapped, args_cli.task, agent_cfg)
+
+    if saved_petbot is not None:
+        current = env.unwrapped.petbot_provenance
+        for field in ("success_thresholds", "physics_dt", "policy_dt", "collection"):
+            if saved_petbot[field] != current[field]:
+                raise ValueError(f"PetBot resume contract mismatch: {field}")
 
     # wrap around environment for rsl-rl
     env = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
@@ -236,6 +258,12 @@ def main(
 
 if __name__ == "__main__":
     # run the main function
-    main()
-    # close sim app
+    try:
+        main()
+    except BaseException:
+        import traceback
+        traceback.print_exc()
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(1)
     simulation_app.close()
