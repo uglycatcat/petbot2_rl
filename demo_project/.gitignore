@@ -1,2 +1,6 @@
 # Nested demo checkouts are versioned on demoproj/* branches.
 /*/
+# jump_rl_demo has no branch yet; only this index note is on main.
+!/jump_rl_demo/
+/jump_rl_demo/*
+!/jump_rl_demo/README.md

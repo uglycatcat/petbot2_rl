@@ -7,7 +7,7 @@
 - 目标：PetBot（轮足机器狗）在平地上被推倒、滚翻或跌落后，用强化学习策略恢复到默认站立构型并保持稳定。
 - 主线：Isaac Lab + RSL-RL + PPO 训练 → 策略导出 → MuJoCo 做 sim2sim 验证。
 - **已有能力与训练目的**：本机 MuJoCo 固定姿态恢复已实现。用户于 2026-10-14 确认当前动作组效果可用、按是否摔倒和 pitch 符号分支的思路明确，但不能覆盖所有摔倒情况；没有全姿态成功率统计。RL 用于学习更自然、连贯、平滑的恢复动作。默认轮足构型无需单独训练站立策略；策略采用 **5 路位置 + 2 路速度**混合输出；训练**不依赖参考动作流或示范轨迹数据**，这套固定姿态恢复不是训练数据。详见[固定姿态恢复](docs/fixed_pose_recovery.md)与[需求基线](docs/current_scope.md#已有能力与强化学习的目的)。
-- **当前阶段：PetBot 第三轮训练与 AGILE 参考试训并行。** recovery 线已关闭，robot_lab 已就绪未开训。AGILE 标准 `StandUp-T1-v0` 训练于 2026-10-13 启动（4096 envs / 100k iteration），仍保留运行。PetBot 前两轮未学出有效恢复，第二轮 24 次策略评估全为 0/512；状态接口修复后，第三轮 A/B/C × seed 42/43 已于 2026-10-15 14:03 启动，14:13 六组全部进入 PPO，2048 环境、暂跑 1500 iteration，尚无正式策略效果结论。见[第三轮记录](docs/petbot_sweep3_training.md)。
+- **当前阶段：PetBot 第三轮训练与 AGILE 参考试训并行。** recovery 线已关闭，robot_lab 已就绪未开训。AGILE 标准 `StandUp-T1-v0` 训练于 2026-10-13 启动（4096 envs / 100k iteration），仍保留运行。PetBot 前两轮未学出有效恢复，第二轮 24 次策略评估全为 0/512；状态接口修复后，第三轮 A/B/C × seed 42/43 已于 2026-10-15 14:03 启动，14:13 六组全部进入 PPO，2048 环境、暂跑 1500 iteration，尚无正式策略效果结论。见[第三轮记录](docs/petbot_sweep3_training.md)。本机另有一条跳跃预研，不占用第三轮：前轮离地已在 MuJoCo 验证，`demo_project/jump_rl_demo/` 只建了目录，训练代码未写。见[跳跃预研](docs/jump_prestudy.md)。
 - **PetBot 与参考项目的本质区别**：PetBot **本来就能轻松站住**（默认站姿是四轮着地的静稳定姿态，站立不需要策略去学）；而 `recovery` 这类轮足翻倒起身项目，研究对象默认**连"站住"都还没解决** —— 它们的站立姿态是要学出来的，所以才有高度 / 姿态塑形、ED-CW 类课程，以及"站住了但还在晃"这种失败模式。**参考项目的奖励权重、课程与成功判据不能直接照搬。**
 
 ## 第一步：判断自己在哪台设备上
@@ -112,12 +112,14 @@
 | 2026-10-15 | 深入诊断确认四元数顺序与复位重力缓存错误 | 旧负 pitch 课程池实际为正 pitch；旧固定序列未执行翻身，修正诊断 35/512（新增救回 2、丢失 52）；接口修复随后完成（见下一行），见[诊断报告](docs/petbot_sweep2_results.md) |
 | 2026-10-15 | 修复姿态/复位接口、动作初始化及评估兼容检查 | PhysX 集成验收通过，64 环境 × 12 iteration PPO 与重载通过；默认均值复现 85/512，但两档随机探索均 0/512，训练反馈仍需优化，见[修复验收](demo_project/recovery_agile_01/PETBOT_REPAIR_01.md) |
 | 2026-10-15 | 第三轮 A/B/C 双种子训练通过 GPU 门槛并启动 | 初版终态噪声默认站姿正控制 25/64 未通过；减小终态噪声后 64/64，倒置新增奖励为零。B/C 各 128×100 短训及重载通过，正式六组已启动（2048×1500），见[第三轮记录](docs/petbot_sweep3_training.md) |
+| 2026-10-15 | 本机验证前轮可离地，并另开跳跃 demo 目录 | 对称轮速与车架力矩的一次约束动力学通过；`jump_demo` 时间积分里前轮离地、后轮着地并停住。四轮依次离地再落地的小跳尚未测到。用户决定据此建 `demo_project/jump_rl_demo/`，训练代码未写，见[跳跃预研](docs/jump_prestudy.md) |
 
 细节写进对应文档，本表只保留一行结论。
 
 ## 当前实现状态
 
 - **第三轮运行中（2026-10-15）**：物理、概率、短训及重载门槛通过；固定 `cffc86d`，六组 2048×1500 全部进入 PPO，250/750/1499 配对评估已安排。最新状态以[第三轮记录](docs/petbot_sweep3_training.md)的实测状态为准。
+- **跳跃预研（2026-10-15，本机）**：与第三轮并行，不改其代码。数学测试与 `jump_demo` 都表明前轮可以离地并只剩后轮支撑；用户看过窗口并确认。小跳的四轮离地再依次落地还没有测到。`demo_project/jump_rl_demo/` 已建目录，训练代码未写，也未登记 repo 清单。见[跳跃预研](docs/jump_prestudy.md)。
 
 - **第二轮训练已结束（2026-10-15）**：8 组全部完成 3000 iteration，24 次策略评估全为 0/512。标准差有界但动作饱和明显，课程成功率 EMA 无可见进展；尚无有效恢复策略。已确认 xyzw/wxyz 混用和复位重力缓存错误，接口修复及容器内验收已完成（详见下方修复记录）；旧课程/固定序列解释失效；后续第三轮状态见上。[结果与证据](docs/petbot_sweep2_results.md)。
 
@@ -140,12 +142,12 @@
 | `docs/` | 项目文档：需求、工程、参考项目进度 | 可改 |
 | `reference_project/` | 上游快照与训练产物 | 不受主线版本管理；但**不放 PetBot 自有的唯一副本** |
 | `demo_project/` | PetBot 自有实验项目，由 repo 物化 | 嵌套代码在 `demoproj/` 分支版本化，清单与索引在 main |
-| `robot_controller_demo/` | 本机 MuJoCo 固定姿态恢复与被动沉降统计；早期键盘驾驶只作历史记录 | 可按该任务阅读、参考；源模型只读约束不变 |
+| `robot_controller_demo/` | 本机 MuJoCo 固定姿态恢复、跳跃前轮离地演示与被动沉降统计；早期键盘驾驶只作历史记录 | 可按该任务阅读、参考；源模型只读约束不变 |
 | `AGENTS.md` / `README.md` | agent 入口 / 人类入口 | 可改 |
 
 ## 检查与交接
 
 - 服务器验收以容器内 PhysX 集成检查、短程 PPO、检查点重载为准；CPU 测试只辅助验证数学与概率契约，不能替代真实仿真。
-- demo 的本地测试：在 `demo_project/recovery_agile_01/` 运行 `python -m pytest -q --confcutdir=petbot_tests petbot_tests`（CPU Torch / MuJoCo 等依赖见 PETBOT.md）；它不启动 Isaac Sim 或训练。改 `pose_recover_demo/` 时运行 `python -m unittest discover -s robot_controller_demo/pose_recover_demo -q`。`driver_demo/` 的旧测试不必运行。
+- demo 的本地测试：在 `demo_project/recovery_agile_01/` 运行 `python -m pytest -q --confcutdir=petbot_tests petbot_tests`（CPU Torch / MuJoCo 等依赖见 PETBOT.md）；它不启动 Isaac Sim 或训练。改 `pose_recover_demo/` 时运行 `python -m unittest discover -s robot_controller_demo/pose_recover_demo -q`。改 `jump_demo/` 或后轮离地可行性测试时，用 `mujoco_env` 运行 `python -m unittest robot_controller_demo.jump_demo.test_maneuver robot_controller_demo.test.rear_wheel_inverted_pendulum.test_lift_feasibility -q`。`driver_demo/` 的旧测试不必运行。
 - 每次工作结束前：核对重要信息与进展是否已同步至本文件「进度报告」及对应主题文档；实现状态发生变化时同步更新「当前实现状态」。明确区分用户确认、实测与未验证内容；无新增重要信息时无需为留痕而改文档。
 - `docs/reports/` 是 2026-09-24 的历史调研资料，只作模型与文献追溯，不代表当前方案。
