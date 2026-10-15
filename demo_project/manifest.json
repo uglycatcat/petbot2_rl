@@ -31,13 +31,30 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/jump_rl_demo",
-      "verified_commit": "1b61916363e82dae0aff8c8d9afd69b387876329",
+      "verified_commit": "c4de88106f5b9622b91a8b6938f50f87312ceb19",
+      "groups": [
+        "demo"
+      ],
+      "shallow": false,
+      "status": "registered; full_jump_abandoned; training_code_not_started",
+      "local_validation": "Front wheels can lift. Rear-wheel hop raised the rear-wheel center of mass by 0.8 mm, so the full jump was abandoned on 2026-10-15. See docs/jump_prestudy.md.",
+      "task": null,
+      "usage": "README.md",
+      "active_tasks": []
+    },
+    {
+      "name": "upright_rl_demo",
+      "path": "demo_project/upright_rl_demo",
+      "url": "https://github.com/uglycatcat/petbot2_rl.git",
+      "remote": "ours",
+      "branch": "demoproj/upright_rl_demo",
+      "verified_commit": "1d812bfb1fc9a30756c54cf1776055c7a22722fb",
       "groups": [
         "demo"
       ],
       "shallow": false,
       "status": "registered; training_code_not_started",
-      "local_validation": "Desktop MuJoCo front-wheel lift verified. The four-wheel jump sequence is not measured. See docs/jump_prestudy.md.",
+      "local_validation": "Reference behavior is robot_controller_demo/jump_demo. It holds the front wheels up and is too stiff to use as training data. See docs/upright.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []

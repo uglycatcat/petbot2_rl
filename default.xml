@@ -42,6 +42,11 @@
            remote="ours"
            revision="demoproj/jump_rl_demo"
            groups="demo" />
+  <project name="petbot2_rl"
+           path="demo_project/upright_rl_demo"
+           remote="ours"
+           revision="demoproj/upright_rl_demo"
+           groups="demo" />
 
   <!-- 训练框架 / 工程参考 -->
   <project name="fan-ziqi/robot_lab"

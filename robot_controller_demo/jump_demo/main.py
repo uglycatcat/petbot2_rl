@@ -1,9 +1,12 @@
 """Rear-wheel inverted pendulum.
 
 The robot drives forward, the frame joints pitch the body and then fold, the
-front wheels leave the ground, and the rear wheels hold an inverted pendulum
-until the robot stops. A second window plots frame position, rear-wheel speed,
-and IMU roll / pitch / yaw over a rolling 10 s.
+front wheels leave the ground, and the rear wheels hold an inverted pitch.
+Rear Hop and Cross stay off until that stance is steady, and only one can
+run. A hop puts both frames at their positive torque limit. A cross drives
+both frames to their negative torque limit. The rear wheels run full speed
+backward for a moment, then full speed forward, and the nose falls forward.
+If all four wheels touch down, the forward roll starts again.
 
     conda activate mujoco_env
     python robot_controller_demo/jump_demo/main.py
@@ -52,12 +55,17 @@ def main():
                 last = now
                 with viewer.lock():
                     while accumulator >= dt:
+                        if gui.consume_jump():
+                            controller.request_jump()
+                        elif gui.consume_cross():
+                            controller.request_cross()
                         controller.step(data, dt)
                         mujoco.mj_step(model, data)
                         gui.push(float(data.time), _sample(model, data, controller))
                         accumulator -= dt
                     viewer.cam.lookat[:] = data.xpos[model.body("lower_body").id]
                 if now >= next_ui:
+                    gui.set_actions_enabled(controller.jump_ready)
                     gui.render(float(data.time), controller.phase)
                     next_ui = now + 1 / 30
                 gui.pump()

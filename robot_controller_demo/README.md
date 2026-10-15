@@ -7,8 +7,9 @@
 | 路径 | 内容 |
 |---|---|
 | [pose_recover_demo/](pose_recover_demo/) | 固定姿态恢复。动作组与试操结论见 [固定姿态恢复](../docs/fixed_pose_recovery.md) |
-| [jump_demo/](jump_demo/) | 前进、车架配合，前轮离地后以后轮维持倒立摆并停住。结论见 [跳跃预研](../docs/jump_prestudy.md) |
+| [jump_demo/](jump_demo/) | 前轮离地后以后轮维持倒立。动作可用但僵硬，是起立的参照，不是训练数据。见 [起立](../docs/upright.md) |
 | [test/rear_wheel_inverted_pendulum/](test/rear_wheel_inverted_pendulum/) | 前轮离地的一次约束动力学测试，不开窗口 |
+| [test/rear_wheel_liftoff/](test/rear_wheel_liftoff/) | jump_demo 后轮支撑姿态上，车架力矩能否让后轮离地。一次约束动力学，不开窗口 |
 | [test/fall_pose_statistics/](test/fall_pose_statistics/) | 执行器关闭后的被动沉降。结果见同一篇文档的[被动沉降](../docs/fixed_pose_recovery.md#被动沉降) |
 | [driver_demo/](driver_demo/README.md) | 早期终端键盘驾驶。历史记录 |
 
@@ -27,12 +28,12 @@ python -m unittest discover -s robot_controller_demo/pose_recover_demo -q
 
 ## jump_demo
 
-MuJoCo 窗口跟着机器人。另有一个英文数据窗口，画 10 秒内的车架位置、后轮速度和 IMU 的 roll / pitch / yaw。用本机 `mujoco_env`：
+MuJoCo 窗口跟着机器人。另有一个数据窗口，画 10 秒内的车架位置、后轮速度和 IMU 的 roll / pitch / yaw。后轮倒立停稳后，Rear Hop 和 Cross 才可按，两者互斥。四轮再着地会自动重新进入后轮支撑。这个倒立是起立参照。用本机 `mujoco_env`：
 
 ```bash
 conda activate mujoco_env
 python robot_controller_demo/jump_demo/main.py
-python -m unittest robot_controller_demo.jump_demo.test_maneuver robot_controller_demo.test.rear_wheel_inverted_pendulum.test_lift_feasibility -q
+python -m unittest robot_controller_demo.jump_demo.test_maneuver robot_controller_demo.test.rear_wheel_inverted_pendulum.test_lift_feasibility robot_controller_demo.test.rear_wheel_liftoff.test_frame_pitch_liftoff -q
 ```
 
 ## 被动沉降统计

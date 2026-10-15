@@ -178,7 +178,9 @@ class JumpGui:
         self.root = tk.Tk()
         self.root.title("PetBot Joint Data")
         self.root.configure(bg=WHITE)
-        self.root.geometry("700x860+32+32")
+        self.root.geometry("700x900+32+32")
+        self._jump_click = False
+        self._cross_click = False
         self.root.resizable(False, False)
         self.root.protocol("WM_DELETE_WINDOW", self.close)
         sans = _family(self.root, ("Nimbus Sans", "Liberation Sans", "FreeSans", "DejaVu Sans"), "TkDefaultFont")
@@ -213,6 +215,23 @@ class JumpGui:
         if self.alive:
             self.log.push(time, values)
 
+    def consume_jump(self):
+        clicked = self._jump_click
+        self._jump_click = False
+        return clicked
+
+    def consume_cross(self):
+        clicked = self._cross_click
+        self._cross_click = False
+        return clicked
+
+    def set_actions_enabled(self, enabled):
+        if not self.alive:
+            return
+        state = "normal" if enabled else "disabled"
+        self._jump.configure(state=state)
+        self._cross.configure(state=state)
+
     def render(self, now, phase):
         if not self.alive:
             return
@@ -236,12 +255,34 @@ class JumpGui:
         self._phase = tk.Label(head, text="DRIVE", bg=WHITE, fg=INK, font=(mono, 11))
         self._phase.pack(side="right")
         tk.Frame(pad, bg=RULE, height=1).pack(fill="x", pady=(12, 0))
+        action = tk.Frame(pad, bg=WHITE)
+        action.pack(fill="x", pady=(12, 0))
+        self._jump = tk.Button(
+            action, text="Rear Hop", command=self._request_jump,
+            state="disabled", bg=WHITE, fg=INK, activebackground=WHITE,
+            activeforeground=INK, relief="solid", bd=1, font=(sans, 11),
+            padx=14, pady=4)
+        self._jump.pack(side="left")
+        self._cross = tk.Button(
+            action, text="Cross", command=self._request_cross,
+            state="disabled", bg=WHITE, fg=INK, activebackground=WHITE,
+            activeforeground=INK, relief="solid", bd=1, font=(sans, 11),
+            padx=14, pady=4)
+        self._cross.pack(side="left", padx=(12, 0))
         self._figure(pad, "01", "FRAME POSITION", "rad", FRAME_SERIES, 0.8, 2, sans, mono, False)
         self._figure(pad, "02", "WHEEL SPEED", "rad/s", WHEEL_SERIES, 8.0, 1, sans, mono, False)
         self._figure(pad, "03", "IMU ATTITUDE", "deg", IMU_SERIES, 30.0, 1, sans, mono, True)
         tk.Label(
             pad, text="ROLLING 10 s    ·    RIGHT EDGE IS NOW    ·    DASHED LINES ARE THE RIGHT JOINT",
             bg=WHITE, fg=MUTED, font=(sans, 8)).pack(anchor="w", pady=(12, 0))
+
+    def _request_jump(self):
+        self._jump_click = True
+        self._cross_click = False
+
+    def _request_cross(self):
+        self._cross_click = True
+        self._jump_click = False
 
     def _figure(self, parent, index, title, unit, series, y_span, digits, sans, mono, unwrap):
         block = tk.Frame(parent, bg=WHITE)

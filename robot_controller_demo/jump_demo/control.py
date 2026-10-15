@@ -1,8 +1,13 @@
 """Rear-wheel balance after a short forward roll.
 
 The frames first pitch the body up, then fold so the front wheels rise while
-the rear wheels stay down. Wheel torque then holds that inverted-pendulum
-pose and trims away the leftover creep.
+the rear wheels stay down. Wheel torque holds the inverted pitch. It does not
+pull the robot back to a place. Once that stance is steady, one of two
+actions can run. A hop drives both frames to their positive torque limit.
+A cross drives both frames to their negative torque limit. The rear wheels
+briefly run full speed backward, then full speed forward, so the nose falls
+forward. The two actions cannot run together. Four wheels back on the ground
+starts the forward roll again.
 """
 
 import numpy as np
@@ -33,8 +38,11 @@ _SCHEDULE = np.array(
 _SEGMENT = 0.18
 _FRAME = -0.40
 _PITCH = 0.614
-# Discrete LQR about the planted pose, scaled up slightly for the real entry.
-_K = 1.15 * np.array([-4.32355269, -2.17754470, 41.85550149, 2.55137570])
+# Pitch and pitch-rate only. Position is not a target.
+_K = 1.15 * np.array([-2.17754470, 41.85550149, 2.55137570])
+_STABLE_S = 0.50
+_FOUR_S = 0.08
+_CROSS_REVERSE_S = 0.10
 
 
 def nose_up(qpos):
@@ -63,14 +71,17 @@ class JumpController:
         self.front_ids = [model.body(name).id for name in FRONT]
         self.rear_ids = [model.body(name).id for name in REAR]
         self.kv = float(model.actuator_gainprm[self.act["left_rear_wheel"], 0])
+        self.hop_torque = float(model.actuator_ctrlrange[self.act["left_frame"], 1])
+        self.full_wheel_speed = float(model.actuator_ctrlrange[self.act["left_rear_wheel"], 1])
         self.phase = "drive"
         self._phase_time = 0.0
         self._segment = 0
         self._segment_time = 0.0
         self._prev_pitch = None
         self._pitch_rate = 0.0
-        self._anchor = None
         self._trim = 0.0
+        self._stable_time = 0.0
+        self._four_time = 0.0
         self.frame_target = np.array([np.nan, np.nan])
         self.wheel_target = np.array([np.nan, np.nan])
 
@@ -89,7 +100,6 @@ class JumpController:
         self._pitch_rate = 0.7 * self._pitch_rate + 0.3 * rate
         frame = float(data.qpos[self.qadr["left_frame"]])
         front_z, rear_z = self.wheel_height(data)
-        x = float(data.qpos[0])
         vx = float(data.qvel[0])
 
         if self.phase == "drive":
@@ -110,15 +120,26 @@ class JumpController:
                 and -0.45 < frame < -0.22
                 and 0.75 < pitch < 1.0
             ):
-                self._anchor = x
                 self._enter("hold")
-                self._balance(data, x, vx, pitch)
+                self._balance(data, vx, pitch)
             elif self._segment >= len(_SCHEDULE) - 1 and self._segment_time >= _SEGMENT:
-                self._anchor = x
                 self._enter("hold")
-                self._balance(data, x, vx, pitch)
+                self._balance(data, vx, pitch)
+        elif self.phase == "hold":
+            self._balance(data, vx, pitch)
+            planted = (
+                front_z > 0.12
+                and rear_z < 0.042
+                and abs(pitch - (_PITCH + self._trim)) < 0.12
+                and abs(self._pitch_rate) < 0.4
+            )
+            self._stable_time = self._stable_time + dt if planted else 0.0
+        elif self.phase == "hop":
+            self._hop(data)
+            self._watch_landing(front_z, rear_z, dt)
         else:
-            self._balance(data, x, vx, pitch)
+            self._cross(data)
+            self._watch_landing(front_z, rear_z, dt)
 
         self._phase_time += dt
         if self.phase == "rear":
@@ -127,9 +148,53 @@ class JumpController:
                 self._segment += 1
                 self._segment_time = 0.0
 
+    @property
+    def jump_ready(self):
+        return self.phase == "hold" and self._stable_time >= _STABLE_S
+
+    def request_jump(self):
+        if not self.jump_ready:
+            return False
+        self._enter("hop")
+        return True
+
+    def request_cross(self):
+        if not self.jump_ready:
+            return False
+        self._enter("cross")
+        return True
+
+    def _watch_landing(self, front_z, rear_z, dt):
+        if front_z < 0.06 and rear_z < 0.06:
+            self._four_time += dt
+        else:
+            self._four_time = 0.0
+        if self._four_time >= _FOUR_S:
+            self._enter("drive")
+
     def _enter(self, phase):
         self.phase = phase
         self._phase_time = 0.0
+        self._stable_time = 0.0
+        self._four_time = 0.0
+        if phase == "drive":
+            self._segment = 0
+            self._segment_time = 0.0
+
+    def _hop(self, data):
+        self._posture(data, None, 8.0, 0.35)
+        self._set_torque(data, "left_frame", self.hop_torque)
+        self._set_torque(data, "right_frame", self.hop_torque)
+        self._wheel_speed(data, 0.0)
+
+    def _cross(self, data):
+        # Positive frame torque throws the body backward no matter the wheel
+        # speed. Torque toward the negative stop, reverse then forward, falls forward.
+        self._posture(data, None, 8.0, 0.35)
+        self._set_torque(data, "left_frame", -self.hop_torque)
+        self._set_torque(data, "right_frame", -self.hop_torque)
+        wheel = -self.full_wheel_speed if self._phase_time < _CROSS_REVERSE_S else self.full_wheel_speed
+        self._wheel_speed(data, wheel)
 
     def _open_loop(self, data):
         frame_torque, wheel_torque = _SCHEDULE[self._segment]
@@ -138,14 +203,10 @@ class JumpController:
         self._set_torque(data, "right_frame", frame_torque)
         self._wheel_torque(data, wheel_torque)
 
-    def _balance(self, data, x, vx, pitch):
-        error = np.array(
-            [x - self._anchor, vx, pitch - (_PITCH + self._trim), self._pitch_rate]
-        )
+    def _balance(self, data, vx, pitch):
+        error = np.array([vx, pitch - (_PITCH + self._trim), self._pitch_rate])
         torque = float(np.clip(-(_K @ error), -0.55, 0.55))
         self._trim = float(np.clip(self._trim + 0.0015 * torque, -0.08, 0.08))
-        if abs(vx) < 0.08:
-            self._anchor = 0.995 * self._anchor + 0.005 * x
         self._posture(data, _FRAME, 32.0, 1.1)
         self._wheel_torque(data, torque)
 

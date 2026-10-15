@@ -11,6 +11,8 @@
 | [current_scope.md](current_scope.md) | 需求基线：目标、动作接口、边界与待定项 |
 | [engineering_handoff.md](engineering_handoff.md) | 工程实施：接口契约、恢复任务设计、阶段验收 |
 | [fixed_pose_recovery.md](fixed_pose_recovery.md) | 本机 MuJoCo 固定姿态恢复动作组，以及被动沉降姿态的采集与结果 |
+| [jump_prestudy.md](jump_prestudy.md) | 前轮离地与后轮起跳的测量，以及放弃完整跳跃的决定 |
+| [upright.md](upright.md) | 起立任务：只有后轮着地，位置尽量不变；`jump_demo` 是僵硬参照 |
 | [reference_selection.md](reference_selection.md) | 参考项目选择建议、源码证据、接入成本与待验证步骤 |
 | [reference_recovery_validation.md](reference_recovery_validation.md) | 已收官参考项目 recovery 的**完整记录**：结论（含关闭决定）、判据 A/B/C/C2/D、实验矩阵、产物与查询、坑、参数速查 |
 
