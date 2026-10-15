@@ -131,6 +131,19 @@ def main():
         dst = path/'artifacts/petbot_asset'
         if not dst.exists():
             shutil.copytree(SOURCE/'artifacts/petbot_asset', dst)
+        # Reuse only fully written preparation caches; pre_learn validates every identity.
+        cache_source = SOURCE/'artifacts/fallen_states'
+        cache_target = path/'artifacts/fallen_states'
+        cache_target.mkdir(parents=True, exist_ok=True)
+        for metadata in cache_source.glob('train_*.json'):
+            info = json.loads(metadata.read_text())
+            if info.get('num_envs') == 2048 and info['collection']['num_states'] == 16384:
+                data = metadata.with_suffix('.pt')
+                if data.exists():
+                    shutil.copy2(data, cache_target/data.name)
+                    shutil.copy2(metadata, cache_target/metadata.name)
+        for data in cache_source.glob('easy_*.pt'):
+            shutil.copy2(data, cache_target/data.name)
     (OUT/'plan.json').write_text(json.dumps({'commit':commit, 'iterations':args.iterations,
                                            'variants':VARIANTS}, indent=2)+'\n')
     if args.prepare_only:

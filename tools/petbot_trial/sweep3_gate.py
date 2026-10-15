@@ -36,9 +36,11 @@ for kind in ('b','c'):
 runtime=out/'runtime_v2.json'
 physics=runtime.exists() and json.loads(runtime.read_text()).get('passed',False)
 probability=(out/'probability_v2.exit').read_text().strip()=='0'
-passed=bool(passed and physics and probability and len(commits)==1)
+reload_path=out/'checkpoint_v2.exit'
+reload_ok=reload_path.exists() and reload_path.read_text().strip()=='0' and (out/'checkpoint_v2.json').exists()
+passed=bool(passed and physics and probability and reload_ok and len(commits)==1)
 report={'passed':passed,'tested_commit':next(iter(commits)) if len(commits)==1 else None,
-        'runtime_passed':physics,'probability_passed':probability,'training':results}
+        'runtime_passed':physics,'probability_passed':probability,'checkpoint_reload_passed':reload_ok,'training':results}
 print(json.dumps(report,indent=2))
 if a.write_gate:
     if not passed:raise RuntimeError('Precheck not passed; no gate written')
