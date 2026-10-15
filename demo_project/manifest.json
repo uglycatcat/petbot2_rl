@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-15",
+  "updated_at": "2026-10-16",
   "purpose": "PetBot experimental training projects. Code is versioned on dedicated demoproj branches; checkouts are managed by default.xml.",
   "repositories": [
     {
@@ -8,22 +8,18 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/recovery_agile_01",
-      "verified_commit": "dcbd56ef48f29b4ec9d855ef7e9a1b383be4624a",
+      "verified_commit": "3bca3152db79fce38a0b0cbed40c982862c6d45d",
       "upstream_url": "https://github.com/nvidia-isaac/WBC-AGILE.git",
       "upstream_commit": "6830cf995714e81c91ce63247e8e016d36e28f14",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "sweep3_six_runs_started; 2048_envs_x_1500_iterations; formal_policy_effect_unverified",
+      "status": "sweep3_complete; no_new_recovery; sweep4_fixed_LR_precheck_running",
       "local_validation": "PhysX stochastic standing 64/64; GPU probability/gradient/export checks; B/C 128 envs x 100 iteration and checkpoint reload passed. Independent untrained stochastic control 87/512 success, 84/512 stable. Training library 16384 with 2489 recoverable fallen curriculum samples. See docs/petbot_sweep3_training.md and PETBOT_SWEEP_03.md.",
       "task": "PetBot-Recovery-AGILE-v0",
       "usage": "PETBOT.md",
-      "active_tasks": [
-        "PetBot-Recovery-Sweep3-A-v0",
-        "PetBot-Recovery-Sweep3-B-v0",
-        "PetBot-Recovery-Sweep3-C-v0"
-      ]
+      "active_tasks": []
     },
     {
       "name": "jump_rl_demo",
@@ -53,7 +49,7 @@
         "demo"
       ],
       "shallow": false,
-      "status": "first_training_running; two_seeds_2048x1500_on_GPU1_and_GPU0; fixed_703157f",
+      "status": "first_training_complete; two_seeds_2048x1500; six_evaluations_zero_stable_success",
       "local_validation": "64-env PhysX negative control; 128x100 PPO and reload passed, stable success 0/128, front-wheel height max 0.21048 m. See docs/tonight_training_20261015.md.",
       "task": null,
       "usage": "README.md",
