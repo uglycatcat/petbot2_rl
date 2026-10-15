@@ -4,7 +4,7 @@
 
 | 项目 | 底座 | 分支 | 状态 |
 |---|---|---|---|
-| [recovery_agile_01](recovery_agile_01/PETBOT.md) | WBC-AGILE `6830cf9`，借鉴 robot_lab 混合动作 | `demoproj/recovery_agile_01` | 第二轮 8 组全部跑满，24 次策略评估全部 0/512，见[第二轮记录](#第二轮过夜训练2026-10-14)；首轮 11 组 2048×3000 扫描 + 确定性独立评估完成：**无一组学到起身**（最好 5 组 0.225~0.227 与开环地板基线 0.213 持平）；见[首版扫描记录](recovery_agile_01/PETBOT_SWEEP_01.md) |
+| [recovery_agile_01](recovery_agile_01/PETBOT.md) | WBC-AGILE `6830cf9`，借鉴 robot_lab 混合动作 | `demoproj/recovery_agile_01` | 第三轮六组 2048×1500 已启动（`cffc86d`），见[第三轮记录](../docs/petbot_sweep3_training.md)；第二轮 8 组全部跑满，24 次策略评估全部 0/512，见[第二轮记录](#第二轮过夜训练2026-10-14)；首轮 11 组 2048×3000 扫描 + 确定性独立评估完成：**无一组学到起身**（最好 5 组 0.225~0.227 与开环地板基线 0.213 持平）；见[首版扫描记录](recovery_agile_01/PETBOT_SWEEP_01.md) |
 
 ## 同步与开发纪律
 
@@ -56,3 +56,7 @@ AGILE 同时在继续训练：日志 `reference_project/agile_env/logs/agile_sta
 ## 接口修复验收（2026-10-15）
 
 已修复 xyzw、复位派生状态、真实失败与超时重叠、旧检查点评估/续训兼容保护；独立 Repair 任务验证有界 Beta 动作及默认构型初始化。容器内 PhysX 集成检查、64 环境 × 12 iteration PPO、检查点重载通过。确定性初始策略 85/512，与开环成功样本一致；两档随机噪声对照仍 0/512，不能据此启动完整扫描或宣称学会恢复。详见[修复记录](recovery_agile_01/PETBOT_REPAIR_01.md)。
+
+## 第三轮正式训练（2026-10-15）
+
+A（仅修复）/B（恢复反馈与状态相关探索）/C（再加实测初态课程）各 seed 42/43，固定 `cffc86d`，2048 环境；GPU3 四组、GPU2 两组，14:13 已全部进入 PPO。B/C 各 128×100 短训、PhysX 正控制、概率契约及检查点重载均通过；全量训练库 16,384 个状态，课程易池 2,489 个倒地状态。先跑 1500 iteration，250/750/1499 使用同一 512 独立初态评估。default 复测 85/512，尚无正式策略效果结论。代码定义见 [PETBOT_SWEEP_03.md](recovery_agile_01/PETBOT_SWEEP_03.md)，实际验收、启动与查询见[第三轮记录](../docs/petbot_sweep3_training.md)。
