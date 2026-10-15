@@ -1,9 +1,23 @@
 # upright_rl_demo
 
-PetBot 起立训练项目。分支 `demoproj/upright_rl_demo`，由根仓库 `default.xml` 物化到 `demo_project/upright_rl_demo`。
+从默认构型、零速度开始，抬起前轮并维持只有后轮着地。左右车架共用位置目标、左右后轮共用速度目标，头和耳保持默认位置目标。固定动作程序仅作行为参照，没有轨迹模仿或示范数据。
 
-2026-10-15 登记。训练代码还没写。
+## 框架与任务
 
-任务是从默认姿态维持只有两个后轮着地，位置最好不变，左右执行器对称，脖子和耳朵不动。本机参照是 `robot_controller_demo/jump_demo`，那个动作太僵硬，不是模仿数据。说明在主仓库 `docs/upright.md`（嵌套检出时相对路径 `../../docs/upright.md`）。
+独立 Isaac Lab 3.0.0-beta2 / RSL-RL 5.4.1 PPO 项目。自有资产适配、伺服与 Beta 初始化代码复用 `recovery_agile_01` 的 `cffc86d`；没有导入恢复任务或修改其运行副本。源模型只读，派生 USD 写在忽略目录 `artifacts/`。
 
-完整跳跃已放弃。`jump_rl_demo` 仍保留，不要删。与 `recovery_agile_01` 的摔倒恢复训练无关，不要改那条线的代码或运行副本。
+两路有界 Beta 动作，位置范围和轮速上限从源 MJCF 读取。125 维观测为5帧历史，每帧重力、根速度、5个位置关节角度与速度、后轮速度、水平位移和上一动作。PPO初始位置/轮速归一化std为0.25/0.15、32步rollout、5 epochs、4 minibatches、lr=3e-4、gamma=.99、entropy=.001，观测归一化。8秒回合，控制50Hz。任务不沿用恢复线的极低终态方差门控。
+
+奖励：前轮高度连续反馈2/s、仅后轮支撑2/s、该支撑下低速保持3/s、首次持续1秒成功10；水平位移平方惩罚0.2/s、动作差平方0.005/s、跌倒5。成功要求两个后轮垂直力均>0.05N、其他身体无>0.1N接触、两个前轮中心均高于0.10m、线速度<0.15m/s、角速度<0.4rad/s、位置关节速度<0.5rad/s、机身未翻倒，持续1秒。位置为软约束，不把绝对不动设为起立前提。以上均为首版工程阈值，学习效果待评估。
+
+## 容器与运行
+
+`bash tools/container.sh up` 创建专用 `petbot-upright-train`，仅GPU0/1；`bash tools/container.sh install` 安装依赖。模型挂载只读。缺少派生资产时在容器运行 `/isaac-sim/python.sh -m upright.prepare --headless`。
+
+训练入口 `train.py --num_envs 2048 --iterations 1500 --seed 42 --log_dir <运行目录>`，仅容器内运行。`--evaluate --checkpoint <路径>` 做确定性重载评估。默认复位相同，因此批量确定性结果不是不同摔倒场景覆盖率。`--probe` 为默认姿态负控制，不能作为起立能力证明。
+
+宿主 `tools/run_guarded.py --gpu 1 --log <日志> <train.py参数>` 检查每卡总显存并保留5GB预算；运行时每秒检查，达到78%即停止本项目专用容器，给用户80%限制留余量。不可停止其他用户任务。正式训练需干净固定版本副本，`--allow-dirty`仅开发验收使用。所有产物不进Git。
+
+## 2026-10-15 验收
+
+64环境默认目标PhysX检查：完整8秒数值有限，起立成功0/64（正确负控制），前轮最高0.04508m，对称目标误差与头耳目标误差均0。128环境×100 iteration PPO退出0，保存model_99.pt，出现非零balance奖励。该短训使用开发工作区，不能把当时HEAD当成完整运行代码身份。重载评估正在进行；正式固定版本训练尚未启动。详细证据在主仓库 `demo_project/runs/_night_20261015/`。
