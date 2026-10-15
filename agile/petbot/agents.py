@@ -82,3 +82,12 @@ class PetBotSweep3RunnerCfg(PetBotRepairRunnerCfg):
         self.algorithm.entropy_coef = .0002
         self.policy.actor_model_override = "agile.petbot.distribution:PetBotRecoveryActor"
         self.policy.distribution_override["class_name"] = "agile.petbot.distribution:PetBotRecoveryBetaDistribution"
+
+
+@configclass
+class PetBotSweep4RunnerCfg(PetBotSweep3RunnerCfg):
+    """Isolate the terminal mean/noise gate repair before adding task changes."""
+    def __post_init__(self):
+        super().__post_init__()
+        self.policy.actor_model_override='agile.petbot.distribution:PetBotResidualActor'
+        self.policy.distribution_override['class_name']='agile.petbot.distribution:PetBotResidualBetaDistribution'

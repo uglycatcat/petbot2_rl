@@ -56,3 +56,12 @@ for suffix, config, runner in (
                 "rsl_rl_cfg_entry_point": f"agile.petbot.agents:{runner}",
                 "pre_learn_entry_point": "agile.petbot.pre_learn:pre_learn"},
     )
+
+for suffix, config in (("B", "PetBotSweep3EnvCfg"), ("C", "PetBotSweep3CurriculumEnvCfg")):
+    gym.register(
+        id=f"PetBot-Recovery-Sweep4-{suffix}-v0",
+        entry_point="agile.petbot.mdp:PetBotRecoveryEnv", disable_env_checker=True,
+        kwargs={"env_cfg_entry_point": f"agile.petbot.env_cfg:{config}",
+                "rsl_rl_cfg_entry_point": "agile.petbot.agents:PetBotSweep4RunnerCfg",
+                "pre_learn_entry_point": "agile.petbot.pre_learn:pre_learn"},
+    )
