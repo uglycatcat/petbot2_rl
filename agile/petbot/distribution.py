@@ -85,6 +85,6 @@ class PetBotRecoveryActor(MLPModel):
         configuration = ((.6 - current[..., 6:11].abs().amax(-1)) / .48).clamp(0., 1.)
         gate = upright * configuration
         gate = gate.square() * (3. - 2. * gate)
-        floor = raw.new_tensor([.01] * 5 + [.005] * 2)
+        floor = raw.new_tensor([.001] * 5 + [.0005] * 2)
         self.distribution.recovery_scale = 1. - gate.unsqueeze(-1) * (1. - floor)
         return super().get_latent(obs, masks, hidden_state)

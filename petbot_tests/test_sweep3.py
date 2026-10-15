@@ -13,7 +13,7 @@ def test_state_gate_probability_and_shuffled_ppo_batch():
                           'initial_mean':[0,-.5,-.5,-1/11,-1/11,0,0],'initial_std':[.2]*5+[.1]*2}).to(device)
     actions=actor(obs,stochastic_output=True).detach()
     dist=actor.distribution;old=tuple(p.detach().clone() for p in dist.params);logp=dist.log_prob(actions).detach()
-    assert (dist.std[:32,:5]<.00201).all() and (dist.std[:32,5:]<.000501).all()
+    assert (dist.std[:32,:5]<.000201).all() and (dist.std[:32,5:]<.0000501).all()
     assert (dist.std[32:,:5]>.1999).all() and (dist.std[32:,5:]>.0999).all()
     permutation=torch.randperm(64,device=device)
     actor(obs[permutation],stochastic_output=True)
