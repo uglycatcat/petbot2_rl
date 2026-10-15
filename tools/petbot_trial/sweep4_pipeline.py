@@ -124,6 +124,18 @@ def main():
     if not args.prepare_only and not json.loads(previous_state.read_text()).get('finished_at'):
         raise RuntimeError('Sweep3 training/evaluation is not finished; preserve its resources')
 
+    # Reuse the ongoing full-library preparation rather than classify in every run.
+    preparation = RUNS/'_sweep4_precheck/prepare.json'
+    deadline = time.monotonic() + 3600
+    while not preparation.exists():
+        if time.monotonic() >= deadline:
+            raise RuntimeError('Full curriculum preparation did not finish; no training launched')
+        print('WAIT full curriculum preparation', flush=True)
+        time.sleep(30)
+    prepared = json.loads(preparation.read_text())
+    if prepared['demo_commit'] != gate['tested_commit'] or prepared['easy_curriculum']['count'] <= 0:
+        raise RuntimeError('Full curriculum preparation provenance mismatch')
+
     for name, _, _, _, _ in VARIANTS:
         path = RUNS/name
         if not path.exists():
