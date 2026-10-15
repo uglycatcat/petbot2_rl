@@ -6,4 +6,4 @@
 
 本机 `robot_controller_demo/jump_demo/` 已经能把前轮抬起并停在后轮上。用户确认这个动作可用，但太僵硬。它是行为参照，不是模仿轨迹，也不作为训练数据。
 
-训练放在 `demo_project/upright_rl_demo`（`demoproj/upright_rl_demo`）。首版独立任务与PPO入口已实现，复用现有镜像创建专用容器。64环境PhysX检查、128×100短训及重载通过；重载0/128稳定成功，前轮最高0.21048m，仍待正式训练验证。GPU1固定版本2048×1500训练已发起，最新状态见[晚间训练交接](tonight_training_20261015.md)。
+训练放在 `demo_project/upright_rl_demo`（`demoproj/upright_rl_demo`）。首版独立任务与PPO入口已实现，复用现有镜像创建专用容器。64环境PhysX检查、128×100短训及重载通过；重载0/128稳定成功，前轮最高0.21048m，仍待正式训练验证。GPU0/1双种子固定版本2048×1500训练已进入PPO，最新状态见[晚间训练交接](tonight_training_20261015.md)。

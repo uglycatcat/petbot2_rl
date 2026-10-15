@@ -48,12 +48,12 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "703157f9ff3e3a9f28b78cb599ab932be0266e02",
+      "verified_commit": "58bc2f3d6fbfbecfafc058a30cfc96365e0000e3",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "implemented; GPU_short_training_and_reload_passed; formal_training_launch_requested",
+      "status": "first_training_running; two_seeds_2048x1500_on_GPU1_and_GPU0; fixed_703157f",
       "local_validation": "64-env PhysX negative control; 128x100 PPO and reload passed, stable success 0/128, front-wheel height max 0.21048 m. See docs/tonight_training_20261015.md.",
       "task": null,
       "usage": "README.md",
