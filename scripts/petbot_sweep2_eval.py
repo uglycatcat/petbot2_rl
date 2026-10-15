@@ -32,11 +32,15 @@ def main():
     import torch
     import agile.rl_env.tasks.stand_up.petbot  # noqa: F401
     from agile.petbot.core import as_torch, gravity_from_xyzw
-    from agile.petbot.model import POSITION_JOINTS, load_model
+    from agile.petbot.model import POSITION_JOINTS, load_model, task_implementation_fingerprint
     from agile.petbot.pre_learn import pre_learn
     from agile.rl_env.rsl_rl import RslRlVecEnvWrapper, make_rsl_rl_runner
     from isaaclab_tasks.utils import load_cfg_from_registry
 
+    if args.episodes < 1:
+        raise ValueError('episodes must be positive')
+    if args.untrained_policy and args.checkpoint:
+        raise ValueError('Choose checkpoint or untrained policy, not both')
     task = args.task
     checkpoint = Path(args.checkpoint).resolve() if args.checkpoint else None
     if checkpoint:
@@ -45,6 +49,10 @@ def main():
             raise ValueError('Source model fingerprint mismatch')
         if saved.get('state_contract') != 'lab3_xyzw_fresh_body_state_v2' and not args.allow_cross_version_checkpoint:
             raise ValueError('Old checkpoint state contract; use its original code or explicitly allow repaired-environment reevaluation')
+        if saved.get('task_implementation_sha256') != task_implementation_fingerprint() and not args.allow_cross_version_checkpoint:
+            raise ValueError('Checkpoint task implementation differs; explicitly allow cross-version reevaluation')
+        if saved['collection']['collection']['seed'] == args.seed:
+            raise ValueError('Evaluation seed must differ from training collection seed')
         task = saved['task']
     env_cfg = load_cfg_from_registry(task, 'env_cfg_entry_point')
     agent_cfg = load_cfg_from_registry(task, 'rsl_rl_cfg_entry_point')
@@ -62,6 +70,12 @@ def main():
     if args.dataset:
         agent_cfg.petbot_eval_dataset = args.dataset
     pre_learn(base, task, agent_cfg)
+    if checkpoint:
+        for field in ('success_thresholds', 'physics_dt', 'policy_dt'):
+            if saved[field] != base.petbot_provenance[field]:
+                raise ValueError(f'Checkpoint evaluation contract mismatch: {field}')
+        if saved['collection']['usd_sha256'] != base.petbot_provenance['collection']['usd_sha256']:
+            raise ValueError('Checkpoint USD differs from evaluation asset')
     if args.save_dataset:
         path = Path(args.save_dataset)
         path.parent.mkdir(parents=True, exist_ok=True)

@@ -75,6 +75,18 @@ def main():
     assert [r['env_id'] for r in base.petbot_episode_records]==[0]
     torch.testing.assert_close(obs['policy'][0].reshape(10,27),actor_observation(base)[0].expand(10,27))
     checks.append('automatic_full_and_partial_timeout_reset_and_episode_records')
+    # Physical states agree with native frame conversions after a fresh simulation tick.
+    s=state(base)
+    base.scene.update(dt=base.physics_dt)
+    torch.testing.assert_close(s['lin_vel'],as_torch(robot.data.root_lin_vel_b),atol=1e-5,rtol=1e-5)
+    torch.testing.assert_close(s['ang_vel'],as_torch(robot.data.root_ang_vel_b),atol=1e-5,rtol=1e-5)
+    # Real failure dominates simultaneous horizon expiration in the returned PPO contract.
+    pose=as_torch(robot.data.root_link_pose_w).clone();pose[:,0]+=1.5
+    robot.write_root_pose_to_sim(pose)
+    base.episode_length_buf[:]=base.max_episode_length-1
+    _,_,term,trunc,_=env.step(action)
+    assert term.all() and not trunc.any()
+    checks.append('fresh_native_velocity_agreement_and_failure_over_timeout_precedence')
 
     # Standing is a positive integration control for the actual reward and success managers.
     root=default_root.clone();root[:,:2]=0;root[:,2]=base.petbot_standing_height+.002;root[:,3:7]=torch.tensor([0.,0.,0.,1.],device=dev);root[:,7:]=0

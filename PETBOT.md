@@ -1,5 +1,7 @@
 # recovery_agile_01 — PetBot 首个恢复 demo
 
+当前接口修复与服务器验收见 [PETBOT_REPAIR_01.md](PETBOT_REPAIR_01.md)。旧评估入口已停用，使用 `scripts/petbot_sweep2_eval.py`；历史实验复现使用其固定版本副本。
+
 基于 WBC-AGILE `6830cf995714e81c91ce63247e8e016d36e28f14`；任务 `PetBot-Recovery-AGILE-v0`。
 复用 AGILE 的任务注册、pre-learn 生命周期、RSL-RL 5 适配与训练/检查点/TensorBoard 入口；借鉴 robot_lab 的位置/速度 action 分组。未继承 T1 的镜像、提升辅助、非足端触地惩罚或高度目标。
 

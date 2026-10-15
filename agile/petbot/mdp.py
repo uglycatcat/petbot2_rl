@@ -194,6 +194,9 @@ class PetBotRecoveryEnv(ManagerBasedRLEnv):
         if not getattr(self, "petbot_ready", False):
             raise RuntimeError("Run the PetBot pre_learn hook before stepping; no standing-only fallback training.")
         result = super().step(action)
+        obs, reward, terminated, truncated, extras = result
+        # A real failure on the horizon boundary must not receive timeout bootstrap.
+        result = (obs, reward, terminated, truncated & ~terminated, extras)
         if getattr(self.cfg, "sweep2", False):
             logs = self.extras.setdefault("log", {})
             logs["Actions/clipped_fraction"] = (action.abs() >= 0.999).float().mean()

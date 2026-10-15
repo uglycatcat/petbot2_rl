@@ -10,7 +10,7 @@ import torch
 
 from .collection import collect, probe_standing, validate_dataset
 from .core import reset_pool_indices
-from .model import JOINT_ORDER, POSITION_JOINTS, PROJECT_ROOT, REAR_WHEELS, load_model, prepared_asset
+from .model import JOINT_ORDER, POSITION_JOINTS, PROJECT_ROOT, REAR_WHEELS, load_model, prepared_asset, task_implementation_fingerprint
 
 
 def pre_learn(env, task_name, agent_cfg):
@@ -72,6 +72,7 @@ def pre_learn(env, task_name, agent_cfg):
     env.petbot_provenance = {
         "task": task_name,
         "state_contract": "lab3_xyzw_fresh_body_state_v2",
+        "task_implementation_sha256": task_implementation_fingerprint(),
         "demo_commit": git("rev-parse", "HEAD"),
         "working_tree_dirty": False,
         "source_model": load_model(),
