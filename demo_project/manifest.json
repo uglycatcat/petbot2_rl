@@ -26,12 +26,12 @@
       ]
     },
     {
-      "name": "jump_rl_pro",
-      "path": "demo_project/jump_rl_pro",
+      "name": "jump_rl_demo",
+      "path": "demo_project/jump_rl_demo",
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
-      "branch": "demoproj/jump_rl_pro",
-      "verified_commit": "cf4e840a413f1f7a2e92e37243018ad44a24d849",
+      "branch": "demoproj/jump_rl_demo",
+      "verified_commit": "1b61916363e82dae0aff8c8d9afd69b387876329",
       "groups": [
         "demo"
       ],

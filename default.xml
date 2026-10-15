@@ -38,9 +38,9 @@
            revision="demoproj/recovery_agile_01"
            groups="demo" />
   <project name="petbot2_rl"
-           path="demo_project/jump_rl_pro"
+           path="demo_project/jump_rl_demo"
            remote="ours"
-           revision="demoproj/jump_rl_pro"
+           revision="demoproj/jump_rl_demo"
            groups="demo" />
 
   <!-- 训练框架 / 工程参考 -->
