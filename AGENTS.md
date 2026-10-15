@@ -113,9 +113,11 @@
 
 细节写进对应文档，本表只保留一行结论。
 
+| 2026-10-15 | 修复姿态/复位接口、动作初始化及评估兼容检查 | PhysX 集成验收通过，64 环境 × 12 iteration PPO 与重载通过；默认均值复现 85/512，但两档随机探索均 0/512，训练反馈仍需优化，见[修复验收](demo_project/recovery_agile_01/PETBOT_REPAIR_01.md) |
+
 ## 当前实现状态
 
-- **第二轮训练已结束（2026-10-15）**：8 组全部完成 3000 iteration，24 次策略评估全为 0/512。标准差有界但动作饱和明显，课程成功率 EMA 无可见进展；尚无有效恢复策略。已确认 xyzw/wxyz 混用和复位重力缓存错误，训练实现待修复；旧课程/固定序列解释失效。本轮没有追加训练。[结果与证据](docs/petbot_sweep2_results.md)。
+- **第二轮训练已结束（2026-10-15）**：8 组全部完成 3000 iteration，24 次策略评估全为 0/512。标准差有界但动作饱和明显，课程成功率 EMA 无可见进展；尚无有效恢复策略。已确认 xyzw/wxyz 混用和复位重力缓存错误，接口修复及容器内验收已完成（详见下方修复记录）；旧课程/固定序列解释失效，尚未追加完整训练。[结果与证据](docs/petbot_sweep2_results.md)。
 
 - **固定姿态恢复（2026-10-14，用户试操）**：`robot_controller_demo/pose_recover_demo/` 已实现。未摔倒用 1 s 回到初始角；摔倒后按 pitch 符号走 4 s 或 8 s 动作组。用户确认效果可用、思路明确，但不能覆盖所有摔倒情况。没有全姿态成功率统计。动作、判据和被动沉降数字见 [固定姿态恢复](docs/fixed_pose_recovery.md)。该动作组是构型与接触的参照，不是训练示范数据。
 - **被动静止姿态（2026-10-14 实测）**：执行器关闭、均匀朝向贴地放下后，1000 套停稳，倾斜角最大 121.7°，130° 以上为 0。侧躺与倒立初态都会离开初始朝向。原始数据在 `robot_controller_demo/test/fall_pose_statistics/output/`。
@@ -141,6 +143,7 @@
 
 ## 检查与交接
 
+- 服务器验收以容器内 PhysX 集成检查、短程 PPO、检查点重载为准；CPU 测试只辅助验证数学与概率契约，不能替代真实仿真。
 - demo 的本地测试：在 `demo_project/recovery_agile_01/` 运行 `python -m pytest -q --confcutdir=petbot_tests petbot_tests`（CPU Torch / MuJoCo 等依赖见 PETBOT.md）；它不启动 Isaac Sim 或训练。改 `pose_recover_demo/` 时运行 `python -m unittest discover -s robot_controller_demo/pose_recover_demo -q`。`driver_demo/` 的旧测试不必运行。
 - 每次工作结束前：核对重要信息与进展是否已同步至本文件「进度报告」及对应主题文档；实现状态发生变化时同步更新「当前实现状态」。明确区分用户确认、实测与未验证内容；无新增重要信息时无需为留痕而改文档。
 - `docs/reports/` 是 2026-09-24 的历史调研资料，只作模型与文献追溯，不代表当前方案。
