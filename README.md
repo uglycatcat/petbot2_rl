@@ -1,6 +1,6 @@
-# jump_rl_pro
+# jump_rl_demo
 
-PetBot 跳跃训练项目。分支 `demoproj/jump_rl_pro`，由根仓库 `default.xml` 物化到 `demo_project/jump_rl_pro`。
+PetBot 跳跃训练项目。分支 `demoproj/jump_rl_demo`，由根仓库 `default.xml` 物化到 `demo_project/jump_rl_demo`。
 
 2026-10-15 登记这条线。训练代码还没写，也还没有训练任务名。
 
