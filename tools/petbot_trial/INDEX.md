@@ -47,3 +47,7 @@ PETBOT_MAX_ITERS=3000 ./launch_variants.sh start     # 后台跑：terminal back
 ## 复位姿态诊断（2026-10-15）
 
 `sweep2_sequence_xyzw_diagnostic.py` 基于训练代码 `9553fef` 的评估入口，独立使用 Lab 3 根姿态 **xyzw** 计算初始重力，打印缓存/直接计算的差异与倒地数量。仅用于排查，未修复训练任务中的课程与复位观测。运行时从 demo checkout 执行，设置 `PYTHONPATH` 为该 checkout；参数同 `petbot_sweep2_eval.py`，本次为 `--episodes 512 --mode sequence --dataset /workspace/runs/_sweep2/eval_states.pt`，输出 `sequence_xyzw_diagnostic.json`。已确认缓存 fallen=0、直接计算=509；修正序列成功 35/512。详细证据在主线 `docs/petbot_sweep2_results.md`。
+
+## 第三轮训练与门槛（2026-10-15）
+
+`sweep3_pipeline.py` 创建 3 组 × 2 种子的固定版本副本，2048 环境，暂跑至 1500 iteration；GPU3 四组、GPU2 两组，实际显存门槛与 45 秒错峰启动。必须先有 `_sweep3_precheck/gate.json` 的真实通过记录，且代码与测试版本相同（允许仅文档提交）。不自动续训或重启失败任务。评估 250、750、1499 检查点，复用旧独立评估库但显式确认 xyzw 契约，重新测 default、zero、初始策略基线；输出 `_sweep3/`。操作参数 `--prepare-only` / `--status`，正式启动不带这两个选项。1500 之后是否延长由实测趋势决定。
