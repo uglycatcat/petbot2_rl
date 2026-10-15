@@ -108,7 +108,7 @@ def test_full_orientation_sampling_and_wheel_sampling():
     torch.testing.assert_close(q.norm(dim=-1), torch.ones(len(q)), atol=1e-6, rtol=0)
     # Isotropic quaternion second moments; gravity z spans both upright and inverted.
     torch.testing.assert_close(q.square().mean(0), torch.full((4,), 0.25), atol=0.005, rtol=0)
-    vertical = 1 - 2 * (q[:, 1].square() + q[:, 2].square())
+    vertical = 1 - 2 * (q[:, 0].square() + q[:, 1].square())
     assert (vertical > 0.8).float().mean() == pytest.approx(0.1, abs=0.01)
     assert (vertical < -0.8).float().mean() == pytest.approx(0.1, abs=0.01)
     spec = load_model()
@@ -185,7 +185,7 @@ def test_drives_restore_on_collection_failure():
 
 def test_cache_rejects_invalid_or_incomplete_states():
     data = {"root": torch.zeros(3, 13), "joint_pos": torch.zeros(3, 9), "joint_vel": torch.zeros(3, 9)}
-    data["root"][:, 3] = 1
+    data["root"][:, 6] = 1
     validate_dataset(data, JOINT_ORDER, 3)
     with pytest.raises(ValueError, match="Incomplete"):
         validate_dataset(data, JOINT_ORDER, 4)

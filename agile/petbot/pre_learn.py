@@ -10,7 +10,7 @@ import torch
 
 from .collection import collect, probe_standing, validate_dataset
 from .core import reset_pool_indices
-from .model import JOINT_ORDER, POSITION_JOINTS, PROJECT_ROOT, REAR_WHEELS, load_model
+from .model import JOINT_ORDER, POSITION_JOINTS, PROJECT_ROOT, REAR_WHEELS, load_model, prepared_asset
 
 
 def pre_learn(env, task_name, agent_cfg):
@@ -34,7 +34,18 @@ def pre_learn(env, task_name, agent_cfg):
         if cfg.split != "eval":
             raise ValueError("External evaluation states cannot be used for training")
         payload = torch.load(external, map_location="cpu", weights_only=True)
-        metadata = payload["metadata"]
+        metadata = dict(payload["metadata"])
+        if metadata.get("quaternion_order") != "xyzw":
+            if metadata.get("schema") != 1 or not getattr(agent_cfg, "petbot_allow_legacy_xyzw", False):
+                raise ValueError("Dataset quaternion contract missing; explicitly opt in to known Lab 3 legacy xyzw data")
+            metadata = {**metadata, "legacy_schema": 1, "schema": 2, "quaternion_order": "xyzw",
+                        "root_velocity_frame": "world_com", "legacy_xyzw_explicitly_confirmed": True}
+        import hashlib
+        usd, _ = prepared_asset()
+        if metadata["usd_sha256"] != hashlib.sha256(usd.read_bytes()).hexdigest():
+            raise ValueError("External state library USD differs")
+        if metadata["physics_dt"] != env.physics_dt or metadata["decimation"] != env.cfg.decimation:
+            raise ValueError("External state library simulation timing differs")
         if metadata["model"] != load_model()["source_sha256"]:
             raise ValueError("External state library model differs")
         if metadata["joint_names"] != list(robot.joint_names):
@@ -60,6 +71,7 @@ def pre_learn(env, task_name, agent_cfg):
 
     env.petbot_provenance = {
         "task": task_name,
+        "state_contract": "lab3_xyzw_fresh_body_state_v2",
         "demo_commit": git("rev-parse", "HEAD"),
         "working_tree_dirty": False,
         "source_model": load_model(),

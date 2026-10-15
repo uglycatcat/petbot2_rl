@@ -33,9 +33,9 @@ def test_discounted_shaping_telescopes_even_when_recovery_first_moves_away():
 
 def test_curriculum_pool_uses_negative_pitch_fallen_states_only():
     roots = torch.zeros(3, 13)
-    roots[:, 3] = math.cos(math.pi/4)
-    roots[:, 5] = torch.tensor([-math.sin(math.pi/4), math.sin(math.pi/4), 0.])
-    roots[2, 3] = 1
+    roots[:, 6] = math.cos(math.pi/4)
+    roots[:, 4] = torch.tensor([-math.sin(math.pi/4), math.sin(math.pi/4), 0.])
+    roots[2, 6] = 1
     assert reset_pool_indices(roots).tolist() == [0]
 
 

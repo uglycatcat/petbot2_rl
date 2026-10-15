@@ -31,7 +31,9 @@ class CollectionCfg:
 def cache_identity(env, cfg):
     usd, _ = prepared_asset()
     payload = {
-        "schema": 1,
+        "schema": 2,
+        "quaternion_order": "xyzw",
+        "root_velocity_frame": "world_com",
         "model": load_model()["source_sha256"],
         "collection": asdict(cfg),
         "usd_sha256": hashlib.sha256(usd.read_bytes()).hexdigest(),

@@ -29,3 +29,16 @@ for suffix, config in (
             "pre_learn_entry_point": "agile.petbot.pre_learn:pre_learn",
         },
     )
+
+
+# Independent action-distribution repair, without silently changing old experiment configurations.
+gym.register(
+    id="PetBot-Recovery-Repair-v0",
+    entry_point="agile.petbot.mdp:PetBotRecoveryEnv",
+    disable_env_checker=True,
+    kwargs={
+        "env_cfg_entry_point": "agile.petbot.env_cfg:PetBotSweep2HistoryEnvCfg",
+        "rsl_rl_cfg_entry_point": "agile.petbot.agents:PetBotRepairRunnerCfg",
+        "pre_learn_entry_point": "agile.petbot.pre_learn:pre_learn",
+    },
+)

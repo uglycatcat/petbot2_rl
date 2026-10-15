@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 
@@ -9,6 +10,9 @@ from isaaclab.app import AppLauncher
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--checkpoint')
+parser.add_argument('--allow-cross-version-checkpoint', action='store_true')
+parser.add_argument('--allow-legacy-xyzw-dataset', action='store_true')
+parser.add_argument('--untrained-policy', action='store_true')
 parser.add_argument('--dataset')
 parser.add_argument('--save-dataset')
 parser.add_argument('--task', default='PetBot-Recovery-Sweep2-A-v0')
@@ -18,7 +22,7 @@ parser.add_argument('--seed', type=int, default=20261015)
 parser.add_argument('--output', required=True)
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
-if args.mode == 'policy' and not args.checkpoint:
+if args.mode == 'policy' and not args.checkpoint and not args.untrained_policy:
     parser.error('policy evaluation requires --checkpoint')
 app = AppLauncher(args).app
 
@@ -27,7 +31,7 @@ def main():
     import gymnasium as gym
     import torch
     import agile.rl_env.tasks.stand_up.petbot  # noqa: F401
-    from agile.petbot.core import as_torch
+    from agile.petbot.core import as_torch, gravity_from_xyzw
     from agile.petbot.model import POSITION_JOINTS, load_model
     from agile.petbot.pre_learn import pre_learn
     from agile.rl_env.rsl_rl import RslRlVecEnvWrapper, make_rsl_rl_runner
@@ -39,6 +43,8 @@ def main():
         saved = json.loads((checkpoint.parent / 'params/petbot.json').read_text())
         if saved['source_model']['source_sha256'] != load_model()['source_sha256']:
             raise ValueError('Source model fingerprint mismatch')
+        if saved.get('state_contract') != 'lab3_xyzw_fresh_body_state_v2' and not args.allow_cross_version_checkpoint:
+            raise ValueError('Old checkpoint state contract; use its original code or explicitly allow repaired-environment reevaluation')
         task = saved['task']
     env_cfg = load_cfg_from_registry(task, 'env_cfg_entry_point')
     agent_cfg = load_cfg_from_registry(task, 'rsl_rl_cfg_entry_point')
@@ -47,6 +53,7 @@ def main():
     env_cfg.sim.device = args.device or 'cuda:0'
     agent_cfg.seed = args.seed
     agent_cfg.device = env_cfg.sim.device
+    agent_cfg.petbot_allow_legacy_xyzw = args.allow_legacy_xyzw_dataset
     agent_cfg.petbot_collection.split = 'eval'
     agent_cfg.petbot_collection.seed = args.seed
     agent_cfg.petbot_collection.num_states = args.episodes
@@ -79,11 +86,14 @@ def main():
         if saved['actor_dim'] != 27 * getattr(env_cfg, 'history_steps', 1):
             raise ValueError('History/actor dimension mismatch')
         # Runner-only overrides (steps/lr/seeds) do not change policy architecture here.
-        for field in ('actor_hidden_dims', 'critic_hidden_dims', 'activation', 'noise_std_type', 'noise_std_range'):
+        for field in ('actor_hidden_dims', 'critic_hidden_dims', 'activation', 'noise_std_type', 'noise_std_range', 'distribution_override'):
             if field in recorded_agent['policy']:
                 setattr(agent_cfg.policy, field, recorded_agent['policy'][field])
         runner = make_rsl_rl_runner(wrapped, agent_cfg, log_dir=None, device=agent_cfg.device)
         runner.load(str(checkpoint), load_cfg={'actor': True, 'critic': True, 'optimizer': False, 'iteration': False})
+        policy = runner.get_inference_policy(device=wrapped.device)
+    if args.untrained_policy and not checkpoint:
+        runner = make_rsl_rl_runner(wrapped, agent_cfg, log_dir=None, device=wrapped.device)
         policy = runner.get_inference_policy(device=wrapped.device)
     robot = base.scene['robot']
     ids = robot.find_joints(list(POSITION_JOINTS), preserve_order=True)[0]
@@ -95,7 +105,7 @@ def main():
     scale = (bounds[:, 1] - bounds[:, 0]) / 2
     fixed = torch.zeros((args.episodes, 7), device=base.device)
     fixed[:, :5] = (home-offset) / scale
-    initial_gravity = as_torch(robot.data.projected_gravity_b).clone()
+    initial_gravity = gravity_from_xyzw(as_torch(robot.data.root_link_pose_w)[:, 3:7])
     positive = initial_gravity[:, 0] >= 0  # sin(pitch)
     fallen = -initial_gravity[:, 2] < 2**-0.5
     first = {}
@@ -151,10 +161,12 @@ def main():
                 action = fixed.clone()
                 action[:, :5] = (q-offset)/scale
                 action[:, 5:] = wheels[:, None]/25
-            action_stats['samples'] += action.numel()
-            action_stats['clipped'] += int((action.abs() >= 1).sum())
+            active = torch.tensor([i not in first for i in range(args.episodes)], device=base.device)
+            action_stats['samples'] += action[active].numel()
+            action_stats['clipped'] += int((action[active].abs() >= 1).sum())
             if step % 5 == 0:
                 traces.append({'t': step*base.step_dt,
+                               'first_episode_active': active[:8].cpu().tolist(),
                                'root': as_torch(robot.data.root_state_w)[:8].cpu().tolist(),
                                'joint_names': robot.joint_names,
                                'q': as_torch(robot.data.joint_pos)[:8].cpu().tolist(),
@@ -178,10 +190,20 @@ def main():
                           'stable_at_end_rate': sum(r['stable_at_end'] for r in group)/len(group) if group else None}
     result = {'mode': args.mode, 'checkpoint': str(checkpoint) if checkpoint else None,
               'dataset_sha256': dataset_hash, 'evaluation': base.petbot_provenance,
+              'training_provenance': saved if checkpoint else None,
+              'untrained_policy': args.untrained_policy,
               'summary': summary, 'episodes': rows, 'action_stats': action_stats, 'traces_first8': traces}
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(result, indent=2, allow_nan=False)+'\n')
+    def finite_json(value):
+        if isinstance(value, float) and not math.isfinite(value):
+            return None
+        if isinstance(value, list):
+            return [finite_json(v) for v in value]
+        if isinstance(value, dict):
+            return {k: finite_json(v) for k, v in value.items()}
+        return value
+    output.write_text(json.dumps(finite_json(result), indent=2, allow_nan=False)+'\n')
     print(json.dumps(summary), flush=True)
     env.close()
 

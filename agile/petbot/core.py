@@ -1,4 +1,4 @@
-"""Tensor math shared by task and CPU tests. Quaternions use wxyz."""
+"""Tensor math shared by task and CPU tests. Simulator quaternions use xyzw."""
 
 from __future__ import annotations
 
@@ -99,9 +99,26 @@ def discounted_progress(previous, current, gamma, terminated):
     return gamma * final - previous
 
 
+def gravity_from_xyzw(quaternion):
+    """World down expressed in the body frame; Lab 3/PhysX storage is xyzw."""
+    x, y, z, w = quaternion.unbind(-1)
+    return torch.stack((2*(w*y-x*z), -2*(w*x+y*z), 2*(x*x+y*y)-1), -1)
+
+
+def rotate_inverse_xyzw(quaternion, vector):
+    """Rotate a world vector into body coordinates without simulator lazy caches."""
+    xyz = quaternion[..., :3]
+    w = quaternion[..., 3:4]
+    uv = torch.cross(xyz, vector, dim=-1)
+    return vector - 2*w*uv + 2*torch.cross(xyz, uv, dim=-1)
+
+
+def initial_classes(root):
+    up = -gravity_from_xyzw(root[:, 3:7])[:, 2]
+    return torch.where(up > .7, 0, torch.where(up < -.7, 1, 2))
+
+
 def reset_pool_indices(root):
-    """Negative-pitch fallen states are a curriculum proxy, not proven easy states."""
-    w, x, y, z = root[:, 3:7].unbind(-1)
-    sin_pitch = 2 * (w * y - z * x)
-    up = 1 - 2 * (x.square() + y.square())
-    return torch.nonzero((sin_pitch < -0.2) & (up < 0.7), as_tuple=False).flatten()
+    """Negative-pitch fallen states, using the actual Lab 3 xyzw storage contract."""
+    gravity = gravity_from_xyzw(root[:, 3:7])
+    return torch.nonzero((gravity[:, 0] < -.2) & (-gravity[:, 2] < .7), as_tuple=False).flatten()

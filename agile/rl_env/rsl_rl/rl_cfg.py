@@ -52,6 +52,9 @@ class RslRlPpoActorCriticCfg:
     noise_std_range: tuple[float, float] = (1e-6, 1e6)
     """Bounds used inside the Gaussian distribution, including log-probability calculation."""
 
+    distribution_override: dict | None = None
+    """Optional native RSL-RL distribution config; default preserves Gaussian behavior."""
+
     actor_hidden_dims: list[int] = MISSING
     """The hidden dimensions of the actor network."""
 
@@ -313,6 +316,8 @@ def _as_plain_dict(value):
 
 
 def _distribution_cfg(policy: dict) -> dict:
+    if policy.get("distribution_override") is not None:
+        return dict(policy["distribution_override"])
     noise_std_type = policy.get("noise_std_type", "scalar")
     if noise_std_type == "pred":
         return {

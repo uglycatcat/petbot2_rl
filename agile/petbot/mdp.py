@@ -6,7 +6,7 @@ import torch
 
 from isaaclab.envs import ManagerBasedRLEnv
 
-from .core import HoldTracker, as_torch, observation_vector, success_components, recovery_potential, discounted_progress
+from .core import HoldTracker, as_torch, observation_vector, success_components, recovery_potential, discounted_progress, gravity_from_xyzw, rotate_inverse_xyzw, initial_classes
 from .model import JOINT_ORDER, POSITION_JOINTS, WHEELS
 
 
@@ -21,14 +21,17 @@ def state(env):
     wheel_ids = joint_ids(env, WHEELS)
     sensor = env.scene["contact_forces"]
     body_ids = sensor.find_bodies(list(WHEELS), preserve_order=True)[0]
+    pose = as_torch(data.root_link_pose_w)
+    velocity = as_torch(data.root_com_vel_w)
+    quaternion = pose[:, 3:7]
     return {
-        "gravity": as_torch(data.projected_gravity_b),
+        "gravity": gravity_from_xyzw(quaternion),
         "joint_error": as_torch(data.joint_pos)[:, ids] - as_torch(data.default_joint_pos)[:, ids],
-        "lin_vel": as_torch(data.root_lin_vel_b),
-        "ang_vel": as_torch(data.root_ang_vel_b),
+        "lin_vel": rotate_inverse_xyzw(quaternion, velocity[:, :3]),
+        "ang_vel": rotate_inverse_xyzw(quaternion, velocity[:, 3:]),
         "pos_vel": as_torch(data.joint_vel)[:, ids],
         "wheel_vel": as_torch(data.joint_vel)[:, wheel_ids],
-        "height": as_torch(data.root_pos_w)[:, 2] - as_torch(env.scene.env_origins)[:, 2],
+        "height": pose[:, 2] - as_torch(env.scene.env_origins)[:, 2],
         # Wheels are filtered against robot bodies; positive vertical force is ground support.
         "wheel_forces": as_torch(sensor.data.net_forces_w)[:, body_ids, 2],
     }
@@ -170,11 +173,9 @@ def reset_from_dataset(env, env_ids):
         velocity = dataset["joint_vel"][indices].to(env.device)
     if not hasattr(env, "petbot_initial_class"):
         env.petbot_initial_class = torch.zeros(env.num_envs, dtype=torch.long, device=env.device)
-    vertical = 1 - 2 * (root[:, 4].square() + root[:, 5].square())
-    env.petbot_initial_class[env_ids] = torch.where(vertical > 0.7, 0, torch.where(vertical < -0.7, 1, 2))
+    env.petbot_initial_class[env_ids] = initial_classes(root)
     if getattr(env.cfg, "sweep2", False) and hasattr(env, "petbot_previous_potential"):
-        w, x, y, z = root[:, 3:7].unbind(-1)
-        gravity = torch.stack((2*(w*y-x*z), -2*(w*x+y*z), 2*(x*x+y*y)-1), -1)
+        gravity = gravity_from_xyzw(root[:, 3:7])
         pos_ids = joint_ids(env, POSITION_JOINTS)
         error = position[:, pos_ids] - as_torch(robot.data.default_joint_pos)[env_ids][:, pos_ids]
         env.petbot_previous_potential[env_ids] = recovery_potential(gravity, error)
@@ -197,11 +198,13 @@ class PetBotRecoveryEnv(ManagerBasedRLEnv):
             logs = self.extras.setdefault("log", {})
             logs["Actions/clipped_fraction"] = (action.abs() >= 0.999).float().mean()
             if hasattr(self, "petbot_distribution") and self.petbot_distribution._distribution is not None:
-                std = self.petbot_distribution.std[0]
+                std = self.petbot_distribution.std.mean(dim=0)
                 mean = self.petbot_distribution.mean
                 for index, name in enumerate(POSITION_JOINTS + ("left_rear_wheel", "right_rear_wheel")):
                     logs[f"Exploration/std_{name}"] = std[index]
                 logs["Actions/mean_outside_range"] = (mean.abs() > 1).float().mean()
+                logs["Actions/mean_abs_max"] = mean.abs().max()
+                logs["Exploration/min_std"] = self.petbot_distribution.std.min()
             logs["Curriculum/success_ema"] = self.petbot_success_ema
         return result
 

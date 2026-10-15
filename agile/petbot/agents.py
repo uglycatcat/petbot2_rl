@@ -57,3 +57,19 @@ class PetBotSweep2RunnerCfg(PetBotPpoRunnerCfg):
         self.algorithm.entropy_coef = 0.002
         from agile.rl_env.rsl_rl import RslRlRewardNormalizationCfg
         self.algorithm.reward_normalization_cfg = RslRlRewardNormalizationCfg()
+
+
+@configclass
+class PetBotRepairRunnerCfg(PetBotSweep2RunnerCfg):
+    """Opt-in action repair; reward weights remain unchanged for isolated validation."""
+    def __post_init__(self):
+        super().__post_init__()
+        from .model import POSITION_JOINTS, load_model
+        joints = load_model()["joints"]
+        mean = [(2*joints[n]["default"]-sum(joints[n]["range"])) /
+                (joints[n]["range"][1]-joints[n]["range"][0]) for n in POSITION_JOINTS] + [0., 0.]
+        self.policy.distribution_override = {
+            "class_name": "agile.petbot.distribution:PetBotBetaDistribution",
+            "initial_mean": mean,
+            "initial_std": [.2, .2, .2, .2, .2, .1, .1],
+        }
