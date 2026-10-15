@@ -12,8 +12,23 @@
 
 ## 验证
 
-17 项 CPU 测试已通过，新增 MuJoCo 独立旋转参考、方向分类、分布概率/熵/KL/PPO 梯度、默认均值与导出一致性。PhysX 集成检查 `scripts/petbot_runtime_check.py` 覆盖已知姿态、复位后速度/接触/历史、自动超时和局部复位、真实成功事件以及初始策略默认构型；运行结果待补。
+服务器容器 `petbot-train`、GPU3 实测，原训练副本与模型不变：
+
+| 检查 | 结果 | 证据（仓库根相对路径） |
+|---|---|---|
+| PhysX 已知姿态、复位、速度、10 帧历史、局部/全量自动复位 | 全部通过；新计算速度与更新后的原生机身速度一致 | `demo_project/runs/_repair01/runtime_check_v2.json` |
+| 成功事件与稳定奖励正控制 | 默认站姿 64/64 成功，每回合只发一次成功事件；真实失败优先于超时 | 同上 |
+| 初始策略确定性评估 | 85/512 成功，与开环成功样本一致；末态稳定 83/512（旧开环为 84/512），无动作裁剪 | `_repair01/initial_policy.json` |
+| PPO 与检查点重载 | 64 环境 × 12 iteration，学习耗时 58 秒，退出 0；重载后 11/64 成功、11/64 末态稳定，无动作裁剪，仅证明链路可用 | `_repair01/ppo_smoke.log`、`checkpoint_eval.json` |
+| 续训兼容性 | 新检查点继续 2 iteration（约 9 秒）退出 0；旧检查点因 state_contract 不匹配退出 1 | `_repair01/resume.log`、`resume_old_rejected.log` |
+| 初始随机探索对照 | 位置/轮速 std .2/.1 与 .02/.01 均 0/512 成功和末态稳定；两组动作裁剪均 0/1,792,000 | `_repair01/stochastic_initial.json`、`stochastic_small.json` |
+
+表内缩写 `_repair01/` 均指 `demo_project/runs/_repair01/`。集成及 PPO 使用 `4728953`，噪声对照 `eaf8d5d`，续训保护 `1683488`；后续文档提交不改变任务实现指纹。CPU 17 项测试仅辅助验证独立 MuJoCo 旋转参考与分布概率/梯度/导出契约，不作为 PhysX 验收替代。
+
+新增真实失败优先于超时的处理，避免错误 bootstrap；旧评估入口停止使用，改用 `scripts/petbot_sweep2_eval.py` 的固定独立初态首回合评估。评估和续训均校验任务实现及物理契约；续训不允许跨状态契约。程序异常以非零退出码报告。
+
+可复验入口（容器内项目目录）：`scripts/petbot_runtime_check.py --help`、`scripts/petbot_sweep2_eval.py --help`。短程训练参数：`scripts/train.py --headless --task PetBot-Recovery-Repair-v0 --num_envs 64 --max_iterations 12 --seed 42 --logger tensorboard agent.petbot_collection.num_states=64 agent.save_interval=1`；使用容器 `/isaac-sim/python.sh`，由 `CUDA_VISIBLE_DEVICES=3` 选择 GPU。
 
 ## 尚未解决的学习风险
 
-有界分布不保证有效探索或恢复能力，Beta 仍可能变得过窄，必须观察执行方差。原有最终成功门槛与奖励稀疏、基于成功 EMA 的课程停滞、固定序列的 PhysX 与 MuJoCo PD 差异属于待验证的训练设计/物理迁移问题，不能用本次接口修复宣称已解决。默认构型正控制和易恢复噪声对照应先通过，再决定新一轮奖励与课程。
+有界分布不保证有效探索或恢复能力，Beta 仍可能变得过窄，必须观察执行方差。原有最终成功门槛与奖励稀疏、基于成功 EMA 的课程停滞、固定序列的 PhysX 与 MuJoCo PD 差异属于待验证的训练设计/物理迁移问题，不能用本次接口修复宣称已解决。默认构型正控制已通过，随机探索对照未通过。实测说明仅降低固定探索尺度仍不足，尚不能证明噪声是全部失败原因；下一步应拆分进入恢复域与低速保持的训练信号，验证接近恢复完成时可降低噪声，最终独立评估仍沿用严格成功判据。
