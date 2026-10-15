@@ -53,3 +53,5 @@ PETBOT_MAX_ITERS=3000 ./launch_variants.sh start     # 后台跑：terminal back
 `sweep3_pipeline.py` 创建 3 组 × 2 种子的固定版本副本，2048 环境，暂跑至 1500 iteration；GPU3 四组、GPU2 两组，实际显存门槛与 45 秒错峰启动。必须先有 `_sweep3_precheck/gate.json` 的真实通过记录，且代码与测试版本相同（允许仅文档提交）。不自动续训或重启失败任务。评估 250、750、1499 检查点，复用旧独立评估库但显式确认 xyzw 契约，重新测 default、zero、初始策略基线；输出 `_sweep3/`。操作参数 `--prepare-only` / `--status`，正式启动不带这两个选项。1500 之后是否延长由实测趋势决定。
 
 `sweep3_prepare.py` 在容器内预先采集 2048 环境口径的训练库并测量可恢复倒地索引，不运行 PPO。正式副本可复用这些缓存，`pre_learn` 仍校验全部身份字段。`sweep3_gate.py --runs-root /workspace/runs --write-gate` 汇总 PhysX、概率、检查点重载及两组 100 iteration 短训的真实证据；未全部通过时拒绝写入启动门槛文件。
+
+`sweep3_launch_when_ready.py` 是一次性启动器：从清单根目录启动，等待 B/C 短训、检查点加载及全量训练库准备全部成功，再运行真实门槛检查并启动正式调度。任何前置失败立即退出；有独立锁、已有状态检查及两小时等待上限，不常驻自动重启训练。运行输出 `_sweep3_precheck/launcher.log`，正式调度状态仍为 `_sweep3/status.json`。
