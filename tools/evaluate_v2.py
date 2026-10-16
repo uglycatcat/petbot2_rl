@@ -1,5 +1,5 @@
 """Single, locked checkpoint evaluation queue. Never launches or resumes training."""
-import argparse,fcntl,json,pathlib,subprocess,time
+import argparse,fcntl,json,pathlib,subprocess,time,os
 p=argparse.ArgumentParser();p.add_argument('--root',type=pathlib.Path,required=True);a=p.parse_args()
 root=a.root.resolve();out=root/'demo_project/runs/_upright_v2';out.mkdir(exist_ok=True)
 lock=(out/'eval.lock').open('w');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -23,7 +23,12 @@ for _ in range(48*360):
      '--log_dir',f'/workspace/runs/_upright_v2/eval_{key}']
    rc=subprocess.run(command).returncode;result=out/f'eval_{key}/evaluation.json'
    state[key].update(status='complete' if rc==0 and result.exists() else 'failed',exit_code=rc)
-   if result.exists():state[key]['result']=json.loads(result.read_text())
+   if result.exists():
+    state[key]['result']=json.loads(result.read_text())
+    render=['artifacts/mujoco_env/bin/python','robot_controller_demo/jump_demo/render_upright_trace.py',str(result.parent)]
+    with (out/f'render_{key}.log').open('w') as f:
+     render_rc=subprocess.run(render,cwd=root,env={**os.environ,'MUJOCO_GL':'egl','MUJOCO_EGL_DEVICE_ID':'1','MPLCONFIGDIR':str(root/'artifacts/matplotlib')},stdout=f,stderr=subprocess.STDOUT).returncode
+    state[key]['render_exit_code']=render_rc
    status.write_text(json.dumps(state,indent=2))
  if not remaining:break
  time.sleep(10)
