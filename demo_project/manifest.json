@@ -44,18 +44,17 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "d548394f71072715c8ba5096d295e3f7f24a6d8b",
+      "verified_commit": "10368c182a93fb179da2392d311c658464a1e68d",
       "groups": [
         "demo"
       ],
       "shallow": false,
       "status": "v3_gpu_short_validation_in_progress; v2_complete_zero_full_success",
-      "local_validation": "Fixed 638ea3d; GPU0/1 two 2048x3000 runs exit 0, no memory guard; 8 deterministic evaluations all 0/64 success, phase2, and lift event. Preparation reward increased while policy std contracted to ~0.02. See docs/upright_v2_training.md.",
+      "local_validation": "V3 peak-progress candidate: CUDA probability/export/phase boundary checks; 16.7Hz PhysX action diagnostic phase2 5/64 and default negative 0/64 false positives. 50Hz 128x150 finite PPO; deterministic reload phase2 64/64, complete success 0/64, support max 0.16s. 16.7Hz short trial still running. See docs/tonight_training_20261016.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_v3_short_a",
-        "upright_v3_short_b"
+        "upright_v3_short_peak_b"
       ]
     }
   ]
