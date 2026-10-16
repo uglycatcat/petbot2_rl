@@ -44,7 +44,7 @@ config=dict(seed=args.seed,device=args.device,num_steps_per_env=32,save_interval
         distribution_cfg=dict(class_name='upright.distribution:UprightBetaDistribution',initial_mean=[home,0.],initial_std=[.25,.15])),
     critic=dict(class_name='MLPModel',hidden_dims=[256,128],activation='elu',obs_normalization=True),
     algorithm=dict(class_name='PPO',value_loss_coef=1.,use_clipped_value_loss=True,clip_param=.2,
-        entropy_coef=.001,num_learning_epochs=5,num_mini_batches=4,learning_rate=2e-4,
+        entropy_coef=.001,num_learning_epochs=5,num_mini_batches=4,learning_rate=6e-4,
         schedule='fixed',gamma=.997,lam=.95,desired_kl=.01,max_grad_norm=1.))
 try:
     cfg=UprightEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
