@@ -53,7 +53,10 @@ class Progress:
         self.hold=torch.where(support & (dist<=.05) & (fixed_error<=.05) & (s['vel'][:,:3].norm(dim=-1)<.1),self.hold+self.dt,0.).clamp(max=1.)
         lift=((s['front_z']-.045)/.075).clamp(0,1)*s['rear'].float()*(~s['other']).float()
         quality=torch.exp(-dist.square()/.15**2)
-        phi=lift+(self.phase==1).float()*quality
+        # Before wheel lift, the demonstrated mechanism first pitches the body.
+        # Small bounded potential gives this preparatory motion credit, not success.
+        prepare=.25*(-s['g'][:,0]/.8).clamp(0,1)*s['rear'].float()
+        phi=prepare+lift+(self.phase==1).float()*quality
         phi=torch.where(failure,0.,phi)
         progress=(GAMMA*phi-self.previous_phi)/self.dt;self.previous_phi=phi
         # Broad feedback remains informative before a fully stable 1s window exists.
