@@ -36,7 +36,7 @@ def total(kind):
   st['pos'][:,0]=offset;st['vel'].zero_()
   if kind=='return' and 100<=t<250:st['vel'][:,0]=-.1
   m=q.update(st,torch.zeros(1,device=device,dtype=torch.bool),st['q'].new_zeros(3))
-  reward=.02*(3*m['progress']+2*m['balance']+5*m['home_hold'])+3*m['lift_event']+30*m['fresh']
+  reward=.02*(3*m['progress']+m['prepare_reward']+2*m['support_reward']+2*m['balance']+5*m['home_hold'])+3*m['lift_event']+30*m['fresh']
   ret+=GAMMA**t*float(reward)
  return ret
 scores={k:total(k) for k in ['ground','away','return']}

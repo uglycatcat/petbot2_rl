@@ -117,6 +117,8 @@ def metrics(env):
 def reward(env,kind):
     s,m=metrics(env)
     if kind=='progress':return m['progress']
+    if kind=='prepare':return m['prepare_reward']
+    if kind=='support':return m['support_reward']
     if kind=='lift_event':return m['lift_event'].float()/env.step_dt
     if kind=='balance':return m['balance']
     if kind=='success':return m['fresh'].float()/env.step_dt
@@ -163,6 +165,8 @@ class ObsCfg:
     policy=Policy()
 @configclass
 class RewardsCfg:
+    prepare=RewTerm(func=reward,weight=1.,params={'kind':'prepare'})
+    support=RewTerm(func=reward,weight=2.,params={'kind':'support'})
     progress=RewTerm(func=reward,weight=3.,params={'kind':'progress'})
     lift_event=RewTerm(func=reward,weight=3.,params={'kind':'lift_event'})
     balance=RewTerm(func=reward,weight=2.,params={'kind':'balance'})

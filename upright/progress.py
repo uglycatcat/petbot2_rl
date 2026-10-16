@@ -65,6 +65,7 @@ class Progress:
         active=(self.phase==1)&support&~failure
         self.result=dict(raw_support=raw,support=support,balanced=balanced,held=held,fresh=fresh,
             lift_event=lift_event,progress=progress,distance=dist,fixed_error=fixed_error,
-            balance=active.float()*velocity_quality*rotation_quality*(.1+.9*quality),
+            prepare_reward=(self.phase==0).float()*(2*prepare+1.5*lift)*(~failure).float(),
+            support_reward=active.float(),balance=active.float()*velocity_quality*rotation_quality*(.1+.9*quality),
             home_hold=held.float(), phase=self.phase, pose_span=span, target_velocity=target)
         return self.result
