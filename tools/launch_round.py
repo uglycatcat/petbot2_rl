@@ -1,9 +1,13 @@
 """One-shot four-GPU round deployment after explicit engineering gate."""
-import argparse,fcntl,json,os,pathlib,shutil,subprocess,time
-p=argparse.ArgumentParser();p.add_argument('--root',type=pathlib.Path,required=True);p.add_argument('--round',required=True);p.add_argument('--iterations',type=int,default=1500);a=p.parse_args()
+import argparse,datetime,fcntl,json,os,pathlib,shutil,subprocess,time
+from zoneinfo import ZoneInfo
+p=argparse.ArgumentParser();p.add_argument('--root',type=pathlib.Path,required=True);p.add_argument('--round',choices=('v3','v4','v5','v6'),required=True);p.add_argument('--iterations',type=int,default=1500);a=p.parse_args()
 root=a.root.resolve();src=root/'demo_project/upright_rl_demo';runs=root/'demo_project/runs';out=runs/('_upright_'+a.round);out.mkdir(exist_ok=True)
 lock=(out/'launch.lock').open('w');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB);status=out/'launch_status.json'
 if status.exists():raise RuntimeError('Existing round: inspect jobs before any repeat')
+start_record=json.loads((out/'round_start.json').read_text())
+cutoff=datetime.datetime(2026,10,17,8,tzinfo=ZoneInfo('Asia/Shanghai'))
+assert datetime.datetime.fromisoformat(start_record['started_at'])<cutoff, 'No new round after final 08:00 trigger'
 gate=json.loads((out/'gate.json').read_text());assert gate['engineering_passed']
 def git(*args):return subprocess.check_output(['git','-C',str(src),*args],text=True).strip()
 assert not git('status','--porcelain');commit=git('rev-parse','HEAD')
