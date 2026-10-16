@@ -6,7 +6,7 @@
 |---|---|---|---|
 | [recovery_agile_01](recovery_agile_01/PETBOT.md) | WBC-AGILE `6830cf9`，借鉴 robot_lab 混合动作 | `demoproj/recovery_agile_01` | 第三轮六组已完成：A 0/512、B/C 85/512，无新增恢复；第四轮B/C双种子及评估已完成，终局87–88/512、仅新增2–3个恢复，见[第四轮记录](../docs/petbot_sweep4_training.md)；第二轮 8 组全部跑满，24 次策略评估全部 0/512，见[第二轮记录](#第二轮过夜训练2026-10-14)；首轮 11 组 2048×3000 扫描 + 确定性独立评估完成：**无一组学到起身**（最好 5 组 0.225~0.227 与开环地板基线 0.213 持平）；见[首版扫描记录](recovery_agile_01/PETBOT_SWEEP_01.md) |
 | [jump_rl_demo](jump_rl_demo/README.md) | 新线，不从上游派生 | `demoproj/jump_rl_demo` | 2026-10-15 已登记，`c4de881`。完整跳跃已放弃，训练代码不写，checkout 保留。见[跳跃预研](../docs/jump_prestudy.md) |
-| [upright_rl_demo](upright_rl_demo/README.md) | 新线，不从上游派生 | `demoproj/upright_rl_demo` | 第二版固定 `638ea3d`：位置/轮速、两阶段奖励、终局回位与窗口稳定；工程检查通过，短训重载0/64成功，GPU0/1双种子各2048×3000于15:15进入PPO，部署及评估见[第二版记录](../docs/upright_v2_training.md)。首版双种子1500次及6次评估已结束，全0/64稳定成功。 |
+| [upright_rl_demo](upright_rl_demo/README.md) | 新线，不从上游派生 | `demoproj/upright_rl_demo` | 第二版固定 `638ea3d`：位置/轮速、两阶段奖励、终局回位与窗口稳定；工程检查通过，短训重载0/64成功，GPU0/1双种子各2048×3000及8次评估已结束，均未学会离地后轮支撑，部署及终局见[第二版记录](../docs/upright_v2_training.md)。首版双种子1500次及6次评估已结束，全0/64稳定成功。 |
 
 ## 同步与开发纪律
 

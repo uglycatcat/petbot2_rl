@@ -49,14 +49,11 @@
         "demo"
       ],
       "shallow": false,
-      "status": "v2_training_running_since_2026-10-16T15:15+08:00; fixed_638ea3d; GPU1_seed42_GPU0_seed43_2048x3000; learning_efficacy_unproven",
-      "local_validation": "CUDA progress contract; 64-env default negative control; position/velocity PhysX diagnostic phase2 14/64; 128x200 PPO all scalar logs finite at fixed LR 0.0006; deterministic reload 0/64 success, 0/64 phase2, no premature termination. Engineering validation only, not learned-task acceptance. See docs/upright_v2_training.md.",
+      "status": "v2_training_complete; two_seeds_2048x3000; eight_evaluations_zero_success_and_phase2",
+      "local_validation": "Fixed 638ea3d; GPU0/1 two 2048x3000 runs exit 0, no memory guard; 8 deterministic evaluations all 0/64 success, phase2, and lift event. Preparation reward increased while policy std contracted to ~0.02. See docs/upright_v2_training.md.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [
-        "upright_v2_s42",
-        "upright_v2_s43"
-      ]
+      "active_tasks": []
     }
   ]
 }
