@@ -63,4 +63,4 @@ AGILE 同时在继续训练：日志 `reference_project/agile_env/logs/agile_sta
 
 A（仅修复）/B（恢复反馈与状态相关探索）/C（再加实测初态课程）各 seed 42/43，固定 `cffc86d`，2048 环境；GPU3 四组、GPU2 两组，14:13 已全部进入 PPO。B/C 各 128×100 短训、PhysX 正控制、概率契约及检查点重载均通过；全量训练库 16,384 个状态，课程易池 2,489 个倒地状态。先跑 1500 iteration，250/750/1499 使用同一 512 独立初态评估。default 复测 85/512，尚无正式策略效果结论。代码定义见 [PETBOT_SWEEP_03.md](recovery_agile_01/PETBOT_SWEEP_03.md)，实际验收、启动与查询见[第三轮记录](../docs/petbot_sweep3_training.md)。
 
-2026-10-16夜间：upright_rl_demo最高优先级，用户授权GPU0–3自动迭代1至4轮，第三版已完成：16.7Hz双种子曾完整成功64/64、额外持续保持0/64；第四版连续姿态稳定奖励正在验收；续接与收官边界见[夜间记录](../docs/tonight_training_20261016.md)。
+2026-10-16夜间：upright_rl_demo最高优先级，用户授权GPU0–3自动迭代1至4轮，第三版已完成：16.7Hz双种子曾完整成功64/64、额外持续保持0/64；第四版固定5a0e9b8四卡训练中（02:21全部进入PPO），对照连续姿态稳定奖励；续接与收官边界见[夜间记录](../docs/tonight_training_20261016.md)。
