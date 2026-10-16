@@ -16,4 +16,6 @@ assert d.std.min()>.058 and d.std.max()<.58
 assert torch.allclose(d.mean,d.deterministic_output(z))
 export=torch.jit.script(d.as_deterministic_output_module());b=io.BytesIO();torch.jit.save(export,b);b.seek(0);export=torch.jit.load(b)
 assert torch.allclose(d.mean,export(z),atol=1e-6)
+broad=UprightBetaDistribution(2,[0.,0.],[.35,.45]).cuda();broad.update(broad.initial_bias.reshape(1,2,2))
+assert torch.allclose(broad.std[0],x.new_tensor([.35,.45]),atol=1e-6)
 print('PASS bounded Beta initial std, sample/likelihood/recompute/KL/gradient/export',float(d.std.min()))

@@ -13,7 +13,7 @@ class Progress:
         self.age=torch.zeros_like(self.phase)
         self.on=torch.zeros(n,device=device); self.off=self.on.clone()
         self.lifted=torch.zeros(n,device=device,dtype=torch.bool); self.ever=self.lifted.clone()
-        self.previous_phi=self.on.clone(); self.hold=self.on.clone()
+        self.maximum_phi=self.on.clone(); self.hold=self.on.clone()
         # Gravity-vector and position-joint ranges reject real pose oscillation without
         # requiring every instantaneous joint velocity to be near zero.
         self.history=torch.zeros(self.window,n,10,device=device)
@@ -24,7 +24,7 @@ class Progress:
 
     def reset(self, ids, s):
         self.origin[ids]=s['pos'][ids,:2]
-        for v in (self.phase,self.age,self.on,self.off,self.lifted,self.ever,self.previous_phi,self.hold):v[ids]=0
+        for v in (self.phase,self.age,self.on,self.off,self.lifted,self.ever,self.maximum_phi,self.hold):v[ids]=0
         for v in (self.history,self.valid,self.near,self.slow,self.contacts):v[:,ids]=0
 
     def update(self, s, failure, fixed_targets):
@@ -60,7 +60,8 @@ class Progress:
         prepare=.25*(-s['g'][:,0]/.8).clamp(0,1)*s['rear'].float()
         phi=prepare+lift+(self.phase==1).float()*quality
         phi=torch.where(failure,0.,phi)
-        progress=(self.gamma*phi-self.previous_phi)/self.dt;self.previous_phi=phi
+        new_peak=torch.maximum(self.maximum_phi,phi)
+        progress=(new_peak-self.maximum_phi)/self.dt;self.maximum_phi=new_peak
         # Broad feedback remains informative before a fully stable 1s window exists.
         velocity_quality=torch.exp(-(s['vel'][:,:2]-target).square().sum(-1)/.15**2)
         rotation_quality=torch.exp(-s['vel'][:,3:].square().sum(-1)/4.)

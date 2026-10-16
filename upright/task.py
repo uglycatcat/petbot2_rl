@@ -91,7 +91,7 @@ def observations(env):
     # Observation reads never advance counters (PPO may read more than once).
     return torch.cat((s['g'],s['heading'],s['vel'],s['q'],s['qd']*.1,s['wheel']*.05,
         s['pos'][:,:2]-p.origin,env.action_manager.action,p.phase[:,None].float(),
-        p.hold[:,None],(env.episode_length_buf*env.step_dt/12.)[:,None]),-1)
+        p.hold[:,None],p.maximum_phi[:,None],(env.episode_length_buf*env.step_dt/12.)[:,None]),-1)
 
 def failed_state(s,origin):
     return (~torch.isfinite(torch.cat((s['pos'],s['vel'],s['q']),-1)).all(-1)
