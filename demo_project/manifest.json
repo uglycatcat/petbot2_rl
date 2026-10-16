@@ -15,14 +15,11 @@
         "demo"
       ],
       "shallow": false,
-      "status": "sweep3_complete; sweep4_B_C_two_seeds_2048x1500_running_PPO_on_GPU2_3",
+      "status": "sweep4_complete; final_success_87_to_88_of_512; new_recoveries_2_to_3; no_baseline_losses",
       "local_validation": "Sweep4 fixed code 3bca315: GPU probability/gradient/JIT and PhysX standing 64/64; B/C 128x100 finite PPO with fixed LR 0.0002; paired reload each 85/512 success, 84/512 stable, rescued 0/lost 0; full curriculum pool 2489/16384. See docs/petbot_sweep4_training.md.",
       "task": "PetBot-Recovery-AGILE-v0",
       "usage": "PETBOT.md",
-      "active_tasks": [
-        "PetBot-Recovery-Sweep4-B-v0",
-        "PetBot-Recovery-Sweep4-C-v0"
-      ]
+      "active_tasks": []
     },
     {
       "name": "jump_rl_demo",
@@ -47,16 +44,19 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "58bc2f3d6fbfbecfafc058a30cfc96365e0000e3",
+      "verified_commit": "638ea3d8d51ef7247f9e8efafd6472fc5382bfb7",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "first_training_complete; two_seeds_2048x1500; six_evaluations_zero_stable_success",
-      "local_validation": "64-env PhysX negative control; 128x100 PPO and reload passed, stable success 0/128, front-wheel height max 0.21048 m. See docs/tonight_training_20261015.md.",
+      "status": "v2_training_running_since_2026-10-16T15:15+08:00; fixed_638ea3d; GPU1_seed42_GPU0_seed43_2048x3000; learning_efficacy_unproven",
+      "local_validation": "CUDA progress contract; 64-env default negative control; position/velocity PhysX diagnostic phase2 14/64; 128x200 PPO all scalar logs finite at fixed LR 0.0006; deterministic reload 0/64 success, 0/64 phase2, no premature termination. Engineering validation only, not learned-task acceptance. See docs/upright_v2_training.md.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": []
+      "active_tasks": [
+        "upright_v2_s42",
+        "upright_v2_s43"
+      ]
     }
   ]
 }

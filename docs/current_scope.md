@@ -99,3 +99,7 @@ PetBot 首个 demo 的训练任务代码已实现，并在服务器容器内跑�
 - [Learning to Recover: Dynamic Reward Shaping with Wheel-Leg Coordination for Fallen Robots](https://arxiv.org/abs/2506.05516)
 - [FTSR / getup_gym](https://github.com/2350575870/getup_gym)
 - [HumanUP](https://github.com/RunpeiDong/HumanUP)
+
+## 独立起立任务（2026-10-16用户确认）
+
+`upright_rl_demo` 与 `recovery_agile_01` 并行推进，彼此独立且正式名称不变。起立从默认构型零速度开始，前轮离地后保持后轮支撑稳定；允许过程位移，但完成后必须回到初始水平位置，不能持续乱跑。输出固定为左右对称车架位置目标和后轮速度目标，头、耳维持初始位置目标。`jump_demo` 是必须复现理解的两阶段行为示例，其车架力矩仅为示例实现方便，不能据此将策略改为力矩输出，也不是训练示范轨迹。实施参数与验收建议见[第二版设计](upright_v2_design.md)。

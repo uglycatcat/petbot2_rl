@@ -12,7 +12,8 @@
 | [engineering_handoff.md](engineering_handoff.md) | 工程实施：接口契约、恢复任务设计、阶段验收 |
 | [fixed_pose_recovery.md](fixed_pose_recovery.md) | 本机 MuJoCo 固定姿态恢复动作组，以及被动沉降姿态的采集与结果 |
 | [jump_prestudy.md](jump_prestudy.md) | 前轮离地与后轮起跳的测量，以及放弃完整跳跃的决定 |
-| [upright.md](upright.md) | 起立任务：只有后轮着地，位置尽量不变；`jump_demo` 是僵硬参照 |
+| [upright.md](upright.md) | 起立任务：前轮离地、后轮稳定支撑，允许过程位移但终局回到原位置 |
+| [upright_v2_design.md](upright_v2_design.md) | jump_demo服务器复现、首版数据诊断和第二版分阶段训练设计（待实现） |
 | [reference_selection.md](reference_selection.md) | 参考项目选择建议、源码证据、接入成本与待验证步骤 |
 | [reference_recovery_validation.md](reference_recovery_validation.md) | 已收官参考项目 recovery 的**完整记录**：结论（含关闭决定）、判据 A/B/C/C2/D、实验矩阵、产物与查询、坑、参数速查 |
 
@@ -35,3 +36,5 @@
 - 关键进展、需求与决策变化、实测结果、重要失败经验和阻塞项按日期写入进度报告（一行一条）；长期有效的背景、约束和决策依据同步到对应主题文档，并修正过时表述。
 - 仅保留结论与必要证据，区分用户确认、实测与待验证推测；不记录对话流水，也不为无新增信息的重复检查追加记录。
 - 文档内使用相对路径；不写主机地址、账号、密码与凭据（本仓库公开）。
+
+- [起立第二版训练记录](upright_v2_training.md)：实际实现、短训失败边界、固定版本部署与评估安排。

@@ -122,3 +122,7 @@ git log --oneline refproj/agile-tools                            # 看改动历�
 ```
 
 内容清单与实验代际说明见该分支的 `tools/recovery_trial/INDEX.md`。
+
+## AGILE参考训练停止（2026-10-16）
+
+用户决定：AGILE作为成熟训练设计参考，不再投入GPU复训。已停止专用容器 `agile-train`，未删除容器、代码或检查点。最后日志32847 iteration，最新保存 `model_32750.pt`；未进行独立效果评估，不据此评价AGILE方法有效性。停止后GPU2总显存实测476 MiB（此前约8.5 GB）。不自动恢复该训练。
