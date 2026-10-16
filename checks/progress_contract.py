@@ -52,3 +52,11 @@ for dt in (.02,.06):
   m=p.update(st,torch.zeros(1,device=device,dtype=torch.bool),st['q'].new_zeros(3))
   assert bool(m['lift_event'][0])==(tick==p.enter_steps+p.contacts.shape[0]//2-1)
  print('PASS exact phase boundary',dt,p.enter_steps,p.contacts.shape[0])
+# Peak progress cannot be earned twice by oscillating between the same states.
+p=Progress(1,device);st={k:v[:1].clone() for k,v in s.items()};st['rear'][:]=True;st['other'][:]=False;st['pos'].zero_()
+p.reset(torch.tensor([0],device=device),st);earned=0.
+for t in range(150):
+ st['front_z'][:]=.19 if t%10<5 else .045
+ m=p.update(st,torch.zeros(1,device=device,dtype=torch.bool),st['q'].new_zeros(3));earned+=float(m['progress'])*p.dt
+assert abs(earned-float(p.maximum_phi))<1e-5 and earned<=2.25
+print('PASS peak reward bounded across repeated lifts',earned)
