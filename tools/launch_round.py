@@ -7,7 +7,9 @@ lock=(out/'launch.lock').open('w');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
 if status.exists():raise RuntimeError('Existing round: inspect jobs before any repeat')
 start_record=json.loads((out/'round_start.json').read_text())
 cutoff=datetime.datetime(2026,10,17,8,tzinfo=ZoneInfo('Asia/Shanghai'))
-assert datetime.datetime.fromisoformat(start_record['started_at'])<cutoff, 'No new round after final 08:00 trigger'
+try:started=datetime.datetime.fromisoformat(start_record['started_at'])
+except ValueError:started=datetime.datetime.strptime(start_record['started_at'],'%Y-%m-%dT%H:%M:%S%z')
+assert started<cutoff, 'No new round after final 08:00 trigger'
 gate=json.loads((out/'gate.json').read_text());assert gate['engineering_passed']
 def git(*args):return subprocess.check_output(['git','-C',str(src),*args],text=True).strip()
 assert not git('status','--porcelain');commit=git('rev-parse','HEAD')
