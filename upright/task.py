@@ -73,62 +73,75 @@ def state(env):
     pos=root[:,:3]-tensor(env.scene.env_origins)
     forces=tensor(env.scene['contact_forces'].data.net_forces_w)
     heights=tensor(d.body_pos_w)[:,:,2]-tensor(env.scene.env_origins)[:,2,None]
-    return dict(g=gravity,pos=pos,vel=root[:,7:13],q=tensor(d.joint_pos)[:,joints],qd=tensor(d.joint_vel)[:,joints],
+    return dict(quat=root[:,3:7],qfull=tensor(d.joint_pos),heading=torch.stack((1-2*(y*y+z*z),2*(x*y+w*z)),-1),g=gravity,pos=pos,vel=root[:,7:13],q=tensor(d.joint_pos)[:,joints],qd=tensor(d.joint_vel)[:,joints],
                 wheel=tensor(d.joint_vel)[:,wheels],front_z=heights[:,front].amin(-1),rear_z=heights[:,rear].amax(-1),
                 rear=(forces[:,sr,2]>.05).all(-1), other=(forces[:,other].norm(dim=-1)>.1).any(-1),
                 front=(forces[:,sf].norm(dim=-1)>.1).any(-1))
 
+def ensure_progress(env):
+    if not hasattr(env,'upright_progress'):
+        from .progress import Progress
+        env.upright_progress=Progress(env.num_envs,env.device,env.step_dt)
+        env.upright_progress.reset(torch.arange(env.num_envs,device=env.device),state(env))
+        env.upright_step=-1
+    return env.upright_progress
+
 def observations(env):
-    s=state(env)
-    return torch.cat((s['g'],s['vel'],s['q'],s['qd']*.1,s['wheel']*.05,s['pos'][:,:2],env.action_manager.action),-1)
+    s=state(env);p=ensure_progress(env)
+    # Observation reads never advance counters (PPO may read more than once).
+    return torch.cat((s['g'],s['heading'],s['vel'],s['q'],s['qd']*.1,s['wheel']*.05,
+        s['pos'][:,:2]-p.origin,env.action_manager.action,p.phase[:,None].float(),
+        p.hold[:,None],(env.episode_length_buf*env.step_dt/12.)[:,None]),-1)
+
+def failed_state(s,origin):
+    return (~torch.isfinite(torch.cat((s['pos'],s['vel'],s['q']),-1)).all(-1)
+        | ((s['pos'][:,:2]-origin).norm(dim=-1)>.6) | (s['pos'][:,2]<.025)
+        | (s['g'][:,2]>.2) | (s['vel'][:,:3].norm(dim=-1)>5.)
+        | (s['vel'][:,3:].norm(dim=-1)>30.))
 
 def metrics(env):
-    if not hasattr(env,'upright_hold'):
-        env.upright_hold=torch.zeros(env.num_envs,device=env.device)
-        env.upright_ever=torch.zeros(env.num_envs,device=env.device,dtype=torch.bool)
-        env.upright_step=-1
+    p=ensure_progress(env)
     if env.upright_step != env.common_step_counter:
         s=state(env)
-        # Height plus contact rejects contact dropout and four-wheel standing.
-        support=s['rear'] & ~s['other'] & (s['front_z']>.10)
-        calm=(s['vel'][:,:3].norm(dim=-1)<.15)&(s['vel'][:,3:].norm(dim=-1)<.4)&(s['qd'].abs().amax(-1)<.5)
-        good=support & calm & (s['g'][:,2]<-.25)
-        env.upright_hold=torch.where(good,env.upright_hold+env.step_dt,0.)
-        held=env.upright_hold>=1.
-        fresh=held & ~env.upright_ever
-        env.upright_ever |= held
-        env.upright_metrics=(s,support,good,held,fresh)
-        env.upright_step=env.common_step_counter
-        env.extras.setdefault('log',{}).update({'Upright/support':support.float().mean(),'Upright/held':held.float().mean(), 'Upright/front_height':s['front_z'].mean()})
+        fixed=s['q'].new_tensor([SPEC['joints'][n]['default'] for n in POSITION_JOINTS[:3]])
+        m=p.update(s,failed_state(s,p.origin),fixed)
+        env.upright_metrics=(s,m);env.upright_step=env.common_step_counter
+        if getattr(env,'upright_record',False):
+            env.upright_snapshot=({k:v.clone() for k,v in s.items()}, {k:v.clone() for k,v in m.items()})
+        env.extras.setdefault('log',{}).update({'Upright/support':m['support'].float().mean(),
+            'Upright/balanced':m['balanced'].float().mean(),'Upright/held':m['held'].float().mean(),
+            'Upright/phase2':p.phase.float().mean(),'Upright/position_error':m['distance'].mean(),
+            'Upright/front_height':s['front_z'].mean()})
     return env.upright_metrics
 
 def reward(env,kind):
-    s,support,good,held,fresh=metrics(env)
-    lift=((s['front_z']-.04)/.10).clamp(0,1)*s['rear'].float()
-    if kind=='lift': return lift
-    if kind=='support': return support.float()
-    if kind=='balance': return support.float()*torch.exp(-s['vel'][:,:3].square().sum(-1)/.04-s['vel'][:,3:].square().sum(-1)/.25)
-    if kind=='success': return fresh.float()/env.step_dt
-    if kind=='position': return s['pos'][:,:2].square().sum(-1).clamp(max=4)
-    if kind=='rate': return (env.action_manager.action-env.action_manager.prev_action).square().sum(-1)
-    if kind=='fall': return env.termination_manager.terminated.float()/env.step_dt
+    s,m=metrics(env)
+    if kind=='progress':return m['progress']
+    if kind=='lift_event':return m['lift_event'].float()/env.step_dt
+    if kind=='balance':return m['balance']
+    if kind=='success':return m['fresh'].float()/env.step_dt
+    if kind=='home_hold':return m['home_hold']
+    if kind=='boundary':return (m['distance']-.4).clamp_min(0).square()
+    if kind=='rate':return (env.action_manager.action-env.action_manager.prev_action).square().sum(-1)
+    if kind=='fall':return env.termination_manager.terminated.float()/env.step_dt
     raise ValueError(kind)
 
 def failed(env):
-    s=state(env)
-    return ~torch.isfinite(torch.cat((s['pos'],s['vel'],s['q']),-1)).all(-1) | (s['pos'][:,:2].norm(dim=-1)>1.5) | (s['pos'][:,2]<.025) | (s['g'][:,2]>.2)
+    return failed_state(state(env),ensure_progress(env).origin)
 
 def reset(env,env_ids):
-    r=env.scene['robot']
+    r=env.scene['robot'];p=ensure_progress(env)
+    env.extras.setdefault('log',{}).update({'Upright/episode_success':p.ever[env_ids].float().mean(),
+        'Upright/episode_lifted':p.lifted[env_ids].float().mean()})
     root=tensor(r.data.default_root_state)[env_ids].clone()
-    root[:,:3]+=tensor(env.scene.env_origins)[env_ids]
-    root[:,7:]=0
+    root[:,:3]+=tensor(env.scene.env_origins)[env_ids];root[:,7:]=0
     r.write_root_state_to_sim(root,env_ids=env_ids)
     q=tensor(r.data.default_joint_pos)[env_ids].clone()
     r.write_joint_state_to_sim(q,torch.zeros_like(q),env_ids=env_ids)
-    if hasattr(env,'upright_hold'):
-        env.extras.setdefault('log',{})['Upright/episode_success']=env.upright_ever[env_ids].float().mean()
-        env.upright_hold[env_ids]=0;env.upright_ever[env_ids]=False;env.upright_step=-1
+    p.reset(env_ids,state(env))
+    # Use the reset specification directly, not a potentially stale root read.
+    p.origin[env_ids]=root[:,:2]-tensor(env.scene.env_origins)[env_ids,:2]
+    env.upright_step=-1
 
 @configclass
 class SceneCfg(InteractiveSceneCfg):
@@ -150,12 +163,13 @@ class ObsCfg:
     policy=Policy()
 @configclass
 class RewardsCfg:
-    lift=RewTerm(func=reward,weight=2.,params={'kind':'lift'})
-    support=RewTerm(func=reward,weight=2.,params={'kind':'support'})
-    balance=RewTerm(func=reward,weight=3.,params={'kind':'balance'})
-    success=RewTerm(func=reward,weight=10.,params={'kind':'success'})
-    position=RewTerm(func=reward,weight=-.2,params={'kind':'position'})
-    rate=RewTerm(func=reward,weight=-.005,params={'kind':'rate'})
+    progress=RewTerm(func=reward,weight=3.,params={'kind':'progress'})
+    lift_event=RewTerm(func=reward,weight=3.,params={'kind':'lift_event'})
+    balance=RewTerm(func=reward,weight=2.,params={'kind':'balance'})
+    success=RewTerm(func=reward,weight=30.,params={'kind':'success'})
+    home_hold=RewTerm(func=reward,weight=5.,params={'kind':'home_hold'})
+    boundary=RewTerm(func=reward,weight=-2.,params={'kind':'boundary'})
+    rate=RewTerm(func=reward,weight=-.002,params={'kind':'rate'})
     fall=RewTerm(func=reward,weight=-5.,params={'kind':'fall'})
 @configclass
 class EventsCfg:
@@ -173,7 +187,7 @@ class UprightEnvCfg(ManagerBasedRLEnvCfg):
     events=EventsCfg();terminations=DonesCfg();commands=EmptyCfg();curriculum=EmptyCfg()
     def __post_init__(self):
         super().__post_init__()
-        self.decimation=10;self.episode_length_s=8.
+        self.decimation=10;self.episode_length_s=12.
         self.sim.dt=SPEC['physics_dt'];self.sim.render_interval=self.decimation
         self.sim.physics=PhysxCfg();self.sim.physics.gpu_max_rigid_patch_count=10*2**15
         self.scene.contact_forces.update_period=self.sim.dt
