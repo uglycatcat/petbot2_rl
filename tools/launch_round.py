@@ -13,7 +13,7 @@ assert subprocess.check_output(['docker','inspect',container,'--format','{{.Stat
 rows=subprocess.check_output(['nvidia-smi','--query-gpu=index,memory.total,memory.used','--format=csv,noheader,nounits'],text=True)
 mem={int(i):(int(t),int(u)) for i,t,u in (line.split(',') for line in rows.splitlines())}
 for gpu in range(4):assert mem[gpu][1]+4000<mem[gpu][0]*.78,(gpu,mem[gpu])
-state={'round':a.round,'commit':commit,'container':container,'started_at':time.strftime('%FT%T%z'),'iterations':a.iterations,
+state={'thread':os.environ.get('CODEX_THREAD_ID'),'round':a.round,'commit':commit,'container':container,'started_at':time.strftime('%FT%T%z'),'iterations':a.iterations,
  'checkpoints':sorted(set([250,750,a.iterations-1])),'gate':gate,'train':{}}
 def save():status.write_text(json.dumps(state,indent=2))
 # Long control-step variants launch first, then GPU0/1 variants.

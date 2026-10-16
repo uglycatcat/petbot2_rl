@@ -1,5 +1,5 @@
 """Evaluate a fixed, explicitly launched four-GPU round; never starts training."""
-import argparse,fcntl,json,os,pathlib,subprocess,time
+import argparse,fcntl,json,os,pathlib,shutil,subprocess,time
 p=argparse.ArgumentParser();p.add_argument('--root',type=pathlib.Path,required=True);p.add_argument('--round',required=True);a=p.parse_args()
 root=a.root.resolve();out=root/'demo_project/runs'/('_upright_'+a.round)
 lock=(out/'eval.lock').open('w');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -41,3 +41,12 @@ while time.time()<deadline:
  if not pending:break
  time.sleep(15)
 (out/'eval_finished.json').write_text(json.dumps({'finished_at':time.strftime('%FT%T%z'),'complete':sum(v['status']=='complete' for v in state.values()),'expected':len(jobs)*len(iterations)}))
+
+# Report completion to the same authorized session so analysis need not wait for a timer.
+if launch.get('thread') and shutil.which('codex'):
+ message=('upright_rl_demo 自动迭代轮次 '+a.round+' 的评估队列已结束。读取 docs/tonight_training_20261016.md、该轮 launch_status.json/eval_status.json/eval_finished.json，核查实际进程与结果；先分析再决定代码修改与下一轮，禁止直接重复启动。遵守最多4轮、2026-10-17 08:00之后完成当时所在轮便收官的边界。失败或缺失结果先诊断，不冒称完整评估通过。')
+ try:
+  r=subprocess.run([shutil.which('codex'),'queue','--thread',launch['thread'],'--message',message],capture_output=True,text=True,timeout=120)
+  notice={'returncode':r.returncode,'stdout':r.stdout,'stderr':r.stderr}
+ except Exception as e:notice={'submission_unknown':str(e)}
+ (out/'completion_notice.json').write_text(json.dumps(notice,indent=2))
