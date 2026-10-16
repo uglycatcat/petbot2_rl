@@ -20,7 +20,7 @@ PetBot2从默认构型、零速度开始，前轮离地、仅后轮支撑稳定�
 
 ## 容器和固定版本运行
 
-独立Isaac Lab3.0.0-beta2 / RSL-RL5.4.1容器 `petbot-upright-train`，仅GPU0/1。`bash tools/container.sh up`，依赖安装用`install`。训练只在容器内，正式运行应从干净固定提交的独立副本启动，源模型只读。
+独立Isaac Lab3.0.0-beta2 / RSL-RL5.4.1；原容器 `petbot-upright-train` 仅GPU0/1。10月16日夜间用户授权四卡，`tools/night_container.sh` 从原依赖快照建立 `petbot-upright-night`，可见GPU0–3，源模型只读。`bash tools/container.sh up`，依赖安装用`install`。训练只在容器内，正式运行应从干净固定提交的独立副本启动，源模型只读。
 
 `train.py --num_envs 2048 --iterations 3000 --seed 42 --log_dir <目录>`；`--evaluate --checkpoint <文件>`确定性重载，默认延长2秒检查保持。`--probe`固定默认目标负控制。评估输出离地/平衡/完整成功/终局/额外保持、位移、实际头耳偏差和完整前4环境轨迹，不将重复默认初态当场景覆盖率。`checks/progress_contract.py`需要CUDA，只验证判据、复位与奖励排序，不能代替PhysX验收。
 
@@ -29,3 +29,5 @@ PetBot2从默认构型、零速度开始，前轮离地、仅后轮支撑稳定�
 ## 历史与当前边界
 
 首版固定703157f：两组2048×1500完成，6次评估全0/64稳定成功；不覆盖其运行副本。第二版实现后的GPU验收、短训/重载和正式部署证据以主仓库 `docs/upright_v2_training.md` 为准。通过运行门槛不等于已学会任务。
+
+四卡轮次使用 `tools/launch_round.py --root <主仓库> --round v3 --iterations 1500`，仅在该轮gate.json记录工程验收通过后执行。已有状态拒绝重复启动；评估按固定副本的控制频率运行并保存视频，结束后向原会话排队分析通知。`tools/summarize_metrics.py`在容器内读取完整TensorBoard标量历史，用于验收与迭代判断。
