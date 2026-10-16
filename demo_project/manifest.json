@@ -44,17 +44,17 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "10368c182a93fb179da2392d311c658464a1e68d",
+      "verified_commit": "1af9d1bf2a942ced8dfab7469ad4bc5cf9ddd354",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "v3_gpu_short_validation_in_progress; v2_complete_zero_full_success",
-      "local_validation": "V3 peak-progress candidate: CUDA probability/export/phase boundary checks; 16.7Hz PhysX action diagnostic phase2 5/64 and default negative 0/64 false positives. 50Hz 128x150 finite PPO; deterministic reload phase2 64/64, complete success 0/64, support max 0.16s. 16.7Hz short trial still running. See docs/tonight_training_20261016.md.",
+      "status": "v3_complete_partial_success; v4_gpu_validation",
+      "local_validation": "V3 all four runs and 12 evaluations complete. 16.7Hz seeds both ever success 64/64 at 750/1499, extra hold 0/64. V4 continuous stability reward CUDA contract passed; short GPU validation ongoing.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_v3_short_peak_b"
+        "upright_v4_short"
       ]
     }
   ]
