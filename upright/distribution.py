@@ -6,14 +6,16 @@ from rsl_rl.modules.distribution import BetaDistribution
 
 
 class BoundedBetaMean(torch.nn.Module):
+    def __init__(self, span: float = 31.):
+        super().__init__(); self.span = span
     def forward(self, x):
         a,b=torch.unbind(x,dim=-2)
-        a,b=parameters(a),parameters(b)
+        a,b=parameters(a,self.span),parameters(b,self.span)
         return 2*a/(a+b)-1
 
-def parameters(x):
+def parameters(x, span: float = 31.):
     v=torch.nn.functional.softplus(x)
-    return 1+31*v/(31+v)
+    return 1+span*v/(span+v)
 
 
 class UprightBetaDistribution(BetaDistribution):
@@ -23,8 +25,10 @@ class UprightBetaDistribution(BetaDistribution):
     Sampling, likelihood, deterministic evaluation and export share the same transform.
     Learning efficacy is deliberately separate from these numerical contracts.
     """
-    def __init__(self, output_dim, initial_mean, initial_std):
+    def __init__(self, output_dim, initial_mean, initial_std, shape_cap=32.):
         super().__init__(output_dim, action_range=(-1.0, 1.0))
+        if shape_cap not in (32.,128.): raise ValueError("Unsupported Beta shape cap")
+        self.span=float(shape_cap)-1.
         mean = torch.as_tensor(initial_mean, dtype=torch.float32)
         std = torch.as_tensor(initial_std, dtype=torch.float32)
         if mean.shape != (output_dim,) or std.shape != (output_dim,):
@@ -39,8 +43,8 @@ class UprightBetaDistribution(BetaDistribution):
             raise ValueError("Initial mean/std must describe a unimodal Beta distribution")
         # Stable inverse of softplus, undoing native Beta's +1 offset.
         parameter = torch.cat((alpha-1, beta-1))
-        if not (parameter<31).all(): raise ValueError("Initial Beta parameters exceed exploration bound")
-        parameter=31*parameter/(31-parameter)
+        if not (parameter<self.span).all(): raise ValueError("Initial Beta parameters exceed exploration bound")
+        parameter=self.span*parameter/(self.span-parameter)
         self.register_buffer("initial_bias", parameter + torch.log(-torch.expm1(-parameter)))
 
     def init_mlp_weights(self, mlp):
@@ -51,14 +55,14 @@ class UprightBetaDistribution(BetaDistribution):
 
     def update(self, mlp_output):
         a,b=torch.unbind(mlp_output,dim=-2)
-        self._alpha,self._beta=parameters(a),parameters(b)
+        self._alpha,self._beta=parameters(a,self.span),parameters(b,self.span)
         self._distribution=torch.distributions.Beta(self._alpha,self._beta)
 
     def deterministic_output(self, mlp_output):
-        return BoundedBetaMean()(mlp_output)
+        return BoundedBetaMean(self.span)(mlp_output)
 
     def as_deterministic_output_module(self):
-        return BoundedBetaMean()
+        return BoundedBetaMean(self.span)
 
     @property
     def entropy(self):

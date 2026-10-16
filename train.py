@@ -6,6 +6,7 @@ parser.add_argument('--num_envs',type=int,default=2048)
 parser.add_argument('--iterations',type=int,default=1500)
 parser.add_argument('--seed',type=int,default=42)
 parser.add_argument('--control-decimation',type=int,choices=(10,30),default=10)
+parser.add_argument('--beta-shape-cap',type=float,choices=(32.,128.),default=32.)
 parser.add_argument('--settle-weight',type=float,default=0.)
 parser.add_argument('--log_dir',default='logs/upright')
 parser.add_argument('--checkpoint')
@@ -43,7 +44,7 @@ config=dict(seed=args.seed,device=args.device,num_steps_per_env=32,save_interval
     logger='tensorboard',experiment_name='upright_rl_demo',run_name=f'seed{args.seed}',
     obs_groups={'actor':['policy'],'critic':['policy']},
     actor=dict(class_name='MLPModel',hidden_dims=[128,128],activation='elu',obs_normalization=True,
-        distribution_cfg=dict(class_name='upright.distribution:UprightBetaDistribution',initial_mean=[home,0.],initial_std=[.35,.45])),
+        distribution_cfg=dict(class_name='upright.distribution:UprightBetaDistribution',initial_mean=[home,0.],initial_std=[.35,.45],shape_cap=args.beta_shape_cap)),
     critic=dict(class_name='MLPModel',hidden_dims=[256,128],activation='elu',obs_normalization=True),
     algorithm=dict(class_name='PPO',value_loss_coef=1.,use_clipped_value_loss=True,clip_param=.2,
         entropy_coef=.001,num_learning_epochs=5,num_mini_batches=4,learning_rate=3e-4,

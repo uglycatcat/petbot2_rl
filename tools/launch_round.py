@@ -23,7 +23,8 @@ state={'thread':os.environ.get('CODEX_THREAD_ID'),'round':a.round,'commit':commi
  'checkpoints':sorted(set([250,750,a.iterations-1])),'gate':gate,'train':{}}
 def save():status.write_text(json.dumps(state,indent=2))
 # Long control-step variants launch first, then GPU0/1 variants.
-for label,seed,gpu,decimation in [('b',42,2,30),('b',43,3,30),('a',42,0,30 if a.round=='v4' else 10),('a',43,1,30 if a.round=='v4' else 10)]:
+for label,seed,gpu,decimation in [('b',42,2,30),('b',43,3,30),('a',42,0,30 if a.round in ('v4','v5') else 10),('a',43,1,30 if a.round in ('v4','v5') else 10)]:
+ shape_cap=128. if a.round=='v5' and label=='b' else 32.
  settle_weight=4. if a.round=='v4' and label=='b' else 0.
  name=f'upright_{a.round}_{label}{seed}';dst=runs/name
  if dst.exists():raise RuntimeError(f'Existing run {name}: inspect, do not overwrite')
@@ -32,9 +33,9 @@ for label,seed,gpu,decimation in [('b',42,2,30),('b',43,3,30),('a',42,0,30 if a.
  shutil.copytree(src/'artifacts/petbot_asset',dst/'artifacts/petbot_asset')
  log=out/f'{name}.log'
  command=['python3',str(dst/'tools/run_guarded.py'),'--container',container,'--gpu',str(gpu),'--reserve-mib','4000','--workdir',f'/workspace/runs/{name}',
-  '--log',str(log),'--headless','--device','cuda:0','--num_envs','2048','--iterations',str(a.iterations),'--seed',str(seed),'--settle-weight',str(settle_weight),'--control-decimation',str(decimation),'--log_dir',f'/workspace/runs/{name}/logs/{name}']
+  '--log',str(log),'--headless','--device','cuda:0','--num_envs','2048','--iterations',str(a.iterations),'--seed',str(seed),'--beta-shape-cap',str(shape_cap),'--settle-weight',str(settle_weight),'--control-decimation',str(decimation),'--log_dir',f'/workspace/runs/{name}/logs/{name}']
  with (out/f'{name}_guard.log').open('w') as f:proc=subprocess.Popen(command,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
- state['train'][name]={'pid':proc.pid,'gpu':gpu,'decimation':decimation,'settle_weight':settle_weight,'status':'initializing','command':command};save()
+ state['train'][name]={'pid':proc.pid,'gpu':gpu,'decimation':decimation,'settle_weight':settle_weight,'shape_cap':shape_cap,'status':'initializing','command':command};save()
  deadline=time.monotonic()+600
  while time.monotonic()<deadline:
   if proc.poll() is not None:raise RuntimeError(f'{name} exit {proc.returncode}; inspect logs')
