@@ -27,7 +27,7 @@ while time.time()<deadline:
    state[key]={'status':'running','gpu':gpu,'started_at':time.strftime('%FT%T%z')};path.write_text(json.dumps(state,indent=2))
    command=['python3',str(pathlib.Path(__file__).with_name('run_guarded.py')),'--container',launch['container'],'--gpu',str(gpu),'--reserve-mib','3500',
     '--workdir',f'/workspace/runs/{name}','--log',str(out/f'eval_{key}.log'),'--headless','--device','cuda:0','--num_envs','64',
-    '--evaluate','--seed','20261016','--control-decimation',str(job['decimation']),'--checkpoint',f'/workspace/runs/{name}/logs/{name}/model_{iteration}.pt',
+    '--evaluate','--seed','20261016','--settle-weight',str(job.get('settle_weight',0.)),'--control-decimation',str(job['decimation']),'--checkpoint',f'/workspace/runs/{name}/logs/{name}/model_{iteration}.pt',
     '--log_dir',f'/workspace/runs/_upright_{a.round}/eval_{key}']
    rc=subprocess.run(command).returncode;result=out/f'eval_{key}/evaluation.json'
    state[key].update(status='complete' if rc==0 and result.exists() else 'failed',exit_code=rc,finished_at=time.strftime('%FT%T%z'))

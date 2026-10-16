@@ -74,5 +74,6 @@ class Progress:
             lift_event=lift_event,progress=progress,distance=dist,fixed_error=fixed_error,
             prepare_reward=(self.phase==0).float()*(.2*prepare*prep_decay+.5*lift.square())*(~failure).float(),
             support_reward=active.float()*(.2+.8*duration),balance=active.float()*velocity_quality*rotation_quality*(.1+.9*quality),
+            settle=active.float()*quality/(1+(span[:,:3].norm(dim=-1)/.05).square()+(span[:,5:].amax(-1)/.03).square()),
             home_hold=held.float(), phase=self.phase, pose_span=span, target_velocity=target)
         return self.result

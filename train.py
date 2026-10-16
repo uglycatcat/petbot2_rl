@@ -6,6 +6,7 @@ parser.add_argument('--num_envs',type=int,default=2048)
 parser.add_argument('--iterations',type=int,default=1500)
 parser.add_argument('--seed',type=int,default=42)
 parser.add_argument('--control-decimation',type=int,choices=(10,30),default=10)
+parser.add_argument('--settle-weight',type=float,default=0.)
 parser.add_argument('--log_dir',default='logs/upright')
 parser.add_argument('--checkpoint')
 parser.add_argument('--evaluate',action='store_true')
@@ -49,6 +50,7 @@ config=dict(seed=args.seed,device=args.device,num_steps_per_env=32,save_interval
         schedule='fixed',gamma=.997**(args.control_decimation/10),lam=.95**(args.control_decimation/10),desired_kl=.01,max_grad_norm=1.))
 try:
     cfg=UprightEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
+    cfg.rewards.settle.weight=args.settle_weight
     cfg.decimation=args.control_decimation;cfg.sim.render_interval=cfg.decimation
     if args.evaluate: cfg.episode_length_s += args.hold_extra
     torch.manual_seed(args.seed)

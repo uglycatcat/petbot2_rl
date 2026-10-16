@@ -60,3 +60,13 @@ for t in range(150):
  m=p.update(st,torch.zeros(1,device=device,dtype=torch.bool),st['q'].new_zeros(3));earned+=float(m['progress'])*p.dt
 assert abs(earned-float(p.maximum_phi))<1e-5 and earned<=2.25
 print('PASS peak reward bounded across repeated lifts',earned)
+
+# Smooth pose credit distinguishes quiet support from repeated frame oscillation.
+p=Progress(2,device,.06);st={k:v[:2].clone() for k,v in s.items()};st['pos'].zero_();st['front_z'][:]=.19;st['rear'][:]=True;st['other'][:]=False;st['q'].zero_()
+p.reset(torch.arange(2,device=device),st)
+for i in range(40):
+ st['q'][1,3:]=.04 if i%2 else -.04
+ m=p.update(st,torch.zeros(2,device=device,dtype=torch.bool),st['q'].new_zeros(3))
+assert m['settle'][0]>m['settle'][1]*5
+assert m['held'].tolist()==[True,False]
+print('PASS continuous stability credit',m['settle'].tolist())

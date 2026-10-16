@@ -121,6 +121,7 @@ def reward(env,kind):
     if kind=='support':return m['support_reward']
     if kind=='lift_event':return m['lift_event'].float()/env.step_dt
     if kind=='balance':return m['balance']
+    if kind=='settle':return m['settle']
     if kind=='success':return m['fresh'].float()/env.step_dt
     if kind=='home_hold':return m['home_hold']
     if kind=='boundary':return (m['distance']-.4).clamp_min(0).square()
@@ -170,6 +171,7 @@ class RewardsCfg:
     progress=RewTerm(func=reward,weight=3.,params={'kind':'progress'})
     lift_event=RewTerm(func=reward,weight=3.,params={'kind':'lift_event'})
     balance=RewTerm(func=reward,weight=2.,params={'kind':'balance'})
+    settle=RewTerm(func=reward,weight=0.,params={'kind':'settle'})
     success=RewTerm(func=reward,weight=30.,params={'kind':'success'})
     home_hold=RewTerm(func=reward,weight=5.,params={'kind':'home_hold'})
     boundary=RewTerm(func=reward,weight=-2.,params={'kind':'boundary'})
