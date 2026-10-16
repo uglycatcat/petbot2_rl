@@ -5,10 +5,22 @@ import torch
 from rsl_rl.modules.distribution import BetaDistribution
 
 
+class BoundedBetaMean(torch.nn.Module):
+    def forward(self, x):
+        a,b=torch.unbind(x,dim=-2)
+        a,b=parameters(a),parameters(b)
+        return 2*a/(a+b)-1
+
+def parameters(x):
+    v=torch.nn.functional.softplus(x)
+    return 1+31*v/(31+v)
+
+
 class UprightBetaDistribution(BetaDistribution):
     """State-dependent spread, initialized around the physical default configuration.
 
-    No environment-side Gaussian clipping mismatch and no uniform exploration floor.
+    Smooth alpha/beta bounds (1,32) prevent vanishing exploration.
+    Sampling, likelihood, deterministic evaluation and export share the same transform.
     Learning efficacy is deliberately separate from these numerical contracts.
     """
     def __init__(self, output_dim, initial_mean, initial_std):
@@ -27,6 +39,8 @@ class UprightBetaDistribution(BetaDistribution):
             raise ValueError("Initial mean/std must describe a unimodal Beta distribution")
         # Stable inverse of softplus, undoing native Beta's +1 offset.
         parameter = torch.cat((alpha-1, beta-1))
+        if not (parameter<31).all(): raise ValueError("Initial Beta parameters exceed exploration bound")
+        parameter=31*parameter/(31-parameter)
         self.register_buffer("initial_bias", parameter + torch.log(-torch.expm1(-parameter)))
 
     def init_mlp_weights(self, mlp):
@@ -34,6 +48,17 @@ class UprightBetaDistribution(BetaDistribution):
         with torch.no_grad():
             last.weight.zero_()
             last.bias.copy_(self.initial_bias.to(last.bias))
+
+    def update(self, mlp_output):
+        a,b=torch.unbind(mlp_output,dim=-2)
+        self._alpha,self._beta=parameters(a),parameters(b)
+        self._distribution=torch.distributions.Beta(self._alpha,self._beta)
+
+    def deterministic_output(self, mlp_output):
+        return BoundedBetaMean()(mlp_output)
+
+    def as_deterministic_output_module(self):
+        return BoundedBetaMean()
 
     @property
     def entropy(self):

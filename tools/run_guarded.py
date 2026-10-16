@@ -1,6 +1,7 @@
 """Run an upright job only with GPU memory headroom; stop our own container on budget breach."""
 import argparse, pathlib, subprocess, time, json
-p=argparse.ArgumentParser();p.add_argument('--gpu',type=int,choices=[0,1],required=True)
+p=argparse.ArgumentParser();p.add_argument('--gpu',type=int,choices=[0,1,2,3],required=True)
+p.add_argument('--container',default='petbot-upright-train')
 p.add_argument('--entrypoint',default='train.py');p.add_argument('--workdir',default='/workspace/demo_project/upright_rl_demo');p.add_argument('--reserve-mib',type=int,default=5000);p.add_argument('--log',required=True)
 a, training_args=p.parse_known_args()
 def usage():
@@ -9,7 +10,7 @@ def usage():
 total,used=usage()[a.gpu]
 if used+a.reserve_mib>total*.78:raise SystemExit(f'Insufficient headroom: used={used}, reserve={a.reserve_mib}, guard={total*.78}')
 log=pathlib.Path(a.log);log.parent.mkdir(parents=True,exist_ok=True)
-command=['docker','exec','-w',a.workdir,'-e',f'CUDA_VISIBLE_DEVICES={a.gpu}','-e','OMP_NUM_THREADS=2','-e','OPENBLAS_NUM_THREADS=2','petbot-upright-train','/isaac-sim/python.sh',a.entrypoint,*training_args]
+command=['docker','exec','-w',a.workdir,'-e',f'CUDA_VISIBLE_DEVICES={a.gpu}','-e','OMP_NUM_THREADS=2','-e','OPENBLAS_NUM_THREADS=2',a.container,'/isaac-sim/python.sh',a.entrypoint,*training_args]
 peak=used;start=time.time();stopped=False
 with log.open('w') as f:
     child=subprocess.Popen(command,stdout=f,stderr=subprocess.STDOUT)
@@ -17,7 +18,7 @@ with log.open('w') as f:
         total,used=usage()[a.gpu];peak=max(peak,used)
         if used>=total*.78:
             f.write(f'\nMemory guard: GPU{a.gpu} {used}/{total} MiB; stopping own upright container.\n');f.flush()
-            subprocess.run(['docker','stop','-t','5','petbot-upright-train'],check=True)
+            subprocess.run(['docker','stop','-t','5',a.container],check=True)
             child.wait();stopped=True;break
         time.sleep(1)
     code=80 if stopped else child.returncode

@@ -42,3 +42,13 @@ def total(kind):
 scores={k:total(k) for k in ['ground','away','return']}
 assert scores['return']>scores['away']>scores['ground'],scores
 print('PASS CUDA progress/reset/anti-repeat/window/reward ranking',scores)
+
+# The stage boundary uses integer ticks and a physical-time contact window.
+for dt in (.02,.06):
+ p=Progress(1,device,dt);st={k:v[:1].clone() for k,v in s.items()}
+ st['front_z'][:]=.19;st['rear'][:]=True;st['other'][:]=False
+ p.reset(torch.tensor([0],device=device),st)
+ for tick in range(p.enter_steps+p.contacts.shape[0]//2):
+  m=p.update(st,torch.zeros(1,device=device,dtype=torch.bool),st['q'].new_zeros(3))
+  assert bool(m['lift_event'][0])==(tick==p.enter_steps+p.contacts.shape[0]//2-1)
+ print('PASS exact phase boundary',dt,p.enter_steps,p.contacts.shape[0])

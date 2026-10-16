@@ -5,6 +5,7 @@ parser=argparse.ArgumentParser()
 parser.add_argument('--num_envs',type=int,default=2048)
 parser.add_argument('--iterations',type=int,default=1500)
 parser.add_argument('--seed',type=int,default=42)
+parser.add_argument('--control-decimation',type=int,choices=(10,30),default=10)
 parser.add_argument('--log_dir',default='logs/upright')
 parser.add_argument('--checkpoint')
 parser.add_argument('--evaluate',action='store_true')
@@ -44,10 +45,11 @@ config=dict(seed=args.seed,device=args.device,num_steps_per_env=32,save_interval
         distribution_cfg=dict(class_name='upright.distribution:UprightBetaDistribution',initial_mean=[home,0.],initial_std=[.25,.15])),
     critic=dict(class_name='MLPModel',hidden_dims=[256,128],activation='elu',obs_normalization=True),
     algorithm=dict(class_name='PPO',value_loss_coef=1.,use_clipped_value_loss=True,clip_param=.2,
-        entropy_coef=.001,num_learning_epochs=5,num_mini_batches=4,learning_rate=6e-4,
-        schedule='fixed',gamma=.997,lam=.95,desired_kl=.01,max_grad_norm=1.))
+        entropy_coef=.001,num_learning_epochs=5,num_mini_batches=4,learning_rate=3e-4,
+        schedule='fixed',gamma=.997**(args.control_decimation/10),lam=.95**(args.control_decimation/10),desired_kl=.01,max_grad_norm=1.))
 try:
     cfg=UprightEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
+    cfg.decimation=args.control_decimation;cfg.sim.render_interval=cfg.decimation
     if args.evaluate: cfg.episode_length_s += args.hold_extra
     torch.manual_seed(args.seed)
     env=ManagerBasedRLEnv(cfg=cfg)
@@ -94,7 +96,7 @@ try:
                 last_good=before & m['held']
                 trace.append(dict(t=t,active=before[:4].cpu().tolist(),action=a[:4].cpu().tolist(),
                     **{k:s[k][:4].cpu().tolist() for k in ['pos','quat','qfull','g','vel','q','qd','wheel','front_z','rear','other']},
-                    **{k:m[k][:4].cpu().tolist() for k in ['distance','support','balanced','held','phase','fixed_error']}))
+                    **{k:m[k][:4].cpu().tolist() for k in ['distance','raw_support','support','balanced','held','phase','fixed_error']}))
                 invalid+=int((before & done.bool() & ~extra['time_outs'].bool()).sum())
                 assert torch.isfinite(obs['policy']).all() and torch.isfinite(r).all()
                 alive &= ~done.bool()
