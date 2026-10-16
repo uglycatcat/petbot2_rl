@@ -44,20 +44,17 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "5a0e9b8f590ca51a048dc7e1b9fc449f4d3d6323",
+      "verified_commit": "4a63cb4a73840b069ad3616fac9fdfa26387e83e",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "v4_four_gpu_training_running; v3_partial_success_no_sustained_extra_hold",
-      "local_validation": "V4 CUDA stability contract passed; 128x100 all scalars finite; reload lifted 64/64, full success 0/64, premature termination 1/64, longest support 0.30s. All four fixed-version runs entered PPO at 02:21; 12-checkpoint evaluation queue alive; see docs/upright_v4_training.md.",
+      "status": "v4_complete; v5_gpu_validation_final_night_round",
+      "local_validation": "V4 all four 1500-iteration runs and 12 evaluations complete. Added stability reward final extra hold 2/64 and 0/64; baseline 0/64 each. V5 cap32/128 CUDA distribution contract passed; short GPU validation ongoing.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_v4_b42",
-        "upright_v4_b43",
-        "upright_v4_a42",
-        "upright_v4_a43"
+        "upright_v5_short"
       ]
     }
   ]

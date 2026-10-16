@@ -43,3 +43,5 @@
 
 - [起立第三版结果](upright_v3_training.md)：四卡对照，离地回位成功与持续保持缺口。
 - [起立第四版训练](upright_v4_training.md)：连续姿态稳定奖励对照与实际部署状态。
+
+- [起立第五版训练](upright_v5_training.md)：有界探索下限对照，夜间最后一轮。
