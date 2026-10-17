@@ -49,16 +49,11 @@
         "demo"
       ],
       "shallow": false,
-      "status": "v5_four_gpu_training_running_final_night_round; v4_complete",
-      "local_validation": "V5 cap32/128 CUDA contract passed; 128x100 finite PPO, reload lifted64/64, full success0/64, premature0, support0.30s. Fixed b236e12 four-GPU PPO confirmed 07:38; 12-evaluation queue alive.",
+      "status": "v5_complete; nightly_goal_closed; cap128_final_extra_hold_56_and_64_of_64",
+      "local_validation": "Three nightly rounds: 12 formal runs and 36 evaluations complete. V5 cap128 both seeds i750 extra hold64/64, final56/64 and64/64; cap32 controls final0/64. All four final scalar histories finite; no pending jobs. Candidate B43/model_1499; MuJoCo policy and real robot unverified.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [
-        "upright_v5_b42",
-        "upright_v5_b43",
-        "upright_v5_a42",
-        "upright_v5_a43"
-      ]
+      "active_tasks": []
     }
   ]
 }

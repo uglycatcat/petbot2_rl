@@ -6,7 +6,7 @@
 |---|---|---|---|
 | [recovery_agile_01](recovery_agile_01/PETBOT.md) | WBC-AGILE `6830cf9`，借鉴 robot_lab 混合动作 | `demoproj/recovery_agile_01` | 第三轮六组已完成：A 0/512、B/C 85/512，无新增恢复；第四轮B/C双种子及评估已完成，终局87–88/512、仅新增2–3个恢复，见[第四轮记录](../docs/petbot_sweep4_training.md)；第二轮 8 组全部跑满，24 次策略评估全部 0/512，见[第二轮记录](#第二轮过夜训练2026-10-14)；首轮 11 组 2048×3000 扫描 + 确定性独立评估完成：**无一组学到起身**（最好 5 组 0.225~0.227 与开环地板基线 0.213 持平）；见[首版扫描记录](recovery_agile_01/PETBOT_SWEEP_01.md) |
 | [jump_rl_demo](jump_rl_demo/README.md) | 新线，不从上游派生 | `demoproj/jump_rl_demo` | 2026-10-15 已登记，`c4de881`。完整跳跃已放弃，训练代码不写，checkout 保留。见[跳跃预研](../docs/jump_prestudy.md) |
-| [upright_rl_demo](upright_rl_demo/README.md) | 新线，不从上游派生 | `demoproj/upright_rl_demo` | 第二版固定 `638ea3d`：位置/轮速、两阶段奖励、终局回位与窗口稳定；工程检查通过，短训重载0/64成功，GPU0/1双种子各2048×3000及8次评估已结束，均未学会离地后轮支撑，部署及终局见[第二版记录](../docs/upright_v2_training.md)。首版双种子1500次及6次评估已结束，全0/64稳定成功。 |
+| [upright_rl_demo](upright_rl_demo/README.md) | 新线，不从上游派生 | `demoproj/upright_rl_demo` | 第五版固定b236e12已完成，128上限双种子750均64/64持续保持，终局56/64和64/64。推荐B43/model_1499作下一步验证；MuJoCo策略闭环和实机未验证。夜间三轮全部收官，见[终局](../docs/upright_v5_training.md)。 |
 
 ## 同步与开发纪律
 
@@ -63,4 +63,4 @@ AGILE 同时在继续训练：日志 `reference_project/agile_env/logs/agile_sta
 
 A（仅修复）/B（恢复反馈与状态相关探索）/C（再加实测初态课程）各 seed 42/43，固定 `cffc86d`，2048 环境；GPU3 四组、GPU2 两组，14:13 已全部进入 PPO。B/C 各 128×100 短训、PhysX 正控制、概率契约及检查点重载均通过；全量训练库 16,384 个状态，课程易池 2,489 个倒地状态。先跑 1500 iteration，250/750/1499 使用同一 512 独立初态评估。default 复测 85/512，尚无正式策略效果结论。代码定义见 [PETBOT_SWEEP_03.md](recovery_agile_01/PETBOT_SWEEP_03.md)，实际验收、启动与查询见[第三轮记录](../docs/petbot_sweep3_training.md)。
 
-2026-10-16夜间：upright_rl_demo最高优先级，用户授权GPU0–3自动迭代1至4轮，第三版已完成：16.7Hz双种子曾完整成功64/64、额外持续保持0/64；第四版全部完成，新增稳定奖励终局额外保持仅2/64和0/64；第五版固定b236e12四卡已进入PPO，比较有界探索下限，为本夜最后一轮；续接与收官边界见[夜间记录](../docs/tonight_training_20261016.md)。
+2026-10-17夜间收官：起立第三至第五版3轮全部完成，无剩余训练/评估，不再开新轮。第五版终局持续保持56/64和64/64，见[夜间记录](../docs/tonight_training_20261016.md)。
