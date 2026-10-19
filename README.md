@@ -1,6 +1,6 @@
 # upright_rl_demo
 
-PetBot2从默认构型、零速度开始，前轮离地、仅后轮支撑稳定，最终回到初始水平位置。过程允许位移，头和耳保持初始位置目标。两路策略分别为左右车架共享位置目标、左右后轮共享速度目标，不输出力矩，不使用示范数据。
+PetBot2前轮离地、仅后轮支撑的起立与行驶任务。`train.py`保留第五版静止起立回位基线（两路动作）；`train_moving.py`实现运动中接管与遥控行驶（三路动作）。车架输出位置、后轮输出速度，头耳保持默认位置；不使用示范起立数据。
 
 ## 运动中接管任务（2026-10-19）
 
@@ -57,3 +57,5 @@ python train_moving.py --headless --device cuda:0 --num_envs 64 --evaluate --che
 首版固定703157f：两组2048×1500完成，6次评估全0/64稳定成功；不覆盖其运行副本。第二版实现后的GPU验收、短训/重载和正式部署证据以主仓库 `docs/upright_v2_training.md` 为准。通过运行门槛不等于已学会任务。
 
 四卡轮次使用 `tools/launch_round.py --root <主仓库> --round v3 --iterations 1500`，仅在该轮gate.json记录工程验收通过后执行。已有状态拒绝重复启动；评估按固定副本的控制频率运行并保存视频，结束后向原会话排队分析通知。`tools/summarize_metrics.py`在容器内读取完整TensorBoard标量历史，用于验收与迭代判断。
+
+四卡运动批次编排入口：`tools/launch_moving.py --root <仓库根> --name <批次名>`；必须已有工程门槛gate.json，拒绝重复批次。`tools/evaluate_moving.py`在各自训练范围评估三个检查点，终局再用共同宽范围独立种子评估，共16次。
