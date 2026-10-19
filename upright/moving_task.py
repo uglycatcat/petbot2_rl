@@ -5,7 +5,7 @@ from isaaclab.managers import ObservationGroupCfg as ObsGroup, RewardTermCfg as 
 from isaaclab.utils import configclass
 from isaaclab.envs import mdp as lab_mdp
 from .task import UprightEnvCfg, SPEC, POSITION_JOINTS, REAR_WHEELS, FRONT_WHEELS, tensor, state as base_state
-from .moving import MovingProgress, slew
+from .moving import MovingProgress, slew, wheel_targets
 
 
 def state(env):
@@ -13,6 +13,8 @@ def state(env):
     s['yaw']=torch.atan2(heading[:,1],heading[:,0]);s['forward']=(s['vel'][:,:2]*heading).sum(-1)
     sensor=env.scene['contact_forces']
     sf=env.upright_ids[2];f=tensor(sensor.data.net_forces_w)
+    body=[i for i,n in enumerate(sensor.body_names) if n not in (*REAR_WHEELS,*FRONT_WHEELS)]
+    s['body_contact']=(f[:,body].norm(dim=-1)>.1).any(-1)
     s['four']=s['rear'] & (f[:,sf,2]>.05).all(-1)
     return s
 
@@ -46,7 +48,7 @@ class MovingAction(ActionTerm):
         if not torch.isfinite(actions).all() or actions.abs().max()>1.00001:raise ValueError('Invalid moving action')
         p=ensure(self._env);p.before_step();self._raw.copy_(actions);self.previous.copy_(self.applied)
         desired_frame=self.lo+(actions[:,0]+1)*.5*(self.hi-self.lo)
-        desired_speed=actions[:,1:]*self.max_speed
+        desired_speed=wheel_targets(actions,self.max_speed,self._env.cfg.wheel_mode)
         # Warmup is ordinary driving, never a reference lift motion. MJCF rear
         # wheel radius .03 m, axle separation .10 m; empirically verify sign/slip.
         drive=torch.stack((p.command[:,0]-.05*p.command[:,1],p.command[:,0]+.05*p.command[:,1]),-1)/.03
@@ -81,7 +83,7 @@ def metrics(env):
         m=p.update(s,fixed);env.moving_metrics=(s,m);env.moving_step=env.common_step_counter
         action=env.action_manager.get_term('moving')
         env.moving_snapshot=({k:v.clone() for k,v in s.items()},{k:v.clone() for k,v in m.items()},p.raw.clone(),p.command.clone(),action.applied.clone(),p.since.clone())
-        env.extras.setdefault('log',{}).update({'Moving/active':p.active.float().mean(),'Moving/support':m['support'].float().mean(),'Moving/held':m['held'].float().mean(),'Moving/raw_path_error':(m['raw_distance']*p.active).sum()/p.active.sum().clamp_min(1)})
+        env.extras.setdefault('log',{}).update({'Moving/active':p.active.float().mean(),'Moving/support':m['support'].float().mean(),'Moving/lift_fraction':m['lift_fraction'].mean(),'Moving/held':m['held'].float().mean(),'Moving/raw_path_error':(m['raw_distance']*p.active).sum()/p.active.sum().clamp_min(1)})
     return env.moving_metrics
 
 
@@ -102,7 +104,7 @@ def reward(env,kind):
     if kind in ('fresh','lift_event'):return m[kind].float()/env.step_dt
     if kind=='failure':return (m['physical_failure']&m['active']).float()/env.step_dt
     if kind=='rate':return (a.applied-a.previous).square().sum(-1)*m['active']
-    if kind=='deviation':return m['raw_distance'].clamp(max=1.5).square()*m['active']
+    if kind=='deviation':return m['raw_distance'].clamp(max=1.5).square()*m['active']*m['transition_scale']
     return m[kind].float()
 
 
@@ -112,7 +114,7 @@ def time_out(env):
 
 def reset(env,env_ids):
     p=ensure(env);r=env.scene['robot']
-    env.extras.setdefault('log',{}).update({'Moving/episode_success':p.ever[env_ids].float().mean(),'Moving/episode_takeover':p.active[env_ids].float().mean()})
+    env.extras.setdefault('log',{}).update({'Moving/episode_success':p.ever[env_ids].float().mean(),'Moving/episode_lifted':p.lifted[env_ids].float().mean(),'Moving/episode_takeover':p.active[env_ids].float().mean()})
     root=tensor(r.data.default_root_state)[env_ids].clone();root[:,:3]+=tensor(env.scene.env_origins)[env_ids];root[:,7:]=0
     r.write_root_state_to_sim(root,env_ids=env_ids)
     q=tensor(r.data.default_joint_pos)[env_ids].clone();r.write_joint_state_to_sim(q,torch.zeros_like(q),env_ids=env_ids)
@@ -157,6 +159,7 @@ class DonesCfg:
 @configclass
 class MovingEnvCfg(UprightEnvCfg):
     actions=ActionsCfg();observations=ObservationsCfg();rewards=RewardsCfg();events=EventsCfg();terminations=DonesCfg()
+    wheel_mode:str='independent'
     speed_limit:float=.3
     yaw_limit:float=1.
     frame_range:tuple=(-1.,1.2)

@@ -4,7 +4,7 @@ PetBot2前轮离地、仅后轮支撑的起立与行驶任务。`train.py`保留
 
 ## 运动中接管任务（2026-10-19）
 
-入口`train_moving.py`，旧`train.py`保留静止起立基线。新任务输出三路：共享车架位置、左后轮速度、右后轮速度，205维观测（41×5帧）。先用同一物理模型进行2–6秒四轮行驶准备；只有四轮实际接触且车架到位才切入策略，接管不清空历史或控制目标。准备动作仅用于形成普通行驶初态，不包含参考起立动作。
+入口`train_moving.py`，旧`train.py`保留静止起立基线。新任务输出三路，`--wheel-mode independent`为共享车架位置及左右轮速度；`common_diff`为车架位置、共同轮速及差速分量（±5rad/s），转换后仍发送左右轮速度目标并限制于源±25rad/s。205维观测（41×5帧）。先用同一物理模型进行2–6秒四轮行驶准备；只有四轮实际接触且车架到位才切入策略，接管不清空历史或控制目标。准备动作仅用于形成普通行驶初态，不包含参考起立动作。
 
 命令为前后速度m/s、偏航角速度rad/s。默认请求范围±0.3m/s、±1rad/s，车架目标范围沿用源模型[-1,1.2]rad；这是初始训练范围，不是“任意速度已通过”。外部命令可调用`upright.moving_task.set_remote_command(env, [v, yaw_rate])`，该模式不会被随机命令覆盖，复位时回到采样模式。
 
@@ -59,3 +59,5 @@ python train_moving.py --headless --device cuda:0 --num_envs 64 --evaluate --che
 四卡轮次使用 `tools/launch_round.py --root <主仓库> --round v3 --iterations 1500`，仅在该轮gate.json记录工程验收通过后执行。已有状态拒绝重复启动；评估按固定副本的控制频率运行并保存视频，结束后向原会话排队分析通知。`tools/summarize_metrics.py`在容器内读取完整TensorBoard标量历史，用于验收与迭代判断。
 
 四卡运动批次编排入口：`tools/launch_moving.py --root <仓库根> --name <批次名>`；必须已有工程门槛gate.json，拒绝重复批次。`tools/evaluate_moving.py`在各自训练范围评估三个检查点，终局再用共同宽范围独立种子评估，共16次。
+
+2026-10-20运动第二版：保留原始成功标准，连续抬升奖励与过渡期非零但较弱的跟踪惩罚；四卡编排A为独立轮速、B为共同/差速，两组相同小范围，各两种子。新任务契约moving_takeover_v2拒绝旧版检查点直接加载。新增全环境离地、支撑时长与最高前轮高度评估；失败共同范围评估可用tools/retry_moving_evaluations.py补跑，旧结果保留。

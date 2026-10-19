@@ -47,3 +47,21 @@ b.reset(torch.tensor([0],device=device),s['pos'],s['yaw'])
 rest=torch.tensor([1,2,3],device=device);a.sample_commands(rest);b.sample_commands(rest)
 assert torch.equal(a.raw[rest],b.raw[rest]) and torch.equal(a.next_command[rest],b.next_command[rest])
 print('PASS independent per-environment evaluation command streams')
+
+# Common acceleration is exactly symmetric, while yaw remains independent.
+from upright.moving import wheel_targets
+x=torch.tensor([[0.,.4,0.],[0.,0.,1.],[0.,1.,1.]],device=device)
+w=wheel_targets(x,25.,'common_diff')
+assert torch.equal(w[0],torch.tensor([10.,10.],device=device))
+assert torch.equal(w[1],torch.tensor([-5.,5.],device=device))
+assert w.abs().max()<=25
+assert torch.equal(wheel_targets(x,25.,'independent'),x[:,1:]*25)
+# Dense credit below full lift grows with height; success remains unchanged.
+p=MovingProgress(n,device,dt);p.active[:]=True;p.since[:]=3
+s['four'][:]=False;s['other'][:]=False;s['rear'][:]=True;s['front_z'][:]=.06
+low=p.update(s,s['q'].new_zeros(3))['prepare'].clone()
+s['front_z'][:]=.10
+m=p.update(s,s['q'].new_zeros(3))
+assert (m['prepare']>low).all() and not m['support'].any() and not m['held'].any()
+assert torch.allclose(m['transition_scale'],torch.full((n,),.1,device=device))
+print('PASS common/differential action bounds and dense partial-lift credit without relaxed success')

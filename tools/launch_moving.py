@@ -16,13 +16,16 @@ for line in rows.splitlines():
  gpu,total,used=map(int,line.split(','));assert used+4000<total*.78,(gpu,used,total)
 state=dict(name=a.name,commit=commit,container=container,thread=os.environ.get('CODEX_THREAD_ID'),started_at=time.strftime('%FT%T%z'),iterations=a.iterations,checkpoints=[250,750,a.iterations-1],gate=gate,train={})
 def save():path.write_text(json.dumps(state,indent=2))
-for label,seed,gpu,speed,yaw,lo,hi in [('b',42,2,.3,1.,-1.,1.2),('b',43,3,.3,1.,-1.,1.2),('a',42,0,.1,.3,-.3,.3),('a',43,1,.1,.3,-.3,.3)]:
+# Second batch isolates action coordinates; all groups use the same easier envelope.
+for label,seed,gpu in [('b',42,2),('b',43,3),('a',42,0),('a',43,1)]:
+ speed,yaw,lo,hi=.1,.3,-.3,.3
+ wheel_mode='common_diff' if label=='b' else 'independent'
  name=f'{a.name}_{label}{seed}';dst=runs/name
  if dst.exists():raise RuntimeError(f'Existing run: {name}')
  subprocess.run(['git','clone','--no-local',str(source),str(dst)],env={**os.environ,'GIT_LFS_SKIP_SMUDGE':'1'},check=True)
  subprocess.run(['git','-C',str(dst),'checkout','--detach',commit],check=True)
  shutil.copytree(source/'artifacts/petbot_asset',dst/'artifacts/petbot_asset')
- envelope=['--speed-limit',str(speed),'--yaw-limit',str(yaw),'--frame-min',str(lo),'--frame-max',str(hi)]
+ envelope=['--speed-limit',str(speed),'--yaw-limit',str(yaw),'--frame-min',str(lo),'--frame-max',str(hi),'--wheel-mode',wheel_mode]
  command=['python3',str(dst/'tools/run_guarded.py'),'--container',container,'--gpu',str(gpu),'--reserve-mib','4000','--entrypoint','train_moving.py','--workdir',f'/workspace/runs/{name}','--log',str(out/(name+'.log')),'--headless','--device','cuda:0','--num_envs','2048','--iterations',str(a.iterations),'--seed',str(seed),*envelope,'--log_dir',f'/workspace/runs/{name}/logs/{name}']
  with (out/(name+'_guard.log')).open('w') as f:proc=subprocess.Popen(command,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
  state['train'][name]=dict(pid=proc.pid,gpu=gpu,envelope=envelope,status='initializing',command=command);save()

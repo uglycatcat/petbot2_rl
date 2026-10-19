@@ -115,6 +115,10 @@ class MovingProgress:
         held=self.good.all(0)&(self.since>=1.)
         fresh=held&~self.ever;self.ever |= held
         lift=((s['front_z']-.045)/.075).clamp(0,1)*s['rear']*(~s['other'])
+        prepare_pitch=(-s['g'][:,0]/.8).clamp(0,1)*s['rear']*(~s.get('body_contact',s['other']))
+        # Smooth credit before the hard 12 cm success gate; never grant success
+        # for partial lift. Tracking penalties stay nonzero during transition.
+        transition_scale=.1+.9*(self.support_run/.3).clamp(0,1)
         phi=(.25*(-s['g'][:,0]/.8).clamp(0,1)*s['rear']+lift+self.lifted.float())*self.active
         new_peak=torch.maximum(phi,self.peak);progress=(new_peak-self.peak)/self.dt;self.peak=new_peak
         finite=torch.isfinite(torch.cat((s['pos'],s['vel'],s['q']),-1)).all(-1)
@@ -124,12 +128,18 @@ class MovingProgress:
         self.result=dict(active=self.active.clone(),switched=switch,support=support,held=held,fresh=fresh,lift_event=lift_event,
             failure=failure,warmup_failed=warmup_failed,physical_failure=physical,progress=progress,
             distance=distance,raw_distance=raw_distance,heading_error=heading_error,raw_error=raw_error,error=error,
-            fixed_error=fixed_error,tilt_rate=tilt_rate,
-            transition_error=self.active*(~self.lifted)*(raw_error[:,0].square()/.3**2+raw_error[:,1].square()).clamp(max=4),
-            prepare=(~self.lifted)*self.active*(.05*(1-self.since/2).clamp(0,1)+.5*lift.square()),
+            fixed_error=fixed_error,tilt_rate=tilt_rate,lift_fraction=lift,transition_scale=transition_scale,
+            transition_error=.1*self.active*(~self.lifted)*(raw_error[:,0].square()/.3**2+raw_error[:,1].square()).clamp(max=4),
+            prepare=self.active*(.1*prepare_pitch*(1-self.since/2).clamp(0,1)+2.*lift),
             support_reward=support*(.2+.8*(self.support_run/.3).clamp(0,1)),
             tracking=support*torch.exp(-error[:,0].square()/.15**2-error[:,1].square()/.4**2),
             raw_tracking=support*torch.exp(-raw_error[:,0].square()/.2**2-raw_error[:,1].square()/.5**2),
             path=support*torch.exp(-raw_distance.square()/.2**2-heading_error.square()/.3**2),
             smooth=support/(1+(tilt_rate/.8).square()))
         return self.result
+
+
+def wheel_targets(actions,max_speed,mode):
+    if mode=='independent':return actions[:,1:]*max_speed
+    common=actions[:,1]*max_speed;differential=actions[:,2]*5.
+    return torch.stack((common-differential,common+differential),-1).clamp(-max_speed,max_speed)

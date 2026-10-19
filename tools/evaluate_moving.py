@@ -8,7 +8,9 @@ if path.exists():raise RuntimeError('Existing evaluation state: inspect before r
 launch=json.loads((out/'launch_status.json').read_text());state={};jobs=[]
 for iteration in launch['checkpoints']:
  for name,job in launch['train'].items():jobs.append((name,job,iteration,'native',job['envelope']))
-for name,job in launch['train'].items():jobs.append((name,job,launch['iterations']-1,'common',['--speed-limit','.3','--yaw-limit','1.','--frame-min','-1.','--frame-max','1.2']))
+for name,job in launch['train'].items():
+ mode=job['envelope'][job['envelope'].index('--wheel-mode')+1] if '--wheel-mode' in job['envelope'] else 'independent'
+ jobs.append((name,job,launch['iterations']-1,'common',['--speed-limit','0.3','--yaw-limit','1.0','--frame-min=-1.0','--frame-max','1.2','--wheel-mode',mode]))
 deadline=time.time()+36*3600
 while time.time()<deadline:
  pending=False
