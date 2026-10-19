@@ -10,7 +10,9 @@ for iteration in launch['checkpoints']:
  for name,job in launch['train'].items():jobs.append((name,job,iteration,'native',job['envelope']))
 for name,job in launch['train'].items():
  mode=job['envelope'][job['envelope'].index('--wheel-mode')+1] if '--wheel-mode' in job['envelope'] else 'independent'
- jobs.append((name,job,launch['iterations']-1,'common',['--speed-limit','0.3','--yaw-limit','1.0','--frame-min=-1.0','--frame-max','1.2','--wheel-mode',mode]))
+ slew=job['envelope'][job['envelope'].index('--wheel-slew')+1] if '--wheel-slew' in job['envelope'] else None
+ extras=['--wheel-slew',slew] if slew else []
+ jobs.append((name,job,launch['iterations']-1,'common',['--speed-limit','0.3','--yaw-limit','1.0','--frame-min=-1.0','--frame-max','1.2','--wheel-mode',mode,*extras]))
 deadline=time.time()+36*3600
 while time.time()<deadline:
  pending=False

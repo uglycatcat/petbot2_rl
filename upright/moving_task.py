@@ -56,7 +56,7 @@ class MovingAction(ActionTerm):
         desired_speed=torch.where(p.active[:,None],desired_speed,drive.clamp(-self.max_speed,self.max_speed))
         frame=slew(self.target[:,3],desired_frame,6.*self._env.step_dt)
         self.target[:,3:]=frame[:,None]
-        self.speed.copy_(slew(self.speed,desired_speed,120.*self._env.step_dt))
+        self.speed.copy_(slew(self.speed,desired_speed,self._env.cfg.wheel_slew*self._env.step_dt))
         self.applied[:,0]=2*(frame-self.lo)/(self.hi-self.lo)-1
         self.applied[:,1:]=self.speed/self.max_speed
     def apply_actions(self):
@@ -159,6 +159,7 @@ class DonesCfg:
 @configclass
 class MovingEnvCfg(UprightEnvCfg):
     actions=ActionsCfg();observations=ObservationsCfg();rewards=RewardsCfg();events=EventsCfg();terminations=DonesCfg()
+    wheel_slew:float=120.
     wheel_mode:str='independent'
     speed_limit:float=.3
     yaw_limit:float=1.

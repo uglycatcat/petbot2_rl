@@ -60,4 +60,4 @@ python train_moving.py --headless --device cuda:0 --num_envs 64 --evaluate --che
 
 四卡运动批次编排入口：`tools/launch_moving.py --root <仓库根> --name <批次名>`；必须已有工程门槛gate.json，拒绝重复批次。`tools/evaluate_moving.py`在各自训练范围评估三个检查点，终局再用共同宽范围独立种子评估，共16次。
 
-2026-10-20运动第二版：保留原始成功标准，连续抬升奖励与过渡期非零但较弱的跟踪惩罚；四卡编排A为独立轮速、B为共同/差速，两组相同小范围，各两种子。新任务契约moving_takeover_v2拒绝旧版检查点直接加载。新增全环境离地、支撑时长与最高前轮高度评估；失败共同范围评估可用tools/retry_moving_evaluations.py补跑，旧结果保留。
+2026-10-20运动第二版：保留原始成功标准，连续抬升奖励与过渡期非零但较弱的跟踪惩罚；四卡编排均为共同/差速，A轮速目标变化率120rad/s²、B为900rad/s²，两组相同小范围，各两种子。`--wheel-slew`显式记录于检查点契约与评估；较宽目标变化率不代表实际机身已经平滑，须查看加速度与轨迹。新任务契约moving_takeover_v2拒绝旧版检查点直接加载。新增全环境离地、支撑时长与最高前轮高度评估；失败共同范围评估可用tools/retry_moving_evaluations.py补跑，旧结果保留。
