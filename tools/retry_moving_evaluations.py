@@ -12,6 +12,9 @@ for key,entry in state.items():
     entry['previous_attempts']=entry.get('previous_attempts',[])+[{k:v for k,v in entry.items() if k!='previous_attempts'}]
     entry.update(status='retry_running',retry_started_at=time.strftime('%FT%T%z'));status.write_text(json.dumps(state,indent=2))
     cmd=['python3',str(root/f'demo_project/runs/{name}/tools/run_guarded.py'),'--container',launch['container'],'--gpu','2','--reserve-mib','3500','--entrypoint','train_moving.py','--workdir',f'/workspace/runs/{name}','--log',str(out/('retry_'+key+'.log')),'--headless','--device','cuda:0','--num_envs','64','--evaluate','--seed','20261020','--speed-limit','0.3','--yaw-limit','1.0','--frame-min=-1.0','--frame-max','1.2','--checkpoint',f'/workspace/runs/{name}/logs/{name}/model_{iteration}.pt','--log_dir',f'/workspace/runs/_{a.name}/retry_{key}']
+    envelope=launch['train'][name]['envelope']
+    for flag in ['--wheel-mode','--wheel-slew']:
+        if flag in envelope:cmd.extend([flag,envelope[envelope.index(flag)+1]])
     code=subprocess.run(cmd).returncode;result=target/'evaluation.json'
     entry.update(status='complete' if code==0 and result.exists() else 'failed',exit_code=code,retry_finished_at=time.strftime('%FT%T%z'))
     if result.exists():entry['result']=json.loads(result.read_text())
