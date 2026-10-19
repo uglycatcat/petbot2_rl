@@ -12,8 +12,8 @@ def wrap(x):
 
 
 class MovingProgress:
-    def __init__(self, n, device, dt, speed_limit=.3, yaw_limit=1., frame_range=(-1.,1.2), seed=42):
-        self.n=n; self.device=device; self.dt=dt; self.seed=seed
+    def __init__(self, n, device, dt, speed_limit=.3, yaw_limit=1., frame_range=(-1.,1.2), seed=42, feedback_mode="command"):
+        self.n=n; self.device=device; self.dt=dt; self.seed=seed; self.feedback_mode=feedback_mode
         self.generation=torch.zeros(n,device=device,dtype=torch.long);self.command_count=self.generation.clone()
         self.speed_limit=speed_limit; self.yaw_limit=yaw_limit; self.frame_range=frame_range
         self.window=math.ceil(1/dt)
@@ -107,6 +107,11 @@ class MovingProgress:
         distance=(s['pos'][:,:2]-self.reference).norm(dim=-1)
         raw_distance=(s['pos'][:,:2]-self.raw_reference).norm(dim=-1)
         heading_error=wrap(s['yaw']-self.raw_yaw)
+        feedback_target=pose_velocity_target(s['pos'][:,:2],s['yaw'],self.raw_reference,self.raw_yaw,self.command)
+        feedback_error=torch.stack((s['forward'],s['vel'][:,5]),-1)-feedback_target
+        tracking_reward=torch.exp(-error[:,0].square()/.15**2-error[:,1].square()/.4**2)
+        if self.feedback_mode=='pose_feedback':
+            tracking_reward=torch.exp(-feedback_error[:,0].square()/.1**2-feedback_error[:,1].square()/.2**2)
         fixed_error=(s['q'][:,:3]-fixed).abs().amax(-1)
         tilt_rate=(s['g']-self.last_g).norm(dim=-1)/self.dt;self.last_g.copy_(s['g'])
         # Turning is allowed: no zero-speed requirement and no fixed world-yaw span.
@@ -128,11 +133,11 @@ class MovingProgress:
         self.result=dict(active=self.active.clone(),switched=switch,support=support,held=held,fresh=fresh,lift_event=lift_event,
             failure=failure,warmup_failed=warmup_failed,physical_failure=physical,progress=progress,
             distance=distance,raw_distance=raw_distance,heading_error=heading_error,raw_error=raw_error,error=error,
-            fixed_error=fixed_error,tilt_rate=tilt_rate,lift_fraction=lift,transition_scale=transition_scale,
+            fixed_error=fixed_error,tilt_rate=tilt_rate,feedback_target=feedback_target,lift_fraction=lift,transition_scale=transition_scale,
             transition_error=.1*self.active*(~self.lifted)*(raw_error[:,0].square()/.3**2+raw_error[:,1].square()).clamp(max=4),
             prepare=self.active*(.1*prepare_pitch*(1-self.since/2).clamp(0,1)+2.*lift),
             support_reward=support*(.2+.8*(self.support_run/.3).clamp(0,1)),
-            tracking=support*torch.exp(-error[:,0].square()/.15**2-error[:,1].square()/.4**2),
+            tracking=support*tracking_reward,
             raw_tracking=support*torch.exp(-raw_error[:,0].square()/.2**2-raw_error[:,1].square()/.5**2),
             path=support*torch.exp(-raw_distance.square()/.2**2-heading_error.square()/.3**2),
             smooth=support/(1+(tilt_rate/.8).square()))
@@ -143,3 +148,15 @@ def wheel_targets(actions,max_speed,mode):
     if mode=='independent':return actions[:,1:]*max_speed
     common=actions[:,1]*max_speed;differential=actions[:,2]*5.
     return torch.stack((common-differential,common+differential),-1).clamp(-max_speed,max_speed)
+
+
+def pose_velocity_target(pos,yaw,reference,reference_yaw,command):
+    """Bounded reward target only; never commands the actuators or changes success."""
+    delta=reference-pos
+    forward=delta[:,0]*yaw.cos()+delta[:,1]*yaw.sin()
+    lateral=-delta[:,0]*yaw.sin()+delta[:,1]*yaw.cos()
+    dv=forward.clamp(-.1,.1)
+    # Reverse driving must steer the opposite way to remove the same lateral error.
+    lateral_turn=.5*torch.atan2(lateral,torch.full_like(lateral,.25))*command[:,0].sign()
+    dw=(1.5*wrap(reference_yaw-yaw)+lateral_turn).clamp(-.25,.25)
+    return command+torch.stack((dv,dw),-1)

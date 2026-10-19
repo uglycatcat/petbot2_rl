@@ -6,6 +6,9 @@ p.add_argument('--num_envs',type=int,default=2048);p.add_argument('--iterations'
 p.add_argument('--seed',type=int,default=42);p.add_argument('--log_dir',default='logs/moving')
 p.add_argument('--speed-limit',type=float,default=.3);p.add_argument('--yaw-limit',type=float,default=1.)
 p.add_argument('--frame-min',type=float,default=-1.);p.add_argument('--frame-max',type=float,default=1.2)
+p.add_argument('--initialize-from')
+p.add_argument('--feedback-mode',choices=['command','pose_feedback'],default='command')
+p.add_argument('--learning-rate',type=float,default=.0001)
 p.add_argument('--wheel-slew',type=float,choices=[120.,900.],default=120.)
 p.add_argument('--wheel-mode',choices=['independent','common_diff'],default='independent')
 p.add_argument('--active-seconds',type=float,default=12.);p.add_argument('--checkpoint')
@@ -35,9 +38,12 @@ try:
     lo,hi=SPEC['joints']['left_frame']['range']
     if not lo<=args.frame_min<=args.frame_max<=hi:raise ValueError('Frame bounds outside source limits')
     if args.active_seconds<4:raise ValueError('At least four active seconds required')
+    if args.checkpoint and args.initialize_from:raise ValueError('Use resume OR explicit initialization')
+    if not 0<args.learning_rate<=.0003:raise ValueError('Learning rate outside validated bound')
     torch.manual_seed(args.seed)
     cfg=MovingEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
     cfg.speed_limit=args.speed_limit;cfg.yaw_limit=args.yaw_limit;cfg.frame_range=(args.frame_min,args.frame_max)
+    cfg.feedback_mode=args.feedback_mode;cfg.rewards.path.weight=4. if args.feedback_mode=='pose_feedback' else 1.
     cfg.wheel_slew=args.wheel_slew;cfg.wheel_mode=args.wheel_mode;cfg.active_seconds=args.active_seconds;cfg.episode_length_s=args.active_seconds+6.
     env=ManagerBasedRLEnv(cfg=cfg);wrapped=Adapter(env)
     folder=pathlib.Path(args.log_dir);folder.mkdir(parents=True,exist_ok=True)
@@ -45,21 +51,35 @@ try:
     if dirty and not args.allow_dirty:raise RuntimeError('Commit source before formal execution')
     files=['train_moving.py',*['upright/'+x for x in ['moving.py','moving_task.py','task.py','distribution.py','model.py','asset_cfg.py','prepare.py']]]
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(x).read_bytes()).hexdigest() for x in files).encode()).hexdigest()
-    contract={'task':'moving_takeover_v2','wheel_mode':args.wheel_mode,'wheel_slew':args.wheel_slew,'fingerprint':fingerprint,'action_dim':3,'control_dt':env.step_dt,'beta_shape_cap':128.,'source_sha256':SPEC['source_sha256']}
+    contract={'task':'moving_takeover_v3','feedback_mode':args.feedback_mode,'wheel_mode':args.wheel_mode,'wheel_slew':args.wheel_slew,'fingerprint':fingerprint,'action_dim':3,'control_dt':env.step_dt,'beta_shape_cap':128.,'source_sha256':SPEC['source_sha256']}
     if args.checkpoint:
         old=json.loads((pathlib.Path(args.checkpoint).parent/'config.json').read_text())
         if old.get('contract')!=contract:raise ValueError('Incompatible checkpoint: task, implementation or action/observation contract changed')
-    if args.evaluate and not args.checkpoint:raise ValueError('Evaluation requires a checkpoint')
+    if args.evaluate and not (args.checkpoint or args.initialize_from):raise ValueError('Evaluation requires a checkpoint')
     home=(2*SPEC['joints']['left_frame']['default']-lo-hi)/(hi-lo)
     config=dict(seed=args.seed,device=args.device,num_steps_per_env=32,save_interval=250,logger='tensorboard',experiment_name='upright_moving',run_name=f'seed{args.seed}',
         obs_groups={'actor':['policy'],'critic':['policy']},
         actor=dict(class_name='MLPModel',hidden_dims=[128,128],activation='elu',obs_normalization=True,distribution_cfg=dict(class_name='upright.distribution:UprightBetaDistribution',initial_mean=[home,0.,0.],initial_std=[.35,.45,.45],shape_cap=128.)),
         critic=dict(class_name='MLPModel',hidden_dims=[256,128],activation='elu',obs_normalization=True),
-        algorithm=dict(class_name='PPO',value_loss_coef=1.,use_clipped_value_loss=True,clip_param=.2,entropy_coef=.001,num_learning_epochs=5,num_mini_batches=4,learning_rate=.0003,schedule='fixed',gamma=.997**3,lam=.95**3,desired_kl=.01,max_grad_norm=1.))
+        algorithm=dict(class_name='PPO',value_loss_coef=1.,use_clipped_value_loss=True,clip_param=.2,entropy_coef=.001,num_learning_epochs=5,num_mini_batches=4,learning_rate=args.learning_rate,schedule='fixed',gamma=.997**3,lam=.95**3,desired_kl=.01,max_grad_norm=1.))
     metadata=dict(contract=contract,args=vars(args),runner=config,working_tree_dirty=dirty,commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip())
     (folder/'config.json').write_text(json.dumps(metadata,indent=2))
     runner=OnPolicyRunner(wrapped,copy.deepcopy(config),log_dir=str(folder),device=args.device)
     if args.checkpoint:runner.load(args.checkpoint)
+    if args.initialize_from:
+        initial=pathlib.Path(args.initialize_from)
+        prior=json.loads((initial.parent/'config.json').read_text());previous=prior['contract']
+        if prior.get('commit')!='dd9733b69148874de6e072c435673166cf269898' or prior.get('working_tree_dirty'):
+            raise ValueError('Initialization is restricted to clean batch2 fixed version')
+        for key in ['wheel_mode','wheel_slew','action_dim','control_dt','beta_shape_cap','source_sha256']:
+            if previous.get(key)!=contract[key]:raise ValueError(f'Initialization contract mismatch: {key}')
+        if previous.get('task')!='moving_takeover_v2':raise ValueError('Expected moving v2 source')
+        if prior['runner']['actor']!=config['actor'] or prior['runner']['critic']!=config['critic']:
+            raise ValueError('Network or normalization interface changed')
+        runner.load(str(initial),load_cfg={'actor':True,'critic':True,'optimizer':False,'iteration':False},strict=True)
+        assert runner.current_learning_iteration==0
+        metadata['initialization']={'checkpoint':str(initial),'sha256':hashlib.sha256(initial.read_bytes()).hexdigest(),'source_commit':prior['commit'],'optimizer_loaded':False,'iteration_loaded':False}
+        (folder/'config.json').write_text(json.dumps(metadata,indent=2))
     if not (args.evaluate or args.probe):runner.learn(num_learning_iterations=args.iterations,init_at_random_ep_len=False)
     else:
         policy=runner.get_inference_policy(device=args.device);obs=wrapped.get_observations()
@@ -69,6 +89,8 @@ try:
         low_speed=torch.zeros(n,device=device);moving_samples=low_speed.clone();max_acceleration=0.;last_forward=None
         lifted=~alive;support_count=counts.clone();max_height=counts.clone();first_lift=torch.full((n,),-1.,device=device)
         premature=~alive;warmup_failed=~alive;max_frame=0.;max_wheel=0.;fixed_error=0.;frame_symmetry=0.;trace=[];takeovers=[]
+        criterion_names=['support','forward','yaw_rate','path','heading','fixed','roll','tilt_rate']
+        criterion_counts=torch.zeros(n,8,device=device);tail_criterion_counts=criterion_counts.clone();tail_counts=torch.zeros(n,device=device)
         with torch.inference_mode():
             for tick in range(env.max_episode_length+3):
                 action=env.action_manager.get_term('moving')
@@ -84,6 +106,8 @@ try:
                 support_count+=active&m['support'];max_height=torch.maximum(max_height,torch.where(active,s['front_z'],0.))
                 success |= active&m['held'];final=torch.where(before,m['held'],final)
                 tail=active&(since>=args.active_seconds-2);extra_seen |= tail;extra &= ~tail | m['held']
+                criteria=torch.stack((m['support'],m['raw_error'][:,0].abs()<.12,m['raw_error'][:,1].abs()<.3,m['raw_distance']<.15,m['heading_error'].abs()<.25,m['fixed_error']<.05,s['g'][:,1].abs()<.15,m['tilt_rate']<.8),-1)
+                criterion_counts+=criteria*active[:,None];tail_criterion_counts+=criteria*tail[:,None];tail_counts+=tail
                 requested_motion=active&(raw[:,0].abs()>.05)
                 moving_samples+=requested_motion;low_speed+=requested_motion&(s['forward'].abs()<.025)
                 if last_forward is not None and active.any():max_acceleration=max(max_acceleration,float(((s['forward']-last_forward).abs()/env.step_dt)[active].max()))
@@ -101,6 +125,8 @@ try:
                 alive &= ~done.bool()
                 if not alive.any():break
         result=dict(count=n,taken_over=int(taken.sum()),success=int(success.sum()),maintained_final_2s=int((success&extra&extra_seen&~premature).sum()),final_success=int((final&~premature).sum()),premature=int(premature.sum()),warmup_failed=int(warmup_failed.sum()),unfinished=int(alive.sum()),
+            criterion_names=criterion_names,criterion_fraction_per_env=(criterion_counts/counts.clamp_min(1)[:,None]).tolist(),tail_criterion_fraction_per_env=(tail_criterion_counts/tail_counts.clamp_min(1)[:,None]).tolist(),tail_samples=tail_counts.tolist(),
+            success_per_env=success.tolist(),maintained_per_env=(success&extra&extra_seen&~premature).tolist(),premature_per_env=premature.tolist(),
             lifted=int(lifted.sum()),lifted_per_env=lifted.tolist(),first_lift_seconds=first_lift.tolist(),support_fraction_per_env=(support_count/counts.clamp_min(1)).tolist(),max_front_height_per_env=max_height.tolist(),
             raw_velocity_mae_per_env=(sum_error/counts.clamp_min(1)[:,None]).tolist(),raw_path_mae_per_env=(sum_path/counts.clamp_min(1)).tolist(),active_samples=counts.tolist(),nonzero_command_low_speed_fraction=(low_speed/moving_samples.clamp_min(1)).tolist(),max_forward_acceleration=max_acceleration,
             max_frame_target_step=max_frame,max_wheel_target_step=max_wheel,max_fixed_error=fixed_error,frame_symmetry_target_error=frame_symmetry,takeovers=takeovers,contract=contract)

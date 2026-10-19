@@ -65,3 +65,16 @@ m=p.update(s,s['q'].new_zeros(3))
 assert (m['prepare']>low).all() and not m['support'].any() and not m['held'].any()
 assert torch.allclose(m['transition_scale'],torch.full((n,),.1,device=device))
 print('PASS common/differential action bounds and dense partial-lift credit without relaxed success')
+
+# Reward feedback corrects accumulated pose error, with rotational invariance.
+from upright.moving import pose_velocity_target
+pos=torch.zeros(2,2,device=device);yaw=torch.tensor([0.,torch.pi/2],device=device)
+ref=torch.tensor([[.2,.0],[0.,.2]],device=device);cmd=torch.tensor([[.1,.2],[.1,.2]],device=device)
+out=pose_velocity_target(pos,yaw,ref,yaw,cmd)
+assert torch.allclose(out,torch.tensor([[.2,.2],[.2,.2]],device=device),atol=1e-6)
+ref=torch.tensor([[0.,.2],[0.,.2]],device=device);yaw.zero_();cmd[:,0]=torch.tensor([.1,-.1],device=device);cmd[:,1]=0
+out=pose_velocity_target(pos,yaw,ref,yaw,cmd)
+assert out[0,1]>0 and out[1,1]<0
+assert ((out-cmd).abs()<=torch.tensor([.1,.25],device=device)+1e-6).all()
+assert torch.equal(pose_velocity_target(pos,yaw,pos,yaw,cmd),cmd)
+print('PASS bounded pose feedback, rotation invariance, reverse steering and zero-error identity')
