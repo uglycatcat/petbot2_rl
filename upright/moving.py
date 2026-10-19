@@ -12,8 +12,9 @@ def wrap(x):
 
 
 class MovingProgress:
-    def __init__(self, n, device, dt, speed_limit=.3, yaw_limit=1., frame_range=(-1.,1.2)):
-        self.n=n; self.device=device; self.dt=dt
+    def __init__(self, n, device, dt, speed_limit=.3, yaw_limit=1., frame_range=(-1.,1.2), seed=42):
+        self.n=n; self.device=device; self.dt=dt; self.seed=seed
+        self.generation=torch.zeros(n,device=device,dtype=torch.long);self.command_count=self.generation.clone()
         self.speed_limit=speed_limit; self.yaw_limit=yaw_limit; self.frame_range=frame_range
         self.window=math.ceil(1/dt)
         def zeros(*shape):return torch.zeros(*shape,device=device)
@@ -27,17 +28,26 @@ class MovingProgress:
         self.cursor=0; self.last_g=zeros(n,3); self.mode=torch.arange(n,device=device)%6
         self.result={}
 
+    def uniform(self, ids, stream):
+        # Per-env counter-based streams: resetting another env cannot change the
+        # held-out command sequence. Avoid shared RNG coupling during evaluation.
+        x=(ids*1103515245+self.generation[ids]*12345+self.command_count[ids]*214013+self.seed*2531011+stream*134775813)&0x7fffffff
+        x=((x^(x>>16))*1103515245+12345)&0x7fffffff
+        x=((x^(x>>13))*214013+2531011)&0x7fffffff
+        return x.to(torch.float32)/2147483648.
+
     def sample_commands(self, ids):
         # Retain straight, reverse, pure-turn and curved-motion cases in every batch.
-        v=(2*torch.rand(len(ids),device=self.device)-1)*self.speed_limit
-        w=(2*torch.rand(len(ids),device=self.device)-1)*self.yaw_limit
+        v=(2*self.uniform(ids,0)-1)*self.speed_limit
+        w=(2*self.uniform(ids,1)-1)*self.yaw_limit
         mode=self.mode[ids]
         v=torch.where(mode==0,v.abs(),torch.where(mode==1,-v.abs(),v))
         w=torch.where((mode==0)|(mode==1),0.,w)
         v=torch.where((mode==2)|(mode==3),0.,v)
         w=torch.where(mode==2,w.abs(),torch.where(mode==3,-w.abs(),w))
         self.raw[ids]=torch.stack((v,w),-1)
-        self.next_command[ids]=self.since[ids]+2.+2.*torch.rand(len(ids),device=self.device)
+        self.next_command[ids]=self.since[ids]+2.+2.*self.uniform(ids,2)
+        self.command_count[ids]+=1
 
     def set_command(self, command, ids=None):
         """External (forward m/s, yaw rad/s) input; disable random resampling."""
@@ -50,9 +60,10 @@ class MovingProgress:
 
     def reset(self, ids, pos, heading):
         for x in (self.active,self.age,self.since,self.ready,self.peak,self.lifted,self.ever,self.support_run):x[ids]=0
+        self.generation[ids]+=1;self.command_count[ids]=0
         self.external[ids]=False; self.good[:,ids]=False; self.last_g[ids]=torch.tensor([0.,0.,-1.],device=self.device)
-        self.frame[ids]=self.frame_range[0]+torch.rand(len(ids),device=self.device)*(self.frame_range[1]-self.frame_range[0])
-        self.switch_at[ids]=2.+2.*torch.rand(len(ids),device=self.device)
+        self.frame[ids]=self.frame_range[0]+self.uniform(ids,3)*(self.frame_range[1]-self.frame_range[0])
+        self.switch_at[ids]=2.+2.*self.uniform(ids,4)
         self.command[ids]=0
         self.reference[ids]=pos[ids,:2]; self.raw_reference[ids]=pos[ids,:2]
         self.yaw[ids]=heading[ids];self.raw_yaw[ids]=heading[ids]

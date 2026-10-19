@@ -38,3 +38,12 @@ assert torch.allclose(p.raw,torch.tensor([.1,-.2],device=device).expand(n,2))
 try:p.set_command([100.,0.]);raise AssertionError('out-of-range accepted')
 except ValueError:pass
 print('PASS external command persistence and envelope validation')
+
+# A neighbour reset must not alter this environment's future command sequence.
+a=MovingProgress(n,device,dt,seed=123);b=MovingProgress(n,device,dt,seed=123)
+ids=torch.arange(n,device=device)
+a.reset(ids,s['pos'],s['yaw']);b.reset(ids,s['pos'],s['yaw'])
+b.reset(torch.tensor([0],device=device),s['pos'],s['yaw'])
+rest=torch.tensor([1,2,3],device=device);a.sample_commands(rest);b.sample_commands(rest)
+assert torch.equal(a.raw[rest],b.raw[rest]) and torch.equal(a.next_command[rest],b.next_command[rest])
+print('PASS independent per-environment evaluation command streams')
