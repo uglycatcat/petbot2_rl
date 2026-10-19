@@ -6,7 +6,7 @@
 
 ## 定时续接
 
-一次性02:00续接已创建，PID429774，状态`demo_project/runs/_night_20261019/20261020_0200.json`；同目录`resume_timer.py`使用本机codex queue投递到原会话。10月19日19:07核查waiting。依赖服务器、Codex进程及可用额度，不保证额度刷新；投递状态未知先核查，不盲目再发。评估队列完成后也会向同一会话排队通知。
+一次性02:00续接已创建，PID429774，状态`demo_project/runs/_night_20261019/20261020_0200.json`；同目录`resume_timer.py`使用本机codex queue投递到原会话。10月20日02:00续接已实际送达并开始复核。依赖服务器、Codex进程及可用额度，不保证额度刷新；投递状态未知先核查，不盲目再发。评估队列完成后也会向同一会话排队通知。
 
 ## 当前实现和验收
 
@@ -31,8 +31,8 @@ A检验较易任务的可学习性，B检验宽范围难度；并不是单参数
 
 训练只在petbot-upright-night容器中跑。每卡总显存<80%，run_guarded以78%停止本项目容器；不影响其他用户容器，不重启AGILE，不改robot_description源模型。每个运行在`demo_project/runs/moving_batch1_*`独立固定副本，禁止同步覆盖。
 
-编排与评估状态位于`demo_project/runs/_moving_batch1/`：gate、launch_status、各训练exit及日志、eval_status/eval_finished。固定c4ff64b2680e03da39849e8d5c7a63e32002fdf4已开始首轮编排（运行代码f91d84f，后续仅README），当前逐组初始化；只有四组实际出现Learning iteration且评估PID存活才算部署完成。
+编排与评估状态位于`demo_project/runs/_moving_batch1/`：gate、launch_status、各训练exit及日志、eval_status/eval_finished。固定c4ff64b2680e03da39849e8d5c7a63e32002fdf4已开始首轮编排（运行代码f91d84f，后续仅README），四组于10月19日19:30全部进入PPO，随后全部1500次正常结束。原评估12/16完成，4次参数解析失败已于10月20日02:06补齐，全部起立0/64；不得重复启动训练。
 
 续接先检查这些记录和真实PID/GPU，不以状态文件中旧的ppo_started推断还在运行。若部分启动失败，保留已运行组，不再次调用一次性launcher。若训练中断，核查退出原因与最后完整checkpoint，在同一固定副本、同任务契约内用--checkpoint继续剩余预算，并单独保留恢复日志；不要重新随机开训覆盖旧日志。重载读取保存的iteration，需按实际剩余步数计算预算。若评估中断，保留已完成结果，只补缺失项，不覆盖原结果。任何resume都先确认对应进程已退出，防止两个写者。
 
-本轮结束后根据共同范围结果判断下一步：是否需要缩小初始难度、分阶段扩展、调整探索和命令跟踪权重。尚无正式学习效果，不预设全范围任务已经可学。
+本轮结束后根据共同范围结果判断下一步：是否需要缩小初始难度、分阶段扩展、调整探索和命令跟踪权重。首轮16次有效评估全部0/64起立，已学会一定四轮跟踪；第二版增强连续抬升反馈并对照轮速变化率120/900rad/s²，固定dd9733b验收中。详见[首轮分析及第二轮](upright_moving_v2.md)。

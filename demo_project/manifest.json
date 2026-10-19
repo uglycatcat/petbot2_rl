@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-19",
+  "updated_at": "2026-10-20",
   "purpose": "PetBot experimental training projects. Code is versioned on dedicated demoproj branches; checkouts are managed by default.xml.",
   "repositories": [
     {
@@ -44,20 +44,17 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "c4ff64b2680e03da39849e8d5c7a63e32002fdf4",
+      "verified_commit": "dd9733b",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "moving_takeover_v1_implemented; moving_batch1_launching; static_v5_preserved",
-      "local_validation": "CUDA moving/turning/command/contact/reset/three-channel Beta and independent command streams passed. Release 64x12 PPO all scalars finite; reload64/64 takeover, success0, premature13, warmup_failed0, unfinished0. Fixed c4ff64b batch launching; see docs/tonight_training_20261019.md.",
+      "status": "moving_batch1_complete_16_evaluations_zero_upright; moving_v2_validation",
+      "local_validation": "First batch four 2048x1500 runs finished; 16 evaluations after four CLI-failure retries: success0/64 throughout. Static policy counterfactual: no limiter or frame-only64/64; wheel120 limiter0/64. See docs/upright_moving_v2.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "moving_batch1_b42",
-        "moving_batch1_b43",
-        "moving_batch1_a42",
-        "moving_batch1_a43"
+        "moving_v2_validation"
       ]
     }
   ]
