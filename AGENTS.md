@@ -4,7 +4,7 @@
 
 ## 项目目标与当前阶段
 
-- **当前优先级（2026-10-19）**：upright_rl_demo扩展为四轮正常行驶中平滑接管起立、后轮支撑下遥控前后/转向；三路控制新任务已实现，GPU工程验收通过，固定c4ff64b首轮已结束，16次有效评估0/64起立；第二版dd9733b验收中，用户已授权当前轮正式训练和10月20日02:00续接。旧夜间目标已完成，其停止边界不适用于本次。见[新夜间记录](docs/tonight_training_20261019.md)。
+- **当前优先级（2026-10-19）**：upright_rl_demo扩展为四轮正常行驶中平滑接管起立、后轮支撑下遥控前后/转向；三路控制新任务已实现，GPU工程验收通过，固定c4ff64b首轮已结束，16次有效评估0/64起立；第二版dd9733b工程验收通过，moving_batch2四卡编排中，用户已授权当前轮正式训练和10月20日02:00续接。旧夜间目标已完成，其停止边界不适用于本次。见[新夜间记录](docs/tonight_training_20261019.md)。
 
 - 目标：PetBot（轮足机器狗）在平地上被推倒、滚翻或跌落后，用强化学习策略恢复到默认站立构型并保持稳定。
 - 主线：Isaac Lab + RSL-RL + PPO 训练 → 策略导出 → MuJoCo 做 sim2sim 验证。
@@ -149,9 +149,11 @@
 
 | 2026-10-19 | 运动任务实现与新夜间目标 | 三路控制、物理行驶接管、全程命令跟踪和GPU验收通过；用户授权当前轮训练及10月20日02:00续接，见[夜间记录](docs/tonight_training_20261019.md) |
 
+| 2026-10-20 | 运动首轮终局与02:00续接 | 四组1500正常结束，补评后16次有效评估起立全0/64；限速反事实定位旧策略不适应轮速变化率限制，第二版增强连续抬升反馈并对照轮速变化率，见[分析](docs/upright_moving_v2.md) |
+
 ## 当前实现状态
 
-- **运动中接管任务（2026-10-19）**：三路位置/轮速控制、205维观测、四轮真实滚动后接管、原始/过滤遥控轨迹跟踪已实现，工程验收通过但短训尚未学会任务。首轮已完成训练、16次有效评估起立全0/64；第二版验收中，10月20日02:00定时续接已送达，见[本轮记录](docs/tonight_training_20261019.md)。
+- **运动中接管任务（2026-10-19）**：三路位置/轮速控制、205维观测、四轮真实滚动后接管、原始/过滤遥控轨迹跟踪已实现，工程验收通过但短训尚未学会任务。首轮已完成训练、16次有效评估起立全0/64；第二版工程验收通过并开始moving_batch2四卡编排，10月20日02:00定时续接已送达，见[本轮记录](docs/tonight_training_20261019.md)。
 
 - **起立夜间终局（2026-10-17）**：三轮12组训练、36次评估完成；第三版可起立回位但终局持续保持0/64，第四版稳定奖励未可靠改善，第五版较低探索下限终局持续保持56/64及64/64。推荐检查点及证据见[第五版](docs/upright_v5_training.md)。没有剩余本夜任务，不再启动新轮。
 
@@ -190,5 +192,3 @@
 - demo 的本地测试：在 `demo_project/recovery_agile_01/` 运行 `python -m pytest -q --confcutdir=petbot_tests petbot_tests`（CPU Torch / MuJoCo 等依赖见 PETBOT.md）；它不启动 Isaac Sim 或训练。改 `pose_recover_demo/` 时运行 `python -m unittest discover -s robot_controller_demo/pose_recover_demo -q`。改 `jump_demo/` 或后轮离地可行性测试时，用 `mujoco_env` 运行 `python -m unittest robot_controller_demo.jump_demo.test_maneuver robot_controller_demo.test.rear_wheel_inverted_pendulum.test_lift_feasibility robot_controller_demo.test.rear_wheel_liftoff.test_frame_pitch_liftoff -q`。`driver_demo/` 的旧测试不必运行。
 - 每次工作结束前：核对重要信息与进展是否已同步至本文件「进度报告」及对应主题文档；实现状态发生变化时同步更新「当前实现状态」。明确区分用户确认、实测与未验证内容；无新增重要信息时无需为留痕而改文档。
 - `docs/reports/` 是 2026-09-24 的历史调研资料，只作模型与文献追溯，不代表当前方案。
-
-| 2026-10-20 | 运动首轮终局与02:00续接 | 四组1500正常结束，补评后16次有效评估起立全0/64；限速反事实定位旧策略不适应轮速变化率限制，第二版增强连续抬升反馈并对照轮速变化率，见[分析](docs/upright_moving_v2.md) |

@@ -44,17 +44,20 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "dd9733b",
+      "verified_commit": "dd9733b69148874de6e072c435673166cf269898",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "moving_batch1_complete_16_evaluations_zero_upright; moving_v2_validation",
-      "local_validation": "First batch four 2048x1500 runs finished; 16 evaluations after four CLI-failure retries: success0/64 throughout. Static policy counterfactual: no limiter or frame-only64/64; wheel120 limiter0/64. See docs/upright_moving_v2.md.",
+      "status": "moving_batch1_complete_16_evaluations_zero_upright; moving_batch2_launching",
+      "local_validation": "First batch four 2048x1500 runs finished; 16 evaluations after four CLI-failure retries: success0/64 throughout. Static policy counterfactual: no limiter or frame-only64/64; wheel120 limiter0/64. See docs/upright_moving_v2.md. Release wheel slew120/900 64x12 PPO all scalars finite; reload64/64 takeover both, zero success, premature0/9; fixed dd9733b launching.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "moving_v2_validation"
+        "moving_batch2_a42",
+        "moving_batch2_a43",
+        "moving_batch2_b42",
+        "moving_batch2_b43"
       ]
     }
   ]
