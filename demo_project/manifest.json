@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-16",
+  "updated_at": "2026-10-19",
   "purpose": "PetBot experimental training projects. Code is versioned on dedicated demoproj branches; checkouts are managed by default.xml.",
   "repositories": [
     {
@@ -44,16 +44,21 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "b236e124611b4c73981f8944414e72a1938d5470",
+      "verified_commit": "c4ff64b2680e03da39849e8d5c7a63e32002fdf4",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "v5_complete; nightly_goal_closed; cap128_final_extra_hold_56_and_64_of_64",
-      "local_validation": "Three nightly rounds: 12 formal runs and 36 evaluations complete. V5 cap128 both seeds i750 extra hold64/64, final56/64 and64/64; cap32 controls final0/64. All four final scalar histories finite; no pending jobs. Candidate B43/model_1499; MuJoCo policy and real robot unverified.",
+      "status": "moving_takeover_v1_implemented; moving_batch1_launching; static_v5_preserved",
+      "local_validation": "CUDA moving/turning/command/contact/reset/three-channel Beta and independent command streams passed. Release 64x12 PPO all scalars finite; reload64/64 takeover, success0, premature13, warmup_failed0, unfinished0. Fixed c4ff64b batch launching; see docs/tonight_training_20261019.md.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": []
+      "active_tasks": [
+        "moving_batch1_b42",
+        "moving_batch1_b43",
+        "moving_batch1_a42",
+        "moving_batch1_a43"
+      ]
     }
   ]
 }
