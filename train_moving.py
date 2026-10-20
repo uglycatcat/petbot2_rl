@@ -87,7 +87,9 @@ try:
         sources={'34b0effd40c853a3e7fac0ebc1afa22a2e5943fe':'moving_takeover_v3',
                  '4c1bd237c02181c2869fe11dd39a33a5b5798b67':'moving_takeover_v4',
                  '29fd27612de07a6acbb134f3cacd25c14b0fea67':'moving_takeover_v5',
-                 '1da1527046822aed40bb41360b42f71c07b586d4':'moving_takeover_v5'}
+                 '1da1527046822aed40bb41360b42f71c07b586d4':'moving_takeover_v5',
+                 '069418b5653c42c0b09e0393a95f5c2b3b64d79c':'moving_takeover_v6',
+                 'dc58f7efb28763a1fdf2d62dfc786866ccd71e83':'moving_takeover_v6'}
         if prior.get('working_tree_dirty') or prior.get('commit') not in sources:
             raise ValueError('Initialization is restricted to a clean finished round')
         for key in ['wheel_mode','wheel_slew','action_dim','control_dt','beta_shape_cap','source_sha256']:
