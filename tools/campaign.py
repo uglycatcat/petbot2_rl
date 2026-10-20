@@ -522,6 +522,8 @@ def envelope_args(plan, var):
             '--learning-rate', str(env['learning_rate'])]
     if var.get('feedback_mode'):
         args += ['--feedback-mode', var['feedback_mode']]
+    if var.get('turn_share') is not None:
+        args += ['--turn-share', str(var['turn_share'])]
     if var.get('initialize_from'):
         args += ['--initialize-from', var['initialize_from']]
     return args
@@ -564,7 +566,8 @@ def cmd_launch(args):
             return 2
     state = dict(name=rnd['id'], commit=rnd['commit'], container=CONTAINER,
                  thread=os.environ.get('CODEX_THREAD_ID'), started_at=stamp(),
-                 iterations=plan['iterations'], checkpoints=plan['checkpoints'],
+                 iterations=rnd.get('iterations', plan['iterations']),
+                 checkpoints=rnd.get('checkpoints', plan['checkpoints']),
                  gate=gate, train={})
     if args.dry_run:
         print('dry-run launch:', json.dumps(dict(round=rnd['id'], commit=rnd['commit'][:7],
