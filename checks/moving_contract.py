@@ -95,3 +95,41 @@ assert good_turn>bad_turn+.7,'Translation error must not erase the turn reward'
 tr,pa=heading_feedback_rewards(zero,zero,zero,zero)
 assert tr==1 and pa==1
 print('PASS tilted heading-rate finite difference and independently bounded turning reward')
+
+# Sustain recipe: turn share, dense heading-window credit, and its boundedness.
+m=MovingProgress(n,device,.06,turn_share=.5)
+assert m.mode.min()>=0 and m.mode.max()<=5
+share=float(((m.mode==2)|(m.mode==3)).float().mean())
+assert .4<=share<=.6,f'pure-turn share {share}'
+assert float(((MovingProgress(n,device,.06).mode==2)|(MovingProgress(n,device,.06).mode==3)).float().mean())==0.
+
+p=MovingProgress(n,device,dt,feedback_mode='sustain')
+p.active[:]=True;p.since[:]=3
+s2=dict(s);s2['four']=torch.zeros(n,device=device,dtype=torch.bool)
+s2['rear']=torch.ones(n,device=device,dtype=torch.bool);s2['other']=torch.zeros(n,device=device,dtype=torch.bool)
+s2['front_z']=torch.full((n,),.18,device=device);s2['g']=torch.tensor([[0.,0.,-1.]],device=device).repeat(n,1)
+s2['pos']=torch.zeros(n,3,device=device);s2['yaw']=torch.zeros(n,device=device);s2['vel']=torch.zeros(n,6,device=device)
+s2['forward']=torch.zeros(n,device=device);s2['q']=torch.zeros(n,5,device=device);s2['heading_rate']=torch.zeros(n,device=device)
+p.raw[:]=0.;p.command[:]=0.;p.reference[:]=0.;p.raw_reference[:]=0.;p.raw_yaw[:]=0.;p.yaw[:]=0.
+run=[]
+for _ in range(20):
+    r=p.update(s2,s2['q'].new_zeros(3));run.append(float(r['heading_sustain'][0]))
+assert run[0]<run[5]<run[-1] and max(run)<=1.0001,'sustain credit must ramp with the compliant run'
+# A heading violation resets the run instead of paying for stale compliance.
+s2['yaw'][:]=.5
+r=p.update(s2,s2['q'].new_zeros(3))
+assert float(r['heading_sustain'][0])==0.0
+s2['yaw'][:]=0.
+p.update(s2,s2['q'].new_zeros(3))
+r=p.update(s2,s2['q'].new_zeros(3))
+assert 0<float(r['heading_sustain'][0])<run[-1],'run must restart from zero after a violation'
+# Tight scales actually separate near-miss heading errors from good ones.
+p2=MovingProgress(n,device,dt,feedback_mode='sustain');p2.active[:]=True;p2.since[:]=3
+p3=MovingProgress(n,device,dt,feedback_mode='pose_feedback');p3.active[:]=True;p3.since[:]=3
+def path_reward(prog,heading_error):
+    s3=dict(s2);s3['yaw']=torch.full((n,),heading_error,device=device)
+    prog.reference[:]=0.;prog.raw_reference[:]=0.;prog.raw_yaw[:]=0.;prog.raw[:]=0.;prog.command[:]=0.
+    return float(prog.update(s3,s3['q'].new_zeros(3))['path'][0])
+tight=path_reward(p2,.20);loose=path_reward(p3,.20)
+assert tight<loose,'the sustain scale must punish a 0.20 rad heading error harder'
+print('PASS turn-share mixture and dense heading-window credit')

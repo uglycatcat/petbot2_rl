@@ -7,7 +7,8 @@ p.add_argument('--seed',type=int,default=42);p.add_argument('--log_dir',default=
 p.add_argument('--speed-limit',type=float,default=.3);p.add_argument('--yaw-limit',type=float,default=1.)
 p.add_argument('--frame-min',type=float,default=-1.);p.add_argument('--frame-max',type=float,default=1.2)
 p.add_argument('--initialize-from')
-p.add_argument('--feedback-mode',choices=['command','pose_feedback','heading_feedback'],default='command')
+p.add_argument('--feedback-mode',choices=['command','pose_feedback','heading_feedback','sustain'],default='command')
+p.add_argument('--turn-share',type=float,default=0.)
 p.add_argument('--learning-rate',type=float,default=.0001)
 p.add_argument('--wheel-slew',type=float,choices=[120.,900.],default=120.)
 p.add_argument('--wheel-mode',choices=['independent','common_diff'],default='independent')
@@ -44,6 +45,11 @@ try:
     cfg=MovingEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
     cfg.speed_limit=args.speed_limit;cfg.yaw_limit=args.yaw_limit;cfg.frame_range=(args.frame_min,args.frame_max)
     cfg.feedback_mode=args.feedback_mode;cfg.rewards.path.weight=1. if args.feedback_mode=='command' else 4.
+    if not 0<=args.turn_share<1:raise ValueError('turn_share is a fraction of pure-turn environments')
+    cfg.turn_share=args.turn_share
+    # The dense heading-window credit belongs to the sustain recipe only; a control
+    # group must keep it switched off or the comparison is not a control.
+    cfg.rewards.heading_sustain.weight=2. if args.feedback_mode=='sustain' else 0.
     cfg.wheel_slew=args.wheel_slew;cfg.wheel_mode=args.wheel_mode;cfg.active_seconds=args.active_seconds;cfg.episode_length_s=args.active_seconds+6.
     env=ManagerBasedRLEnv(cfg=cfg);wrapped=Adapter(env)
     folder=pathlib.Path(args.log_dir);folder.mkdir(parents=True,exist_ok=True)
@@ -51,7 +57,7 @@ try:
     if dirty and not args.allow_dirty:raise RuntimeError('Commit source before formal execution')
     files=['train_moving.py',*['upright/'+x for x in ['moving.py','moving_task.py','task.py','distribution.py','model.py','asset_cfg.py','prepare.py']]]
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(x).read_bytes()).hexdigest() for x in files).encode()).hexdigest()
-    contract={'task':'moving_takeover_v4','feedback_mode':args.feedback_mode,'wheel_mode':args.wheel_mode,'wheel_slew':args.wheel_slew,'fingerprint':fingerprint,'action_dim':3,'control_dt':env.step_dt,'beta_shape_cap':128.,'source_sha256':SPEC['source_sha256']}
+    contract={'task':'moving_takeover_v5','feedback_mode':args.feedback_mode,'wheel_mode':args.wheel_mode,'wheel_slew':args.wheel_slew,'turn_share':args.turn_share,'fingerprint':fingerprint,'action_dim':3,'control_dt':env.step_dt,'beta_shape_cap':128.,'source_sha256':SPEC['source_sha256']}
     if args.checkpoint:
         old=json.loads((pathlib.Path(args.checkpoint).parent/'config.json').read_text())
         if old.get('contract')!=contract:raise ValueError('Incompatible checkpoint: task, implementation or action/observation contract changed')
@@ -69,12 +75,16 @@ try:
     if args.initialize_from:
         initial=pathlib.Path(args.initialize_from)
         prior=json.loads((initial.parent/'config.json').read_text());previous=prior['contract']
-        if prior.get('commit')!='34b0effd40c853a3e7fac0ebc1afa22a2e5943fe' or prior.get('working_tree_dirty'):
-            raise ValueError('Initialization is restricted to clean batch3 fixed version')
+        # Only clean, already-analysed rounds may seed a new one. Extend this table
+        # when a round finishes; never seed from an unverified or dirty tree.
+        sources={'34b0effd40c853a3e7fac0ebc1afa22a2e5943fe':'moving_takeover_v3',
+                 '4c1bd237c02181c2869fe11dd39a33a5b5798b67':'moving_takeover_v4'}
+        if prior.get('working_tree_dirty') or prior.get('commit') not in sources:
+            raise ValueError('Initialization is restricted to a clean finished round')
         for key in ['wheel_mode','wheel_slew','action_dim','control_dt','beta_shape_cap','source_sha256']:
             if previous.get(key)!=contract[key]:raise ValueError(f'Initialization contract mismatch: {key}')
-        if previous.get('task')!='moving_takeover_v3' or previous.get('feedback_mode')!='pose_feedback':
-            raise ValueError('Expected moving v3 pose-feedback source')
+        if previous.get('task')!=sources[prior['commit']] or previous.get('feedback_mode')!='pose_feedback':
+            raise ValueError('Expected a pose-feedback source of the declared round')
         if prior['runner']['actor']!=config['actor'] or prior['runner']['critic']!=config['critic']:
             raise ValueError('Network or normalization interface changed')
         runner.load(str(initial),load_cfg={'actor':True,'critic':True,'optimizer':False,'iteration':False},strict=True)

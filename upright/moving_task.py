@@ -24,7 +24,7 @@ def state(env):
 
 def ensure(env):
     if not hasattr(env,'moving_progress'):
-        s=state(env);env.moving_progress=MovingProgress(env.num_envs,env.device,env.step_dt,env.cfg.speed_limit,env.cfg.yaw_limit,env.cfg.frame_range,env.cfg.seed,env.cfg.feedback_mode)
+        s=state(env);env.moving_progress=MovingProgress(env.num_envs,env.device,env.step_dt,env.cfg.speed_limit,env.cfg.yaw_limit,env.cfg.frame_range,env.cfg.seed,env.cfg.feedback_mode,env.cfg.turn_share)
         env.moving_progress.reset(torch.arange(env.num_envs,device=env.device),s['pos'],s['yaw'])
         env.moving_step=-1
     return env.moving_progress
@@ -142,6 +142,7 @@ class RewardsCfg:
     progress=RewTerm(func=reward,weight=3.,params={'kind':'progress'})
     lift=RewTerm(func=reward,weight=3.,params={'kind':'lift_event'})
     support=RewTerm(func=reward,weight=2.,params={'kind':'support_reward'})
+    heading_sustain=RewTerm(func=reward,weight=0.,params={'kind':'heading_sustain'})
     transition_error=RewTerm(func=reward,weight=-.2,params={'kind':'transition_error'})
     tracking=RewTerm(func=reward,weight=2.,params={'kind':'tracking'})
     raw_tracking=RewTerm(func=reward,weight=1.,params={'kind':'raw_tracking'})
@@ -163,6 +164,7 @@ class DonesCfg:
 class MovingEnvCfg(UprightEnvCfg):
     actions=ActionsCfg();observations=ObservationsCfg();rewards=RewardsCfg();events=EventsCfg();terminations=DonesCfg()
     feedback_mode:str='command'
+    turn_share:float=0.
     wheel_slew:float=120.
     wheel_mode:str='independent'
     speed_limit:float=.3
