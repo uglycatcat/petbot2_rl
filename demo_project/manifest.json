@@ -44,20 +44,17 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "dd9733b69148874de6e072c435673166cf269898",
+      "verified_commit": "1b8c8d3ce6cab238b536c5d9723c33f0359a741c",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "moving_batch1_complete_16_evaluations_zero_upright; moving_batch2_four_runs_in_ppo_evaluation_queue_waiting",
-      "local_validation": "First batch four 2048x1500 runs finished; 16 evaluations after four CLI-failure retries: success0/64 throughout. Static policy counterfactual: no limiter or frame-only64/64; wheel120 limiter0/64. See docs/upright_moving_v2.md. Release wheel slew120/900 64x12 PPO all scalars finite; reload64/64 takeover both, zero success, premature0/9; Fixed dd9733b four 2048x1500 runs all in PPO at 2026-10-20 02:22+08; evaluation queue PID630028 waiting for checkpoints.",
+      "status": "moving_batch2_complete_16_evals; batch3_pose_feedback_validation",
+      "local_validation": "Batch2 B final native lifted64/64 both; success56/53, maintained2/1. All four trains and16 evals complete. Tail diagnosis isolates path/heading drift. CUDA bounded pose feedback contracts passed; initialization preserves both source policies exactly (per-env path/lift/support differences0); short PPO and subsequent reload validation pending. See docs/upright_moving_v3.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "moving_batch2_a42",
-        "moving_batch2_a43",
-        "moving_batch2_b42",
-        "moving_batch2_b43"
+        "moving_v3_validation"
       ]
     }
   ]
