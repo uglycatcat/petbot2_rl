@@ -89,7 +89,7 @@
       "id": "moving_batch5",
       "batch": "moving_batch5",
       "status": "planned",
-      "commit": "06da2917cbf6e27110e08d0aea87965b78b28300",
+      "commit": "374cfad6430caf4c2de29b85d039c2f810085e33",
       "doc": "docs/upright_moving_v5.md",
       "gate": {
         "gpus": [
