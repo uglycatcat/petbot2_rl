@@ -48,7 +48,12 @@ class MovingProgress:
         because pure turning is where accumulated heading error is worst."""
         base=[0,1,4,5]
         turns=max(0,min(8,round(turn_share/(1-turn_share)*len(base)/2))) if 0<turn_share<1 else 0
-        pattern=base+[2,3]*turns
+        # Interleave the turn classes with the straight/reverse/mixed ones, so the
+        # share holds for any env count and the first environments are not all straight.
+        pending=[2,3]*turns;pattern=[];i=j=0
+        while i<len(base) or j<len(pending):
+            if i<len(base):pattern.append(base[i]);i+=1
+            if j<len(pending):pattern.append(pending[j]);j+=1
         table=torch.tensor(pattern,device=device,dtype=torch.long)
         return table[torch.arange(n,device=device)%len(pattern)]
 
