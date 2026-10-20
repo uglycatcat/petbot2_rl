@@ -180,7 +180,7 @@
     {
       "id": "moving_batch6",
       "batch": "moving_batch6",
-      "status": "in_flight",
+      "status": "done",
       "commit": "1da1527046822aed40bb41360b42f71c07b586d4",
       "gate_dir": "moving_batch6",
       "doc": "docs/upright_moving_v6.md",
@@ -253,7 +253,81 @@
           }
         ]
       },
-      "save_interval": 75
+      "save_interval": 75,
+      "verdict": "lr_dependent_peak_at_75",
+      "result": {
+        "hold_a": {
+          "75": 61,
+          "150": 51,
+          "249": 51
+        },
+        "hold_b": {
+          "75": 56,
+          "150": 56,
+          "249": 55
+        },
+        "wide_a": 1,
+        "wide_b": 0,
+        "path_a": 0.0353,
+        "path_b": 0.0335
+      }
+    },
+    {
+      "id": "moving_batch7",
+      "batch": "moving_batch7",
+      "status": "planned",
+      "commit": "1da1527046822aed40bb41360b42f71c07b586d4",
+      "gate_dir": "moving_batch6",
+      "doc": "docs/upright_moving_v7.md",
+      "iterations": 200,
+      "save_interval": 50,
+      "checkpoints": [
+        50,
+        100,
+        199
+      ],
+      "variants": [
+        {
+          "run": "moving_batch7_a42",
+          "group": "a",
+          "seed": 42,
+          "gpu": 2,
+          "feedback_mode": "sustain",
+          "turn_share": 0.5,
+          "learning_rate": 5e-05,
+          "initialize_from": "../moving_batch4_a42/logs/moving_batch4_a42/model_999.pt"
+        },
+        {
+          "run": "moving_batch7_a43",
+          "group": "a",
+          "seed": 43,
+          "gpu": 2,
+          "feedback_mode": "sustain",
+          "turn_share": 0.5,
+          "learning_rate": 5e-05,
+          "initialize_from": "../moving_batch4_a43/logs/moving_batch4_a43/model_999.pt"
+        },
+        {
+          "run": "moving_batch7_b42",
+          "group": "b",
+          "seed": 42,
+          "gpu": 3,
+          "feedback_mode": "sustain",
+          "turn_share": 0.5,
+          "learning_rate": 5e-05,
+          "initialize_from": "../moving_batch4_a42/logs/moving_batch4_a42/model_999.pt"
+        },
+        {
+          "run": "moving_batch7_b43",
+          "group": "b",
+          "seed": 43,
+          "gpu": 3,
+          "feedback_mode": "sustain",
+          "turn_share": 0.5,
+          "learning_rate": 5e-05,
+          "initialize_from": "../moving_batch4_a43/logs/moving_batch4_a43/model_999.pt"
+        }
+      ]
     }
   ],
   "stop": {
