@@ -89,21 +89,24 @@ try:
             raise ValueError('Initialization is restricted to a clean finished round')
         for key in ['wheel_mode','wheel_slew','action_dim','control_dt','beta_shape_cap','source_sha256']:
             if previous.get(key)!=contract[key]:raise ValueError(f'Initialization contract mismatch: {key}')
-        if previous.get('task')!=sources[prior['commit']] or previous.get('feedback_mode')!='pose_feedback':
-            raise ValueError('Expected a pose-feedback source of the declared round')
+        if previous.get('task')!=sources[prior['commit']]:
+            raise ValueError('Initialization source is not the declared task of that round')
+        # The reward mode of the source no longer constrains the new run: weights are
+        # loaded and the optimizer restarted, so any validated mode is a legal source.
+        if previous.get('feedback_mode') not in ('command','pose_feedback','heading_feedback','sustain'):
+            raise ValueError('Unknown feedback mode on the initialization source')
         if prior['runner']['actor']!=config['actor'] or prior['runner']['critic']!=config['critic']:
             raise ValueError('Network or normalization interface changed')
         # The partial-load path (load_cfg + strict) kills the process on these
         # checkpoints without raising, while the plain loader is what evaluation
         # and resume already use successfully. Re-stage the weights instead:
         # drop the optimizer state and reset the iteration, then load normally.
-        staged=folder/'initial_weights.pt'
-        state=torch.load(initial,map_location='cpu',weights_only=False)
-        state.pop('optimizer_state_dict',None)
-        state['iter']=0
-        torch.save(state,staged)
-        runner.load(str(staged))
-        assert runner.current_learning_iteration==0
+        # Load exactly the way evaluation and resume do, then restart optimisation:
+        # anything that re-saves the state first dies inside the loader.
+        runner.load(str(initial))
+        runner.current_learning_iteration=0
+        runner.alg.optimizer.state.clear()
+        for group in runner.alg.optimizer.param_groups:group['lr']=args.learning_rate
         metadata['initialization']={'checkpoint':str(initial),'sha256':hashlib.sha256(initial.read_bytes()).hexdigest(),'source_commit':prior['commit'],'optimizer_loaded':False,'iteration_loaded':False}
         (folder/'config.json').write_text(json.dumps(metadata,indent=2))
     if not (args.evaluate or args.probe):runner.learn(num_learning_iterations=args.iterations,init_at_random_ep_len=False)
