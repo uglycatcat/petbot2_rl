@@ -11,6 +11,19 @@ def wrap(x):
     return torch.atan2(torch.sin(x), torch.cos(x))
 
 
+def projected_heading_rate(forward_axis, angular_velocity):
+    """Derivative of atan2(body-forward world y, x), with world angular velocity."""
+    dx=torch.cross(angular_velocity,forward_axis,dim=-1)
+    return (forward_axis[:,0]*dx[:,1]-forward_axis[:,1]*dx[:,0])/forward_axis[:,:2].square().sum(-1).clamp_min(1e-6)
+
+
+def heading_feedback_rewards(forward_error, heading_rate_error, distance, heading_error):
+    # Independent terms keep angular feedback useful while translation is imperfect.
+    tracking=.25*torch.exp(-forward_error.square()/.1**2)+.75*torch.exp(-heading_rate_error.square()/.12**2)
+    path=.5*torch.exp(-distance.square()/.2**2)+.5*torch.exp(-heading_error.square()/.15**2)
+    return tracking,path
+
+
 class MovingProgress:
     def __init__(self, n, device, dt, speed_limit=.3, yaw_limit=1., frame_range=(-1.,1.2), seed=42, feedback_mode="command"):
         self.n=n; self.device=device; self.dt=dt; self.seed=seed; self.feedback_mode=feedback_mode
@@ -110,8 +123,12 @@ class MovingProgress:
         feedback_target=pose_velocity_target(s['pos'][:,:2],s['yaw'],self.raw_reference,self.raw_yaw,self.command)
         feedback_error=torch.stack((s['forward'],s['vel'][:,5]),-1)-feedback_target
         tracking_reward=torch.exp(-error[:,0].square()/.15**2-error[:,1].square()/.4**2)
+        path_reward=torch.exp(-raw_distance.square()/.2**2-heading_error.square()/.3**2)
         if self.feedback_mode=='pose_feedback':
             tracking_reward=torch.exp(-feedback_error[:,0].square()/.1**2-feedback_error[:,1].square()/.2**2)
+        elif self.feedback_mode=='heading_feedback':
+            tracking_reward,path_reward=heading_feedback_rewards(
+                feedback_error[:,0],s['heading_rate']-feedback_target[:,1],raw_distance,heading_error)
         fixed_error=(s['q'][:,:3]-fixed).abs().amax(-1)
         tilt_rate=(s['g']-self.last_g).norm(dim=-1)/self.dt;self.last_g.copy_(s['g'])
         # Turning is allowed: no zero-speed requirement and no fixed world-yaw span.
@@ -139,7 +156,7 @@ class MovingProgress:
             support_reward=support*(.2+.8*(self.support_run/.3).clamp(0,1)),
             tracking=support*tracking_reward,
             raw_tracking=support*torch.exp(-raw_error[:,0].square()/.2**2-raw_error[:,1].square()/.5**2),
-            path=support*torch.exp(-raw_distance.square()/.2**2-heading_error.square()/.3**2),
+            path=support*path_reward,
             smooth=support/(1+(tilt_rate/.8).square()))
         return self.result
 

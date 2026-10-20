@@ -7,7 +7,7 @@ p.add_argument('--seed',type=int,default=42);p.add_argument('--log_dir',default=
 p.add_argument('--speed-limit',type=float,default=.3);p.add_argument('--yaw-limit',type=float,default=1.)
 p.add_argument('--frame-min',type=float,default=-1.);p.add_argument('--frame-max',type=float,default=1.2)
 p.add_argument('--initialize-from')
-p.add_argument('--feedback-mode',choices=['command','pose_feedback'],default='command')
+p.add_argument('--feedback-mode',choices=['command','pose_feedback','heading_feedback'],default='command')
 p.add_argument('--learning-rate',type=float,default=.0001)
 p.add_argument('--wheel-slew',type=float,choices=[120.,900.],default=120.)
 p.add_argument('--wheel-mode',choices=['independent','common_diff'],default='independent')
@@ -43,7 +43,7 @@ try:
     torch.manual_seed(args.seed)
     cfg=MovingEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
     cfg.speed_limit=args.speed_limit;cfg.yaw_limit=args.yaw_limit;cfg.frame_range=(args.frame_min,args.frame_max)
-    cfg.feedback_mode=args.feedback_mode;cfg.rewards.path.weight=4. if args.feedback_mode=='pose_feedback' else 1.
+    cfg.feedback_mode=args.feedback_mode;cfg.rewards.path.weight=1. if args.feedback_mode=='command' else 4.
     cfg.wheel_slew=args.wheel_slew;cfg.wheel_mode=args.wheel_mode;cfg.active_seconds=args.active_seconds;cfg.episode_length_s=args.active_seconds+6.
     env=ManagerBasedRLEnv(cfg=cfg);wrapped=Adapter(env)
     folder=pathlib.Path(args.log_dir);folder.mkdir(parents=True,exist_ok=True)
@@ -51,7 +51,7 @@ try:
     if dirty and not args.allow_dirty:raise RuntimeError('Commit source before formal execution')
     files=['train_moving.py',*['upright/'+x for x in ['moving.py','moving_task.py','task.py','distribution.py','model.py','asset_cfg.py','prepare.py']]]
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(x).read_bytes()).hexdigest() for x in files).encode()).hexdigest()
-    contract={'task':'moving_takeover_v3','feedback_mode':args.feedback_mode,'wheel_mode':args.wheel_mode,'wheel_slew':args.wheel_slew,'fingerprint':fingerprint,'action_dim':3,'control_dt':env.step_dt,'beta_shape_cap':128.,'source_sha256':SPEC['source_sha256']}
+    contract={'task':'moving_takeover_v4','feedback_mode':args.feedback_mode,'wheel_mode':args.wheel_mode,'wheel_slew':args.wheel_slew,'fingerprint':fingerprint,'action_dim':3,'control_dt':env.step_dt,'beta_shape_cap':128.,'source_sha256':SPEC['source_sha256']}
     if args.checkpoint:
         old=json.loads((pathlib.Path(args.checkpoint).parent/'config.json').read_text())
         if old.get('contract')!=contract:raise ValueError('Incompatible checkpoint: task, implementation or action/observation contract changed')
@@ -69,11 +69,12 @@ try:
     if args.initialize_from:
         initial=pathlib.Path(args.initialize_from)
         prior=json.loads((initial.parent/'config.json').read_text());previous=prior['contract']
-        if prior.get('commit')!='dd9733b69148874de6e072c435673166cf269898' or prior.get('working_tree_dirty'):
-            raise ValueError('Initialization is restricted to clean batch2 fixed version')
+        if prior.get('commit')!='34b0effd40c853a3e7fac0ebc1afa22a2e5943fe' or prior.get('working_tree_dirty'):
+            raise ValueError('Initialization is restricted to clean batch3 fixed version')
         for key in ['wheel_mode','wheel_slew','action_dim','control_dt','beta_shape_cap','source_sha256']:
             if previous.get(key)!=contract[key]:raise ValueError(f'Initialization contract mismatch: {key}')
-        if previous.get('task')!='moving_takeover_v2':raise ValueError('Expected moving v2 source')
+        if previous.get('task')!='moving_takeover_v3' or previous.get('feedback_mode')!='pose_feedback':
+            raise ValueError('Expected moving v3 pose-feedback source')
         if prior['runner']['actor']!=config['actor'] or prior['runner']['critic']!=config['critic']:
             raise ValueError('Network or normalization interface changed')
         runner.load(str(initial),load_cfg={'actor':True,'critic':True,'optimizer':False,'iteration':False},strict=True)
@@ -91,6 +92,8 @@ try:
         premature=~alive;warmup_failed=~alive;max_frame=0.;max_wheel=0.;fixed_error=0.;frame_symmetry=0.;trace=[];takeovers=[]
         criterion_names=['support','forward','yaw_rate','path','heading','fixed','roll','tilt_rate']
         criterion_counts=torch.zeros(n,8,device=device);tail_criterion_counts=criterion_counts.clone();tail_counts=torch.zeros(n,device=device)
+        heading_rate_error=counts.clone();physical_ended=~alive;path_ended=~alive
+        rear_missing=counts.clone()
         with torch.inference_mode():
             for tick in range(env.max_episode_length+3):
                 action=env.action_manager.get_term('moving')
@@ -113,6 +116,10 @@ try:
                 if last_forward is not None and active.any():max_acceleration=max(max_acceleration,float(((s['forward']-last_forward).abs()/env.step_dt)[active].max()))
                 last_forward=s['forward'].clone()
                 counts+=active;sum_error+=m['raw_error'].abs()*active[:,None];sum_path+=m['raw_distance']*active
+                heading_rate_error+=(s['heading_rate']-raw[:,1]).abs()*active
+                rear_missing+=active&~s['rear']
+                physical_ended |= before&m['physical_failure']
+                path_ended |= active&(m['raw_distance']>1.5)
                 premature |= before&done.bool()&~info['time_outs'].bool();warmup_failed |= before&m['warmup_failed']
                 delta=(applied-previous).abs()
                 max_frame=max(max_frame,float(delta[:,0].max())*(hi-lo)/2);max_wheel=max(max_wheel,float(delta[:,1:].max())*action.max_speed)
@@ -127,6 +134,9 @@ try:
         result=dict(count=n,taken_over=int(taken.sum()),success=int(success.sum()),maintained_final_2s=int((success&extra&extra_seen&~premature).sum()),final_success=int((final&~premature).sum()),premature=int(premature.sum()),warmup_failed=int(warmup_failed.sum()),unfinished=int(alive.sum()),
             criterion_names=criterion_names,criterion_fraction_per_env=(criterion_counts/counts.clamp_min(1)[:,None]).tolist(),tail_criterion_fraction_per_env=(tail_criterion_counts/tail_counts.clamp_min(1)[:,None]).tolist(),tail_samples=tail_counts.tolist(),
             success_per_env=success.tolist(),maintained_per_env=(success&extra&extra_seen&~premature).tolist(),premature_per_env=premature.tolist(),
+            heading_rate_mae_per_env=(heading_rate_error/counts.clamp_min(1)).tolist(),
+            rear_missing_fraction_per_env=(rear_missing/counts.clamp_min(1)).tolist(),
+            physical_failure_per_env=physical_ended.tolist(),path_failure_per_env=path_ended.tolist(),
             lifted=int(lifted.sum()),lifted_per_env=lifted.tolist(),first_lift_seconds=first_lift.tolist(),support_fraction_per_env=(support_count/counts.clamp_min(1)).tolist(),max_front_height_per_env=max_height.tolist(),
             raw_velocity_mae_per_env=(sum_error/counts.clamp_min(1)[:,None]).tolist(),raw_path_mae_per_env=(sum_path/counts.clamp_min(1)).tolist(),active_samples=counts.tolist(),nonzero_command_low_speed_fraction=(low_speed/moving_samples.clamp_min(1)).tolist(),max_forward_acceleration=max_acceleration,
             max_frame_target_step=max_frame,max_wheel_target_step=max_wheel,max_fixed_error=fixed_error,frame_symmetry_target_error=frame_symmetry,takeovers=takeovers,contract=contract)

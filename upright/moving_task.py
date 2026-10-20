@@ -5,12 +5,15 @@ from isaaclab.managers import ObservationGroupCfg as ObsGroup, RewardTermCfg as 
 from isaaclab.utils import configclass
 from isaaclab.envs import mdp as lab_mdp
 from .task import UprightEnvCfg, SPEC, POSITION_JOINTS, REAR_WHEELS, FRONT_WHEELS, tensor, state as base_state
-from .moving import MovingProgress, slew, wheel_targets
+from .moving import MovingProgress, slew, wheel_targets, projected_heading_rate
 
 
 def state(env):
     s=base_state(env);h=s['heading'];heading=h/h.norm(dim=-1,keepdim=True).clamp_min(1e-6)
     s['yaw']=torch.atan2(heading[:,1],heading[:,0]);s['forward']=(s['vel'][:,:2]*heading).sum(-1)
+    x,y,z,w=s['quat'].unbind(-1)
+    forward_axis=torch.cat((h,(2*(x*z-w*y))[:,None]),-1)
+    s['heading_rate']=projected_heading_rate(forward_axis,s['vel'][:,3:])
     sensor=env.scene['contact_forces']
     sf=env.upright_ids[2];f=tensor(sensor.data.net_forces_w)
     body=[i for i,n in enumerate(sensor.body_names) if n not in (*REAR_WHEELS,*FRONT_WHEELS)]

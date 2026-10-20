@@ -17,7 +17,9 @@ record='''                diagnostic.append(dict(active=active.tolist(),since=si
                     heading_error=m['heading_error'].tolist(),fixed_error=m['fixed_error'].tolist(),
                     roll=s['g'][:,1].tolist(),tilt_rate=m['tilt_rate'].tolist(),
                     physical_failure=m['physical_failure'].tolist(),
-                    pos=s['pos'].tolist(),raw=raw.tolist(),forward=s['forward'].tolist()))
+                    pos=s['pos'].tolist(),raw=raw.tolist(),forward=s['forward'].tolist(),
+                    rear=s['rear'].tolist(),other=s['other'].tolist(),front_z=s['front_z'].tolist(),
+                    gravity=s['g'].tolist(),yaw=s['yaw'].tolist(),velocity=s['vel'].tolist()))
 '''
 code=code.replace(needle,record+needle)
 needle="        print({k:v for k,v in result.items() if not isinstance(v,(list,dict))})"

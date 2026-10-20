@@ -78,3 +78,20 @@ assert out[0,1]>0 and out[1,1]<0
 assert ((out-cmd).abs()<=torch.tensor([.1,.25],device=device)+1e-6).all()
 assert torch.equal(pose_velocity_target(pos,yaw,pos,yaw,cmd),cmd)
 print('PASS bounded pose feedback, rotation invariance, reverse steering and zero-error identity')
+
+# Heading derivative must match independent finite world-axis rotation, including tilt.
+from upright.moving import projected_heading_rate,heading_feedback_rewards
+axis=torch.tensor([[1.,0.,0.],[.3,.4,.8660254],[.6,-.2,.7745967]],device=device,dtype=torch.float64)
+omega=torch.tensor([[0.,0.,.4],[.2,-.4,.3],[-.3,.2,-.5]],device=device,dtype=torch.float64)
+eps=1e-6;unit=omega/omega.norm(dim=-1,keepdim=True);angle=omega.norm(dim=-1,keepdim=True)*eps
+rot=axis*angle.cos()+torch.cross(unit,axis,dim=-1)*angle.sin()+unit*(unit*axis).sum(-1,keepdim=True)*(1-angle.cos())
+finite=(torch.atan2(rot[:,1],rot[:,0])-torch.atan2(axis[:,1],axis[:,0]))/eps
+assert torch.allclose(projected_heading_rate(axis,omega),finite,atol=1e-6)
+assert (projected_heading_rate(axis,omega)[1:]-omega[1:,2]).abs().min()>.05
+bad=torch.tensor([.5],device=device);zero=bad*0
+good_turn,_=heading_feedback_rewards(bad,zero,bad,zero)
+bad_turn,_=heading_feedback_rewards(bad,bad,bad,zero)
+assert good_turn>bad_turn+.7,'Translation error must not erase the turn reward'
+tr,pa=heading_feedback_rewards(zero,zero,zero,zero)
+assert tr==1 and pa==1
+print('PASS tilted heading-rate finite difference and independently bounded turning reward')

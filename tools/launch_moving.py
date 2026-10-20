@@ -16,13 +16,13 @@ for line in rows.splitlines():
  gpu,total,used=map(int,line.split(','));assert used+4000<total*.78,(gpu,used,total)
 state=dict(name=a.name,commit=commit,container=container,thread=os.environ.get('CODEX_THREAD_ID'),started_at=time.strftime('%FT%T%z'),iterations=a.iterations,checkpoints=[250,750,a.iterations-1],gate=gate,train={})
 def save():path.write_text(json.dumps(state,indent=2))
-# Third batch isolates pose feedback reward; all groups use the same easier envelope.
+# Fourth batch compares explicit heading rewards with continued pose feedback.
 for label,seed,gpu in [('b',42,2),('b',43,3),('a',42,0),('a',43,1)]:
  speed,yaw,lo,hi=.1,.3,-.3,.3
  wheel_mode='common_diff'
  wheel_slew=900.
- feedback_mode='pose_feedback' if label=='b' else 'command'
- initial=f'../moving_batch2_b{seed}/logs/moving_batch2_b{seed}/model_1499.pt'
+ feedback_mode='heading_feedback' if label=='b' else 'pose_feedback'
+ initial=f'../moving_batch3_b{seed}/logs/moving_batch3_b{seed}/model_999.pt'
  name=f'{a.name}_{label}{seed}';dst=runs/name
  if dst.exists():raise RuntimeError(f'Existing run: {name}')
  subprocess.run(['git','clone','--no-local',str(source),str(dst)],env={**os.environ,'GIT_LFS_SKIP_SMUDGE':'1'},check=True)
