@@ -11,6 +11,7 @@ p.add_argument('--feedback-mode',choices=['command','pose_feedback','heading_fee
 p.add_argument('--turn-share',type=float,default=0.)
 p.add_argument('--learning-rate',type=float,default=.0001)
 p.add_argument('--save-interval',type=int,default=250)
+p.add_argument('--contact-loss-weight',type=float,default=0.)
 p.add_argument('--wheel-slew',type=float,choices=[120.,900.],default=120.)
 p.add_argument('--wheel-mode',choices=['independent','common_diff'],default='independent')
 p.add_argument('--active-seconds',type=float,default=12.);p.add_argument('--checkpoint')
@@ -51,6 +52,8 @@ try:
     # The dense heading-window credit belongs to the sustain recipe only; a control
     # group must keep it switched off or the comparison is not a control.
     cfg.rewards.heading_sustain.weight=2. if args.feedback_mode=='sustain' else 0.
+    if not 0<=args.contact_loss_weight<=20:raise ValueError('contact-loss weight outside validated bound')
+    cfg.rewards.contact_loss.weight=args.contact_loss_weight
     cfg.wheel_slew=args.wheel_slew;cfg.wheel_mode=args.wheel_mode;cfg.active_seconds=args.active_seconds;cfg.episode_length_s=args.active_seconds+6.
     env=ManagerBasedRLEnv(cfg=cfg);wrapped=Adapter(env)
     folder=pathlib.Path(args.log_dir);folder.mkdir(parents=True,exist_ok=True)
@@ -58,7 +61,7 @@ try:
     if dirty and not args.allow_dirty:raise RuntimeError('Commit source before formal execution')
     files=['train_moving.py',*['upright/'+x for x in ['moving.py','moving_task.py','task.py','distribution.py','model.py','asset_cfg.py','prepare.py']]]
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(x).read_bytes()).hexdigest() for x in files).encode()).hexdigest()
-    contract={'task':'moving_takeover_v5','feedback_mode':args.feedback_mode,'wheel_mode':args.wheel_mode,'wheel_slew':args.wheel_slew,'turn_share':args.turn_share,'fingerprint':fingerprint,'action_dim':3,'control_dt':env.step_dt,'beta_shape_cap':128.,'source_sha256':SPEC['source_sha256']}
+    contract={'task':'moving_takeover_v6','feedback_mode':args.feedback_mode,'wheel_mode':args.wheel_mode,'wheel_slew':args.wheel_slew,'turn_share':args.turn_share,'fingerprint':fingerprint,'action_dim':3,'control_dt':env.step_dt,'beta_shape_cap':128.,'source_sha256':SPEC['source_sha256']}
     if args.checkpoint:
         old=json.loads((pathlib.Path(args.checkpoint).parent/'config.json').read_text())
         if old.get('contract')!=contract:raise ValueError('Incompatible checkpoint: task, implementation or action/observation contract changed')
@@ -80,7 +83,8 @@ try:
         # when a round finishes; never seed from an unverified or dirty tree.
         sources={'34b0effd40c853a3e7fac0ebc1afa22a2e5943fe':'moving_takeover_v3',
                  '4c1bd237c02181c2869fe11dd39a33a5b5798b67':'moving_takeover_v4',
-                 '29fd27612de07a6acbb134f3cacd25c14b0fea67':'moving_takeover_v5'}
+                 '29fd27612de07a6acbb134f3cacd25c14b0fea67':'moving_takeover_v5',
+                 '1da1527046822aed40bb41360b42f71c07b586d4':'moving_takeover_v5'}
         if prior.get('working_tree_dirty') or prior.get('commit') not in sources:
             raise ValueError('Initialization is restricted to a clean finished round')
         for key in ['wheel_mode','wheel_slew','action_dim','control_dt','beta_shape_cap','source_sha256']:
@@ -89,7 +93,16 @@ try:
             raise ValueError('Expected a pose-feedback source of the declared round')
         if prior['runner']['actor']!=config['actor'] or prior['runner']['critic']!=config['critic']:
             raise ValueError('Network or normalization interface changed')
-        runner.load(str(initial),load_cfg={'actor':True,'critic':True,'optimizer':False,'iteration':False},strict=True)
+        # The partial-load path (load_cfg + strict) kills the process on these
+        # checkpoints without raising, while the plain loader is what evaluation
+        # and resume already use successfully. Re-stage the weights instead:
+        # drop the optimizer state and reset the iteration, then load normally.
+        staged=folder/'initial_weights.pt'
+        state=torch.load(initial,map_location='cpu',weights_only=False)
+        state.pop('optimizer_state_dict',None)
+        state['iter']=0
+        torch.save(state,staged)
+        runner.load(str(staged))
         assert runner.current_learning_iteration==0
         metadata['initialization']={'checkpoint':str(initial),'sha256':hashlib.sha256(initial.read_bytes()).hexdigest(),'source_commit':prior['commit'],'optimizer_loaded':False,'iteration_loaded':False}
         (folder/'config.json').write_text(json.dumps(metadata,indent=2))

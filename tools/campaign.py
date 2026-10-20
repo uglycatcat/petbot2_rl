@@ -493,7 +493,7 @@ def cmd_gate(args):
                '--headless', '--device', 'cuda:0', '--num_envs', '128',
                '--iterations', str(gate['short_iterations']), '--seed', '20261019',
                '--log_dir', f'/workspace/runs/{gdir}/{name}',
-               *envelope_args(plan, var)]
+               *envelope_args(plan, var), *init_args(var)]
         if args.dry_run:
             print('dry-run:', ' '.join(cmd))
             continue
@@ -543,6 +543,13 @@ def cmd_gate(args):
         gate['reload'][label] = {k: result[k] for k in
                                  ('taken_over', 'lifted', 'success', 'maintained_final_2s',
                                   'premature', 'warmup_failed', 'unfinished')}
+    # A reload that cannot lift every environment is not the same policy the
+    # short run was verified on; the gate must not pass on that alone.
+    short = [(k, v) for k, v in gate['reload'].items() if v.get('lifted', 0) < 64]
+    if short:
+        save(out / 'gate.json', gate)
+        print('reload failed to lift all environments:', short)
+        return 2
     gate['engineering_passed'] = True
     save(out / 'gate.json', gate)
     print(json.dumps(gate, indent=2))

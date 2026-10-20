@@ -37,7 +37,7 @@ class MovingProgress:
         self.reference=zeros(n,2); self.raw_reference=zeros(n,2)
         self.yaw=zeros(n); self.raw_yaw=zeros(n); self.frame=zeros(n)
         self.peak=zeros(n); self.lifted=zeros(n).bool(); self.ever=zeros(n).bool()
-        self.support_run=zeros(n); self.heading_run=zeros(n)
+        self.support_run=zeros(n); self.heading_run=zeros(n); self.rear_prev=torch.zeros(n,device=device,dtype=torch.bool)
         self.good=torch.zeros(self.window,n,device=device,dtype=torch.bool)
         self.cursor=0; self.last_g=zeros(n,3); self.mode=self.mode_pattern(n,device,turn_share)
         self.result={}
@@ -89,6 +89,7 @@ class MovingProgress:
 
     def reset(self, ids, pos, heading):
         for x in (self.active,self.age,self.since,self.ready,self.peak,self.lifted,self.ever,self.support_run,self.heading_run):x[ids]=0
+        self.rear_prev[ids]=False
         self.generation[ids]+=1;self.command_count[ids]=0
         self.external[ids]=False; self.good[:,ids]=False; self.last_g[ids]=torch.tensor([0.,0.,-1.],device=self.device)
         self.frame[ids]=self.frame_range[0]+self.uniform(ids,3)*(self.frame_range[1]-self.frame_range[0])
@@ -159,6 +160,10 @@ class MovingProgress:
         # |heading error| inside it continuously, so reward the run length, not the instant.
         heading_ok=support&(heading_error.abs()<.25)
         self.heading_run=torch.where(heading_ok,self.heading_run+self.dt,0.)
+        # Losing rear contact after the lift is what breaks the 1 s support window:
+        # charge the event itself, not the instantaneous absence of support.
+        contact_loss=self.active&self.lifted&self.rear_prev&(~s['rear'])
+        self.rear_prev.copy_(s['rear'])
         self.good[self.cursor]=good;self.cursor=(self.cursor+1)%self.window
         held=self.good.all(0)&(self.since>=1.)
         fresh=held&~self.ever;self.ever |= held
@@ -181,6 +186,7 @@ class MovingProgress:
             prepare=self.active*(.1*prepare_pitch*(1-self.since/2).clamp(0,1)+2.*lift),
             support_reward=support*(.2+.8*(self.support_run/.3).clamp(0,1)),
             heading_sustain=support*(self.heading_run/1.).clamp(0,1),
+            contact_loss=contact_loss.float(),
             tracking=support*tracking_reward,
             raw_tracking=support*torch.exp(-raw_error[:,0].square()/.2**2-raw_error[:,1].square()/.5**2),
             path=support*path_reward,

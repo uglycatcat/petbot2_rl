@@ -106,6 +106,7 @@ def reward(env,kind):
     s,m=metrics(env);a=env.action_manager.get_term('moving')
     if kind in ('fresh','lift_event'):return m[kind].float()/env.step_dt
     if kind=='failure':return (m['physical_failure']&m['active']).float()/env.step_dt
+    if kind=='contact_loss':return m['contact_loss'].float()/env.step_dt
     if kind=='rate':return (a.applied-a.previous).square().sum(-1)*m['active']
     if kind=='deviation':return m['raw_distance'].clamp(max=1.5).square()*m['active']*m['transition_scale']
     return m[kind].float()
@@ -143,6 +144,7 @@ class RewardsCfg:
     lift=RewTerm(func=reward,weight=3.,params={'kind':'lift_event'})
     support=RewTerm(func=reward,weight=2.,params={'kind':'support_reward'})
     heading_sustain=RewTerm(func=reward,weight=0.,params={'kind':'heading_sustain'})
+    contact_loss=RewTerm(func=reward,weight=0.,params={'kind':'contact_loss'})
     transition_error=RewTerm(func=reward,weight=-.2,params={'kind':'transition_error'})
     tracking=RewTerm(func=reward,weight=2.,params={'kind':'tracking'})
     raw_tracking=RewTerm(func=reward,weight=1.,params={'kind':'raw_tracking'})

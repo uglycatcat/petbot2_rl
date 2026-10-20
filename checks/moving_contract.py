@@ -133,3 +133,21 @@ def path_reward(prog,heading_error):
 tight=path_reward(p2,.20);loose=path_reward(p3,.20)
 assert tight<loose,'the sustain scale must punish a 0.20 rad heading error harder'
 print('PASS turn-share mixture and dense heading-window credit')
+
+# Losing rear contact after the lift is charged as an event, not as missing support.
+q=MovingProgress(n,device,dt);q.active[:]=True;q.since[:]=3;q.lifted[:]=True
+s4=dict(s2)
+q.rear_prev[:]=True
+s4['rear']=torch.ones(n,device=device,dtype=torch.bool)
+m1=q.update(s4,s4['q'].new_zeros(3))
+assert float(m1['contact_loss'].sum())==0.,'holding contact must not be charged'
+s4['rear']=torch.zeros(n,device=device,dtype=torch.bool)
+m2=q.update(s4,s4['q'].new_zeros(3))
+assert float(m2['contact_loss'].sum())==n,'a lost contact must be charged once'
+m3=q.update(s4,s4['q'].new_zeros(3))
+assert float(m3['contact_loss'].sum())==0.,'staying off the ground must not be charged twice'
+# Before the lift the same signal is not a loss.
+q2=MovingProgress(n,device,dt);q2.active[:]=True;q2.since[:]=3;q2.lifted[:]=False;q2.rear_prev[:]=True
+m4=q2.update(s4,s4['q'].new_zeros(3))
+assert float(m4['contact_loss'].sum())==0.,'no charge before the lift'
+print('PASS rear-contact loss is an event reward, once per loss, lift-gated')
