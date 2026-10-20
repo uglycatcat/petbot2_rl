@@ -231,7 +231,28 @@
           "learning_rate": 3e-05,
           "initialize_from": "../moving_batch5_b43/logs/moving_batch5_b43/model_250.pt"
         }
-      ]
+      ],
+      "gate": {
+        "gpus": [
+          2,
+          3
+        ],
+        "smoke_iterations": 100,
+        "variants": [
+          {
+            "label": "a",
+            "feedback_mode": "sustain",
+            "turn_share": 0.5,
+            "learning_rate": 0.0001
+          },
+          {
+            "label": "b",
+            "feedback_mode": "sustain",
+            "turn_share": 0.5,
+            "learning_rate": 3e-05
+          }
+        ]
+      }
     }
   ],
   "stop": {

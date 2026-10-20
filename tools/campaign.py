@@ -462,6 +462,9 @@ def cmd_gate(args):
     if code != 0:
         print(f'contract check failed ({code}): {contract}')
         return 2
+    if not rnd.get('gate', {}).get('variants'):
+        print('round has no gate variants; refusing to write a gate record')
+        return 2
     gate = dict(engineering_passed=False, tested_commit=commit, contract='contract.log',
                 short_iterations=rnd.get('gate', {}).get('smoke_iterations', 100),
                 created_at=stamp(), smoke={}, reload={})
