@@ -81,3 +81,14 @@ python3 tools/campaign.py drive  --timeout-h 6
 
 状态目录 `demo_project/runs/_<batch>/{analysis,decision}.json`；需要设计变更时
 `demo_project/runs/_<batch>/review_request.md`。
+
+## 本轮踩到并已修复的坑（2026-10-20/21）
+
+| 现象 | 根因 | 修法 |
+|---|---|---|
+| 训练/评估进程静默退出，退出码 0，日志停在环境初始化 | `train_moving.py` 的异常被 `finally: app.close()` 吞掉，Isaac 的关闭把退出码变成 0 | 判断失败看**产物**（`evaluation.json`、检查点）而不是退出码；容器内排查时在 `except` 里写文件 |
+| 64 次评估里 14 次失败，全部指向 GPU2 | 训练 envelope 里带了 `--initialize-from`，评估复用该 envelope 后同时收到初始化和检查点，脚本主动报错退出 | envelope 只存"训练参数"，初始化源单独传（`init_args`） |
+| 公共宽范围评估对带转向配比的运行失败 | `evaluate_moving.py` 重建参数时只搬运 wheel-mode/slew/feedback-mode | 增加 `--turn-share` 搬运 |
+| 计划里的 100/175 检查点从不出现 | 保存间隔硬编码 250 | `--save-interval` 参数化，由 plan 传入 |
+| 批次被判断为 `in_flight` 而拒绝重开 | 启动器在最后写 status，被中断时状态已落盘 | 重开前把 round 状态改回 `planned` 并清掉 `launch_status.json` |
+| 带 `--frame-min=-0.3` 的重评参数解析错位 | 按两个 token 一组配对，等号写法让后续全部移位 | 按 flag 逐 token 解析 |
