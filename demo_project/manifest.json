@@ -44,20 +44,20 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "34b0effd40c853a3e7fac0ebc1afa22a2e5943fe",
+      "verified_commit": "4c1bd237c02181c2869fe11dd39a33a5b5798b67",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "moving_batch2_complete_16_evals; moving_batch3_four_runs_in_ppo_evaluation_queue_waiting",
-      "local_validation": "Batch2 B final native lifted64/64 both; success56/53, maintained2/1. All four trains and16 evals complete. Tail diagnosis isolates path/heading drift. CUDA bounded pose feedback contracts passed; initialization preserves both source policies exactly (per-env path/lift/support differences0); A/B128x100 PPO all36 scalar tags finite; reload64/64 lift, maintained4/3, no premature/warmup failure/unfinished; batch3 fixed34b0eff all four2048x1000 runs in PPO at2026-10-20 11:38+08; eval queue PID931126 waiting. See docs/upright_moving_v3.md.",
+      "status": "moving_batch3_complete_4_trains_16_evals; moving_batch4_four_runs_in_ppo_evaluation_queue_waiting",
+      "local_validation": "Batch3 B native maintained16/13 of64 vs A9/8; wide B maintained1/1, premature29/29. V4 CUDA heading-rate/reward contracts pass; exact initialization parity both seeds; both128x100 PPO all36 scalar tags finite; reload lifted64/64 and success64/64 both, maintained A11/B13, premature A1/B0. Four-GPU fixed4c1bd23 batch4 all in PPO at2026-10-20 16:43+08;16:44 actual processes/configs verified,16-eval queue PID1126412 alive, maximum card memory74.6%. See docs/upright_moving_v4.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "moving_batch3_a42",
-        "moving_batch3_a43",
-        "moving_batch3_b42",
-        "moving_batch3_b43"
+        "moving_batch4_a42",
+        "moving_batch4_a43",
+        "moving_batch4_b42",
+        "moving_batch4_b43"
       ]
     }
   ]
