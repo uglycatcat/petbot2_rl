@@ -629,7 +629,8 @@ def cmd_launch(args):
                '--gpu', str(var['gpu']), '--reserve-mib', '4000', '--entrypoint', 'train_moving.py',
                '--workdir', f"/workspace/runs/{var['run']}", '--log', str(out / (var['run'] + '.log')),
                '--headless', '--device', 'cuda:0', '--num_envs', str(plan.get('num_envs', 2048)),
-               '--iterations', str(state['iterations']), '--seed', str(var['seed']), *envelope,
+               '--iterations', str(state['iterations']), '--seed', str(var['seed']),
+               '--save-interval', str(rnd.get('save_interval', 250)), *envelope,
                *init_args(var),
                '--log_dir', f"/workspace/runs/{var['run']}/logs/{var['run']}"]
         with (out / (var['run'] + '_guard.log')).open('w') as f:

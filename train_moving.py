@@ -10,6 +10,7 @@ p.add_argument('--initialize-from')
 p.add_argument('--feedback-mode',choices=['command','pose_feedback','heading_feedback','sustain'],default='command')
 p.add_argument('--turn-share',type=float,default=0.)
 p.add_argument('--learning-rate',type=float,default=.0001)
+p.add_argument('--save-interval',type=int,default=250)
 p.add_argument('--wheel-slew',type=float,choices=[120.,900.],default=120.)
 p.add_argument('--wheel-mode',choices=['independent','common_diff'],default='independent')
 p.add_argument('--active-seconds',type=float,default=12.);p.add_argument('--checkpoint')
@@ -63,7 +64,7 @@ try:
         if old.get('contract')!=contract:raise ValueError('Incompatible checkpoint: task, implementation or action/observation contract changed')
     if args.evaluate and not (args.checkpoint or args.initialize_from):raise ValueError('Evaluation requires a checkpoint')
     home=(2*SPEC['joints']['left_frame']['default']-lo-hi)/(hi-lo)
-    config=dict(seed=args.seed,device=args.device,num_steps_per_env=32,save_interval=250,logger='tensorboard',experiment_name='upright_moving',run_name=f'seed{args.seed}',
+    config=dict(seed=args.seed,device=args.device,num_steps_per_env=32,save_interval=args.save_interval,logger='tensorboard',experiment_name='upright_moving',run_name=f'seed{args.seed}',
         obs_groups={'actor':['policy'],'critic':['policy']},
         actor=dict(class_name='MLPModel',hidden_dims=[128,128],activation='elu',obs_normalization=True,distribution_cfg=dict(class_name='upright.distribution:UprightBetaDistribution',initial_mean=[home,0.,0.],initial_std=[.35,.45,.45],shape_cap=128.)),
         critic=dict(class_name='MLPModel',hidden_dims=[256,128],activation='elu',obs_normalization=True),
