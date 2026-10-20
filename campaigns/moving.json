@@ -364,14 +364,14 @@
             "feedback_mode": "sustain",
             "turn_share": 0.5,
             "learning_rate": 3e-05,
-            "initialize_from": "../moving_batch6_a42/logs/moving_batch6_a42/model_75.pt"
+            "initialize_from": "/workspace/runs/moving_batch6_a42/logs/moving_batch6_a42/model_75.pt"
           },
           {
             "label": "b",
             "feedback_mode": "sustain",
             "turn_share": 0.5,
             "learning_rate": 3e-05,
-            "initialize_from": "../moving_batch6_a42/logs/moving_batch6_a42/model_75.pt"
+            "initialize_from": "/workspace/runs/moving_batch6_a42/logs/moving_batch6_a42/model_75.pt"
           }
         ]
       },
