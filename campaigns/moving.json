@@ -180,7 +180,7 @@
     {
       "id": "moving_batch6",
       "batch": "moving_batch6",
-      "status": "planned",
+      "status": "in_flight",
       "commit": "1da1527046822aed40bb41360b42f71c07b586d4",
       "gate_dir": "moving_batch6",
       "doc": "docs/upright_moving_v6.md",

@@ -13,6 +13,7 @@ for name,job in launch['train'].items():
  slew=job['envelope'][job['envelope'].index('--wheel-slew')+1] if '--wheel-slew' in job['envelope'] else None
  extras=['--wheel-slew',slew] if slew else []
  if '--feedback-mode' in job['envelope']:extras+=['--feedback-mode',job['envelope'][job['envelope'].index('--feedback-mode')+1]]
+ if '--turn-share' in job['envelope']:extras+=['--turn-share',job['envelope'][job['envelope'].index('--turn-share')+1]]
  jobs.append((name,job,launch['iterations']-1,'common',['--speed-limit','0.3','--yaw-limit','1.0','--frame-min=-1.0','--frame-max','1.2','--wheel-mode',mode,*extras]))
 deadline=time.time()+36*3600
 while time.time()<deadline:
