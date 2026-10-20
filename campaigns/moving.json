@@ -342,7 +342,7 @@
       "id": "moving_batch8",
       "batch": "moving_batch8",
       "status": "planned",
-      "commit": "f139676",
+      "commit": "069418b5653c42c0b09e0393a95f5c2b3b64d79c",
       "gate_dir": "moving_batch8",
       "doc": "docs/upright_moving_v8.md",
       "iterations": 150,
