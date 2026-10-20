@@ -22,7 +22,7 @@ for label,seed,gpu in [('b',42,2),('b',43,3),('a',42,0),('a',43,1)]:
  wheel_mode='common_diff'
  wheel_slew=900.
  feedback_mode='pose_feedback' if label=='b' else 'command'
- initial=f'/workspace/runs/moving_batch2_b{seed}/logs/moving_batch2_b{seed}/model_1499.pt'
+ initial=f'../moving_batch2_b{seed}/logs/moving_batch2_b{seed}/model_1499.pt'
  name=f'{a.name}_{label}{seed}';dst=runs/name
  if dst.exists():raise RuntimeError(f'Existing run: {name}')
  subprocess.run(['git','clone','--no-local',str(source),str(dst)],env={**os.environ,'GIT_LFS_SKIP_SMUDGE':'1'},check=True)
