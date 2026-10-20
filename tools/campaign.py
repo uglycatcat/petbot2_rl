@@ -443,6 +443,9 @@ def cmd_gate(args):
         return 2
     out = batch_dir(rnd.get('gate_dir', rnd['id']))
     out.mkdir(parents=True, exist_ok=True)
+    # Container-side work directory: the host directory batch_dir() creates is
+    # mounted as /workspace/runs/<name-with-underscore>, so both must agree.
+    gdir = '_' + (rnd.get('gate_dir') or rnd['id'])
     commit = rnd['commit']
     if not code_matches(commit):
         print(f'source checkout is not the clean fixed commit {commit[:7]}')
@@ -467,15 +470,26 @@ def cmd_gate(args):
         gpu = gpus[i % len(gpus)]
         name = f"smoke_{var['label']}"
         log = out / (name + '.log')
+        exit_file = out / (name + '.exit.json')
+        done = load(exit_file)
         if log.exists():
-            print(f'{log} exists; inspect instead of rerunning')
+            # Reuse an already finished short run instead of paying for it twice,
+            # but only when its own record proves it finished cleanly.
+            text = log.read_text(errors='replace')
+            if done and done.get('exit_code') == 0 and 'Learning iteration' in text and 'nan' not in text.lower():
+                gate['smoke'][name] = dict(exit_code=0, all_finite=True,
+                                           iterations=len(re.findall(r'Learning iteration', text)),
+                                           reused=True)
+                print(f'{name}: reusing the finished short run')
+                continue
+            print(f'{log} exists without a clean record; inspect instead of rerunning')
             return 2
         cmd = ['python3', str(DEMO / 'tools/run_guarded.py'), '--container', CONTAINER,
                '--gpu', str(gpu), '--reserve-mib', '3500', '--entrypoint', 'train_moving.py',
                '--workdir', '/workspace/demo_project/upright_rl_demo', '--log', str(log),
                '--headless', '--device', 'cuda:0', '--num_envs', '128',
                '--iterations', str(gate['short_iterations']), '--seed', '20261019',
-               '--log_dir', f'/workspace/runs/{rnd.get("gate_dir", rnd["id"])}/{name}',
+               '--log_dir', f'/workspace/runs/{gdir}/{name}',
                *envelope_args(plan, var)]
         if args.dry_run:
             print('dry-run:', ' '.join(cmd))
@@ -500,13 +514,21 @@ def cmd_gate(args):
     for i, var in enumerate(rnd.get('gate', {}).get('variants', [])):
         label = var['label']
         name = f'reload_{label}'
-        ckpt = f'/workspace/runs/{rnd.get("gate_dir", rnd["id"])}/smoke_{label}/model_{gate["short_iterations"] - 1}.pt'
+        ckpt = f'/workspace/runs/{gdir}/smoke_{label}/model_{gate["short_iterations"] - 1}.pt'
+        existing = load(out / name / 'evaluation.json')
+        if existing:
+            gate['reload'][label] = {k: existing[k] for k in
+                                     ('taken_over', 'lifted', 'success', 'maintained_final_2s',
+                                      'premature', 'warmup_failed', 'unfinished')}
+            gate['reload'][label]['reused'] = True
+            print(f'{name}: reusing the finished reload')
+            continue
         cmd = ['python3', str(DEMO / 'tools/run_guarded.py'), '--container', CONTAINER,
                '--gpu', str(gpus[i % len(gpus)]), '--reserve-mib', '3500',
                '--entrypoint', 'train_moving.py', '--workdir', '/workspace/demo_project/upright_rl_demo',
                '--log', str(out / (name + '.log')), '--headless', '--device', 'cuda:0',
                '--num_envs', '64', '--evaluate', '--seed', '20261019', '--checkpoint', ckpt,
-               '--log_dir', f'/workspace/runs/{rnd.get("gate_dir", rnd["id"])}/{name}',
+               '--log_dir', f'/workspace/runs/{gdir}/{name}',
                *envelope_args(plan, var)]
         code = gate_run(cmd, out / (name + '_guard.log'))
         result = load(out / name / 'evaluation.json')
