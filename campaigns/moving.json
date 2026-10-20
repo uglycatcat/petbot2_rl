@@ -96,7 +96,7 @@
     {
       "id": "moving_batch5",
       "batch": "moving_batch5",
-      "status": "planned",
+      "status": "done",
       "commit": "29fd27612de07a6acbb134f3cacd25c14b0fea67",
       "doc": "docs/upright_moving_v5.md",
       "iterations": 1500,
@@ -157,6 +157,79 @@
           "feedback_mode": "sustain",
           "turn_share": 0.5,
           "initialize_from": "../moving_batch4_a43/logs/moving_batch4_a43/model_999.pt"
+        }
+      ],
+      "verdict": "reciped_improves_heading_but_checkpoint_peaks_at_250",
+      "result": {
+        "hold_a": {
+          "250": 42,
+          "750": 41,
+          "1499": 34
+        },
+        "hold_b": {
+          "250": 53,
+          "750": 51,
+          "1499": 46
+        },
+        "wide_a": 1,
+        "wide_b": 1,
+        "path_a": 0.0266,
+        "path_b": 0.0314
+      }
+    },
+    {
+      "id": "moving_batch6",
+      "batch": "moving_batch6",
+      "status": "planned",
+      "commit": "29fd27612de07a6acbb134f3cacd25c14b0fea67",
+      "gate_dir": "moving_batch5",
+      "doc": "docs/upright_moving_v6.md",
+      "iterations": 600,
+      "checkpoints": [
+        150,
+        300,
+        599
+      ],
+      "variants": [
+        {
+          "run": "moving_batch6_a42",
+          "group": "a",
+          "seed": 42,
+          "gpu": 2,
+          "feedback_mode": "sustain",
+          "turn_share": 0.5,
+          "learning_rate": 0.0001,
+          "initialize_from": "../moving_batch5_b42/logs/moving_batch5_b42/model_250.pt"
+        },
+        {
+          "run": "moving_batch6_a43",
+          "group": "a",
+          "seed": 43,
+          "gpu": 3,
+          "feedback_mode": "sustain",
+          "turn_share": 0.5,
+          "learning_rate": 0.0001,
+          "initialize_from": "../moving_batch5_b43/logs/moving_batch5_b43/model_250.pt"
+        },
+        {
+          "run": "moving_batch6_b42",
+          "group": "b",
+          "seed": 42,
+          "gpu": 2,
+          "feedback_mode": "sustain",
+          "turn_share": 0.5,
+          "learning_rate": 3e-05,
+          "initialize_from": "../moving_batch5_b42/logs/moving_batch5_b42/model_250.pt"
+        },
+        {
+          "run": "moving_batch6_b43",
+          "group": "b",
+          "seed": 43,
+          "gpu": 3,
+          "feedback_mode": "sustain",
+          "turn_share": 0.5,
+          "learning_rate": 3e-05,
+          "initialize_from": "../moving_batch5_b43/logs/moving_batch5_b43/model_250.pt"
         }
       ]
     }

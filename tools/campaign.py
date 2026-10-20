@@ -551,7 +551,7 @@ def envelope_args(plan, var):
     args = ['--speed-limit', str(env['speed_limit']), '--yaw-limit', str(env['yaw_limit']),
             f"--frame-min={env['frame_min']}", '--frame-max', str(env['frame_max']),
             '--wheel-mode', env['wheel_mode'], '--wheel-slew', str(env['wheel_slew']),
-            '--learning-rate', str(env['learning_rate'])]
+            '--learning-rate', str(var.get('learning_rate', env['learning_rate']))]
     if var.get('feedback_mode'):
         args += ['--feedback-mode', var['feedback_mode']]
     if var.get('turn_share') is not None:
