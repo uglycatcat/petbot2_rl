@@ -49,8 +49,8 @@
         "demo"
       ],
       "shallow": false,
-      "status": "moving_batch2_complete_16_evals; moving_batch3_launching",
-      "local_validation": "Batch2 B final native lifted64/64 both; success56/53, maintained2/1. All four trains and16 evals complete. Tail diagnosis isolates path/heading drift. CUDA bounded pose feedback contracts passed; initialization preserves both source policies exactly (per-env path/lift/support differences0); A/B128x100 PPO all36 scalar tags finite; reload64/64 lift, maintained4/3, no premature/warmup failure/unfinished; batch3 fixed34b0eff launching. See docs/upright_moving_v3.md.",
+      "status": "moving_batch2_complete_16_evals; moving_batch3_four_runs_in_ppo_evaluation_queue_waiting",
+      "local_validation": "Batch2 B final native lifted64/64 both; success56/53, maintained2/1. All four trains and16 evals complete. Tail diagnosis isolates path/heading drift. CUDA bounded pose feedback contracts passed; initialization preserves both source policies exactly (per-env path/lift/support differences0); A/B128x100 PPO all36 scalar tags finite; reload64/64 lift, maintained4/3, no premature/warmup failure/unfinished; batch3 fixed34b0eff all four2048x1000 runs in PPO at2026-10-20 11:38+08; eval queue PID931126 waiting. See docs/upright_moving_v3.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
