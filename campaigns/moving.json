@@ -439,7 +439,7 @@
       "id": "moving_batch9",
       "batch": "moving_batch9",
       "status": "planned",
-      "commit": null,
+      "commit": "dc58f7efb28763a1fdf2d62dfc786866ccd71e83",
       "gate_dir": "moving_batch9",
       "doc": "docs/upright_moving_v9.md",
       "iterations": 100,
