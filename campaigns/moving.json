@@ -180,14 +180,14 @@
     {
       "id": "moving_batch6",
       "batch": "moving_batch6",
-      "status": "planned",
-      "commit": "bf3dbd29a4eb68ddb3937f3b965ce68dcce0c072",
+      "status": "in_flight",
+      "commit": "1da1527046822aed40bb41360b42f71c07b586d4",
       "gate_dir": "moving_batch6",
       "doc": "docs/upright_moving_v6.md",
       "iterations": 250,
       "checkpoints": [
-        100,
-        175,
+        75,
+        150,
         249
       ],
       "variants": [
@@ -252,7 +252,8 @@
             "learning_rate": 3e-05
           }
         ]
-      }
+      },
+      "save_interval": 75
     }
   ],
   "stop": {
