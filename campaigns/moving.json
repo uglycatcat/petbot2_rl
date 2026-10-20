@@ -275,7 +275,7 @@
     {
       "id": "moving_batch7",
       "batch": "moving_batch7",
-      "status": "in_flight",
+      "status": "done",
       "commit": "1da1527046822aed40bb41360b42f71c07b586d4",
       "gate_dir": "moving_batch6",
       "doc": "docs/upright_moving_v7.md",
@@ -326,6 +326,97 @@
           "turn_share": 0.5,
           "learning_rate": 5e-05,
           "initialize_from": "../moving_batch4_a43/logs/moving_batch4_a43/model_999.pt"
+        }
+      ],
+      "verdict": "lr_does_not_lift_the_ceiling",
+      "result": {
+        "hold": {
+          "50": 58,
+          "100": 61,
+          "199": 47
+        },
+        "wide": 2
+      }
+    },
+    {
+      "id": "moving_batch8",
+      "batch": "moving_batch8",
+      "status": "planned",
+      "commit": "f139676",
+      "gate_dir": "moving_batch8",
+      "doc": "docs/upright_moving_v8.md",
+      "iterations": 150,
+      "save_interval": 25,
+      "checkpoints": [
+        25,
+        75,
+        149
+      ],
+      "gate": {
+        "gpus": [
+          2,
+          3
+        ],
+        "smoke_iterations": 100,
+        "variants": [
+          {
+            "label": "a",
+            "feedback_mode": "sustain",
+            "turn_share": 0.5,
+            "learning_rate": 3e-05,
+            "initialize_from": "../moving_batch6_a42/logs/moving_batch6_a42/model_75.pt"
+          },
+          {
+            "label": "b",
+            "feedback_mode": "sustain",
+            "turn_share": 0.5,
+            "learning_rate": 3e-05,
+            "initialize_from": "../moving_batch6_a42/logs/moving_batch6_a42/model_75.pt"
+          }
+        ]
+      },
+      "variants": [
+        {
+          "run": "moving_batch8_a42",
+          "group": "a",
+          "seed": 42,
+          "gpu": 2,
+          "feedback_mode": "sustain",
+          "turn_share": 0.5,
+          "learning_rate": 3e-05,
+          "initialize_from": "../moving_batch6_a42/logs/moving_batch6_a42/model_75.pt"
+        },
+        {
+          "run": "moving_batch8_a43",
+          "group": "a",
+          "seed": 43,
+          "gpu": 3,
+          "feedback_mode": "sustain",
+          "turn_share": 0.5,
+          "learning_rate": 3e-05,
+          "initialize_from": "../moving_batch6_a43/logs/moving_batch6_a43/model_75.pt"
+        },
+        {
+          "run": "moving_batch8_b42",
+          "group": "b",
+          "seed": 42,
+          "gpu": 2,
+          "feedback_mode": "sustain",
+          "turn_share": 0.5,
+          "learning_rate": 3e-05,
+          "contact_loss_weight": 2.0,
+          "initialize_from": "../moving_batch6_a42/logs/moving_batch6_a42/model_75.pt"
+        },
+        {
+          "run": "moving_batch8_b43",
+          "group": "b",
+          "seed": 43,
+          "gpu": 3,
+          "feedback_mode": "sustain",
+          "turn_share": 0.5,
+          "learning_rate": 3e-05,
+          "contact_loss_weight": 2.0,
+          "initialize_from": "../moving_batch6_a43/logs/moving_batch6_a43/model_75.pt"
         }
       ]
     }

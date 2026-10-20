@@ -566,6 +566,8 @@ def envelope_args(plan, var):
         args += ['--feedback-mode', var['feedback_mode']]
     if var.get('turn_share') is not None:
         args += ['--turn-share', str(var['turn_share'])]
+    if var.get('contact_loss_weight') is not None:
+        args += ['--contact-loss-weight', str(var['contact_loss_weight'])]
     # An initialization source must NOT be part of the envelope: the envelope is
     # replayed by the evaluation queue, and train_moving refuses to start with both
     # an initialization source and a checkpoint.
