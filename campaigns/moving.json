@@ -97,7 +97,7 @@
       "id": "moving_batch5",
       "batch": "moving_batch5",
       "status": "planned",
-      "commit": null,
+      "commit": "29fd27612de07a6acbb134f3cacd25c14b0fea67",
       "doc": "docs/upright_moving_v5.md",
       "note": "registered without a commit: the batch4 decision decides which layer gets redesigned"
     }
