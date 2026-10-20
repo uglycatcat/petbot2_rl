@@ -181,8 +181,8 @@
       "id": "moving_batch6",
       "batch": "moving_batch6",
       "status": "planned",
-      "commit": "29fd27612de07a6acbb134f3cacd25c14b0fea67",
-      "gate_dir": "moving_batch5",
+      "commit": "bf3dbd29a4eb68ddb3937f3b965ce68dcce0c072",
+      "gate_dir": "moving_batch6",
       "doc": "docs/upright_moving_v6.md",
       "iterations": 600,
       "checkpoints": [
