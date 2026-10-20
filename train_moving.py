@@ -12,6 +12,7 @@ p.add_argument('--turn-share',type=float,default=0.)
 p.add_argument('--learning-rate',type=float,default=.0001)
 p.add_argument('--save-interval',type=int,default=250)
 p.add_argument('--contact-loss-weight',type=float,default=0.)
+p.add_argument('--window-progress-weight',type=float,default=0.)
 p.add_argument('--wheel-slew',type=float,choices=[120.,900.],default=120.)
 p.add_argument('--wheel-mode',choices=['independent','common_diff'],default='independent')
 p.add_argument('--active-seconds',type=float,default=12.);p.add_argument('--checkpoint')
@@ -54,6 +55,8 @@ try:
     cfg.rewards.heading_sustain.weight=2. if args.feedback_mode=='sustain' else 0.
     if not 0<=args.contact_loss_weight<=20:raise ValueError('contact-loss weight outside validated bound')
     cfg.rewards.contact_loss.weight=args.contact_loss_weight
+    if not 0<=args.window_progress_weight<=10:raise ValueError('window-progress weight outside validated bound')
+    cfg.rewards.window_progress.weight=args.window_progress_weight
     cfg.wheel_slew=args.wheel_slew;cfg.wheel_mode=args.wheel_mode;cfg.active_seconds=args.active_seconds;cfg.episode_length_s=args.active_seconds+6.
     env=ManagerBasedRLEnv(cfg=cfg);wrapped=Adapter(env)
     folder=pathlib.Path(args.log_dir);folder.mkdir(parents=True,exist_ok=True)

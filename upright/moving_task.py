@@ -145,6 +145,7 @@ class RewardsCfg:
     support=RewTerm(func=reward,weight=2.,params={'kind':'support_reward'})
     heading_sustain=RewTerm(func=reward,weight=0.,params={'kind':'heading_sustain'})
     contact_loss=RewTerm(func=reward,weight=0.,params={'kind':'contact_loss'})
+    window_progress=RewTerm(func=reward,weight=0.,params={'kind':'window_progress'})
     transition_error=RewTerm(func=reward,weight=-.2,params={'kind':'transition_error'})
     tracking=RewTerm(func=reward,weight=2.,params={'kind':'tracking'})
     raw_tracking=RewTerm(func=reward,weight=1.,params={'kind':'raw_tracking'})

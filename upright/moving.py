@@ -37,7 +37,8 @@ class MovingProgress:
         self.reference=zeros(n,2); self.raw_reference=zeros(n,2)
         self.yaw=zeros(n); self.raw_yaw=zeros(n); self.frame=zeros(n)
         self.peak=zeros(n); self.lifted=zeros(n).bool(); self.ever=zeros(n).bool()
-        self.support_run=zeros(n); self.heading_run=zeros(n); self.rear_prev=torch.zeros(n,device=device,dtype=torch.bool)
+        self.support_run=zeros(n); self.heading_run=zeros(n); self.good_run=zeros(n)
+        self.rear_prev=torch.zeros(n,device=device,dtype=torch.bool)
         self.good=torch.zeros(self.window,n,device=device,dtype=torch.bool)
         self.cursor=0; self.last_g=zeros(n,3); self.mode=self.mode_pattern(n,device,turn_share)
         self.result={}
@@ -88,7 +89,7 @@ class MovingProgress:
         self.raw[ids]=command;self.external[ids]=True
 
     def reset(self, ids, pos, heading):
-        for x in (self.active,self.age,self.since,self.ready,self.peak,self.lifted,self.ever,self.support_run,self.heading_run):x[ids]=0
+        for x in (self.active,self.age,self.since,self.ready,self.peak,self.lifted,self.ever,self.support_run,self.heading_run,self.good_run):x[ids]=0
         self.rear_prev[ids]=False
         self.generation[ids]+=1;self.command_count[ids]=0
         self.external[ids]=False; self.good[:,ids]=False; self.last_g[ids]=torch.tensor([0.,0.,-1.],device=self.device)
@@ -165,6 +166,9 @@ class MovingProgress:
         contact_loss=self.active&self.lifted&self.rear_prev&(~s['rear'])
         self.rear_prev.copy_(s['rear'])
         self.good[self.cursor]=good;self.cursor=(self.cursor+1)%self.window
+        # Dense credit for closing in on the 1 s window itself: the streak of
+        # steps that satisfy all eight criteria, not one criterion at a time.
+        self.good_run=torch.where(good,self.good_run+self.dt,0.)
         held=self.good.all(0)&(self.since>=1.)
         fresh=held&~self.ever;self.ever |= held
         lift=((s['front_z']-.045)/.075).clamp(0,1)*s['rear']*(~s['other'])
@@ -187,6 +191,7 @@ class MovingProgress:
             support_reward=support*(.2+.8*(self.support_run/.3).clamp(0,1)),
             heading_sustain=support*(self.heading_run/1.).clamp(0,1),
             contact_loss=contact_loss.float(),
+            window_progress=(self.good_run/1.).clamp(0,1),
             tracking=support*tracking_reward,
             raw_tracking=support*torch.exp(-raw_error[:,0].square()/.2**2-raw_error[:,1].square()/.5**2),
             path=support*path_reward,

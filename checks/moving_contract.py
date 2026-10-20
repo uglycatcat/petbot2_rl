@@ -151,3 +151,14 @@ q2=MovingProgress(n,device,dt);q2.active[:]=True;q2.since[:]=3;q2.lifted[:]=Fals
 m4=q2.update(s4,s4['q'].new_zeros(3))
 assert float(m4['contact_loss'].sum())==0.,'no charge before the lift'
 print('PASS rear-contact loss is an event reward, once per loss, lift-gated')
+
+# Window-progress credit ramps with the consecutive all-criteria streak.
+w=MovingProgress(n,device,dt);w.active[:]=True;w.since[:]=3;w.lifted[:]=True;w.rear_prev[:]=True
+sw=dict(s2);sw['rear']=torch.ones(n,device=device,dtype=torch.bool)
+vals=[]
+for _ in range(20):
+    vals.append(float(w.update(sw,sw['q'].new_zeros(3))['window_progress'][0]))
+assert vals[0]<vals[5]<vals[-1] and max(vals)<=1.0001,'window credit must ramp with the streak'
+sw['yaw'][:]=0.5
+assert float(w.update(sw,sw['q'].new_zeros(3))['window_progress'][0])==0.0,'a broken criterion must reset the streak'
+print('PASS window-progress credit follows the all-criteria streak and resets on a miss')
