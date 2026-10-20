@@ -8,6 +8,8 @@
 
 | 文档 | 作用 |
 |---|---|
+| [upright_moving_v4.md](upright_moving_v4.md) | 运动第四轮：独立转向反馈（heading_feedback）与姿态反馈对照 |
+| [upright_moving_automation.md](upright_moving_automation.md) | 运动任务的自动迭代流程：轮次登记、判定规则、gate 与分层归因 |
 | [current_scope.md](current_scope.md) | 需求基线：目标、动作接口、边界与待定项 |
 | [engineering_handoff.md](engineering_handoff.md) | 工程实施：接口契约、恢复任务设计、阶段验收 |
 | [fixed_pose_recovery.md](fixed_pose_recovery.md) | 本机 MuJoCo 固定姿态恢复动作组，以及被动沉降姿态的采集与结果 |
