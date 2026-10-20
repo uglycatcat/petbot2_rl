@@ -93,3 +93,16 @@ A 用 lr 1e-4、B 用 lr 3e-5，各 600 次，检查点 150/300/599。
 1. 修 `--initialize-from` 的静默退出，或直接改为从最优检查点续训。
 2. 下一轮主攻每步支撑与朝向可靠性（而非学习率/奖励形状）。
 3. 明早补 `AGENTS.md` 一行。
+
+## 推荐检查点（供交付与复现）
+
+`demo_project/runs/moving_batch6_a43/logs/moving_batch6_a43/model_75.pt`
+SHA256 `b8dcd5a3744f1dcb98c92648395e22bf528097e7bd0ecfbf3299cef62ab0772c`。
+
+同口径评估（64 环境，种子 20261019）：接管 64/64、离地 64/64、曾完整达标 64/64、
+末 2 秒持续达标 **32/64**、提前终止 0、轨迹 MAE 0.0323 m、峰值前向加速度 12.16 m/s²。
+推理参数：`--feedback-mode sustain --turn-share 0.5 --speed-limit 0.1 --yaw-limit 0.3
+--frame-min=-0.3 --frame-max 0.3 --wheel-mode common_diff --wheel-slew 900`。
+
+这不是"任务已完成"的策略：它在训练范围内约一半环境能连续 1 秒达标，宽范围基本不达标，
+且未做 MuJoCo 闭环或实机验证。
