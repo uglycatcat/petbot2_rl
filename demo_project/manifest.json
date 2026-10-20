@@ -49,8 +49,8 @@
         "demo"
       ],
       "shallow": false,
-      "status": "moving_batch3_complete_4_trains_16_evals; moving_batch4_four_runs_in_ppo_evaluation_queue_waiting",
-      "local_validation": "Batch3 B native maintained16/13 of64 vs A9/8; wide B maintained1/1, premature29/29. V4 CUDA heading-rate/reward contracts pass; exact initialization parity both seeds; both128x100 PPO all36 scalar tags finite; reload lifted64/64 and success64/64 both, maintained A11/B13, premature A1/B0. Four-GPU fixed4c1bd23 batch4 all in PPO at2026-10-20 16:43+08;16:44 actual processes/configs verified,16-eval queue PID1126412 alive, maximum card memory74.6%. See docs/upright_moving_v4.md.",
+      "status": "moving_batch4_four_runs_in_ppo; 250_checkpoint_4_of_16_evals_complete",
+      "local_validation": "Batch3 B native maintained16/13 of64 vs A9/8; wide B maintained1/1, premature29/29. V4 CUDA heading-rate/reward contracts pass; exact initialization parity both seeds; both128x100 PPO all36 scalar tags finite; reload lifted64/64 and success64/64 both, maintained A11/B13, premature A1/B0. Four-GPU fixed4c1bd23 batch4 all in PPO at2026-10-20 16:43+08. At17:36 all four alive, four i250 evals complete and12 pending; both arms lifted/succeeded64/64; maintained A15/15, B17/12 (29/128 vs30/128), no demonstrated new-reward advantage. Mean GPU utilization16.5/23.1/17.5/17.5% over10 samples at2s intervals; peak memory74.6%. See docs/upright_moving_v4.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
