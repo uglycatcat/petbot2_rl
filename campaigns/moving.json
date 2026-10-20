@@ -184,11 +184,11 @@
       "commit": "bf3dbd29a4eb68ddb3937f3b965ce68dcce0c072",
       "gate_dir": "moving_batch6",
       "doc": "docs/upright_moving_v6.md",
-      "iterations": 600,
+      "iterations": 250,
       "checkpoints": [
-        150,
-        300,
-        599
+        100,
+        175,
+        249
       ],
       "variants": [
         {
@@ -199,7 +199,7 @@
           "feedback_mode": "sustain",
           "turn_share": 0.5,
           "learning_rate": 0.0001,
-          "initialize_from": "../moving_batch5_b42/logs/moving_batch5_b42/model_250.pt"
+          "initialize_from": "../moving_batch4_a42/logs/moving_batch4_a42/model_999.pt"
         },
         {
           "run": "moving_batch6_a43",
@@ -209,7 +209,7 @@
           "feedback_mode": "sustain",
           "turn_share": 0.5,
           "learning_rate": 0.0001,
-          "initialize_from": "../moving_batch5_b43/logs/moving_batch5_b43/model_250.pt"
+          "initialize_from": "../moving_batch4_a43/logs/moving_batch4_a43/model_999.pt"
         },
         {
           "run": "moving_batch6_b42",
@@ -219,7 +219,7 @@
           "feedback_mode": "sustain",
           "turn_share": 0.5,
           "learning_rate": 3e-05,
-          "initialize_from": "../moving_batch5_b42/logs/moving_batch5_b42/model_250.pt"
+          "initialize_from": "../moving_batch4_a42/logs/moving_batch4_a42/model_999.pt"
         },
         {
           "run": "moving_batch6_b43",
@@ -229,7 +229,7 @@
           "feedback_mode": "sustain",
           "turn_share": 0.5,
           "learning_rate": 3e-05,
-          "initialize_from": "../moving_batch5_b43/logs/moving_batch5_b43/model_250.pt"
+          "initialize_from": "../moving_batch4_a43/logs/moving_batch4_a43/model_999.pt"
         }
       ],
       "gate": {
