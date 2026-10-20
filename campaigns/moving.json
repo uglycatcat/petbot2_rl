@@ -3,12 +3,8 @@
   "task": "moving takeover + rear-wheel-supported remote driving",
   "container": "petbot-upright-night",
   "num_envs": 2048,
-  "iterations": 1000,
-  "checkpoints": [
-    250,
-    750,
-    999
-  ],
+  "iterations": 1500,
+  "checkpoints": [250, 750, 1499],
   "envelope": {
     "speed_limit": 0.1,
     "yaw_limit": 0.3,
@@ -48,50 +44,20 @@
       "id": "moving_batch4",
       "batch": "moving_batch4",
       "status": "done",
+      "verdict": "regress",
       "commit": "4c1bd237c02181c2869fe11dd39a33a5b5798b67",
       "doc": "docs/upright_moving_v4.md",
+      "result": {"hold_a": 38, "hold_b": 36, "gain": -2, "wide_hold_a": 3, "wide_hold_b": 1},
       "variants": [
-        {
-          "run": "moving_batch4_a42",
-          "group": "a",
-          "seed": 42,
-          "gpu": 0,
-          "feedback_mode": "pose_feedback",
-          "initialize_from": "../moving_batch3_b42/logs/moving_batch3_b42/model_999.pt"
-        },
-        {
-          "run": "moving_batch4_a43",
-          "group": "a",
-          "seed": 43,
-          "gpu": 1,
-          "feedback_mode": "pose_feedback",
-          "initialize_from": "../moving_batch3_b43/logs/moving_batch3_b43/model_999.pt"
-        },
-        {
-          "run": "moving_batch4_b42",
-          "group": "b",
-          "seed": 42,
-          "gpu": 2,
-          "feedback_mode": "heading_feedback",
-          "initialize_from": "../moving_batch3_b42/logs/moving_batch3_b42/model_999.pt"
-        },
-        {
-          "run": "moving_batch4_b43",
-          "group": "b",
-          "seed": 43,
-          "gpu": 3,
-          "feedback_mode": "heading_feedback",
-          "initialize_from": "../moving_batch3_b43/logs/moving_batch3_b43/model_999.pt"
-        }
-      ],
-      "verdict": "regress",
-      "result": {
-        "hold_a": 38,
-        "hold_b": 36,
-        "gain": -2,
-        "wide_hold_a": 3,
-        "wide_hold_b": 1
-      }
+        {"run": "moving_batch4_a42", "group": "a", "seed": 42, "gpu": 0, "feedback_mode": "pose_feedback",
+         "initialize_from": "../moving_batch3_b42/logs/moving_batch3_b42/model_999.pt"},
+        {"run": "moving_batch4_a43", "group": "a", "seed": 43, "gpu": 1, "feedback_mode": "pose_feedback",
+         "initialize_from": "../moving_batch3_b43/logs/moving_batch3_b43/model_999.pt"},
+        {"run": "moving_batch4_b42", "group": "b", "seed": 42, "gpu": 2, "feedback_mode": "heading_feedback",
+         "initialize_from": "../moving_batch3_b42/logs/moving_batch3_b42/model_999.pt"},
+        {"run": "moving_batch4_b43", "group": "b", "seed": 43, "gpu": 3, "feedback_mode": "heading_feedback",
+         "initialize_from": "../moving_batch3_b43/logs/moving_batch3_b43/model_999.pt"}
+      ]
     },
     {
       "id": "moving_batch5",
@@ -99,7 +65,26 @@
       "status": "planned",
       "commit": "29fd27612de07a6acbb134f3cacd25c14b0fea67",
       "doc": "docs/upright_moving_v5.md",
-      "note": "registered without a commit: the batch4 decision decides which layer gets redesigned"
+      "iterations": 1500,
+      "checkpoints": [250, 750, 1499],
+      "gate": {
+        "gpus": [2, 3],
+        "smoke_iterations": 100,
+        "variants": [
+          {"label": "a", "feedback_mode": "pose_feedback"},
+          {"label": "b", "feedback_mode": "sustain", "turn_share": 0.5}
+        ]
+      },
+      "variants": [
+        {"run": "moving_batch5_a42", "group": "a", "seed": 42, "gpu": 0, "feedback_mode": "pose_feedback",
+         "initialize_from": "../moving_batch4_a42/logs/moving_batch4_a42/model_999.pt"},
+        {"run": "moving_batch5_a43", "group": "a", "seed": 43, "gpu": 1, "feedback_mode": "pose_feedback",
+         "initialize_from": "../moving_batch4_a43/logs/moving_batch4_a43/model_999.pt"},
+        {"run": "moving_batch5_b42", "group": "b", "seed": 42, "gpu": 2, "feedback_mode": "sustain",
+         "turn_share": 0.5, "initialize_from": "../moving_batch4_a42/logs/moving_batch4_a42/model_999.pt"},
+        {"run": "moving_batch5_b43", "group": "b", "seed": 43, "gpu": 3, "feedback_mode": "sustain",
+         "turn_share": 0.5, "initialize_from": "../moving_batch4_a43/logs/moving_batch4_a43/model_999.pt"}
+      ]
     }
   ],
   "stop": {
