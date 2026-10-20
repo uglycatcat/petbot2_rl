@@ -78,7 +78,8 @@ try:
         # Only clean, already-analysed rounds may seed a new one. Extend this table
         # when a round finishes; never seed from an unverified or dirty tree.
         sources={'34b0effd40c853a3e7fac0ebc1afa22a2e5943fe':'moving_takeover_v3',
-                 '4c1bd237c02181c2869fe11dd39a33a5b5798b67':'moving_takeover_v4'}
+                 '4c1bd237c02181c2869fe11dd39a33a5b5798b67':'moving_takeover_v4',
+                 '29fd27612de07a6acbb134f3cacd25c14b0fea67':'moving_takeover_v5'}
         if prior.get('working_tree_dirty') or prior.get('commit') not in sources:
             raise ValueError('Initialization is restricted to a clean finished round')
         for key in ['wheel_mode','wheel_slew','action_dim','control_dt','beta_shape_cap','source_sha256']:
