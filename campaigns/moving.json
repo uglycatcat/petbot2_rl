@@ -47,7 +47,7 @@
     {
       "id": "moving_batch4",
       "batch": "moving_batch4",
-      "status": "in_flight",
+      "status": "done",
       "commit": "4c1bd237c02181c2869fe11dd39a33a5b5798b67",
       "doc": "docs/upright_moving_v4.md",
       "variants": [
@@ -83,74 +83,23 @@
           "feedback_mode": "heading_feedback",
           "initialize_from": "../moving_batch3_b43/logs/moving_batch3_b43/model_999.pt"
         }
-      ]
+      ],
+      "verdict": "regress",
+      "result": {
+        "hold_a": 38,
+        "hold_b": 36,
+        "gain": -2,
+        "wide_hold_a": 3,
+        "wide_hold_b": 1
+      }
     },
     {
       "id": "moving_batch5",
       "batch": "moving_batch5",
       "status": "planned",
-      "commit": "374cfad6430caf4c2de29b85d039c2f810085e33",
+      "commit": null,
       "doc": "docs/upright_moving_v5.md",
-      "gate": {
-        "gpus": [
-          2,
-          3
-        ],
-        "smoke_iterations": 100,
-        "variants": [
-          {
-            "label": "a",
-            "feedback_mode": "pose_feedback"
-          },
-          {
-            "label": "b",
-            "feedback_mode": "sustain",
-            "turn_share": 0.5
-          }
-        ]
-      },
-      "variants": [
-        {
-          "run": "moving_batch5_a42",
-          "group": "a",
-          "seed": 42,
-          "gpu": 0,
-          "feedback_mode": "pose_feedback",
-          "initialize_from": "../moving_batch4_a42/logs/moving_batch4_a42/model_999.pt"
-        },
-        {
-          "run": "moving_batch5_a43",
-          "group": "a",
-          "seed": 43,
-          "gpu": 1,
-          "feedback_mode": "pose_feedback",
-          "initialize_from": "../moving_batch4_a43/logs/moving_batch4_a43/model_999.pt"
-        },
-        {
-          "run": "moving_batch5_b42",
-          "group": "b",
-          "seed": 42,
-          "gpu": 2,
-          "feedback_mode": "sustain",
-          "turn_share": 0.5,
-          "initialize_from": "../moving_batch4_a42/logs/moving_batch4_a42/model_999.pt"
-        },
-        {
-          "run": "moving_batch5_b43",
-          "group": "b",
-          "seed": 43,
-          "gpu": 3,
-          "feedback_mode": "sustain",
-          "turn_share": 0.5,
-          "initialize_from": "../moving_batch4_a43/logs/moving_batch4_a43/model_999.pt"
-        }
-      ],
-      "iterations": 1500,
-      "checkpoints": [
-        250,
-        750,
-        1499
-      ]
+      "note": "registered without a commit: the batch4 decision decides which layer gets redesigned"
     }
   ],
   "stop": {
