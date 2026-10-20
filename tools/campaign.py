@@ -424,6 +424,16 @@ def gate_run(cmd, log, env=None):
     return p.returncode
 
 
+def code_matches(commit):
+    """The code paths must still be exactly the tested commit, even if later
+    commits (plan/doc registration) moved HEAD. Never silently test a different tree."""
+    if git('status', '--porcelain'):
+        return False
+    proc = subprocess.run(['git', '-C', str(DEMO), 'diff', '--quiet', commit, 'HEAD',
+                           '--', 'upright', 'train_moving.py'])
+    return proc.returncode == 0
+
+
 def cmd_gate(args):
     """Contract check + short PPO + 64-env reload on the round's fixed commit."""
     plan = load(args.plan)
@@ -434,7 +444,7 @@ def cmd_gate(args):
     out = batch_dir(rnd.get('gate_dir', rnd['id']))
     out.mkdir(parents=True, exist_ok=True)
     commit = rnd['commit']
-    if git('rev-parse', 'HEAD') != commit or git('status', '--porcelain'):
+    if not code_matches(commit):
         print(f'source checkout is not the clean fixed commit {commit[:7]}')
         return 2
     if not container_running():
@@ -550,7 +560,7 @@ def cmd_launch(args):
     if not gate or not gate.get('engineering_passed'):
         print(f'no passed gate at {gate_file}')
         return 2
-    if git('rev-parse', 'HEAD') != rnd['commit'] or git('status', '--porcelain'):
+    if not code_matches(rnd['commit']):
         print('source checkout is not the clean fixed commit; fix before launching')
         return 2
     if git('diff', gate['tested_commit'], rnd['commit'], '--', 'upright', 'train_moving.py'):
