@@ -556,9 +556,14 @@ def envelope_args(plan, var):
         args += ['--feedback-mode', var['feedback_mode']]
     if var.get('turn_share') is not None:
         args += ['--turn-share', str(var['turn_share'])]
-    if var.get('initialize_from'):
-        args += ['--initialize-from', var['initialize_from']]
+    # An initialization source must NOT be part of the envelope: the envelope is
+    # replayed by the evaluation queue, and train_moving refuses to start with both
+    # an initialization source and a checkpoint.
     return args
+
+
+def init_args(var):
+    return ['--initialize-from', var['initialize_from']] if var.get('initialize_from') else []
 
 
 # ------------------------------------------------------------------- launch
@@ -621,7 +626,8 @@ def cmd_launch(args):
                '--gpu', str(var['gpu']), '--reserve-mib', '4000', '--entrypoint', 'train_moving.py',
                '--workdir', f"/workspace/runs/{var['run']}", '--log', str(out / (var['run'] + '.log')),
                '--headless', '--device', 'cuda:0', '--num_envs', str(plan.get('num_envs', 2048)),
-               '--iterations', str(plan['iterations']), '--seed', str(var['seed']), *envelope,
+               '--iterations', str(state['iterations']), '--seed', str(var['seed']), *envelope,
+               *init_args(var),
                '--log_dir', f"/workspace/runs/{var['run']}/logs/{var['run']}"]
         with (out / (var['run'] + '_guard.log')).open('w') as f:
             proc = subprocess.Popen(cmd, stdout=f, stderr=subprocess.STDOUT, start_new_session=True)
