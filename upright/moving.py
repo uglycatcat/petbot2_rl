@@ -49,7 +49,8 @@ class MovingProgress:
         base=[0,1,4,5]
         turns=max(0,min(8,round(turn_share/(1-turn_share)*len(base)/2))) if 0<turn_share<1 else 0
         pattern=base+[2,3]*turns
-        return (torch.arange(n,device=device)%len(pattern)).long().apply_(lambda i: pattern[i])
+        table=torch.tensor(pattern,device=device,dtype=torch.long)
+        return table[torch.arange(n,device=device)%len(pattern)]
 
     def uniform(self, ids, stream):
         # Per-env counter-based streams: resetting another env cannot change the
