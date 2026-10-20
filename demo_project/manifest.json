@@ -59,6 +59,40 @@
         "moving_batch4_b42",
         "moving_batch4_b43"
       ]
+    },
+    {
+      "name": "step_rl_demo",
+      "path": "demo_project/step_rl_demo",
+      "url": "https://github.com/uglycatcat/petbot2_rl.git",
+      "remote": "ours",
+      "branch": "demoproj/step_rl_demo",
+      "verified_commit": "8c86d8d406becec397f9704845e8392c264f910e",
+      "groups": [
+        "demo"
+      ],
+      "shallow": false,
+      "status": "registered_placeholder_readme_only",
+      "local_validation": "Task goal only: lift the front wheels onto a 0–3cm step below rear-wheel radius, then accelerate to climb. No implementation or training. See README.md.",
+      "task": null,
+      "usage": "README.md",
+      "active_tasks": []
+    },
+    {
+      "name": "recovery_rl_demo",
+      "path": "demo_project/recovery_rl_demo",
+      "url": "https://github.com/uglycatcat/petbot2_rl.git",
+      "remote": "ours",
+      "branch": "demoproj/recovery_rl_demo",
+      "verified_commit": "73ccbb995d96b37041a4cf219cca12fad7f4d84e",
+      "groups": [
+        "demo"
+      ],
+      "shallow": false,
+      "status": "registered_placeholder_readme_only",
+      "local_validation": "Task goal only: staged fall recovery with improved smoothness. User hypothesis that recovery_agile_01 task design was flawed remains unverified. No implementation or training. See README.md.",
+      "task": null,
+      "usage": "README.md",
+      "active_tasks": []
     }
   ]
 }
