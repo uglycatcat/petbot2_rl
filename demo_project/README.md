@@ -6,7 +6,7 @@
 |---|---|---|---|
 | [recovery_agile_01](recovery_agile_01/PETBOT.md) | WBC-AGILE `6830cf9`，借鉴 robot_lab 混合动作 | `demoproj/recovery_agile_01` | 第三轮六组已完成：A 0/512、B/C 85/512，无新增恢复；第四轮B/C双种子及评估已完成，终局87–88/512、仅新增2–3个恢复，见[第四轮记录](../docs/petbot_sweep4_training.md)；第二轮 8 组全部跑满，24 次策略评估全部 0/512，见[第二轮记录](#第二轮过夜训练2026-10-14)；首轮 11 组 2048×3000 扫描 + 确定性独立评估完成：**无一组学到起身**（最好 5 组 0.225~0.227 与开环地板基线 0.213 持平）；见[首版扫描记录](recovery_agile_01/PETBOT_SWEEP_01.md) |
 | [jump_rl_demo](jump_rl_demo/README.md) | 新线，不从上游派生 | `demoproj/jump_rl_demo` | 2026-10-15 已登记，`c4de881`。完整跳跃已放弃，训练代码不写，checkout 保留。见[跳跃预研](../docs/jump_prestudy.md) |
-| [upright_rl_demo](upright_rl_demo/README.md) | 新线，不从上游派生 | `demoproj/upright_rl_demo` | 2026-10-19运动中接管/遥控首版已实现，GPU工程验收通过，固定c4ff64b首轮训练已结束，补评后16次起立全0/64；第二版dd9733b工程验收通过，第二轮训练及16次评估已完成：B双种子64/64离地，但末段完整保持仅2/64、1/64；第三轮6e47a2a验收中，见[新夜间记录](../docs/tonight_training_20261019.md)。旧第五版静止策略终局持续保持56/64及64/64，固定副本保留，见[旧终局](../docs/upright_v5_training.md)。 |
+| [upright_rl_demo](upright_rl_demo/README.md) | 新线，不从上游派生 | `demoproj/upright_rl_demo` | 2026-10-19运动中接管/遥控首版已实现，GPU工程验收通过，固定c4ff64b首轮训练已结束，补评后16次起立全0/64；第二版dd9733b工程验收通过，第二轮训练及16次评估已完成：B双种子64/64离地，但末段完整保持仅2/64、1/64；第三轮34b0eff通过验收、四卡编排中，见[新夜间记录](../docs/tonight_training_20261019.md)。旧第五版静止策略终局持续保持56/64及64/64，固定副本保留，见[旧终局](../docs/upright_v5_training.md)。 |
 
 ## 同步与开发纪律
 
