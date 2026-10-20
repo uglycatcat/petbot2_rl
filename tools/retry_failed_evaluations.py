@@ -41,18 +41,33 @@ for key, entry in state.items():
     envelope = list(job.get('envelope') or [])
     # The stored training envelope must never carry an initialization source into
     # an evaluation: train_moving refuses to start with both that and a checkpoint.
-    cleaned, skip = [], False
-    for token in envelope:
+    # Parse flag by flag: '--frame-min=-0.3' is a single token, so pairing blindly
+    # shifts every later flag and silently drops the feedback mode.
+    cleaned, skip, i = [], False, 0
+    while i < len(envelope):
+        token = envelope[i]
         if token == '--initialize-from':
-            skip = True
+            i += 2
             continue
-        if skip:
-            skip = False
+        if token.startswith('--') and '=' in token:
+            cleaned.append(token)
+            i += 1
             continue
         cleaned.append(token)
-    carry = [cleaned[i:i + 2] for i in range(0, len(cleaned), 2)
-             if cleaned[i] in ('--wheel-mode', '--wheel-slew', '--feedback-mode')]
-    carries = [x for pair in carry for x in pair]
+        if token.startswith('--') and i + 1 < len(envelope):
+            cleaned.append(envelope[i + 1])
+            i += 2
+        else:
+            i += 1
+    carries = []
+    i = 0
+    while i < len(cleaned):
+        token = cleaned[i]
+        if token in ('--wheel-mode', '--wheel-slew', '--feedback-mode', '--turn-share') and i + 1 < len(cleaned):
+            carries += [token, cleaned[i + 1]]
+            i += 2
+            continue
+        i += 2 if (token.startswith('--') and '=' not in token) else 1
     scope_args = NARROW if scope == 'native' else WIDE
     seed = '20261019' if scope == 'native' else '20261020'
     todo.append((key, run, iteration, scope, job, scope_args, carries, seed))
