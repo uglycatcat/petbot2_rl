@@ -92,3 +92,4 @@ python3 tools/campaign.py drive  --timeout-h 6
 | 计划里的 100/175 检查点从不出现 | 保存间隔硬编码 250 | `--save-interval` 参数化，由 plan 传入 |
 | 批次被判断为 `in_flight` 而拒绝重开 | 启动器在最后写 status，被中断时状态已落盘 | 重开前把 round 状态改回 `planned` 并清掉 `launch_status.json` |
 | 带 `--frame-min=-0.3` 的重评参数解析错位 | 按两个 token 一组配对，等号写法让后续全部移位 | 按 flag 逐 token 解析 |
+| 热启（`--initialize-from`）从第五轮起一律静默失败 | 白名单要求源检查点是 `pose_feedback`，第五轮起都是 `sustain`，抛 `ValueError` 被 `app.close()` 吞掉 | 白名单只校验任务名与接口契约，奖励模式放宽到已实现的任一种 |
