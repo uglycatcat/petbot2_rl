@@ -19,12 +19,6 @@ def state(env):
     body=[i for i,n in enumerate(sensor.body_names) if n not in (*REAR_WHEELS,*FRONT_WHEELS)]
     s['body_contact']=(f[:,body].norm(dim=-1)>.1).any(-1)
     s['four']=s['rear'] & (f[:,sf,2]>.05).all(-1)
-    # Physics-rate support: judge the control interval, not its last 2 ms frame.
-    frames=env.cfg.contact_frames
-    if frames>1:
-        hist=tensor(sensor.data.net_forces_w_history)[:,-frames:]
-        frac=(hist[:,:,sr,2]>.05).float().mean(1)
-        s['rear']=(frac>=env.cfg.contact_fraction).all(-1)
     return s
 
 
