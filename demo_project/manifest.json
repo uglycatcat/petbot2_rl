@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-20",
+  "updated_at": "2026-10-21",
   "purpose": "PetBot experimental training projects. Code is versioned on dedicated demoproj branches; checkouts are managed by default.xml.",
   "repositories": [
     {
@@ -44,20 +44,28 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "4c1bd237c02181c2869fe11dd39a33a5b5798b67",
+      "verified_commit": "22477c50c42c9ac76fb39fe98c045d8d0391c047",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "moving_batch4_four_runs_in_ppo; 250_and_750_checkpoint_8_of_16_evals_complete",
-      "local_validation": "Batch3 B native maintained16/13 of64 vs A9/8; wide B maintained1/1, premature29/29. V4 CUDA heading-rate/reward contracts pass; exact initialization parity both seeds; both128x100 PPO all36 scalar tags finite; reload lifted64/64 and success64/64 both, maintained A11/B13, premature A1/B0. Four-GPU fixed4c1bd23 batch4 all in PPO at2026-10-20 16:43+08. At17:36 all four alive, four i250 evals complete and12 pending; both arms lifted/succeeded64/64; maintained A15/15, B17/12 (29/128 vs30/128), no demonstrated new-reward advantage. Mean GPU utilization16.5/23.1/17.5/17.5% over10 samples at2s intervals; peak memory74.6%. See docs/upright_moving_v4.md. At18:32 four training processes and evaluation queue alive, iterations787–829/1000; eight evaluations complete. i750 maintained A14/19, B17/18 of64, all ever-success64/64 and premature0; final/native and wide evaluations pending. No established advantage.",
+      "status": "upright_rebuild_batch1_12_runs_ppo_started",
+      "local_validation": "Overnight batch5+ changes/results retired. Restored batch4 semantics; CUDA contracts,128x12 repair smoke and A/B128x32 release smoke finite; reload both lifted64/64, hold19/22, premature1/0. Batch4 A42 contact-history instrumentation preserves per-env outcomes and trajectory metrics exactly. New12 paired-seed runs2048x600,48 evaluations planned. See docs/upright_rebuild_batch1.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "moving_batch4_a42",
-        "moving_batch4_a43",
-        "moving_batch4_b42",
-        "moving_batch4_b43"
+        "upright_rebuild_batch1_a42",
+        "upright_rebuild_batch1_b42",
+        "upright_rebuild_batch1_a43",
+        "upright_rebuild_batch1_b43",
+        "upright_rebuild_batch1_a44",
+        "upright_rebuild_batch1_b44",
+        "upright_rebuild_batch1_a45",
+        "upright_rebuild_batch1_b45",
+        "upright_rebuild_batch1_a46",
+        "upright_rebuild_batch1_b46",
+        "upright_rebuild_batch1_a47",
+        "upright_rebuild_batch1_b47"
       ]
     },
     {
