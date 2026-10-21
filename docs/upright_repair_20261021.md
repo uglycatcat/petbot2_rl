@@ -24,4 +24,4 @@ CUDA任务契约与修复回归检查通过；第四轮A42热启128×12正常结
 
 ## 发布与后续
 
-发布22477c5（已推送demoproj/upright_rl_demo），新增单因素候选与只读物理接触诊断，验收及新训练见[upright_rebuild_batch1.md](upright_rebuild_batch1.md)。当前新launcher在demo的tools/launch_validated.py，资源工具同目录；主仓库只保留通用会话定时投递工具。初始化及全部短训/重载均已正常结束；正式批次12组已全部进入PPO，48次评估队列等待检查点，禁止重复发起。
+发布22477c5（已推送demoproj/upright_rl_demo），新增单因素候选与只读物理接触诊断，验收及新训练见[upright_rebuild_batch1.md](upright_rebuild_batch1.md)。当前新launcher在demo的tools/launch_validated.py，资源工具同目录；主仓库只保留通用会话定时投递工具。初始化及全部短训/重载均已正常结束；正式批次12组训练与48次评估均已完整结束，另四组诊断完成，终局及下一步见新训练文档，禁止重复发起。

@@ -49,24 +49,11 @@
         "demo"
       ],
       "shallow": false,
-      "status": "upright_rebuild_batch1_12_runs_ppo_started",
-      "local_validation": "Overnight batch5+ changes/results retired. Restored batch4 semantics; CUDA contracts,128x12 repair smoke and A/B128x32 release smoke finite; reload both lifted64/64, hold19/22, premature1/0. Batch4 A42 contact-history instrumentation preserves per-env outcomes and trajectory metrics exactly. New12 paired-seed runs2048x600,48 evaluations planned. See docs/upright_rebuild_batch1.md.",
+      "status": "upright_rebuild_batch1_complete_diagnosed",
+      "local_validation": "12 runs completed,48 evaluations validated,4 contact diagnostics exit0. Native final A116/384 B135/384; common wide A8/384 B11/384. Short contact interruptions remain; next physical contact reward contrast is proposed, not implemented. See docs/upright_rebuild_batch1.md.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [
-        "upright_rebuild_batch1_a42",
-        "upright_rebuild_batch1_b42",
-        "upright_rebuild_batch1_a43",
-        "upright_rebuild_batch1_b43",
-        "upright_rebuild_batch1_a44",
-        "upright_rebuild_batch1_b44",
-        "upright_rebuild_batch1_a45",
-        "upright_rebuild_batch1_b45",
-        "upright_rebuild_batch1_a46",
-        "upright_rebuild_batch1_b46",
-        "upright_rebuild_batch1_a47",
-        "upright_rebuild_batch1_b47"
-      ]
+      "active_tasks": []
     },
     {
       "name": "step_rl_demo",
