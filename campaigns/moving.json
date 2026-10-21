@@ -438,7 +438,7 @@
     {
       "id": "moving_batch9",
       "batch": "moving_batch9",
-      "status": "planned",
+      "status": "in_flight",
       "commit": "680770d054bfbbedc85853005a4df17c16368d48",
       "gate_dir": "moving_batch9",
       "doc": "docs/upright_moving_v9.md",

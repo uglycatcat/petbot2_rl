@@ -13,10 +13,13 @@ p.add_argument('--learning-rate',type=float,default=.0001)
 p.add_argument('--save-interval',type=int,default=250)
 p.add_argument('--contact-loss-weight',type=float,default=0.)
 p.add_argument('--window-progress-weight',type=float,default=0.)
+p.add_argument('--support-window',type=int,choices=[1,3,5],default=1)
+
 p.add_argument('--wheel-slew',type=float,choices=[120.,900.],default=120.)
 p.add_argument('--wheel-mode',choices=['independent','common_diff'],default='independent')
 p.add_argument('--active-seconds',type=float,default=12.);p.add_argument('--checkpoint')
 p.add_argument('--evaluate',action='store_true');p.add_argument('--probe',action='store_true');p.add_argument('--allow-dirty',action='store_true')
+p.add_argument('--allow-contract-drift',action='store_true')
 AppLauncher.add_app_launcher_args(p);args=p.parse_args();app=AppLauncher(args).app
 import torch
 from tensordict import TensorDict
@@ -50,6 +53,8 @@ try:
     cfg.feedback_mode=args.feedback_mode;cfg.rewards.path.weight=1. if args.feedback_mode=='command' else 4.
     if not 0<=args.turn_share<1:raise ValueError('turn_share is a fraction of pure-turn environments')
     cfg.turn_share=args.turn_share
+    cfg.support_window=args.support_window
+
     # The dense heading-window credit belongs to the sustain recipe only; a control
     # group must keep it switched off or the comparison is not a control.
     cfg.rewards.heading_sustain.weight=2. if args.feedback_mode=='sustain' else 0.
@@ -67,7 +72,15 @@ try:
     contract={'task':'moving_takeover_v6','feedback_mode':args.feedback_mode,'wheel_mode':args.wheel_mode,'wheel_slew':args.wheel_slew,'turn_share':args.turn_share,'fingerprint':fingerprint,'action_dim':3,'control_dt':env.step_dt,'beta_shape_cap':128.,'source_sha256':SPEC['source_sha256']}
     if args.checkpoint:
         old=json.loads((pathlib.Path(args.checkpoint).parent/'config.json').read_text())
-        if old.get('contract')!=contract:raise ValueError('Incompatible checkpoint: task, implementation or action/observation contract changed')
+        previous_contract=old.get('contract') or {}
+        if args.allow_contract_drift:
+            # Reward and measurement changes keep the network interface; only the
+            # interface keys decide whether this checkpoint can be scored.
+            drifted=[k for k in ('action_dim','control_dt','beta_shape_cap','source_sha256','wheel_mode','wheel_slew')
+                     if previous_contract.get(k)!=contract.get(k)]
+            if drifted:raise ValueError(f'Interface changed, cannot score this checkpoint: {drifted}')
+        elif previous_contract!=contract:
+            raise ValueError('Incompatible checkpoint: task, implementation or action/observation contract changed')
     if args.evaluate and not (args.checkpoint or args.initialize_from):raise ValueError('Evaluation requires a checkpoint')
     home=(2*SPEC['joints']['left_frame']['default']-lo-hi)/(hi-lo)
     config=dict(seed=args.seed,device=args.device,num_steps_per_env=32,save_interval=args.save_interval,logger='tensorboard',experiment_name='upright_moving',run_name=f'seed{args.seed}',

@@ -19,12 +19,18 @@ def state(env):
     body=[i for i,n in enumerate(sensor.body_names) if n not in (*REAR_WHEELS,*FRONT_WHEELS)]
     s['body_contact']=(f[:,body].norm(dim=-1)>.1).any(-1)
     s['four']=s['rear'] & (f[:,sf,2]>.05).all(-1)
+    # Physics-rate support: judge the control interval, not its last 2 ms frame.
+    frames=env.cfg.contact_frames
+    if frames>1:
+        hist=tensor(sensor.data.net_forces_w_history)[:,-frames:]
+        frac=(hist[:,:,sr,2]>.05).float().mean(1)
+        s['rear']=(frac>=env.cfg.contact_fraction).all(-1)
     return s
 
 
 def ensure(env):
     if not hasattr(env,'moving_progress'):
-        s=state(env);env.moving_progress=MovingProgress(env.num_envs,env.device,env.step_dt,env.cfg.speed_limit,env.cfg.yaw_limit,env.cfg.frame_range,env.cfg.seed,env.cfg.feedback_mode,env.cfg.turn_share)
+        s=state(env);env.moving_progress=MovingProgress(env.num_envs,env.device,env.step_dt,env.cfg.speed_limit,env.cfg.yaw_limit,env.cfg.frame_range,env.cfg.seed,env.cfg.feedback_mode,env.cfg.turn_share,env.cfg.support_window)
         env.moving_progress.reset(torch.arange(env.num_envs,device=env.device),s['pos'],s['yaw'])
         env.moving_step=-1
     return env.moving_progress
@@ -168,6 +174,8 @@ class MovingEnvCfg(UprightEnvCfg):
     actions=ActionsCfg();observations=ObservationsCfg();rewards=RewardsCfg();events=EventsCfg();terminations=DonesCfg()
     feedback_mode:str='command'
     turn_share:float=0.
+    support_window:int=1
+
     wheel_slew:float=120.
     wheel_mode:str='independent'
     speed_limit:float=.3

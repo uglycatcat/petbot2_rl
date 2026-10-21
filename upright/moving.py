@@ -25,11 +25,12 @@ def heading_feedback_rewards(forward_error, heading_rate_error, distance, headin
 
 
 class MovingProgress:
-    def __init__(self, n, device, dt, speed_limit=.3, yaw_limit=1., frame_range=(-1.,1.2), seed=42, feedback_mode="command", turn_share=0.):
+    def __init__(self, n, device, dt, speed_limit=.3, yaw_limit=1., frame_range=(-1.,1.2), seed=42, feedback_mode="command", turn_share=0., support_window=1):
         self.n=n; self.device=device; self.dt=dt; self.seed=seed; self.feedback_mode=feedback_mode
         self.generation=torch.zeros(n,device=device,dtype=torch.long);self.command_count=self.generation.clone()
         self.speed_limit=speed_limit; self.yaw_limit=yaw_limit; self.frame_range=frame_range
-        self.window=math.ceil(1/dt)
+        self.window=math.ceil(1/dt); self.support_window=max(1,int(support_window))
+        self.support_hist=torch.zeros(self.support_window,n,device=device,dtype=torch.bool); self.support_cursor=0; self.support_cursor_all=0
         def zeros(*shape):return torch.zeros(*shape,device=device)
         self.external=zeros(n).bool(); self.active=zeros(n).bool(); self.age=zeros(n); self.since=zeros(n)
         self.ready=zeros(n); self.switch_at=zeros(n); self.next_command=zeros(n)
@@ -130,7 +131,20 @@ class MovingProgress:
         # The first policy step inherits the measured motion; never request a stop.
         self.command[switch,0]=s['forward'][switch];self.command[switch,1]=s['vel'][switch,5]
         self.since+=active_before*self.dt
-        support=self.active & s['rear'] & ~s['other'] & (s['front_z']>.12) & (s['g'][:,2]<-.25)
+        support_raw=self.active & s['rear'] & ~s['other'] & (s['front_z']>.12) & (s['g'][:,2]<-.25)
+        # The criterion claims "sustained support" but today samples one physics frame
+        # per control step; a window averages the same measurement over the control
+        # interval instead of judging a 60 ms interval from its last 2 ms.
+        if self.support_window>1:
+            self.support_hist[self.support_cursor]=support_raw
+            self.support_cursor=(self.support_cursor+1)%self.support_window
+            self.support_cursor_all+=1
+            if self.support_cursor_all>=self.support_window:
+                support=self.support_hist.sum(0)>=max(2,self.support_window-1)
+            else:
+                support=support_raw
+        else:
+            support=support_raw
         self.support_run=torch.where(support,self.support_run+self.dt,0.)
         lift_event=(self.support_run>=.12)&~self.lifted;self.lifted |= lift_event
         raw_error=torch.stack((s['forward']-self.raw[:,0],s['vel'][:,5]-self.raw[:,1]),-1)

@@ -162,3 +162,18 @@ assert vals[0]<vals[5]<vals[-1] and max(vals)<=1.0001,'window credit must ramp w
 sw['yaw'][:]=0.5
 assert float(w.update(sw,sw['q'].new_zeros(3))['window_progress'][0])==0.0,'a broken criterion must reset the streak'
 print('PASS window-progress credit follows the all-criteria streak and resets on a miss')
+
+# The support window averages the same measurement over the control interval.
+v1=MovingProgress(n,device,dt,support_window=3)
+v1.active[:]=True;v1.since[:]=3
+sv=dict(s2);sv['rear']=torch.ones(n,device=device,dtype=torch.bool)
+for _ in range(3):
+    v1.update(sv,sv['q'].new_zeros(3))
+assert float(v1.result['support'].float().mean())==1.0
+sv['rear']=torch.zeros(n,device=device,dtype=torch.bool)
+v1.update(sv,sv['q'].new_zeros(3))
+assert float(v1.result['support'].float().mean())>0.5,'one missed sample inside a 3-step window must not drop support'
+for _ in range(3):
+    v1.update(sv,sv['q'].new_zeros(3))
+assert float(v1.result['support'].float().mean())==0.0,'losing contact across the window must drop support'
+print('PASS support window tolerates a single missed sample but not sustained loss')
