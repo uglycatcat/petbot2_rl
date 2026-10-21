@@ -10,6 +10,7 @@ p.add_argument('--initialize-from')
 p.add_argument('--feedback-mode',choices=['command','pose_feedback','heading_feedback','pose_feedback_tight'],default='command')
 p.add_argument('--learning-rate',type=float,default=.0001)
 p.add_argument('--contact-audit',action='store_true')
+p.add_argument('--physical-contact-weight',type=float,default=0.)
 p.add_argument('--save-interval',type=int,default=250)
 p.add_argument('--wheel-slew',type=float,choices=[120.,900.],default=120.)
 p.add_argument('--wheel-mode',choices=['independent','common_diff'],default='independent')
@@ -42,20 +43,23 @@ try:
     if args.active_seconds<4:raise ValueError('At least four active seconds required')
     if args.checkpoint and args.initialize_from:raise ValueError('Use resume OR explicit initialization')
     if not 0<args.learning_rate<=.0003:raise ValueError('Learning rate outside validated bound')
+    if not 0<=args.physical_contact_weight<=10:raise ValueError('Contact penalty magnitude must be in [0,10]')
     torch.manual_seed(args.seed)
     if args.contact_audit and not args.evaluate:raise ValueError('Contact audit is evaluation-only')
     cfg=MovingEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
     cfg.speed_limit=args.speed_limit;cfg.yaw_limit=args.yaw_limit;cfg.frame_range=(args.frame_min,args.frame_max)
     cfg.feedback_mode=args.feedback_mode;cfg.rewards.path.weight=1. if args.feedback_mode=='command' else 4.
     cfg.wheel_slew=args.wheel_slew;cfg.wheel_mode=args.wheel_mode;cfg.active_seconds=args.active_seconds;cfg.episode_length_s=args.active_seconds+6.
-    if args.contact_audit:cfg.scene.contact_forces.history_length=cfg.decimation
+    # Identical history sampling for treatment and zero-weight control.
+    cfg.scene.contact_forces.history_length=cfg.decimation
+    cfg.rewards.physical_contact.weight=-args.physical_contact_weight
     env=ManagerBasedRLEnv(cfg=cfg);wrapped=Adapter(env)
     folder=pathlib.Path(args.log_dir);folder.mkdir(parents=True,exist_ok=True)
     dirty=bool(subprocess.check_output(['git','status','--porcelain'],text=True).strip())
     if dirty and not args.allow_dirty:raise RuntimeError('Commit source before formal execution')
     files=['train_moving.py',*['upright/'+x for x in ['moving.py','moving_task.py','task.py','distribution.py','model.py','asset_cfg.py','prepare.py']]]
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(x).read_bytes()).hexdigest() for x in files).encode()).hexdigest()
-    contract={'task':'moving_takeover_audit_v1','observation_schema':'moving_41x5_raw_support_v1','feedback_mode':args.feedback_mode,'wheel_mode':args.wheel_mode,'wheel_slew':args.wheel_slew,'fingerprint':fingerprint,'action_dim':3,'control_dt':env.step_dt,'beta_shape_cap':128.,'source_sha256':SPEC['source_sha256']}
+    contract={'task':'moving_takeover_audit_v1','observation_schema':'moving_41x5_raw_support_v1','physical_contact_weight':args.physical_contact_weight,'contact_history_steps':cfg.decimation,'feedback_mode':args.feedback_mode,'wheel_mode':args.wheel_mode,'wheel_slew':args.wheel_slew,'fingerprint':fingerprint,'action_dim':3,'control_dt':env.step_dt,'beta_shape_cap':128.,'source_sha256':SPEC['source_sha256']}
     if args.checkpoint:
         old=json.loads((pathlib.Path(args.checkpoint).parent/'config.json').read_text())
         if old.get('contract')!=contract:raise ValueError('Incompatible checkpoint: task, implementation or action/observation contract changed')
@@ -73,13 +77,14 @@ try:
     if args.initialize_from:
         initial=pathlib.Path(args.initialize_from)
         prior=json.loads((initial.parent/'config.json').read_text());previous=prior['contract']
-        sources={'34b0effd40c853a3e7fac0ebc1afa22a2e5943fe':'moving_takeover_v3', '4c1bd237c02181c2869fe11dd39a33a5b5798b67':'moving_takeover_v4'}
+        sources={'34b0effd40c853a3e7fac0ebc1afa22a2e5943fe':'moving_takeover_v3', '4c1bd237c02181c2869fe11dd39a33a5b5798b67':'moving_takeover_v4', '22477c50c42c9ac76fb39fe98c045d8d0391c047':'moving_takeover_audit_v1'}
         if prior.get('commit') not in sources or prior.get('working_tree_dirty'):
-            raise ValueError('Initialization is restricted to clean audited batch3/batch4 sources')
+            raise ValueError('Initialization is restricted to clean audited batch3/batch4/rebuild1 sources')
         for key in ['wheel_mode','wheel_slew','action_dim','control_dt','beta_shape_cap','source_sha256']:
             if previous.get(key)!=contract[key]:raise ValueError(f'Initialization contract mismatch: {key}')
-        if previous.get('task')!=sources[prior['commit']] or previous.get('feedback_mode') not in ('pose_feedback','heading_feedback'):
-            raise ValueError('Expected audited moving v3/v4 source')
+        if previous.get('task')!=sources[prior['commit']] or previous.get('feedback_mode') not in ('pose_feedback','heading_feedback','pose_feedback_tight'):
+            raise ValueError('Expected audited moving source')
+        if previous.get('task')=='moving_takeover_audit_v1' and previous.get('observation_schema')!=contract['observation_schema']:raise ValueError('Observation schema mismatch')
         if prior['runner']['actor']!=config['actor'] or prior['runner']['critic']!=config['critic']:
             raise ValueError('Network or normalization interface changed')
         runner.load(str(initial),load_cfg={'actor':True,'critic':True,'optimizer':False,'iteration':False},strict=True)

@@ -14,6 +14,7 @@ for name,job in launch['train'].items():
  slew=job['envelope'][job['envelope'].index('--wheel-slew')+1] if '--wheel-slew' in job['envelope'] else None
  extras=['--wheel-slew',slew] if slew else []
  if '--feedback-mode' in job['envelope']:extras+=['--feedback-mode',job['envelope'][job['envelope'].index('--feedback-mode')+1]]
+ if '--physical-contact-weight' in job['envelope']:extras+=['--physical-contact-weight',job['envelope'][job['envelope'].index('--physical-contact-weight')+1]]
  jobs.append((name,job,launch['iterations']-1,'common',['--speed-limit','0.3','--yaw-limit','1.0','--frame-min=-1.0','--frame-max','1.2','--wheel-mode',mode,*extras]))
 deadline=time.time()+36*3600
 while time.time()<deadline:
@@ -51,7 +52,7 @@ path.write_text(json.dumps(state,indent=2))
 summary=dict(failed=sum(x['status']!='complete' for x in state.values()),finished_at=time.strftime('%FT%T%z'),complete=sum(x['status']=='complete' for x in state.values()),expected=len(jobs))
 (out/'eval_finished.json').write_text(json.dumps(summary))
 if launch.get('thread') and shutil.which('codex'):
- message=f'upright_rl_demo运动任务批次{a.name}评估队列已结束。读取AGENTS.md、docs/upright_repair_20261021.md、docs/upright_rebuild_batch1.md及该批launch_status/eval_status/eval_finished，先核查实际进程、缺失/失败和结果，再分析优化。不要重复启动；旧第五轮及之后夜间结果已废弃，不作优化来源；若受迫中断先继续当前轮；保留最新用户授权与约束，不能把队列结束当任务成功。'
+ message=f'upright_rl_demo运动任务批次{a.name}评估队列已结束。读取AGENTS.md、docs/upright_repair_20261021.md、对应最新实验文档及该批launch_status/eval_status/eval_finished，先核查实际进程、缺失/失败和结果，再分析优化。不要重复启动；旧第五轮及之后夜间结果已废弃，不作优化来源；若受迫中断先继续当前轮；保留最新用户授权与约束，不能把队列结束当任务成功。'
  try:
   r=subprocess.run([shutil.which('codex'),'queue','--thread',launch['thread'],'--message',message],capture_output=True,text=True,timeout=120);notice=dict(returncode=r.returncode,stdout=r.stdout,stderr=r.stderr)
  except Exception as e:notice=dict(submission_unknown=str(e))

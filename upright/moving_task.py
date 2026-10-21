@@ -5,7 +5,7 @@ from isaaclab.managers import ObservationGroupCfg as ObsGroup, RewardTermCfg as 
 from isaaclab.utils import configclass
 from isaaclab.envs import mdp as lab_mdp
 from .task import UprightEnvCfg, SPEC, POSITION_JOINTS, REAR_WHEELS, FRONT_WHEELS, tensor, state as base_state
-from .moving import MovingProgress, slew, wheel_targets, projected_heading_rate
+from .moving import MovingProgress, slew, wheel_targets, projected_heading_rate, physical_contact_deficit
 
 
 def state(env):
@@ -106,6 +106,10 @@ def reward(env,kind):
     s,m=metrics(env);a=env.action_manager.get_term('moving')
     if kind in ('fresh','lift_event'):return m[kind].float()/env.step_dt
     if kind=='failure':return (m['physical_failure']&m['active']).float()/env.step_dt
+    if kind=='physical_contact':
+        p=ensure(env);history=tensor(env.scene['contact_forces'].data.net_forces_w_history)
+        assert history.shape[1]==env.cfg.decimation
+        return physical_contact_deficit(history,env.upright_ids[3],p.active & p.lifted)
     if kind=='rate':return (a.applied-a.previous).square().sum(-1)*m['active']
     if kind=='deviation':return m['raw_distance'].clamp(max=1.5).square()*m['active']*m['transition_scale']
     return m[kind].float()
@@ -152,6 +156,7 @@ class RewardsCfg:
     deviation=RewTerm(func=reward,weight=-.5,params={'kind':'deviation'})
     rate=RewTerm(func=reward,weight=-.002,params={'kind':'rate'})
     failure=RewTerm(func=reward,weight=-5.,params={'kind':'failure'})
+    physical_contact=RewTerm(func=reward,weight=0.,params={'kind':'physical_contact'})
 @configclass
 class EventsCfg:
     reset_robot=EventTerm(func=reset,mode='reset')

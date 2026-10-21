@@ -180,3 +180,11 @@ def pose_velocity_target(pos,yaw,reference,reference_yaw,command):
     lateral_turn=.5*torch.atan2(lateral,torch.full_like(lateral,.25))*command[:,0].sign()
     dw=(1.5*wrap(reference_yaw-yaw)+lateral_turn).clamp(-.25,.25)
     return command+torch.stack((dv,dw),-1)
+
+
+def physical_contact_deficit(history, rear_ids, eligible):
+    """Time fraction without both rear contacts; no temporal support filtering."""
+    if history.ndim != 4 or history.shape[-1] != 3:
+        raise ValueError('Expected [env, physics_step, body, xyz] contact history')
+    contact=(history[:,:,rear_ids,2]>.05).all(-1)
+    return (1.-contact.float().mean(-1))*eligible.float()
