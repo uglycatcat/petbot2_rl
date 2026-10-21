@@ -1,3 +1,9 @@
+# 当前实施入口（2026-10-21）
+
+旧第五至十轮的变更与结果已退出优化基线，当前恢复第四轮任务语义；不使用旧campaign自动设计/部署流程。任务与修复说明见主仓库`docs/upright_repair_20261021.md`，新实验见`docs/upright_rebuild_batch1.md`。
+
+正式部署入口为`python3 tools/launch_validated.py <计划JSON>`，计划路径相对主仓库。必须有与固定代码匹配的GPU验收证据、完整资源预算、配对实验定义；已有运行记录禁止重复启动。旧`launch_moving.py`仅留退役提示，不再作为新批次入口。`tools/sample_resources.py`采样整卡显存与计算利用率，不能将两者混用。
+
 # upright_rl_demo
 
 PetBot2前轮离地、仅后轮支撑的起立与行驶任务。`train.py`保留第五版静止起立回位基线（两路动作）；`train_moving.py`实现运动中接管与遥控行驶（三路动作）。车架输出位置、后轮输出速度，头耳保持默认位置；不使用示范起立数据。

@@ -51,7 +51,7 @@ path.write_text(json.dumps(state,indent=2))
 summary=dict(failed=sum(x['status']!='complete' for x in state.values()),finished_at=time.strftime('%FT%T%z'),complete=sum(x['status']=='complete' for x in state.values()),expected=len(jobs))
 (out/'eval_finished.json').write_text(json.dumps(summary))
 if launch.get('thread') and shutil.which('codex'):
- message=f'upright_rl_demo运动任务批次{a.name}评估队列已结束。读取docs/tonight_training_20261019.md、docs/upright_moving_v1.md及该批launch_status/eval_status/eval_finished，先核查实际进程、缺失/失败和结果，再分析优化。不要重复启动；若受迫中断先继续当前轮；保留最新用户授权与约束，不能把队列结束当任务成功。'
+ message=f'upright_rl_demo运动任务批次{a.name}评估队列已结束。读取AGENTS.md、docs/upright_repair_20261021.md、docs/upright_rebuild_batch1.md及该批launch_status/eval_status/eval_finished，先核查实际进程、缺失/失败和结果，再分析优化。不要重复启动；旧第五轮及之后夜间结果已废弃，不作优化来源；若受迫中断先继续当前轮；保留最新用户授权与约束，不能把队列结束当任务成功。'
  try:
   r=subprocess.run([shutil.which('codex'),'queue','--thread',launch['thread'],'--message',message],capture_output=True,text=True,timeout=120);notice=dict(returncode=r.returncode,stdout=r.stdout,stderr=r.stderr)
  except Exception as e:notice=dict(submission_unknown=str(e))
