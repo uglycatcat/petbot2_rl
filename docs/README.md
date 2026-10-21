@@ -10,6 +10,11 @@
 |---|---|
 | [upright_moving_v4.md](upright_moving_v4.md) | 运动第四轮：独立转向反馈（heading_feedback）与姿态反馈对照 |
 | [upright_moving_automation.md](upright_moving_automation.md) | 运动任务的自动迭代流程：轮次登记、判定规则、gate 与分层归因 |
+| [upright_moving_v5.md](upright_moving_v5.md) | 第五轮：持续朝向信用 + 纯转向占比，转向与支撑的主要增益 |
+| [upright_moving_v6.md](upright_moving_v6.md) | 第六轮：学习率 1e-4 / 3e-5 对照，峰值位置与退化 |
+| [upright_moving_v7.md](upright_moving_v7.md) | 第七轮：中间学习率 5e-5，天花板 61/128 |
+| [upright_moving_v8.md](upright_moving_v8.md) | 第八轮：从峰值续训 + 后轮接触中断计费 |
+| [upright_moving_v9.md](upright_moving_v9.md) | 第九轮：窗口进度奖励，合计 68/128 为最好 |
 | [current_scope.md](current_scope.md) | 需求基线：目标、动作接口、边界与待定项 |
 | [engineering_handoff.md](engineering_handoff.md) | 工程实施：接口契约、恢复任务设计、阶段验收 |
 | [fixed_pose_recovery.md](fixed_pose_recovery.md) | 本机 MuJoCo 固定姿态恢复动作组，以及被动沉降姿态的采集与结果 |
