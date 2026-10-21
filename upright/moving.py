@@ -124,12 +124,16 @@ class MovingProgress:
         feedback_error=torch.stack((s['forward'],s['vel'][:,5]),-1)-feedback_target
         tracking_reward=torch.exp(-error[:,0].square()/.15**2-error[:,1].square()/.4**2)
         path_reward=torch.exp(-raw_distance.square()/.2**2-heading_error.square()/.3**2)
-        if self.feedback_mode in ('pose_feedback','pose_feedback_tight'):
+        if self.feedback_mode in ('pose_feedback','pose_feedback_tight','pose_feedback_projected'):
             tracking_reward=torch.exp(-feedback_error[:,0].square()/.1**2-feedback_error[:,1].square()/.2**2)
+        if self.feedback_mode=='pose_feedback_projected':
+            # Single factor: the commanded heading derivative is not world omega_z.
+            angular_error=s['heading_rate']-feedback_target[:,1]
+            tracking_reward=torch.exp(-feedback_error[:,0].square()/.1**2-angular_error.square()/.2**2)
         elif self.feedback_mode=='heading_feedback':
             tracking_reward,path_reward=heading_feedback_rewards(
                 feedback_error[:,0],s['heading_rate']-feedback_target[:,1],raw_distance,heading_error)
-        if self.feedback_mode=='pose_feedback_tight':
+        if self.feedback_mode in ('pose_feedback_tight','pose_feedback_projected'):
             # Single-factor contrast: tighten only heading error in the path reward.
             path_reward=torch.exp(-raw_distance.square()/.2**2-heading_error.square()/.15**2)
         fixed_error=(s['q'][:,:3]-fixed).abs().amax(-1)

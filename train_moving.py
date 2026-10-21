@@ -7,7 +7,7 @@ p.add_argument('--seed',type=int,default=42);p.add_argument('--log_dir',default=
 p.add_argument('--speed-limit',type=float,default=.3);p.add_argument('--yaw-limit',type=float,default=1.)
 p.add_argument('--frame-min',type=float,default=-1.);p.add_argument('--frame-max',type=float,default=1.2)
 p.add_argument('--initialize-from')
-p.add_argument('--feedback-mode',choices=['command','pose_feedback','heading_feedback','pose_feedback_tight'],default='command')
+p.add_argument('--feedback-mode',choices=['command','pose_feedback','heading_feedback','pose_feedback_tight','pose_feedback_projected'],default='command')
 p.add_argument('--learning-rate',type=float,default=.0001)
 p.add_argument('--contact-audit',action='store_true')
 p.add_argument('--physical-contact-weight',type=float,default=0.)
@@ -77,9 +77,9 @@ try:
     if args.initialize_from:
         initial=pathlib.Path(args.initialize_from)
         prior=json.loads((initial.parent/'config.json').read_text());previous=prior['contract']
-        sources={'34b0effd40c853a3e7fac0ebc1afa22a2e5943fe':'moving_takeover_v3', '4c1bd237c02181c2869fe11dd39a33a5b5798b67':'moving_takeover_v4', '22477c50c42c9ac76fb39fe98c045d8d0391c047':'moving_takeover_audit_v1'}
+        sources={'34b0effd40c853a3e7fac0ebc1afa22a2e5943fe':'moving_takeover_v3', '4c1bd237c02181c2869fe11dd39a33a5b5798b67':'moving_takeover_v4', '22477c50c42c9ac76fb39fe98c045d8d0391c047':'moving_takeover_audit_v1', '5bb0c71a28c9b2b9733926d9768d7ae44625a224':'moving_takeover_audit_v1'}
         if prior.get('commit') not in sources or prior.get('working_tree_dirty'):
-            raise ValueError('Initialization is restricted to clean audited batch3/batch4/rebuild1 sources')
+            raise ValueError('Initialization is restricted to clean audited batch3/batch4/rebuild1/rebuild2 sources')
         for key in ['wheel_mode','wheel_slew','action_dim','control_dt','beta_shape_cap','source_sha256']:
             if previous.get(key)!=contract[key]:raise ValueError(f'Initialization contract mismatch: {key}')
         if previous.get('task')!=sources[prior['commit']] or previous.get('feedback_mode') not in ('pose_feedback','heading_feedback','pose_feedback_tight'):
