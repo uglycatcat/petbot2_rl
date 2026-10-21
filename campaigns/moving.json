@@ -438,7 +438,7 @@
     {
       "id": "moving_batch9",
       "batch": "moving_batch9",
-      "status": "in_flight",
+      "status": "done",
       "commit": "680770d054bfbbedc85853005a4df17c16368d48",
       "gate_dir": "moving_batch9",
       "doc": "docs/upright_moving_v9.md",
@@ -520,7 +520,28 @@
           "window_progress_weight": 1.0,
           "initialize_from": "../moving_batch8_b43/logs/moving_batch8_b43/model_149.pt"
         }
-      ]
+      ],
+      "verdict": "regress_under_old_measurement",
+      "result": {
+        "hold": {
+          "25": 66,
+          "50": 62,
+          "99": 63
+        },
+        "hold_b": {
+          "25": 68,
+          "50": 63,
+          "99": 61
+        },
+        "wide_a": 2,
+        "wide_b": 1,
+        "corrected_measurement": {
+          "a42": 42,
+          "a43": 47,
+          "b42": 44,
+          "b43": 52
+        }
+      }
     },
     {
       "id": "moving_batch10",
