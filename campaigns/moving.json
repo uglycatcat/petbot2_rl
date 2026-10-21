@@ -527,7 +527,7 @@
       "batch": "moving_batch10",
       "status": "planned",
       "commit": "f68deac",
-      "gate_dir": "moving_batch9",
+      "gate_dir": "moving_batch10",
       "doc": "docs/upright_moving_v10.md",
       "iterations": 100,
       "save_interval": 25,
@@ -563,7 +563,25 @@
           "support_window": 3,
           "initialize_from": "../moving_batch8_b43/logs/moving_batch8_b43/model_149.pt"
         }
-      ]
+      ],
+      "gate": {
+        "gpus": [
+          2
+        ],
+        "smoke_iterations": 40,
+        "variants": [
+          {
+            "label": "a",
+            "feedback_mode": "sustain",
+            "turn_share": 0.5,
+            "learning_rate": 3e-05,
+            "contact_loss_weight": 2.0,
+            "window_progress_weight": 1.0,
+            "support_window": 3,
+            "initialize_from": "/workspace/runs/moving_batch8_b43/logs/moving_batch8_b43/model_149.pt"
+          }
+        ]
+      }
     }
   ],
   "stop": {
