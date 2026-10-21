@@ -44,16 +44,29 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "22477c50c42c9ac76fb39fe98c045d8d0391c047",
+      "verified_commit": "5bb0c71a28c9b2b9733926d9768d7ae44625a224",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "upright_rebuild_batch1_complete_diagnosed",
-      "local_validation": "12 runs completed,48 evaluations validated,4 contact diagnostics exit0. Native final A116/384 B135/384; common wide A8/384 B11/384. Short contact interruptions remain; next physical contact reward contrast is proposed, not implemented. See docs/upright_rebuild_batch1.md.",
+      "status": "upright_rebuild_batch2_12_runs_ppo_started",
+      "local_validation": "GPU contact history/reset/sign tests passed. A/B128x32 and2048x16 completed with finite scalars. Reload64 taken/lifted64 each, hold22/25,premature1/0,unfinished0. Second paired experiment2048x600,60 evaluations. See docs/upright_rebuild_batch2.md.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": []
+      "active_tasks": [
+        "upright_rebuild_batch2_a42",
+        "upright_rebuild_batch2_b42",
+        "upright_rebuild_batch2_a43",
+        "upright_rebuild_batch2_b43",
+        "upright_rebuild_batch2_a44",
+        "upright_rebuild_batch2_b44",
+        "upright_rebuild_batch2_a45",
+        "upright_rebuild_batch2_b45",
+        "upright_rebuild_batch2_a46",
+        "upright_rebuild_batch2_b46",
+        "upright_rebuild_batch2_a47",
+        "upright_rebuild_batch2_b47"
+      ]
     },
     {
       "name": "step_rl_demo",
