@@ -1,4 +1,5 @@
 """One-shot fixed-version moving-task batch. Existing state requires manual recovery."""
+raise SystemExit('Historical batch4 launcher retired. Build and validate a new explicit experiment/resource plan before launch; do not reuse the old campaign.')
 import argparse,fcntl,json,os,pathlib,re,shutil,subprocess,time
 p=argparse.ArgumentParser();p.add_argument('--root',type=pathlib.Path,required=True);p.add_argument('--name',required=True);p.add_argument('--iterations',type=int,default=1500);a=p.parse_args()
 assert re.fullmatch('[a-z0-9_]+',a.name) and a.iterations>=751

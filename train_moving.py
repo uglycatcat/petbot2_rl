@@ -7,19 +7,13 @@ p.add_argument('--seed',type=int,default=42);p.add_argument('--log_dir',default=
 p.add_argument('--speed-limit',type=float,default=.3);p.add_argument('--yaw-limit',type=float,default=1.)
 p.add_argument('--frame-min',type=float,default=-1.);p.add_argument('--frame-max',type=float,default=1.2)
 p.add_argument('--initialize-from')
-p.add_argument('--feedback-mode',choices=['command','pose_feedback','heading_feedback','sustain'],default='command')
-p.add_argument('--turn-share',type=float,default=0.)
+p.add_argument('--feedback-mode',choices=['command','pose_feedback','heading_feedback'],default='command')
 p.add_argument('--learning-rate',type=float,default=.0001)
 p.add_argument('--save-interval',type=int,default=250)
-p.add_argument('--contact-loss-weight',type=float,default=0.)
-p.add_argument('--window-progress-weight',type=float,default=0.)
-p.add_argument('--support-window',type=int,choices=[1,3,5],default=1)
-
 p.add_argument('--wheel-slew',type=float,choices=[120.,900.],default=120.)
 p.add_argument('--wheel-mode',choices=['independent','common_diff'],default='independent')
 p.add_argument('--active-seconds',type=float,default=12.);p.add_argument('--checkpoint')
 p.add_argument('--evaluate',action='store_true');p.add_argument('--probe',action='store_true');p.add_argument('--allow-dirty',action='store_true')
-p.add_argument('--allow-contract-drift',action='store_true')
 AppLauncher.add_app_launcher_args(p);args=p.parse_args();app=AppLauncher(args).app
 import torch
 from tensordict import TensorDict
@@ -51,17 +45,6 @@ try:
     cfg=MovingEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
     cfg.speed_limit=args.speed_limit;cfg.yaw_limit=args.yaw_limit;cfg.frame_range=(args.frame_min,args.frame_max)
     cfg.feedback_mode=args.feedback_mode;cfg.rewards.path.weight=1. if args.feedback_mode=='command' else 4.
-    if not 0<=args.turn_share<1:raise ValueError('turn_share is a fraction of pure-turn environments')
-    cfg.turn_share=args.turn_share
-    cfg.support_window=args.support_window
-
-    # The dense heading-window credit belongs to the sustain recipe only; a control
-    # group must keep it switched off or the comparison is not a control.
-    cfg.rewards.heading_sustain.weight=2. if args.feedback_mode=='sustain' else 0.
-    if not 0<=args.contact_loss_weight<=20:raise ValueError('contact-loss weight outside validated bound')
-    cfg.rewards.contact_loss.weight=args.contact_loss_weight
-    if not 0<=args.window_progress_weight<=10:raise ValueError('window-progress weight outside validated bound')
-    cfg.rewards.window_progress.weight=args.window_progress_weight
     cfg.wheel_slew=args.wheel_slew;cfg.wheel_mode=args.wheel_mode;cfg.active_seconds=args.active_seconds;cfg.episode_length_s=args.active_seconds+6.
     env=ManagerBasedRLEnv(cfg=cfg);wrapped=Adapter(env)
     folder=pathlib.Path(args.log_dir);folder.mkdir(parents=True,exist_ok=True)
@@ -69,18 +52,10 @@ try:
     if dirty and not args.allow_dirty:raise RuntimeError('Commit source before formal execution')
     files=['train_moving.py',*['upright/'+x for x in ['moving.py','moving_task.py','task.py','distribution.py','model.py','asset_cfg.py','prepare.py']]]
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(x).read_bytes()).hexdigest() for x in files).encode()).hexdigest()
-    contract={'task':'moving_takeover_v6','feedback_mode':args.feedback_mode,'wheel_mode':args.wheel_mode,'wheel_slew':args.wheel_slew,'turn_share':args.turn_share,'fingerprint':fingerprint,'action_dim':3,'control_dt':env.step_dt,'beta_shape_cap':128.,'source_sha256':SPEC['source_sha256']}
+    contract={'task':'moving_takeover_audit_v1','observation_schema':'moving_41x5_raw_support_v1','feedback_mode':args.feedback_mode,'wheel_mode':args.wheel_mode,'wheel_slew':args.wheel_slew,'fingerprint':fingerprint,'action_dim':3,'control_dt':env.step_dt,'beta_shape_cap':128.,'source_sha256':SPEC['source_sha256']}
     if args.checkpoint:
         old=json.loads((pathlib.Path(args.checkpoint).parent/'config.json').read_text())
-        previous_contract=old.get('contract') or {}
-        if args.allow_contract_drift:
-            # Reward and measurement changes keep the network interface; only the
-            # interface keys decide whether this checkpoint can be scored.
-            drifted=[k for k in ('action_dim','control_dt','beta_shape_cap','source_sha256','wheel_mode','wheel_slew')
-                     if previous_contract.get(k)!=contract.get(k)]
-            if drifted:raise ValueError(f'Interface changed, cannot score this checkpoint: {drifted}')
-        elif previous_contract!=contract:
-            raise ValueError('Incompatible checkpoint: task, implementation or action/observation contract changed')
+        if old.get('contract')!=contract:raise ValueError('Incompatible checkpoint: task, implementation or action/observation contract changed')
     if args.evaluate and not (args.checkpoint or args.initialize_from):raise ValueError('Evaluation requires a checkpoint')
     home=(2*SPEC['joints']['left_frame']['default']-lo-hi)/(hi-lo)
     config=dict(seed=args.seed,device=args.device,num_steps_per_env=32,save_interval=args.save_interval,logger='tensorboard',experiment_name='upright_moving',run_name=f'seed{args.seed}',
@@ -95,36 +70,18 @@ try:
     if args.initialize_from:
         initial=pathlib.Path(args.initialize_from)
         prior=json.loads((initial.parent/'config.json').read_text());previous=prior['contract']
-        # Only clean, already-analysed rounds may seed a new one. Extend this table
-        # when a round finishes; never seed from an unverified or dirty tree.
-        sources={'34b0effd40c853a3e7fac0ebc1afa22a2e5943fe':'moving_takeover_v3',
-                 '4c1bd237c02181c2869fe11dd39a33a5b5798b67':'moving_takeover_v4',
-                 '29fd27612de07a6acbb134f3cacd25c14b0fea67':'moving_takeover_v5',
-                 '1da1527046822aed40bb41360b42f71c07b586d4':'moving_takeover_v5',
-                 '069418b5653c42c0b09e0393a95f5c2b3b64d79c':'moving_takeover_v6',
-                 'dc58f7efb28763a1fdf2d62dfc786866ccd71e83':'moving_takeover_v6'}
-        if prior.get('working_tree_dirty') or prior.get('commit') not in sources:
-            raise ValueError('Initialization is restricted to a clean finished round')
+        sources={'34b0effd40c853a3e7fac0ebc1afa22a2e5943fe':'moving_takeover_v3', '4c1bd237c02181c2869fe11dd39a33a5b5798b67':'moving_takeover_v4'}
+        if prior.get('commit') not in sources or prior.get('working_tree_dirty'):
+            raise ValueError('Initialization is restricted to clean audited batch3/batch4 sources')
         for key in ['wheel_mode','wheel_slew','action_dim','control_dt','beta_shape_cap','source_sha256']:
             if previous.get(key)!=contract[key]:raise ValueError(f'Initialization contract mismatch: {key}')
-        if previous.get('task')!=sources[prior['commit']]:
-            raise ValueError('Initialization source is not the declared task of that round')
-        # The reward mode of the source no longer constrains the new run: weights are
-        # loaded and the optimizer restarted, so any validated mode is a legal source.
-        if previous.get('feedback_mode') not in ('command','pose_feedback','heading_feedback','sustain'):
-            raise ValueError('Unknown feedback mode on the initialization source')
+        if previous.get('task')!=sources[prior['commit']] or previous.get('feedback_mode') not in ('pose_feedback','heading_feedback'):
+            raise ValueError('Expected audited moving v3/v4 source')
         if prior['runner']['actor']!=config['actor'] or prior['runner']['critic']!=config['critic']:
             raise ValueError('Network or normalization interface changed')
-        # The partial-load path (load_cfg + strict) kills the process on these
-        # checkpoints without raising, while the plain loader is what evaluation
-        # and resume already use successfully. Re-stage the weights instead:
-        # drop the optimizer state and reset the iteration, then load normally.
-        # Load exactly the way evaluation and resume do, then restart optimisation:
-        # anything that re-saves the state first dies inside the loader.
-        runner.load(str(initial))
-        runner.current_learning_iteration=0
-        runner.alg.optimizer.state.clear()
-        for group in runner.alg.optimizer.param_groups:group['lr']=args.learning_rate
+        runner.load(str(initial),load_cfg={'actor':True,'critic':True,'optimizer':False,'iteration':False},strict=True)
+        assert runner.current_learning_iteration==0
+        assert not runner.alg.optimizer.state, 'Initialization must not load optimizer moments'
         metadata['initialization']={'checkpoint':str(initial),'sha256':hashlib.sha256(initial.read_bytes()).hexdigest(),'source_commit':prior['commit'],'optimizer_loaded':False,'iteration_loaded':False}
         (folder/'config.json').write_text(json.dumps(metadata,indent=2))
     if not (args.evaluate or args.probe):runner.learn(num_learning_iterations=args.iterations,init_at_random_ep_len=False)
@@ -192,4 +149,11 @@ try:
         assert max_frame<=6*env.step_dt+1e-5 and max_wheel<=args.wheel_slew*env.step_dt+1e-4
         assert all(x['four'] for x in takeovers)
     env.close()
-finally:app.close()
+except BaseException:
+    # SimulationApp.close may terminate the interpreter before an exception is
+    # printed. Emit the traceback and preserve failure status for the supervisor.
+    import traceback,sys,os
+    traceback.print_exc();sys.stdout.flush();sys.stderr.flush()
+    os._exit(1)
+else:
+    app.close()

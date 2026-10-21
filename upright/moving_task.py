@@ -24,7 +24,7 @@ def state(env):
 
 def ensure(env):
     if not hasattr(env,'moving_progress'):
-        s=state(env);env.moving_progress=MovingProgress(env.num_envs,env.device,env.step_dt,env.cfg.speed_limit,env.cfg.yaw_limit,env.cfg.frame_range,env.cfg.seed,env.cfg.feedback_mode,env.cfg.turn_share,env.cfg.support_window)
+        s=state(env);env.moving_progress=MovingProgress(env.num_envs,env.device,env.step_dt,env.cfg.speed_limit,env.cfg.yaw_limit,env.cfg.frame_range,env.cfg.seed,env.cfg.feedback_mode)
         env.moving_progress.reset(torch.arange(env.num_envs,device=env.device),s['pos'],s['yaw'])
         env.moving_step=-1
     return env.moving_progress
@@ -106,7 +106,6 @@ def reward(env,kind):
     s,m=metrics(env);a=env.action_manager.get_term('moving')
     if kind in ('fresh','lift_event'):return m[kind].float()/env.step_dt
     if kind=='failure':return (m['physical_failure']&m['active']).float()/env.step_dt
-    if kind=='contact_loss':return m['contact_loss'].float()/env.step_dt
     if kind=='rate':return (a.applied-a.previous).square().sum(-1)*m['active']
     if kind=='deviation':return m['raw_distance'].clamp(max=1.5).square()*m['active']*m['transition_scale']
     return m[kind].float()
@@ -143,9 +142,6 @@ class RewardsCfg:
     progress=RewTerm(func=reward,weight=3.,params={'kind':'progress'})
     lift=RewTerm(func=reward,weight=3.,params={'kind':'lift_event'})
     support=RewTerm(func=reward,weight=2.,params={'kind':'support_reward'})
-    heading_sustain=RewTerm(func=reward,weight=0.,params={'kind':'heading_sustain'})
-    contact_loss=RewTerm(func=reward,weight=0.,params={'kind':'contact_loss'})
-    window_progress=RewTerm(func=reward,weight=0.,params={'kind':'window_progress'})
     transition_error=RewTerm(func=reward,weight=-.2,params={'kind':'transition_error'})
     tracking=RewTerm(func=reward,weight=2.,params={'kind':'tracking'})
     raw_tracking=RewTerm(func=reward,weight=1.,params={'kind':'raw_tracking'})
@@ -167,9 +163,6 @@ class DonesCfg:
 class MovingEnvCfg(UprightEnvCfg):
     actions=ActionsCfg();observations=ObservationsCfg();rewards=RewardsCfg();events=EventsCfg();terminations=DonesCfg()
     feedback_mode:str='command'
-    turn_share:float=0.
-    support_window:int=1
-
     wheel_slew:float=120.
     wheel_mode:str='independent'
     speed_limit:float=.3

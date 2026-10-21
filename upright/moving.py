@@ -25,12 +25,11 @@ def heading_feedback_rewards(forward_error, heading_rate_error, distance, headin
 
 
 class MovingProgress:
-    def __init__(self, n, device, dt, speed_limit=.3, yaw_limit=1., frame_range=(-1.,1.2), seed=42, feedback_mode="command", turn_share=0., support_window=1):
+    def __init__(self, n, device, dt, speed_limit=.3, yaw_limit=1., frame_range=(-1.,1.2), seed=42, feedback_mode="command"):
         self.n=n; self.device=device; self.dt=dt; self.seed=seed; self.feedback_mode=feedback_mode
         self.generation=torch.zeros(n,device=device,dtype=torch.long);self.command_count=self.generation.clone()
         self.speed_limit=speed_limit; self.yaw_limit=yaw_limit; self.frame_range=frame_range
-        self.window=math.ceil(1/dt); self.support_window=max(1,int(support_window))
-        self.support_hist=torch.zeros(self.support_window,n,device=device,dtype=torch.bool); self.support_cursor=0; self.support_cursor_all=0
+        self.window=math.ceil(1/dt)
         def zeros(*shape):return torch.zeros(*shape,device=device)
         self.external=zeros(n).bool(); self.active=zeros(n).bool(); self.age=zeros(n); self.since=zeros(n)
         self.ready=zeros(n); self.switch_at=zeros(n); self.next_command=zeros(n)
@@ -38,26 +37,9 @@ class MovingProgress:
         self.reference=zeros(n,2); self.raw_reference=zeros(n,2)
         self.yaw=zeros(n); self.raw_yaw=zeros(n); self.frame=zeros(n)
         self.peak=zeros(n); self.lifted=zeros(n).bool(); self.ever=zeros(n).bool()
-        self.support_run=zeros(n); self.heading_run=zeros(n); self.good_run=zeros(n)
-        self.rear_prev=torch.zeros(n,device=device,dtype=torch.bool)
-        self.good=torch.zeros(self.window,n,device=device,dtype=torch.bool)
-        self.cursor=0; self.last_g=zeros(n,3); self.mode=self.mode_pattern(n,device,turn_share)
+        self.support_run=zeros(n); self.good=torch.zeros(self.window,n,device=device,dtype=torch.bool)
+        self.cursor=0; self.last_g=zeros(n,3); self.mode=torch.arange(n,device=device)%6
         self.result={}
-
-    @staticmethod
-    def mode_pattern(n,device,turn_share):
-        """Fixed per-env command class. turn_share raises the share of pure turns,
-        because pure turning is where accumulated heading error is worst."""
-        base=[0,1,4,5]
-        turns=max(0,min(8,round(turn_share/(1-turn_share)*len(base)/2))) if 0<turn_share<1 else 0
-        # Interleave the turn classes with the straight/reverse/mixed ones, so the
-        # share holds for any env count and the first environments are not all straight.
-        pending=[2,3]*turns;pattern=[];i=j=0
-        while i<len(base) or j<len(pending):
-            if i<len(base):pattern.append(base[i]);i+=1
-            if j<len(pending):pattern.append(pending[j]);j+=1
-        table=torch.tensor(pattern,device=device,dtype=torch.long)
-        return table[torch.arange(n,device=device)%len(pattern)]
 
     def uniform(self, ids, stream):
         # Per-env counter-based streams: resetting another env cannot change the
@@ -90,8 +72,7 @@ class MovingProgress:
         self.raw[ids]=command;self.external[ids]=True
 
     def reset(self, ids, pos, heading):
-        for x in (self.active,self.age,self.since,self.ready,self.peak,self.lifted,self.ever,self.support_run,self.heading_run,self.good_run):x[ids]=0
-        self.rear_prev[ids]=False
+        for x in (self.active,self.age,self.since,self.ready,self.peak,self.lifted,self.ever,self.support_run):x[ids]=0
         self.generation[ids]+=1;self.command_count[ids]=0
         self.external[ids]=False; self.good[:,ids]=False; self.last_g[ids]=torch.tensor([0.,0.,-1.],device=self.device)
         self.frame[ids]=self.frame_range[0]+self.uniform(ids,3)*(self.frame_range[1]-self.frame_range[0])
@@ -131,20 +112,7 @@ class MovingProgress:
         # The first policy step inherits the measured motion; never request a stop.
         self.command[switch,0]=s['forward'][switch];self.command[switch,1]=s['vel'][switch,5]
         self.since+=active_before*self.dt
-        support_raw=self.active & s['rear'] & ~s['other'] & (s['front_z']>.12) & (s['g'][:,2]<-.25)
-        # The criterion claims "sustained support" but today samples one physics frame
-        # per control step; a window averages the same measurement over the control
-        # interval instead of judging a 60 ms interval from its last 2 ms.
-        if self.support_window>1:
-            self.support_hist[self.support_cursor]=support_raw
-            self.support_cursor=(self.support_cursor+1)%self.support_window
-            self.support_cursor_all+=1
-            if self.support_cursor_all>=self.support_window:
-                support=self.support_hist.sum(0)>=max(2,self.support_window-1)
-            else:
-                support=support_raw
-        else:
-            support=support_raw
+        support=self.active & s['rear'] & ~s['other'] & (s['front_z']>.12) & (s['g'][:,2]<-.25)
         self.support_run=torch.where(support,self.support_run+self.dt,0.)
         lift_event=(self.support_run>=.12)&~self.lifted;self.lifted |= lift_event
         raw_error=torch.stack((s['forward']-self.raw[:,0],s['vel'][:,5]-self.raw[:,1]),-1)
@@ -161,28 +129,11 @@ class MovingProgress:
         elif self.feedback_mode=='heading_feedback':
             tracking_reward,path_reward=heading_feedback_rewards(
                 feedback_error[:,0],s['heading_rate']-feedback_target[:,1],raw_distance,heading_error)
-        elif self.feedback_mode=='sustain':
-            # Tight on what the success window actually measures: the 0.25 rad
-            # heading budget is an integral, so the rate scale must be smaller than
-            # the 0.4 rad/s the command-mode reward tolerated.
-            tracking_reward=torch.exp(-feedback_error[:,0].square()/.1**2-feedback_error[:,1].square()/.15**2)
-            path_reward=torch.exp(-raw_distance.square()/.2**2-heading_error.square()/.10**2)
         fixed_error=(s['q'][:,:3]-fixed).abs().amax(-1)
         tilt_rate=(s['g']-self.last_g).norm(dim=-1)/self.dt;self.last_g.copy_(s['g'])
         # Turning is allowed: no zero-speed requirement and no fixed world-yaw span.
         good=support & (raw_error[:,0].abs()<.12)&(raw_error[:,1].abs()<.3)&(raw_distance<.15)&(heading_error.abs()<.25)&(fixed_error<.05)&(s['g'][:,1].abs()<.15)&(tilt_rate<.8)
-        # Dense credit for the criterion's own heading window: the hard gate needs
-        # |heading error| inside it continuously, so reward the run length, not the instant.
-        heading_ok=support&(heading_error.abs()<.25)
-        self.heading_run=torch.where(heading_ok,self.heading_run+self.dt,0.)
-        # Losing rear contact after the lift is what breaks the 1 s support window:
-        # charge the event itself, not the instantaneous absence of support.
-        contact_loss=self.active&self.lifted&self.rear_prev&(~s['rear'])
-        self.rear_prev.copy_(s['rear'])
         self.good[self.cursor]=good;self.cursor=(self.cursor+1)%self.window
-        # Dense credit for closing in on the 1 s window itself: the streak of
-        # steps that satisfy all eight criteria, not one criterion at a time.
-        self.good_run=torch.where(good,self.good_run+self.dt,0.)
         held=self.good.all(0)&(self.since>=1.)
         fresh=held&~self.ever;self.ever |= held
         lift=((s['front_z']-.045)/.075).clamp(0,1)*s['rear']*(~s['other'])
@@ -203,9 +154,6 @@ class MovingProgress:
             transition_error=.1*self.active*(~self.lifted)*(raw_error[:,0].square()/.3**2+raw_error[:,1].square()).clamp(max=4),
             prepare=self.active*(.1*prepare_pitch*(1-self.since/2).clamp(0,1)+2.*lift),
             support_reward=support*(.2+.8*(self.support_run/.3).clamp(0,1)),
-            heading_sustain=support*(self.heading_run/1.).clamp(0,1),
-            contact_loss=contact_loss.float(),
-            window_progress=(self.good_run/1.).clamp(0,1),
             tracking=support*tracking_reward,
             raw_tracking=support*torch.exp(-raw_error[:,0].square()/.2**2-raw_error[:,1].square()/.5**2),
             path=support*path_reward,
