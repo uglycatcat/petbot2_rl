@@ -525,7 +525,7 @@
     {
       "id": "moving_batch10",
       "batch": "moving_batch10",
-      "status": "planned",
+      "status": "aborted",
       "commit": "f68deac",
       "gate_dir": "moving_batch10",
       "doc": "docs/upright_moving_v10.md",
@@ -581,7 +581,8 @@
             "initialize_from": "/workspace/runs/moving_batch8_b43/logs/moving_batch8_b43/model_149.pt"
           }
         ]
-      }
+      },
+      "note": "用户要求停止：训练在第 3-15 次迭代时被终止，无结果，不作为证据"
     }
   ],
   "stop": {
