@@ -49,24 +49,11 @@
         "demo"
       ],
       "shallow": false,
-      "status": "upright_rebuild_batch2_12_runs_ppo_started",
-      "local_validation": "GPU contact history/reset/sign tests passed. A/B128x32 and2048x16 completed with finite scalars. Reload64 taken/lifted64 each, hold22/25,premature1/0,unfinished0. Second paired experiment2048x600,60 evaluations. See docs/upright_rebuild_batch2.md.",
+      "status": "upright_rebuild_batch2_complete_analyzed",
+      "local_validation": "12 training runs and60 evaluations complete, finite scalars. Final native A123/B140 of384; heldout A81/B96; wide A9/B10. No robust breakthrough; next projected-heading feedback contrast proposed, not implemented. See docs/upright_rebuild_batch2.md.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [
-        "upright_rebuild_batch2_a42",
-        "upright_rebuild_batch2_b42",
-        "upright_rebuild_batch2_a43",
-        "upright_rebuild_batch2_b43",
-        "upright_rebuild_batch2_a44",
-        "upright_rebuild_batch2_b44",
-        "upright_rebuild_batch2_a45",
-        "upright_rebuild_batch2_b45",
-        "upright_rebuild_batch2_a46",
-        "upright_rebuild_batch2_b46",
-        "upright_rebuild_batch2_a47",
-        "upright_rebuild_batch2_b47"
-      ]
+      "active_tasks": []
     },
     {
       "name": "step_rl_demo",
