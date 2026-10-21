@@ -16,6 +16,8 @@ for name,job in launch['train'].items():
  if '--feedback-mode' in job['envelope']:extras+=['--feedback-mode',job['envelope'][job['envelope'].index('--feedback-mode')+1]]
  if '--physical-contact-weight' in job['envelope']:extras+=['--physical-contact-weight',job['envelope'][job['envelope'].index('--physical-contact-weight')+1]]
  jobs.append((name,job,launch['iterations']-1,'common',['--speed-limit','0.3','--yaw-limit','1.0','--frame-min=-1.0','--frame-max','1.2','--wheel-mode',mode,*extras]))
+if launch.get('heldout_seed') is not None:
+ for name,job in launch['train'].items():jobs.append((name,job,launch['iterations']-1,'heldout',job['envelope']))
 deadline=time.time()+36*3600
 while time.time()<deadline:
  pending=False
@@ -33,7 +35,7 @@ while time.time()<deadline:
   gpu=next((i for i in (2,3,1) if mem[i][1]+3500<mem[i][0]*.78),None)
   if gpu is None:continue
   state[key]=dict(status='running',gpu=gpu,envelope=envelope,started_at=time.strftime('%FT%T%z'));path.write_text(json.dumps(state,indent=2))
-  cmd=['python3',str(pathlib.Path(__file__).with_name('run_guarded.py')),'--container',launch['container'],'--gpu',str(gpu),'--reserve-mib','3500','--entrypoint','train_moving.py','--workdir',f'/workspace/runs/{name}','--log',str(out/f'eval_{key}.log'),'--headless','--device','cuda:0','--num_envs','64','--evaluate','--seed',str(20261019 if scope=='native' else 20261020),*envelope,'--checkpoint',f'/workspace/runs/{name}/logs/{name}/model_{iteration}.pt','--log_dir',f'/workspace/runs/_{a.name}/eval_{key}']
+  cmd=['python3',str(pathlib.Path(__file__).with_name('run_guarded.py')),'--container',launch['container'],'--gpu',str(gpu),'--reserve-mib','3500','--entrypoint','train_moving.py','--workdir',f'/workspace/runs/{name}','--log',str(out/f'eval_{key}.log'),'--headless','--device','cuda:0','--num_envs','64','--evaluate','--seed',str(launch['heldout_seed'] if scope=='heldout' else (20261019 if scope=='native' else 20261020)),*envelope,'--checkpoint',f'/workspace/runs/{name}/logs/{name}/model_{iteration}.pt','--log_dir',f'/workspace/runs/_{a.name}/eval_{key}']
   started=time.time();code=subprocess.run(cmd).returncode;result=out/f'eval_{key}/evaluation.json'
   state[key].update(status='complete' if code==0 and result.exists() else 'failed',exit_code=code,finished_at=time.strftime('%FT%T%z'))
   if result.exists():
