@@ -26,7 +26,7 @@
 
   <remote name="github" fetch="https://github.com/" review="https://github.com/" />
   <!-- 我们自己的仓库：用于存放参考项目修改（refproj/*）和自有实验（demoproj/*） -->
-  <remote name="ours" fetch="https://github.com/uglycatcat/" review="https://github.com/" />
+  <remote name="ours" fetch="git@github.com:uglycatcat/" review="https://github.com/" />
 
   <default remote="github" revision="main" sync-j="4" />
 
