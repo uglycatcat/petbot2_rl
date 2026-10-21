@@ -15,3 +15,14 @@ for bad in (dict(r,unfinished=1),dict(r,success=1),dict(r,metric=float('inf'))):
  except ValueError:pass
  else:raise AssertionError('Invalid result accepted')
 print('PASS CUDA six-mode baseline / no support filter / result completeness and finiteness')
+
+# The candidate changes path reward only, not success/support or mode distribution.
+s=dict(pos=torch.tensor([[0.,0.,.1]],device='cuda:0'),yaw=torch.tensor([.2],device='cuda:0'),forward=torch.zeros(1,device='cuda:0'),vel=torch.zeros(1,6,device='cuda:0'),q=torch.zeros(1,5,device='cuda:0'),g=torch.tensor([[0.,0.,-1.]],device='cuda:0'),front_z=torch.full((1,),.18,device='cuda:0'),rear=torch.ones(1,device='cuda:0',dtype=torch.bool),other=torch.zeros(1,device='cuda:0',dtype=torch.bool),four=torch.zeros(1,device='cuda:0',dtype=torch.bool))
+outputs=[]
+for mode in ('pose_feedback','pose_feedback_tight'):
+ q=MovingProgress(1,'cuda:0',.06,feedback_mode=mode);q.active[:]=True;q.since[:]=3
+ outputs.append(q.update(s,torch.zeros(3,device='cuda:0')))
+assert outputs[1]['path'].item()<outputs[0]['path'].item()
+for k in outputs[0]:
+ if k!='path':assert torch.equal(outputs[0][k],outputs[1][k]),k
+print('PASS candidate changes only path heading scale; all other metrics identical')

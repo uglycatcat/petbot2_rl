@@ -124,11 +124,14 @@ class MovingProgress:
         feedback_error=torch.stack((s['forward'],s['vel'][:,5]),-1)-feedback_target
         tracking_reward=torch.exp(-error[:,0].square()/.15**2-error[:,1].square()/.4**2)
         path_reward=torch.exp(-raw_distance.square()/.2**2-heading_error.square()/.3**2)
-        if self.feedback_mode=='pose_feedback':
+        if self.feedback_mode in ('pose_feedback','pose_feedback_tight'):
             tracking_reward=torch.exp(-feedback_error[:,0].square()/.1**2-feedback_error[:,1].square()/.2**2)
         elif self.feedback_mode=='heading_feedback':
             tracking_reward,path_reward=heading_feedback_rewards(
                 feedback_error[:,0],s['heading_rate']-feedback_target[:,1],raw_distance,heading_error)
+        if self.feedback_mode=='pose_feedback_tight':
+            # Single-factor contrast: tighten only heading error in the path reward.
+            path_reward=torch.exp(-raw_distance.square()/.2**2-heading_error.square()/.15**2)
         fixed_error=(s['q'][:,:3]-fixed).abs().amax(-1)
         tilt_rate=(s['g']-self.last_g).norm(dim=-1)/self.dt;self.last_g.copy_(s['g'])
         # Turning is allowed: no zero-speed requirement and no fixed world-yaw span.

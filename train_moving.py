@@ -7,8 +7,9 @@ p.add_argument('--seed',type=int,default=42);p.add_argument('--log_dir',default=
 p.add_argument('--speed-limit',type=float,default=.3);p.add_argument('--yaw-limit',type=float,default=1.)
 p.add_argument('--frame-min',type=float,default=-1.);p.add_argument('--frame-max',type=float,default=1.2)
 p.add_argument('--initialize-from')
-p.add_argument('--feedback-mode',choices=['command','pose_feedback','heading_feedback'],default='command')
+p.add_argument('--feedback-mode',choices=['command','pose_feedback','heading_feedback','pose_feedback_tight'],default='command')
 p.add_argument('--learning-rate',type=float,default=.0001)
+p.add_argument('--contact-audit',action='store_true')
 p.add_argument('--save-interval',type=int,default=250)
 p.add_argument('--wheel-slew',type=float,choices=[120.,900.],default=120.)
 p.add_argument('--wheel-mode',choices=['independent','common_diff'],default='independent')
@@ -42,10 +43,12 @@ try:
     if args.checkpoint and args.initialize_from:raise ValueError('Use resume OR explicit initialization')
     if not 0<args.learning_rate<=.0003:raise ValueError('Learning rate outside validated bound')
     torch.manual_seed(args.seed)
+    if args.contact_audit and not args.evaluate:raise ValueError('Contact audit is evaluation-only')
     cfg=MovingEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
     cfg.speed_limit=args.speed_limit;cfg.yaw_limit=args.yaw_limit;cfg.frame_range=(args.frame_min,args.frame_max)
     cfg.feedback_mode=args.feedback_mode;cfg.rewards.path.weight=1. if args.feedback_mode=='command' else 4.
     cfg.wheel_slew=args.wheel_slew;cfg.wheel_mode=args.wheel_mode;cfg.active_seconds=args.active_seconds;cfg.episode_length_s=args.active_seconds+6.
+    if args.contact_audit:cfg.scene.contact_forces.history_length=cfg.decimation
     env=ManagerBasedRLEnv(cfg=cfg);wrapped=Adapter(env)
     folder=pathlib.Path(args.log_dir);folder.mkdir(parents=True,exist_ok=True)
     dirty=bool(subprocess.check_output(['git','status','--porcelain'],text=True).strip())
@@ -96,7 +99,7 @@ try:
         criterion_names=['support','forward','yaw_rate','path','heading','fixed','roll','tilt_rate']
         criterion_counts=torch.zeros(n,8,device=device);tail_criterion_counts=criterion_counts.clone();tail_counts=torch.zeros(n,device=device)
         heading_rate_error=counts.clone();physical_ended=~alive;path_ended=~alive
-        rear_missing=counts.clone()
+        rear_missing=counts.clone();contact_trace=[]
         with torch.inference_mode():
             for tick in range(env.max_episode_length+3):
                 action=env.action_manager.get_term('moving')
@@ -107,6 +110,12 @@ try:
                 previous=action.applied.clone();before=alive.clone()
                 obs,reward,done,info=wrapped.step(a)
                 s,m,raw,command,applied,since=env.moving_snapshot
+                if args.contact_audit:
+                    from upright.task import tensor
+                    h=tensor(env.scene['contact_forces'].data.net_forces_w_history)
+                    assert h.ndim==4 and h.shape[1]==env.cfg.decimation and h.shape[-1]==3
+                    fraction=(h[:,:,env.upright_ids[3],2]>.05).all(-1).float().mean(-1)
+                    contact_trace.append(dict(t=tick*env.step_dt,valid=(before&m['active']&~done.bool()).tolist(),sampled_rear=s['rear'].tolist(),physics_rear_fraction=fraction.tolist(),front_z=s['front_z'].tolist(),other=s['other'].tolist()))
                 active=before&m['active'];switched=before&m['switched'];taken |= switched
                 event=active&m['lift_event'];first_lift=torch.where(event & ~lifted,since,first_lift);lifted |= event
                 support_count+=active&m['support'];max_height=torch.maximum(max_height,torch.where(active,s['front_z'],0.))
@@ -143,6 +152,7 @@ try:
             lifted=int(lifted.sum()),lifted_per_env=lifted.tolist(),first_lift_seconds=first_lift.tolist(),support_fraction_per_env=(support_count/counts.clamp_min(1)).tolist(),max_front_height_per_env=max_height.tolist(),
             raw_velocity_mae_per_env=(sum_error/counts.clamp_min(1)[:,None]).tolist(),raw_path_mae_per_env=(sum_path/counts.clamp_min(1)).tolist(),active_samples=counts.tolist(),nonzero_command_low_speed_fraction=(low_speed/moving_samples.clamp_min(1)).tolist(),max_forward_acceleration=max_acceleration,
             max_frame_target_step=max_frame,max_wheel_target_step=max_wheel,max_fixed_error=fixed_error,frame_symmetry_target_error=frame_symmetry,takeovers=takeovers,contract=contract)
+        if args.contact_audit:(folder/'contact_trace.json').write_text(json.dumps(contact_trace))
         (folder/'evaluation.json').write_text(json.dumps(result,indent=2));(folder/'trace.json').write_text(json.dumps(trace))
         print({k:v for k,v in result.items() if not isinstance(v,(list,dict))})
         assert frame_symmetry==0
