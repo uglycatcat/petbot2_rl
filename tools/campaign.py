@@ -570,6 +570,8 @@ def envelope_args(plan, var):
         args += ['--contact-loss-weight', str(var['contact_loss_weight'])]
     if var.get('window_progress_weight') is not None:
         args += ['--window-progress-weight', str(var['window_progress_weight'])]
+    if var.get('support_window') is not None:
+        args += ['--support-window', str(var['support_window'])]
     # An initialization source must NOT be part of the envelope: the envelope is
     # replayed by the evaluation queue, and train_moving refuses to start with both
     # an initialization source and a checkpoint.

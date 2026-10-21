@@ -521,6 +521,49 @@
           "initialize_from": "../moving_batch8_b43/logs/moving_batch8_b43/model_149.pt"
         }
       ]
+    },
+    {
+      "id": "moving_batch10",
+      "batch": "moving_batch10",
+      "status": "planned",
+      "commit": "f68deac",
+      "gate_dir": "moving_batch9",
+      "doc": "docs/upright_moving_v10.md",
+      "iterations": 100,
+      "save_interval": 25,
+      "checkpoints": [
+        25,
+        50,
+        99
+      ],
+      "variants": [
+        {
+          "run": "moving_batch10_a42",
+          "group": "a",
+          "seed": 42,
+          "gpu": 2,
+          "feedback_mode": "sustain",
+          "turn_share": 0.5,
+          "learning_rate": 3e-05,
+          "contact_loss_weight": 2.0,
+          "window_progress_weight": 1.0,
+          "support_window": 3,
+          "initialize_from": "../moving_batch8_b42/logs/moving_batch8_b42/model_149.pt"
+        },
+        {
+          "run": "moving_batch10_a43",
+          "group": "a",
+          "seed": 43,
+          "gpu": 3,
+          "feedback_mode": "sustain",
+          "turn_share": 0.5,
+          "learning_rate": 3e-05,
+          "contact_loss_weight": 2.0,
+          "window_progress_weight": 1.0,
+          "support_window": 3,
+          "initialize_from": "../moving_batch8_b43/logs/moving_batch8_b43/model_149.pt"
+        }
+      ]
     }
   ],
   "stop": {
