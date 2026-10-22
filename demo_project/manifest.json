@@ -49,24 +49,11 @@
         "demo"
       ],
       "shallow": false,
-      "status": "upright_rebuild_batch3_12_runs_ppo_started",
-      "local_validation": "CUDA heading derivative and single-factor checks passed; A/B128x32 and2048x16 finite, exit0. Reload64 lifted64 each, hold30/20,premature1/0. Third paired experiment2048x600 with60 evaluations; no efficacy claim. See docs/upright_rebuild_batch3.md.",
+      "status": "upright_rebuild_batch3_complete_diagnosed",
+      "local_validation": "12 runs and60 evaluations complete, all scalars finite; final native A128/B119, heldout82/84, wide12/10 of384. Four trace diagnostics reproduce results; projected feedback not promoted. Next: physical-step contact duration and trajectory validation, no batch4 launched. See docs/upright_rebuild_batch3.md.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [
-        "upright_rebuild_batch3_a42",
-        "upright_rebuild_batch3_b42",
-        "upright_rebuild_batch3_a43",
-        "upright_rebuild_batch3_b43",
-        "upright_rebuild_batch3_a44",
-        "upright_rebuild_batch3_b44",
-        "upright_rebuild_batch3_a45",
-        "upright_rebuild_batch3_b45",
-        "upright_rebuild_batch3_a46",
-        "upright_rebuild_batch3_b46",
-        "upright_rebuild_batch3_a47",
-        "upright_rebuild_batch3_b47"
-      ]
+      "active_tasks": []
     },
     {
       "name": "step_rl_demo",
