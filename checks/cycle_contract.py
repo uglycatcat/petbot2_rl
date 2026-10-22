@@ -27,3 +27,16 @@ y=((x[:,indices]-old['obs_normalizer._mean'])/old['obs_normalizer._std'])@old['m
 z=((x-e['obs_normalizer._mean'])/e['obs_normalizer._std'])@e['mlp.0.weight'].T
 assert torch.allclose(y,z,atol=2e-5,rtol=2e-5)
 print('PASS one-time reference anchor, low-speed accountability, latched landing, handoff, failure priority, reset, actor history transfer')
+
+# A stationary landing posture must not accumulate progress reward, and fast
+# descent must already be penalized before front-wheel contact.
+p.reset(ids,s['pos'],s['yaw']);p.active[:]=True;p.phase[:]=3;p.external[:]=True;p.destination[:]=.2
+s['g'][:]=torch.tensor([0.,0.,-1.],device=d);s['front_z'][:]=.09;s['four_fraction'][:]=0;s['front_contact'][:]=False;s['front_vertical_speed'][:]=-.7
+p.update(s,torch.zeros(3,device=d));m=p.update(s,torch.zeros(3,device=d))
+assert torch.all(m['land_reward']==0), 'No repeated pose reward'
+assert (m['descent_cost']>0).all(), 'Brake before contact'
+s['front_vertical_speed'][:]=-.05;m=p.update(s,torch.zeros(3,device=d));assert (m['descent_cost']==0).all()
+# Static landing has negative total residence incentive even with maximal
+# approach, ground, transition and smooth shaping: -.7 per second or less.
+assert -2+.2+.5+.1+.5<0
+print('PASS no landing residence exploit, precontact braking, gentle descent')

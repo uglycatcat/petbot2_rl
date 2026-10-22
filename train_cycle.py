@@ -9,7 +9,8 @@ p.add_argument('--frame-min',type=float,default=-.3);p.add_argument('--frame-max
 p.add_argument('--wheel-slew',type=float,choices=[120.,240.,480.],default=120.)
 p.add_argument('--frame-slew',type=float,default=3.)
 p.add_argument('--learning-rate',type=float,default=.0001);p.add_argument('--save-interval',type=int,default=100)
-p.add_argument('--initialize-from');p.add_argument('--checkpoint');p.add_argument('--evaluate',action='store_true')
+p.add_argument('--tracking-weight',type=float,choices=[6.,12.],default=6.)
+p.add_argument('--initialize-cycle-from');p.add_argument('--initialize-from');p.add_argument('--checkpoint');p.add_argument('--evaluate',action='store_true')
 p.add_argument('--allow-dirty',action='store_true');p.add_argument('--probe',action='store_true')
 AppLauncher.add_app_launcher_args(p);args=p.parse_args();app=AppLauncher(args).app
 import torch
@@ -36,18 +37,18 @@ class Adapter:
 try:
     assert 0<args.speed_limit<=.3 and 0<args.yaw_limit<=1
     assert -1<=args.frame_min<=args.frame_max<=1.2 and 0<args.frame_slew<=6
-    assert not (args.checkpoint and args.initialize_from)
+    assert sum(bool(x) for x in (args.checkpoint,args.initialize_from,args.initialize_cycle_from))<=1
     cfg=CycleEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
     cfg.speed_limit=args.speed_limit;cfg.yaw_limit=args.yaw_limit;cfg.frame_range=(args.frame_min,args.frame_max)
     cfg.wheel_slew=args.wheel_slew;cfg.frame_slew=args.frame_slew;cfg.wheel_mode='common_diff'
-    cfg.feedback_mode='pose_feedback_tight'
+    cfg.feedback_mode='pose_feedback_tight';cfg.rewards.tracking.weight=args.tracking_weight
     torch.manual_seed(args.seed);env=ManagerBasedRLEnv(cfg=cfg);wrapped=Adapter(env)
     folder=pathlib.Path(args.log_dir);folder.mkdir(parents=True,exist_ok=True)
     dirty=bool(subprocess.check_output(['git','status','--porcelain'],text=True).strip())
     if dirty and not args.allow_dirty:raise RuntimeError('Commit source before formal execution')
     names=['train_cycle.py']+['upright/'+n+'.py' for n in ['cycle','cycle_task','moving','task','distribution','model','asset_cfg','prepare','transfer']]
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(n).read_bytes()).hexdigest() for n in names).encode()).hexdigest()
-    contract=dict(task='upright_cycle_v1',observation_schema='cycle_49x5_v1',fingerprint=fingerprint,
+    contract=dict(task='upright_cycle_v2',reward_design='landing_progress_precontact_braking_v2',tracking_weight=args.tracking_weight,observation_schema='cycle_49x5_v1',fingerprint=fingerprint,
         action_dim=3,wheel_mode='common_diff',wheel_slew=args.wheel_slew,frame_slew=args.frame_slew,
         control_dt=env.step_dt,source_sha256=SPEC['source_sha256'],rear_duty_threshold=.9,
         transition_reference='reanchor_once_on_balance',mode_request='landing_latched_until_handoff',landing_force_limit_n=20.,touchdown_speed_limit=.35)
@@ -72,6 +73,16 @@ try:
         actor=runner.alg.get_policy();actor.load_state_dict(expand_actor(loaded['actor_state_dict'],actor.state_dict()),strict=True)
         assert runner.current_learning_iteration==0 and not runner.alg.optimizer.state
         metadata['initialization']=dict(source_commit=prior['commit'],checkpoint_sha256=hashlib.sha256(initial.read_bytes()).hexdigest(),actor_only=True,critic_fresh=True,optimizer_loaded=False,extra_features_zero_weight=True)
+        del loaded
+    if args.initialize_cycle_from:
+        initial=pathlib.Path(args.initialize_cycle_from);prior=json.loads((initial.parent/'config.json').read_text())
+        if prior['commit']!='c3bb859f05c6490ffff645a2265c4291e393a35a' or prior['working_tree_dirty']:raise ValueError('Only clean cycle batch1 actor allowed')
+        for k in ('observation_schema','action_dim','wheel_mode','wheel_slew','frame_slew','control_dt','source_sha256'):
+            if prior['contract'][k]!=contract[k]:raise ValueError('Actor transfer mismatch '+k)
+        loaded=torch.load(initial,map_location='cpu',weights_only=False)
+        runner.alg.get_policy().load_state_dict(loaded['actor_state_dict'],strict=True)
+        assert runner.current_learning_iteration==0 and not runner.alg.optimizer.state
+        metadata['initialization']=dict(source_commit=prior['commit'],checkpoint_sha256=hashlib.sha256(initial.read_bytes()).hexdigest(),actor_only=True,critic_fresh=True,optimizer_loaded=False)
         del loaded
     if args.checkpoint:runner.load(args.checkpoint)
     (folder/'config.json').write_text(json.dumps(metadata,indent=2))

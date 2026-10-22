@@ -118,7 +118,7 @@ def observations(env):
 
 def reward(env,kind):
     s,m=metrics(env);a=env.action_manager.get_term('moving')
-    if kind in ('entered_balance','entered_handoff'):return m[kind].float()/env.step_dt
+    if kind in ('entered_balance','entered_handoff','land_reward'):return m[kind].float()/env.step_dt
     if kind=='failure':return m['failure'].float()/env.step_dt
     if kind=='rate':
         frame_rate=(a.target[:,3]-a.previous[:,0]*(a.hi-a.lo)/2-(a.hi+a.lo)/2)/env.step_dt
@@ -164,7 +164,10 @@ class RewardsCfg:
     tracking=RewTerm(func=reward,weight=5.,params={'kind':'track_reward'})
     transition=RewTerm(func=reward,weight=1.,params={'kind':'transition_track'})
     landing=RewTerm(func=reward,weight=3.,params={'kind':'land_reward'})
-    approach=RewTerm(func=reward,weight=2.,params={'kind':'approach_reward'})
+    approach=RewTerm(func=reward,weight=.2,params={'kind':'approach_reward'})
+    landing_time=RewTerm(func=reward,weight=-2.,params={'kind':'landing_time'})
+    ground_quality=RewTerm(func=reward,weight=.5,params={'kind':'ground_quality'})
+    descent=RewTerm(func=reward,weight=-3.,params={'kind':'descent_cost'})
     enter_handoff=RewTerm(func=reward,weight=10.,params={'kind':'entered_handoff'})
     handoff=RewTerm(func=reward,weight=3.,params={'kind':'handoff_reward'})
     smooth=RewTerm(func=reward,weight=.5,params={'kind':'smooth_reward'})

@@ -14,12 +14,12 @@ class CycleProgress(MovingProgress):
         self.max_impact=z();self.max_touchdown_speed=z();self.last_front_speed=z();self.landed=z().bool();self.handoff=z().bool()
         self.balance_ever=z().bool();self.external_mode=z().bool();self.land_height=z()+.18
         self.track_sum=torch.zeros(self.n,2,device=self.device);self.track_count=z()
-        self.track_good=z();self.balance_good=z();self.handoff_run=z()
+        self.track_good=z();self.balance_good=z();self.handoff_run=z();self.landing_potential=z()
 
     def reset(self,ids,pos,heading):
         super().reset(ids,pos,heading)
         for x in (self.phase,self.phase_time,self.ground_run,self.balance_time,self.transition_offset,
-                  self.max_impact,self.max_touchdown_speed,self.last_front_speed,self.landed,self.handoff,self.balance_ever,self.external_mode,self.track_count,self.track_good,self.balance_good,self.handoff_run):x[ids]=0
+                  self.max_impact,self.max_touchdown_speed,self.last_front_speed,self.landed,self.handoff,self.balance_ever,self.external_mode,self.track_count,self.track_good,self.balance_good,self.handoff_run,self.landing_potential):x[ids]=0
         self.track_sum[ids]=0;self.mode[ids]=1
         self.destination[ids]=self.frame_range[0]+self.uniform(ids,8)*(self.frame_range[1]-self.frame_range[0])
         self.land_at[ids]=5.+3.*self.uniform(ids,9)
@@ -73,11 +73,19 @@ class CycleProgress(MovingProgress):
         self.track_sum+=error.abs()*((self.phase==2)&(self.phase_time>.5))[:,None]
         eligible=(self.phase==2)&(self.phase_time>.5)
         self.track_count+=eligible;self.track_good+=eligible&tracking;self.balance_good+=eligible&balanced
-        tracking_reward=.5*torch.exp(-error[:,0].square()/.06**2)+.5*torch.exp(-error[:,1].square()/.15**2)
+        tracking_reward=.5*torch.exp(-(error[:,0]/(2*tolerance[:,0])).square())+.5*torch.exp(-(error[:,1]/(2*tolerance[:,1])).square())
         remaining=((s['front_z']-.045)/(self.land_height-.045).clamp_min(.075)).clamp(0,1)
         lowering=(1-remaining)*s['rear_fraction']
         pitch_return=(( -s['g'][:,2]-.25)/.75).clamp(0,1)
         frame_match=torch.exp(-frame_error.square()/.15**2)
+        potential=lowering+pitch_return+frame_match
+        # Reward change, never repeated residence at an already lowered pose.
+        self.landing_potential[landing]=potential[landing]
+        landing_progress=torch.where((self.phase==3)|handoff,potential-self.landing_potential,0.)
+        self.landing_potential.copy_(potential)
+        clearance=(s['front_z']-.045).clamp_min(0.)
+        allowed_down=(.08+torch.sqrt(2*.6*clearance)).clamp(max=.6)
+        descent_cost=torch.relu(-s['front_vertical_speed']-allowed_down).square()/.25**2
         # Safety termination has priority over time limits, including the final handoff step.
         failure=m['physical_failure']|m['warmup_failed']|((self.phase==1)&(self.phase_time>3.))|((self.phase==3)&(self.phase_time>4.))
         failure |= self.active & ((s['pos'][:,:2]-self.rise_position).norm(dim=-1)>3.)
@@ -94,7 +102,10 @@ class CycleProgress(MovingProgress):
             lift_reward=(self.phase==1)*((s['front_z']-.045)/.075).clamp(0,1)*s['rear_fraction'],
             balance_reward=(self.phase==2)*balanced.float(),
             track_reward=(self.phase==2)*support*tracking_reward,
-            land_reward=(self.phase==3)*(lowering+pitch_return+frame_match)*s['rear_fraction'],
+            land_reward=landing_progress,
+            landing_time=(self.phase==3).float(),
+            ground_quality=(self.phase==3)*s['four_fraction']*frame_match,
+            descent_cost=(self.phase==3)*descent_cost,
             approach_reward=(self.phase==3)*torch.exp(-s['front_vertical_speed'].square()/.25**2)*(1-remaining),
             handoff_reward=(self.phase==4)*ground*frame_match,
             touchdown_cost=(self.phase==3)*s['front_contact']*torch.relu(-s['front_vertical_speed']-.25).square(),

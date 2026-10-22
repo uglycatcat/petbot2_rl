@@ -56,16 +56,24 @@ def main():
     save(out/'launch_status.json',state)
     starting=[]
     for v in variants:
-        dst=RUNS/v['run'];envelope=plan['envelope']+['--wheel-slew',str(v['wheel_slew']),'--frame-slew',str(v['frame_slew'])]
+        dst=RUNS/v['run'];envelope=plan['envelope']+['--wheel-slew',str(v['wheel_slew']),'--frame-slew',str(v['frame_slew'])]+(['--tracking-weight',str(v['tracking_weight'])] if 'tracking_weight' in v else [])
         initial=pathlib.Path(v['initial']).relative_to('demo_project/runs')
-        cmd=['python3',str(dst/'tools/run_guarded.py'),'--container',plan['container'],'--gpu',str(v['gpu']),'--reserve-mib',str(v['reserve_mib']),'--workdir','/workspace/runs/'+v['run'],'--entrypoint','train_cycle.py','--log',str(out/(v['run']+'.log')),'--headless','--device','cuda:0','--num_envs',str(v['envs']),'--iterations',str(plan['iterations']),'--save-interval',str(plan['save_interval']),'--learning-rate',str(plan['learning_rate']),'--seed',str(v['seed']),'--initialize-from','/workspace/runs/'+str(initial),'--log_dir','/workspace/runs/'+v['run']+'/logs/'+v['run'],*envelope]
+        cmd=['python3',str(dst/'tools/run_guarded.py'),'--container',plan['container'],'--gpu',str(v['gpu']),'--reserve-mib',str(v.get('start_reserve_mib',v['reserve_mib'])),'--workdir','/workspace/runs/'+v['run'],'--entrypoint','train_cycle.py','--log',str(out/(v['run']+'.log')),'--headless','--device','cuda:0','--num_envs',str(v['envs']),'--iterations',str(plan['iterations']),'--save-interval',str(plan['save_interval']),'--learning-rate',str(plan['learning_rate']),'--seed',str(v['seed']),plan.get('initialization_flag','--initialize-from'),'/workspace/runs/'+str(initial),'--log_dir','/workspace/runs/'+v['run']+'/logs/'+v['run'],*envelope]
+        # Never refill capacity freed by a failed earlier job.
+        while True:
+            for prior_run,prior_proc,_ in starting:
+                if prior_proc.poll() is not None and prior_proc.returncode!=0:raise RuntimeError('Earlier job interrupted: '+prior_run)
+            total,used,_=usage()[v['gpu']]
+            if used+v.get('start_reserve_mib',v['reserve_mib'])<total*.78:break
+            time.sleep(5)
         with (out/(v['run']+'_guard.log')).open('w') as f:proc=subprocess.Popen(cmd,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
         state['train'][v['run']]=dict(pid=proc.pid,gpu=v['gpu'],envelope=envelope,command=cmd,status='initializing',num_envs=v['envs']);save(out/'launch_status.json',state)
         starting.append((v['run'],proc,time.monotonic()+900))
         # Wait for this allocation/PPO before another launch.
         deadline=time.monotonic()+900
         while True:
-            if proc.poll() is not None:raise RuntimeError('Startup exit: '+v['run'])
+            for prior_run,prior_proc,_ in starting:
+                if prior_proc.poll() is not None and prior_proc.returncode!=0:raise RuntimeError('Earlier job interrupted: '+prior_run)
             log=out/(v['run']+'.log')
             if log.exists() and 'Learning iteration' in log.read_text(errors='replace'):break
             if time.monotonic()>deadline:raise RuntimeError('Startup timeout')
@@ -73,7 +81,7 @@ def main():
         state['train'][v['run']]['status']='ppo_started';save(out/'launch_status.json',state)
     while starting:
         for run,proc,deadline in list(starting):
-            if proc.poll() is not None:raise RuntimeError(f'{run} exited before PPO verification; inspect partial launch')
+            if proc.poll() is not None and proc.returncode!=0:raise RuntimeError(f'{run} exited before PPO verification; inspect partial launch')
             log=out/(run+'.log')
             if log.exists() and 'Learning iteration' in log.read_text(errors='replace'):
                 state['train'][run]['status']='ppo_started';save(out/'launch_status.json',state)
