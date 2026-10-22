@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "c3bb859f05c6490ffff645a2265c4291e393a35a",
+      "verified_commit": "46afcd81c577c1588cbee3f138e0844791499fea",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "upright_cycle_batch1_launching",
-      "local_validation": "Rebuild batch4 complete:12 training and60 validated evaluations; no candidate promotion. Full-cycle GPU gate passed: two128x8 and2048x8 finite,64/64 takeover each,59/64 and64/64 balance,0 learned landing/qualified. Grounded handoff16/16. Launching12 fixed-version2048x600 comparisons; see docs/upright_cycle_v1.md and launch_status.json. Source model unchanged.",
+      "status": "upright_cycle_batch1_partial_launch_capacity_queue",
+      "local_validation": "Task fixedc3bb859, orchestration46afcd8. Rebuild4:12 trains/60 evals complete, no promotion. Full-cycle gate finite;59/64 and64/64 balance,0 learned landing. 6 formal jobs running, seventh initializing; GPU3 external memory spikes stopped only untrainedb44 twice. GPU3 excluded for this batch; conservative6GB sequential pending launcher active on remaining cards, evaluator scheduled after all starts. See docs/upright_cycle_v1.md and launch_status; do not duplicate launch.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
