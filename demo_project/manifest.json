@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "c270057e4c4ac7a052949d563524976e3867b27d",
+      "verified_commit": "c3bb859f05c6490ffff645a2265c4291e393a35a",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "upright_rebuild_batch4_conservative_recovery",
-      "local_validation": "Batch4 task remains14dca2d. Interrupted at11:26:16 complete,4 failed,40 missing evaluations; GPU0 memory guard stopped shared container. Token-scoped termination tested without disturbing second job; 12 runs resumed from200/300/400 checkpoints with optimizer. Original checkpoint identities archived for evaluation; final results pending. See docs/upright_rebuild_batch4.md and deployment audit. GPU0 retrigger isolated successfully; a42 movedGPU2. At11:38 all12 training plus evaluation live;17 evaluations complete, no final conclusion. Orchestration6951f0a, task14dca2d. Later GPU2 guard stopped3 jobs; at11:55 switched to serial6GB-headroom reload and deferred evaluation. See current launch_status and conservative_recovery.json; no final result.",
+      "status": "upright_cycle_batch1_launching",
+      "local_validation": "Rebuild batch4 complete:12 training and60 validated evaluations; no candidate promotion. Full-cycle GPU gate passed: two128x8 and2048x8 finite,64/64 takeover each,59/64 and64/64 balance,0 learned landing/qualified. Grounded handoff16/16. Launching12 fixed-version2048x600 comparisons; see docs/upright_cycle_v1.md and launch_status.json. Source model unchanged.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
