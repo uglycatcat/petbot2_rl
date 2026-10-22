@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "46afcd81c577c1588cbee3f138e0844791499fea",
+      "verified_commit": "57111deb383c40c467ba81c1d5b0ab5bc51002b8",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "upright_cycle_batch1_partial_launch_capacity_queue",
-      "local_validation": "Task fixedc3bb859, orchestration46afcd8. Rebuild4:12 trains/60 evals complete, no promotion. Full-cycle gate finite;59/64 and64/64 balance,0 learned landing. 6 formal jobs running, seventh initializing; GPU3 external memory spikes stopped only untrainedb44 twice. GPU3 excluded for this batch; conservative6GB sequential pending launcher active on remaining cards, evaluator scheduled after all starts. See docs/upright_cycle_v1.md and launch_status; do not duplicate launch.",
+      "status": "upright_cycle_batch1_checkpoint_recovery",
+      "local_validation": "Task fixedc3bb859. At16:00 eight live,three guard interruptions,one pending. Reconcile tool8b1f024 restores100/0/0 with original evidence archived and8GB headroom; GPU3 requalified after external load ended. EarlyA42/500:62 balance,61 landing requests,2 completed,0 qualified of64; all61 lowered front wheels to ground height,59 landing timeout. Observation-only contact diagnosticc2c5186. No batch success claim; see docs/upright_cycle_v1.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
