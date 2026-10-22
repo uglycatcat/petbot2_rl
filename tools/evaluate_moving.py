@@ -33,6 +33,9 @@ while time.time()<deadline:
   key=f'{name}_i{iteration}_{scope}'
   if state.get(key,{}).get('status') in ('complete','failed','missing_checkpoint'):continue
   pending=True;checkpoint=root/f'demo_project/runs/{name}/logs/{name}/model_{iteration}.pt'
+  # Recovery may re-save its starting iteration; retain the pre-interruption checkpoint identity.
+  preserved=out/launch.get('recovery_archive','_no_recovery')/name/f'model_{iteration}.pt'
+  if preserved.exists():checkpoint=preserved
   if not checkpoint.exists():
    end=out/(name+'.exit.json')
    if end.exists():state[key]=dict(status='missing_checkpoint',training_exit=json.loads(end.read_text()));path.write_text(json.dumps(state,indent=2))
@@ -43,7 +46,7 @@ while time.time()<deadline:
   gpu=next((i for i in (2,3,1) if mem[i][1]+3500<mem[i][0]*.78),None)
   if gpu is None:continue
   state[key]=dict(status='running',gpu=gpu,envelope=envelope,started_at=time.strftime('%FT%T%z'));path.write_text(json.dumps(state,indent=2))
-  cmd=['python3',str(pathlib.Path(__file__).with_name('run_guarded.py')),'--container',launch['container'],'--gpu',str(gpu),'--reserve-mib','3500','--entrypoint','train_moving.py','--workdir',f'/workspace/runs/{name}','--log',str(out/f'eval_{key}.log'),'--headless','--device','cuda:0','--num_envs','64','--evaluate','--seed',str(launch['heldout_seed'] if scope=='heldout' else (20261019 if scope=='native' else 20261020)),*envelope,'--checkpoint',f'/workspace/runs/{name}/logs/{name}/model_{iteration}.pt','--log_dir',f'/workspace/runs/_{a.name}/eval_{key}']
+  cmd=['python3',str(pathlib.Path(__file__).with_name('run_guarded.py')),'--container',launch['container'],'--gpu',str(gpu),'--reserve-mib','3500','--entrypoint','train_moving.py','--workdir',f'/workspace/runs/{name}','--log',str(out/f'eval_{key}.log'),'--headless','--device','cuda:0','--num_envs','64','--evaluate','--seed',str(launch['heldout_seed'] if scope=='heldout' else (20261019 if scope=='native' else 20261020)),*envelope,'--checkpoint','/workspace/runs/'+str(checkpoint.relative_to(root/'demo_project/runs')),'--log_dir',f'/workspace/runs/_{a.name}/eval_{key}']
   started=time.time();code=subprocess.run(cmd).returncode;result=out/f'eval_{key}/evaluation.json'
   state[key].update(status='complete' if code==0 and result.exists() else 'failed',exit_code=code,finished_at=time.strftime('%FT%T%z'))
   if result.exists():

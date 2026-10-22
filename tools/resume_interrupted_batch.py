@@ -7,7 +7,8 @@ l=json.loads((out/'launch_status.json').read_text())
 for j in [*l['train'].values(),{'pid':l.get('eval_pid',0)}]:
  f=pathlib.Path('/proc')/str(j['pid'])/'cmdline'
  if f.exists() and f.read_bytes():raise RuntimeError('Prior PID still exists; inspect before resuming')
-archive=out/'interruption_20261022_1126';archive.mkdir(exist_ok=False)
+archive=out/('interruption_'+time.strftime('%Y%m%d_%H%M%S'));archive.mkdir(exist_ok=False)
+l['recovery_archive']=archive.name
 for name in ['launch_status.json','eval_status.json','eval_finished.json','completion_notice.json']:
  f=out/name
  if f.exists():shutil.copy2(f,archive/name)
