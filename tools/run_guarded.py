@@ -1,5 +1,5 @@
 """Run an upright job only with GPU memory headroom; stop only the token-owned job on budget breach."""
-import argparse, pathlib, subprocess, time, json, uuid
+import argparse, pathlib, subprocess, time, json, uuid, fcntl, os
 from job_control import signal_job
 p=argparse.ArgumentParser();p.add_argument('--gpu',type=int,choices=[0,1,2,3],required=True)
 p.add_argument('--container',default='petbot-upright-train')
@@ -19,12 +19,18 @@ with log.open('w') as f:
     while child.poll() is None:
         total,used=usage()[a.gpu];peak=max(peak,used)
         if used>=total*.78:
-            f.write(f'\nMemory guard: GPU{a.gpu} {used}/{total} MiB; stopping only this token-owned job.\n');f.flush()
-            signal_job(a.container,token,15)
-            try:child.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                signal_job(a.container,token,9);child.wait(timeout=15)
-            stopped=True;break
+            # Serialize same-user guards: another job may already have freed memory.
+            with open(f'/tmp/petbot-upright-guard-{os.getuid()}-{a.gpu}.lock','a') as guard_lock:
+                fcntl.flock(guard_lock,fcntl.LOCK_EX)
+                total,used=usage()[a.gpu]
+                if used>=total*.78:
+                    f.write(f'\nMemory guard: GPU{a.gpu} {used}/{total} MiB; stopping only this token-owned job.\n');f.flush()
+                    signal_job(a.container,token,15)
+                    try:child.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        signal_job(a.container,token,9);child.wait(timeout=15)
+                    stopped=True;time.sleep(1)
+            if stopped:break
         time.sleep(1)
     code=80 if stopped else child.returncode
 log.with_suffix('.exit.json').write_text(json.dumps({'job_token':token,'exit_code':code,'gpu':a.gpu,'command':command,'sampled_peak_mib':peak,'total_mib':total,'guard_stopped':stopped,'elapsed_s':time.time()-start}))
