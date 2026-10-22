@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "57111deb383c40c467ba81c1d5b0ab5bc51002b8",
+      "verified_commit": "05761191b7ad328e5677a4b99d95b67203e7edd3",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "upright_cycle_batch1_checkpoint_recovery",
-      "local_validation": "Task fixedc3bb859. At16:00 eight live,three guard interruptions,one pending. Reconcile tool8b1f024 restores100/0/0 with original evidence archived and8GB headroom; GPU3 requalified after external load ended. EarlyA42/500:62 balance,61 landing requests,2 completed,0 qualified of64; all61 lowered front wheels to ground height,59 landing timeout. Observation-only contact diagnosticc2c5186. No batch success claim; see docs/upright_cycle_v1.md.",
+      "status": "upright_cycle_batch2_launching",
+      "local_validation": "Cycle batch1:12 trains/60 evals complete, native A97/B78 handoff of384 each, qualified0. Cycle2 fixed0576119 retains success criteria, changes landing progress/precontact braking and tracking reward. CUDA and two128x40 plus two2048x8 GPU gates finite; reload63/64 and60/64 balance, qualified0.12-group tracking6/12 comparison launching18:40 with continuous exit checks and same-session failure watch; see docs/upright_cycle_v2.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
