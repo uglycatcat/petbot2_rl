@@ -57,7 +57,7 @@ def main():
     save(out/'launch_status.json',state)
     starting=[]
     for v in variants:
-        dst=RUNS/v['run'];envelope=plan['envelope']+['--wheel-slew',str(v['wheel_slew']),'--frame-slew',str(v['frame_slew'])]+(['--tracking-weight',str(v['tracking_weight'])] if 'tracking_weight' in v else [])+(['--exploration-profile',v['exploration_profile']] if 'exploration_profile' in v else [])
+        dst=RUNS/v['run'];envelope=plan['envelope']+(['--tracking-shape',v['tracking_shape']] if 'tracking_shape' in v else [])+['--wheel-slew',str(v['wheel_slew']),'--frame-slew',str(v['frame_slew'])]+(['--tracking-weight',str(v['tracking_weight'])] if 'tracking_weight' in v else [])+(['--exploration-profile',v['exploration_profile']] if 'exploration_profile' in v else [])
         initial=pathlib.Path(v['initial']).relative_to('demo_project/runs')
         cmd=['python3',str(dst/'tools/run_guarded.py'),'--container',plan['container'],'--gpu',str(v['gpu']),'--reserve-mib',str(v.get('start_reserve_mib',v['reserve_mib'])),'--workdir','/workspace/runs/'+v['run'],'--entrypoint','train_cycle.py','--log',str(out/(v['run']+'.log')),'--headless','--device','cuda:0','--num_envs',str(v['envs']),'--iterations',str(plan['iterations']),'--save-interval',str(plan['save_interval']),'--learning-rate',str(plan['learning_rate']),'--seed',str(v['seed']),plan.get('initialization_flag','--initialize-from'),'/workspace/runs/'+str(initial),'--log_dir','/workspace/runs/'+v['run']+'/logs/'+v['run'],*envelope]
         # Never refill capacity freed by a failed earlier job.

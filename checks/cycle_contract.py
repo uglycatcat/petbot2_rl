@@ -68,3 +68,17 @@ for generation in range(3):
         assert (v[p.mode==4]!=0).all() and (w[p.mode==4]!=0).all()
         assert (p.raw[p.mode==5]==0).all()
 print('PASS all six command groups survive reset and mode requests')
+
+# Preserve positive bounded rewards: poor tracking must not create a new incentive
+# to terminate. Match half-height so the comparison is not merely a wider scale.
+from upright.cycle import tracking_score
+import math
+err=torch.tensor([[0.,0.],[math.sqrt(math.log(2))]*2,[2.,2.],[3.,3.]],device=d)
+tol=torch.full_like(err,.5)
+gaussian=tracking_score(err,tol,'gaussian');cauchy=tracking_score(err,tol,'cauchy')
+assert torch.allclose(gaussian[:2],cauchy[:2],atol=1e-6)
+assert (cauchy[:-1]>cauchy[1:]).all() and (cauchy>0).all() and (cauchy<=1).all()
+assert cauchy[3]>gaussian[3]*100
+assert torch.equal(cauchy,tracking_score(-err,tol,'cauchy'))
+assert torch.isfinite(tracking_score(err*1e6,tol,'cauchy')).all()
+print('PASS tracking reward bounds, symmetry, half-height matching and tail discrimination')

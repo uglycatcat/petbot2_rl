@@ -4,7 +4,9 @@ from .moving import MovingProgress, wrap
 
 
 class CycleProgress(MovingProgress):
-    def __init__(self,*args,**kwargs):
+    def __init__(self,*args,tracking_shape="gaussian",**kwargs):
+        if tracking_shape not in ("gaussian","cauchy"):raise ValueError("Invalid tracking reward shape")
+        self.tracking_shape=tracking_shape
         super().__init__(*args,**kwargs)
         z=lambda:torch.zeros(self.n,device=self.device)
         self.phase=z().long();self.requested_mode=z()+1;self.destination=z()
@@ -78,7 +80,7 @@ class CycleProgress(MovingProgress):
         self.track_sum+=error.abs()*((self.phase==2)&(self.phase_time>.5))[:,None]
         eligible=(self.phase==2)&(self.phase_time>.5)
         self.track_count+=eligible;self.track_good+=eligible&tracking;self.balance_good+=eligible&balanced
-        tracking_reward=.5*torch.exp(-(error[:,0]/(2*tolerance[:,0])).square())+.5*torch.exp(-(error[:,1]/(2*tolerance[:,1])).square())
+        tracking_reward=tracking_score(error,tolerance,self.tracking_shape)
         remaining=((s['front_z']-.045)/(self.land_height-.045).clamp_min(.075)).clamp(0,1)
         lowering=(1-remaining)*s['rear_fraction']
         pitch_return=(( -s['g'][:,2]-.25)/.75).clamp(0,1)
@@ -121,3 +123,11 @@ class CycleProgress(MovingProgress):
             transition_track=((self.phase==1)|(self.phase==3))*.1*tracking_reward,
             smooth_reward=self.active/(1+(m['tilt_rate']/.8).square()))
         self.result=result;return result
+
+
+def tracking_score(error,tolerance,shape):
+    """Positive, bounded feedback; Cauchy has the same half-height error as Gaussian."""
+    x2=(error/(2*tolerance)).square()
+    if shape=='gaussian':return torch.exp(-x2).mean(-1)
+    if shape=='cauchy':return (1/(1+x2/0.6931471805599453)).mean(-1)
+    raise ValueError('Invalid tracking reward shape')

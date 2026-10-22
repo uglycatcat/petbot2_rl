@@ -34,7 +34,7 @@ def state(env):
 
 def ensure(env):
     if not hasattr(env,'moving_progress'):
-        s=state(env);env.moving_progress=CycleProgress(env.num_envs,env.device,env.step_dt,env.cfg.speed_limit,env.cfg.yaw_limit,env.cfg.frame_range,env.cfg.seed,env.cfg.feedback_mode)
+        s=state(env);env.moving_progress=CycleProgress(env.num_envs,env.device,env.step_dt,env.cfg.speed_limit,env.cfg.yaw_limit,env.cfg.frame_range,env.cfg.seed,env.cfg.feedback_mode,tracking_shape=env.cfg.tracking_shape)
         env.moving_progress.reset(torch.arange(env.num_envs,device=env.device),s['pos'],s['yaw'])
         env.moving_step=-1
     return env.moving_progress
@@ -188,6 +188,7 @@ class DonesCfg:
 @configclass
 class CycleEnvCfg(UprightEnvCfg):
     actions=ActionsCfg();observations=ObservationsCfg();rewards=RewardsCfg();events=EventsCfg();terminations=DonesCfg()
+    tracking_shape:str='gaussian'
     feedback_mode:str='command'
     wheel_slew:float=120.
     frame_slew:float=3.

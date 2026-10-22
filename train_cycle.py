@@ -10,6 +10,7 @@ p.add_argument('--wheel-slew',type=float,choices=[120.,240.,480.],default=120.)
 p.add_argument('--frame-slew',type=float,default=3.)
 p.add_argument('--learning-rate',type=float,default=.0001);p.add_argument('--save-interval',type=int,default=100)
 p.add_argument('--exploration-profile',choices=['moderate','fine'],default='moderate')
+p.add_argument('--tracking-shape',choices=['gaussian','cauchy'],default='gaussian')
 p.add_argument('--tracking-weight',type=float,choices=[6.,12.],default=6.)
 p.add_argument('--initialize-cycle-from');p.add_argument('--initialize-from');p.add_argument('--checkpoint');p.add_argument('--evaluate',action='store_true')
 p.add_argument('--allow-dirty',action='store_true');p.add_argument('--probe',action='store_true')
@@ -42,7 +43,7 @@ try:
     cfg=CycleEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
     cfg.speed_limit=args.speed_limit;cfg.yaw_limit=args.yaw_limit;cfg.frame_range=(args.frame_min,args.frame_max)
     cfg.wheel_slew=args.wheel_slew;cfg.frame_slew=args.frame_slew;cfg.wheel_mode='common_diff'
-    cfg.feedback_mode='pose_feedback_tight';cfg.rewards.tracking.weight=args.tracking_weight
+    cfg.feedback_mode='pose_feedback_tight';cfg.rewards.tracking.weight=args.tracking_weight;cfg.tracking_shape=args.tracking_shape
     torch.manual_seed(args.seed);env=ManagerBasedRLEnv(cfg=cfg);wrapped=Adapter(env)
     folder=pathlib.Path(args.log_dir);folder.mkdir(parents=True,exist_ok=True)
     dirty=bool(subprocess.check_output(['git','status','--porcelain'],text=True).strip())
@@ -50,7 +51,7 @@ try:
     names=['train_cycle.py']+['upright/'+n+'.py' for n in ['cycle','cycle_task','moving','task','distribution','model','asset_cfg','prepare','transfer']]
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(n).read_bytes()).hexdigest() for n in names).encode()).hexdigest()
     scales=[1.,4.,4.] if args.exploration_profile=='moderate' else [4.,16.,16.]
-    contract=dict(task='upright_cycle_v4',command_sampling='independent_six_groups_v1',reward_design='peak_impact_increment_v3',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_49x5_v1',fingerprint=fingerprint,
+    contract=dict(task='upright_cycle_v5',tracking_shape=args.tracking_shape,command_sampling='independent_six_groups_v1',reward_design='peak_impact_increment_v3',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_49x5_v1',fingerprint=fingerprint,
         action_dim=3,wheel_mode='common_diff',wheel_slew=args.wheel_slew,frame_slew=args.frame_slew,
         control_dt=env.step_dt,source_sha256=SPEC['source_sha256'],rear_duty_threshold=.9,
         transition_reference='reanchor_once_on_balance',mode_request='landing_latched_until_handoff',landing_force_limit_n=20.,touchdown_speed_limit=.35)
@@ -78,7 +79,7 @@ try:
         del loaded
     if args.initialize_cycle_from:
         initial=pathlib.Path(args.initialize_cycle_from);prior=json.loads((initial.parent/'config.json').read_text())
-        if prior['commit']!='2e4243f92f495893905986e1dcfd5ad0144561f5' or prior['working_tree_dirty']:raise ValueError('Only clean cycle batch3 actor allowed')
+        if prior['commit']!='4ebd1ae9b344ad679a0dacec7c49142dbe8554bf' or prior['working_tree_dirty']:raise ValueError('Only clean cycle batch4 actor allowed')
         for k in ('observation_schema','action_dim','wheel_mode','wheel_slew','frame_slew','control_dt','source_sha256'):
             if prior['contract'][k]!=contract[k]:raise ValueError('Actor transfer mismatch '+k)
         loaded=torch.load(initial,map_location='cpu',weights_only=False)
