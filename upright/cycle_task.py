@@ -129,9 +129,10 @@ def reward(env,kind):
 
 
 def failed(env):return metrics(env)[1]['failure']
+def completed(env):return metrics(env)[1]['completed']
 def time_out(env):
     p=ensure(env);m=metrics(env)[1]
-    return (m['completed'] | (p.active & (p.since>=env.cfg.active_seconds))) & ~m['failure']
+    return (p.active & (p.since>=env.cfg.active_seconds)) & ~m['failure'] & ~m['completed']
 
 
 def reset(env,env_ids):
@@ -177,6 +178,7 @@ class EventsCfg:
     reset_robot=EventTerm(func=reset,mode='reset')
 @configclass
 class DonesCfg:
+    complete=DoneTerm(func=completed)
     timeout=DoneTerm(func=time_out,time_out=True)
     failure=DoneTerm(func=failed)
 @configclass
