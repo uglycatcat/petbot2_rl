@@ -21,14 +21,17 @@ def parameters(x, span: float = 31.):
 class UprightBetaDistribution(BetaDistribution):
     """State-dependent spread, initialized around the physical default configuration.
 
-    Smooth alpha/beta bounds (1,32) prevent vanishing exploration.
+    Bounded base alpha/beta and finite channel scales retain nonzero exploration.
+    Scaling alpha and beta together preserves the deterministic mean.
     Sampling, likelihood, deterministic evaluation and export share the same transform.
     Learning efficacy is deliberately separate from these numerical contracts.
     """
-    def __init__(self, output_dim, initial_mean, initial_std, shape_cap=32.):
+    def __init__(self, output_dim, initial_mean, initial_std, shape_cap=32., concentration_scale=None):
         super().__init__(output_dim, action_range=(-1.0, 1.0))
         if shape_cap not in (32.,128.): raise ValueError("Unsupported Beta shape cap")
         self.span=float(shape_cap)-1.
+        self.concentration_scale=tuple(concentration_scale or [1.]*output_dim)
+        if len(self.concentration_scale)!=output_dim or any(not math.isfinite(x) or not 1<=x<=16 for x in self.concentration_scale):raise ValueError("Invalid concentration scale")
         mean = torch.as_tensor(initial_mean, dtype=torch.float32)
         std = torch.as_tensor(initial_std, dtype=torch.float32)
         if mean.shape != (output_dim,) or std.shape != (output_dim,):
@@ -55,7 +58,8 @@ class UprightBetaDistribution(BetaDistribution):
 
     def update(self, mlp_output):
         a,b=torch.unbind(mlp_output,dim=-2)
-        self._alpha,self._beta=parameters(a,self.span),parameters(b,self.span)
+        scale=a.new_tensor(self.concentration_scale)
+        self._alpha,self._beta=parameters(a,self.span)*scale,parameters(b,self.span)*scale
         self._distribution=torch.distributions.Beta(self._alpha,self._beta)
 
     def deterministic_output(self, mlp_output):

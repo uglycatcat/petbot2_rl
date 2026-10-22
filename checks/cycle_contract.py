@@ -40,3 +40,12 @@ s['front_vertical_speed'][:]=-.05;m=p.update(s,torch.zeros(3,device=d));assert (
 # approach, ground, transition and smooth shaping: -.7 per second or less.
 assert -2+.2+.5+.1+.5<0
 print('PASS no landing residence exploit, precontact braking, gentle descent')
+
+# Peak overspeed penalty is charged only as the episode maximum increases,
+# independent of contact chatter or control duration.
+s['front_contact'][:]=True;s['front_vertical_speed'][:]=-.7;p.last_front_speed[:]=-.7
+m=p.update(s,torch.zeros(3,device=d));assert torch.allclose(m['impact_increment'],torch.ones(n,device=d))
+m=p.update(s,torch.zeros(3,device=d));assert (m['impact_increment']==0).all()
+s['front_contact'][:]=False;m=p.update(s,torch.zeros(3,device=d));assert (m['impact_increment']==0).all()
+p.reset(ids,s['pos'],s['yaw']);assert (p.max_touchdown_speed==0).all()
+print('PASS impact increment once per increased maximum and reset')

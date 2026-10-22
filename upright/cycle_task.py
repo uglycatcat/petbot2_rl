@@ -118,7 +118,7 @@ def observations(env):
 
 def reward(env,kind):
     s,m=metrics(env);a=env.action_manager.get_term('moving')
-    if kind in ('entered_balance','entered_handoff','land_reward'):return m[kind].float()/env.step_dt
+    if kind in ('entered_balance','entered_handoff','land_reward','impact_increment'):return m[kind].float()/env.step_dt
     if kind=='failure':return m['failure'].float()/env.step_dt
     if kind=='rate':
         frame_rate=(a.target[:,3]-a.previous[:,0]*(a.hi-a.lo)/2-(a.hi+a.lo)/2)/env.step_dt
@@ -174,6 +174,7 @@ class RewardsCfg:
     rate=RewTerm(func=reward,weight=-.2,params={'kind':'rate'})
     body=RewTerm(func=reward,weight=-3.,params={'kind':'body_cost'})
     touchdown=RewTerm(func=reward,weight=-3.,params={'kind':'touchdown_cost'})
+    impact=RewTerm(func=reward,weight=-6.,params={'kind':'impact_increment'})
     failure=RewTerm(func=reward,weight=-10.,params={'kind':'failure'})
     contact=RewTerm(func=reward,weight=-2.,params={'kind':'physical_contact'})
 @configclass

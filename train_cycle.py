@@ -9,6 +9,7 @@ p.add_argument('--frame-min',type=float,default=-.3);p.add_argument('--frame-max
 p.add_argument('--wheel-slew',type=float,choices=[120.,240.,480.],default=120.)
 p.add_argument('--frame-slew',type=float,default=3.)
 p.add_argument('--learning-rate',type=float,default=.0001);p.add_argument('--save-interval',type=int,default=100)
+p.add_argument('--exploration-profile',choices=['moderate','fine'],default='moderate')
 p.add_argument('--tracking-weight',type=float,choices=[6.,12.],default=6.)
 p.add_argument('--initialize-cycle-from');p.add_argument('--initialize-from');p.add_argument('--checkpoint');p.add_argument('--evaluate',action='store_true')
 p.add_argument('--allow-dirty',action='store_true');p.add_argument('--probe',action='store_true')
@@ -48,7 +49,8 @@ try:
     if dirty and not args.allow_dirty:raise RuntimeError('Commit source before formal execution')
     names=['train_cycle.py']+['upright/'+n+'.py' for n in ['cycle','cycle_task','moving','task','distribution','model','asset_cfg','prepare','transfer']]
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(n).read_bytes()).hexdigest() for n in names).encode()).hexdigest()
-    contract=dict(task='upright_cycle_v2',reward_design='landing_progress_precontact_braking_v2',tracking_weight=args.tracking_weight,observation_schema='cycle_49x5_v1',fingerprint=fingerprint,
+    scales=[1.,4.,4.] if args.exploration_profile=='moderate' else [4.,16.,16.]
+    contract=dict(task='upright_cycle_v3',reward_design='peak_impact_increment_v3',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_49x5_v1',fingerprint=fingerprint,
         action_dim=3,wheel_mode='common_diff',wheel_slew=args.wheel_slew,frame_slew=args.frame_slew,
         control_dt=env.step_dt,source_sha256=SPEC['source_sha256'],rear_duty_threshold=.9,
         transition_reference='reanchor_once_on_balance',mode_request='landing_latched_until_handoff',landing_force_limit_n=20.,touchdown_speed_limit=.35)
@@ -59,7 +61,7 @@ try:
     lo,hi=SPEC['joints']['left_frame']['range'];home=(2*SPEC['joints']['left_frame']['default']-lo-hi)/(hi-lo)
     config=dict(seed=args.seed,device=args.device,num_steps_per_env=32,save_interval=args.save_interval,logger='tensorboard',experiment_name='upright_cycle',run_name=f'seed{args.seed}',
         obs_groups={'actor':['policy'],'critic':['policy']},
-        actor=dict(class_name='MLPModel',hidden_dims=[128,128],activation='elu',obs_normalization=True,distribution_cfg=dict(class_name='upright.distribution:UprightBetaDistribution',initial_mean=[home,0.,0.],initial_std=[.35,.45,.45],shape_cap=128.)),
+        actor=dict(class_name='MLPModel',hidden_dims=[128,128],activation='elu',obs_normalization=True,distribution_cfg=dict(class_name='upright.distribution:UprightBetaDistribution',initial_mean=[home,0.,0.],initial_std=[.35,.45,.45],shape_cap=128.,concentration_scale=scales)),
         critic=dict(class_name='MLPModel',hidden_dims=[256,128],activation='elu',obs_normalization=True),
         algorithm=dict(class_name='PPO',value_loss_coef=1.,use_clipped_value_loss=True,clip_param=.2,entropy_coef=.001,num_learning_epochs=5,num_mini_batches=4,learning_rate=args.learning_rate,schedule='fixed',gamma=.997**3,lam=.95**3,desired_kl=.01,max_grad_norm=1.))
     runner=OnPolicyRunner(wrapped,copy.deepcopy(config),log_dir=str(folder),device=args.device)
@@ -76,7 +78,7 @@ try:
         del loaded
     if args.initialize_cycle_from:
         initial=pathlib.Path(args.initialize_cycle_from);prior=json.loads((initial.parent/'config.json').read_text())
-        if prior['commit']!='c3bb859f05c6490ffff645a2265c4291e393a35a' or prior['working_tree_dirty']:raise ValueError('Only clean cycle batch1 actor allowed')
+        if prior['commit']!='05761191b7ad328e5677a4b99d95b67203e7edd3' or prior['working_tree_dirty']:raise ValueError('Only clean cycle batch2 actor allowed')
         for k in ('observation_schema','action_dim','wheel_mode','wheel_slew','frame_slew','control_dt','source_sha256'):
             if prior['contract'][k]!=contract[k]:raise ValueError('Actor transfer mismatch '+k)
         loaded=torch.load(initial,map_location='cpu',weights_only=False)

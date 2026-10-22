@@ -91,7 +91,9 @@ class CycleProgress(MovingProgress):
         failure |= self.active & ((s['pos'][:,:2]-self.rise_position).norm(dim=-1)>3.)
         self.max_impact=torch.maximum(self.max_impact,torch.where((self.phase==3),s['front_force_peak'],0.))
         touchdown_speed=torch.maximum((-s['front_vertical_speed']).clamp_min(0),(-self.last_front_speed).clamp_min(0))
+        previous_impact_excess=torch.relu(self.max_touchdown_speed/.35-1).square()
         self.max_touchdown_speed=torch.maximum(self.max_touchdown_speed,torch.where((self.phase==3)&s['front_contact'],touchdown_speed,0.))
+        impact_increment=(torch.relu(self.max_touchdown_speed/.35-1).square()-previous_impact_excess).clamp_min(0.)
         self.last_front_speed.copy_(s['front_vertical_speed'])
         result=dict(m)
         result.update(phase=self.phase.clone(),phase_time=self.phase_time.clone(),support=support,
@@ -108,6 +110,7 @@ class CycleProgress(MovingProgress):
             descent_cost=(self.phase==3)*descent_cost,
             approach_reward=(self.phase==3)*torch.exp(-s['front_vertical_speed'].square()/.25**2)*(1-remaining),
             handoff_reward=(self.phase==4)*ground*frame_match,
+            impact_increment=impact_increment,
             touchdown_cost=(self.phase==3)*s['front_contact']*torch.relu(-s['front_vertical_speed']-.25).square(),
             body_cost=self.active*s['body_history'],
             transition_track=((self.phase==1)|(self.phase==3))*.1*tracking_reward,
