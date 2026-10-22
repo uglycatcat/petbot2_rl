@@ -31,6 +31,17 @@ for name,j in l['train'].items():
  with (out/(name+'_guard.log')).open('w') as f:q=subprocess.Popen(c,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
  j.update(pid=q.pid,command=c,status='resuming',resume_checkpoint=ck.name,resume_started_at=time.strftime('%FT%T%z'))
  (out/'launch_status.json').write_text(json.dumps(l,indent=2))
+# Wait for allocation/PPO before scheduling additional GPU work.
+deadline=time.monotonic()+900
+while True:
+ ready=True
+ for name,j in l['train'].items():
+  if (out/(name+'.exit.json')).exists():raise RuntimeError('Resume exited: '+name)
+  f=out/(name+'.log')
+  ready &= f.exists() and 'Learning iteration' in f.read_text(errors='replace')
+ if ready:break
+ if time.monotonic()>deadline:raise RuntimeError('Resume startup timeout; inspect existing jobs')
+ time.sleep(2)
 # The queue uses repaired orchestration, with original fixed task checkouts.
 with (out/'eval_queue_resume.log').open('w') as f:q=subprocess.Popen(['python3',str(pathlib.Path(__file__).with_name('evaluate_moving.py')),'--root',str(root),'--name',a.batch,'--resume'],stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
 l.update(eval_pid=q.pid,recovery_orchestration_commit=subprocess.check_output(['git','-C',str(pathlib.Path(__file__).parents[1]),'rev-parse','HEAD'],text=True).strip())
