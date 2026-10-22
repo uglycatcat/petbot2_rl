@@ -1,12 +1,19 @@
 """Fixed checkpoints, native envelopes plus common final wide-envelope evaluation."""
 import argparse,fcntl,json,pathlib,shutil,subprocess,time
 from evaluation_contract import validate
-p=argparse.ArgumentParser();p.add_argument('--root',type=pathlib.Path,required=True);p.add_argument('--name',required=True);a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('--root',type=pathlib.Path,required=True);p.add_argument('--name',required=True);p.add_argument('--resume',action='store_true');a=p.parse_args()
 root=a.root.resolve();out=root/'demo_project/runs'/('_'+a.name)
 lock=(out/'eval.lock').open('w');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
 path=out/'eval_status.json'
-if path.exists():raise RuntimeError('Existing evaluation state: inspect before resuming')
+if path.exists() and not a.resume:raise RuntimeError('Existing evaluation state: inspect before resuming')
 launch=json.loads((out/'launch_status.json').read_text());state={};jobs=[]
+if a.resume:
+ previous=json.loads(path.read_text())
+ if any(v['status']=='running' for v in previous.values()):raise RuntimeError('Resolve running entries before resume')
+ for k,v in previous.items():
+  if v['status']=='complete':
+   validate(v['result']);state[k]=v
+ path.write_text(json.dumps(state,indent=2))
 for iteration in launch['checkpoints']:
  for name,job in launch['train'].items():jobs.append((name,job,iteration,'native',job['envelope']))
 for name,job in launch['train'].items():
