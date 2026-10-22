@@ -7,7 +7,7 @@ while True:
  if not path.exists():
   if time.monotonic()>deadline:reason='No launch status after15min';break
   time.sleep(5);continue
- state=json.loads(path.read_text());all_complete=len(state['train'])==12
+ state=json.loads(path.read_text());all_complete=len(state['train'])==state['expected_train']
  for name,j in state['train'].items():
   end=out/(name+'.exit.json');proc=pathlib.Path('/proc')/str(j.get('pid',0))/'cmdline'
   if end.exists():
