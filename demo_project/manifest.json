@@ -49,8 +49,8 @@
         "demo"
       ],
       "shallow": false,
-      "status": "upright_cycle_batch4_launching",
-      "local_validation": "Cycle batch3:12 trains/60 evals complete, native376/374 handoff, qualified0. Audit found cycle mode overwrote command sampling in batches1-3: balance commands reverse only; not full remote-control coverage. Fixed4ebd1ae separates requests and six driving groups. CUDA regression and two128x40/two2048x8 GPU gates passed; reload58/57 balance and44/42 handoff of64, six groups covered, qualified0. Batch4 four-GPU12-group deployment in progress; see docs/upright_cycle_v4.md.",
+      "status": "upright_cycle_batch4_evaluating",
+      "local_validation": "Cycle4 fixed4ebd1ae:12 training runs completed600, exit0 and finite scalars; 2026-10-23 05:33 evaluation50/60 complete, one running, no failures. Six command groups validated. Native balance A383/B381, handoff362/333 of384 each, qualified0; only6/768 tracking fraction and17/768 touchdown speed pass. Heldout evaluation pending. See docs/upright_cycle_v4.md. Previous cycle batches1-3 were reverse-only due to mode collision and are not full command coverage baselines.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
