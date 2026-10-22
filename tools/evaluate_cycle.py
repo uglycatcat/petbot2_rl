@@ -40,7 +40,7 @@ while time.time()<deadline:
   if time.time()-checkpoint.stat().st_mtime<30:continue
   rows=subprocess.check_output(['nvidia-smi','--query-gpu=index,memory.total,memory.used','--format=csv,noheader,nounits'],text=True)
   mem={int(i):(int(t),int(u)) for i,t,u in (x.split(',') for x in rows.splitlines())}
-  gpu=next((i for i in (2,3,1) if mem[i][1]+6000<mem[i][0]*.78),None)
+  gpu=next((i for i in (2,3,1) if i not in launch.get('excluded_gpus',[]) and mem[i][1]+6000<mem[i][0]*.78),None)
   if gpu is None:continue
   state[key]=dict(status='running',gpu=gpu,envelope=envelope,started_at=time.strftime('%FT%T%z'));path.write_text(json.dumps(state,indent=2))
   cmd=['python3',str(pathlib.Path(__file__).with_name('run_guarded.py')),'--container',launch['container'],'--gpu',str(gpu),'--reserve-mib','6000','--entrypoint','train_cycle.py','--workdir',f'/workspace/runs/{name}','--log',str(out/f'eval_{key}.log'),'--headless','--device','cuda:0','--num_envs','64','--evaluate','--seed',str(launch['heldout_seed'] if scope=='heldout' else (20261019 if scope=='native' else 20261020)),*envelope,'--checkpoint','/workspace/runs/'+str(checkpoint.relative_to(root/'demo_project/runs')),'--log_dir',f'/workspace/runs/_{a.name}/eval_{key}']

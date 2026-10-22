@@ -1,9 +1,9 @@
 """Continue a partial cycle launch without restarting live/checkpointed jobs."""
 import argparse,fcntl,json,pathlib,subprocess,time,shutil
-p=argparse.ArgumentParser();p.add_argument('plan',type=pathlib.Path);a=p.parse_args();plan=json.loads(a.plan.read_text())
+p=argparse.ArgumentParser();p.add_argument('plan',type=pathlib.Path);p.add_argument('--exclude-gpus',default='');a=p.parse_args();plan=json.loads(a.plan.read_text())
 root=pathlib.Path(__file__).resolve().parents[3];out=root/'demo_project/runs'/('_'+plan['name']);statepath=out/'launch_status.json'
 lock=(root/'demo_project/runs/upright_launch.lock').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-state=json.loads(statepath.read_text());assert state['commit']==plan['commit'];assert not state.get('eval_pid')
+excluded={int(x) for x in a.exclude_gpus.split(',') if x};state=json.loads(statepath.read_text());state['excluded_gpus']=sorted(excluded);assert state['commit']==plan['commit'];assert not state.get('eval_pid')
 def save():
  temp=statepath.with_suffix('.tmp');temp.write_text(json.dumps(state,indent=2));temp.replace(statepath)
 def live(pid):
@@ -24,7 +24,7 @@ for v in plan['variants']:
  while True:
   rows=subprocess.check_output(['nvidia-smi','--query-gpu=index,memory.total,memory.used,utilization.gpu','--format=csv,noheader,nounits'],text=True)
   mem={int(i):(int(t),int(u),int(util)) for i,t,u,util in (row.split(',') for row in rows.splitlines())}
-  eligible=[i for i,(t,u,util) in mem.items() if u+6000<t*.78]
+  eligible=[i for i,(t,u,util) in mem.items() if i not in excluded and u+6000<t*.78]
   if eligible:gpu=min(eligible,key=lambda i:(mem[i][2],mem[i][1]));break
   time.sleep(10)
  dst=root/'demo_project/runs'/name
@@ -41,5 +41,5 @@ for v in plan['variants']:
   if time.monotonic()>deadline:raise RuntimeError('Startup timeout: '+name)
   time.sleep(2)
  state['train'][name]['status']='ppo_started';save();print('PPO',name,gpu,flush=True)
-with (out/'eval_queue.log').open('w') as f:q=subprocess.Popen(['python3',str(dst/'tools/evaluate_cycle.py'),'--root',str(root),'--name',plan['name']],stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
+with (out/'eval_queue.log').open('w') as f:q=subprocess.Popen(['python3',str(pathlib.Path(__file__).with_name('evaluate_cycle.py')),'--root',str(root),'--name',plan['name']],stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
 state.update(eval_pid=q.pid,all_ppo_at=time.strftime('%FT%T%z'));save();print('Evaluation queue',q.pid,flush=True)
