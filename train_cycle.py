@@ -6,7 +6,7 @@ p.add_argument('--num_envs',type=int,default=2048);p.add_argument('--iterations'
 p.add_argument('--seed',type=int,default=42);p.add_argument('--log_dir',default='logs/cycle')
 p.add_argument('--speed-limit',type=float,default=.1);p.add_argument('--yaw-limit',type=float,default=.3)
 p.add_argument('--frame-min',type=float,default=-.3);p.add_argument('--frame-max',type=float,default=.3)
-p.add_argument('--wheel-slew',type=float,choices=[120.,240.],default=120.)
+p.add_argument('--wheel-slew',type=float,choices=[120.,240.,480.],default=120.)
 p.add_argument('--frame-slew',type=float,default=3.)
 p.add_argument('--learning-rate',type=float,default=.0001);p.add_argument('--save-interval',type=int,default=100)
 p.add_argument('--initialize-from');p.add_argument('--checkpoint');p.add_argument('--evaluate',action='store_true')
@@ -50,7 +50,7 @@ try:
     contract=dict(task='upright_cycle_v1',observation_schema='cycle_49x5_v1',fingerprint=fingerprint,
         action_dim=3,wheel_mode='common_diff',wheel_slew=args.wheel_slew,frame_slew=args.frame_slew,
         control_dt=env.step_dt,source_sha256=SPEC['source_sha256'],rear_duty_threshold=.9,
-        transition_reference='reanchor_once_on_balance',mode_request='landing_latched_until_handoff')
+        transition_reference='reanchor_once_on_balance',mode_request='landing_latched_until_handoff',landing_force_limit_n=20.,touchdown_speed_limit=.35)
     if args.checkpoint:
         prior=json.loads((pathlib.Path(args.checkpoint).parent/'config.json').read_text())
         if prior['contract']!=contract:raise ValueError('Checkpoint contract mismatch')
@@ -80,7 +80,7 @@ try:
         policy=runner.get_inference_policy(device=args.device);obs=wrapped.get_observations();n=args.num_envs
         alive=torch.ones(n,device=args.device,dtype=torch.bool)
         flags={k:torch.zeros_like(alive) for k in ['takeover','balance','landing','handoff','complete','qualified','failure']}
-        trace=[];max_frame=0.;max_wheel=0.;peak_force=torch.zeros(n,device=args.device);track_sum=torch.zeros(n,2,device=args.device);track_count=torch.zeros(n,device=args.device)
+        trace=[];max_frame=0.;max_wheel=0.;peak_force=torch.zeros(n,device=args.device);peak_touch_speed=peak_force.clone();track_sum=torch.zeros(n,2,device=args.device);track_count=torch.zeros(n,device=args.device)
         balance_good=torch.zeros(n,device=args.device);balance_count=torch.zeros(n,device=args.device)
         offsets=torch.zeros(n,device=args.device);first_balance=torch.full((n,),-1.,device=args.device)
         with torch.inference_mode():
@@ -97,6 +97,7 @@ try:
                 track_sum+=m['raw_error'].abs()*b[:,None];track_count+=b
                 balance_good+=b&m['balanced'];balance_count+=b
                 peak_force=torch.maximum(peak_force,torch.where(valid&(m['phase']==3),s['front_force_peak'],0.))
+                peak_touch_speed=torch.maximum(peak_touch_speed,torch.where(valid,m['max_touchdown_speed'],0.))
                 delta=(applied-previous).abs();max_frame=max(max_frame,float(delta[valid,0].max())*(hi-lo)/2 if valid.any() else 0.)
                 max_wheel=max(max_wheel,float(delta[valid,1:].max())*a.max_speed if valid.any() else 0.)
                 trace.append(dict(t=(tick+1)*env.step_dt,valid=valid.tolist(),phase=m['phase'].tolist(),phase_time=m['phase_time'].tolist(),since=since.tolist(),raw=raw.tolist(),command=command.tolist(),pos=s['pos'].tolist(),forward=s['forward'].tolist(),heading_rate=s['heading_rate'].tolist(),front_z=s['front_z'].tolist(),front_vertical_speed=s['front_vertical_speed'].tolist(),rear_fraction=s['rear_fraction'].tolist(),four_fraction=s['four_fraction'].tolist(),applied=applied.tolist(),failure=m['failure'].tolist(),balanced=m['balanced'].tolist()))
@@ -104,7 +105,7 @@ try:
                 alive &= ~done.bool()
                 if not alive.any():break
         result=dict(count=n,**{k:int(v.sum()) for k,v in flags.items()},outcomes={k:v.tolist() for k,v in flags.items()},unfinished=int(alive.sum()),contract=contract,
-            first_balance_seconds=first_balance.tolist(),transition_offset_m=offsets.tolist(),balanced_fraction=(balance_good/balance_count.clamp_min(1)).tolist(),balance_samples=balance_count.tolist(),tracking_mae=(track_sum/track_count.clamp_min(1)[:,None]).tolist(),landing_peak_front_force=peak_force.tolist(),max_frame_target_step=max_frame,max_wheel_target_step=max_wheel)
+            first_balance_seconds=first_balance.tolist(),transition_offset_m=offsets.tolist(),balanced_fraction=(balance_good/balance_count.clamp_min(1)).tolist(),balance_samples=balance_count.tolist(),tracking_mae=(track_sum/track_count.clamp_min(1)[:,None]).tolist(),landing_peak_front_force=peak_force.tolist(),landing_peak_touchdown_speed=peak_touch_speed.tolist(),max_frame_target_step=max_frame,max_wheel_target_step=max_wheel)
         (folder/'evaluation.json').write_text(json.dumps(result,indent=2));(folder/'trace.json').write_text(json.dumps(trace))
         assert max_frame<=args.frame_slew*env.step_dt+1e-5 and max_wheel<=args.wheel_slew*env.step_dt+1e-4
         assert not alive.any()

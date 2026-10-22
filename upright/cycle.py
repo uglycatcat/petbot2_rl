@@ -11,7 +11,7 @@ class CycleProgress(MovingProgress):
         self.phase_time=z();self.land_at=z();self.ground_run=z();self.balance_time=z()
         self.rise_position=torch.zeros(self.n,2,device=self.device)
         self.transition_offset=z();self.front_previous=z()+.045
-        self.max_impact=z();self.landed=z().bool();self.handoff=z().bool()
+        self.max_impact=z();self.max_touchdown_speed=z();self.last_front_speed=z();self.landed=z().bool();self.handoff=z().bool()
         self.balance_ever=z().bool();self.external_mode=z().bool();self.land_height=z()+.18
         self.track_sum=torch.zeros(self.n,2,device=self.device);self.track_count=z()
         self.track_good=z();self.balance_good=z();self.handoff_run=z()
@@ -19,7 +19,7 @@ class CycleProgress(MovingProgress):
     def reset(self,ids,pos,heading):
         super().reset(ids,pos,heading)
         for x in (self.phase,self.phase_time,self.ground_run,self.balance_time,self.transition_offset,
-                  self.max_impact,self.landed,self.handoff,self.balance_ever,self.external_mode,self.track_count,self.track_good,self.balance_good,self.handoff_run):x[ids]=0
+                  self.max_impact,self.max_touchdown_speed,self.last_front_speed,self.landed,self.handoff,self.balance_ever,self.external_mode,self.track_count,self.track_good,self.balance_good,self.handoff_run):x[ids]=0
         self.track_sum[ids]=0;self.mode[ids]=1
         self.destination[ids]=self.frame_range[0]+self.uniform(ids,8)*(self.frame_range[1]-self.frame_range[0])
         self.land_at[ids]=5.+3.*self.uniform(ids,9)
@@ -82,12 +82,15 @@ class CycleProgress(MovingProgress):
         failure=m['physical_failure']|m['warmup_failed']|((self.phase==1)&(self.phase_time>3.))|((self.phase==3)&(self.phase_time>4.))
         failure |= self.active & ((s['pos'][:,:2]-self.rise_position).norm(dim=-1)>3.)
         self.max_impact=torch.maximum(self.max_impact,torch.where((self.phase==3),s['front_force_peak'],0.))
+        touchdown_speed=torch.maximum((-s['front_vertical_speed']).clamp_min(0),(-self.last_front_speed).clamp_min(0))
+        self.max_touchdown_speed=torch.maximum(self.max_touchdown_speed,torch.where((self.phase==3)&s['front_contact'],touchdown_speed,0.))
+        self.last_front_speed.copy_(s['front_vertical_speed'])
         result=dict(m)
         result.update(phase=self.phase.clone(),phase_time=self.phase_time.clone(),support=support,
             entered_balance=entering,entered_landing=landing,entered_handoff=handoff,
             failure=failure,balanced=balanced,tracking_good=tracking,
-            completed=self.handoff & ~failure,raw_error=error,transition_offset=self.transition_offset.clone(),
-            qualified=self.handoff & ~failure & (self.track_count>=20) & (self.track_good/self.track_count.clamp_min(1)>=.8) & (self.balance_good/self.track_count.clamp_min(1)>=.9),
+            completed=self.handoff & ~failure,raw_error=error,transition_offset=self.transition_offset.clone(),max_touchdown_speed=self.max_touchdown_speed.clone(),
+            qualified=self.handoff & ~failure & (self.track_count>=20) & (self.track_good/self.track_count.clamp_min(1)>=.8) & (self.balance_good/self.track_count.clamp_min(1)>=.9) & (self.max_impact<=20.) & (self.max_touchdown_speed<=.35),
             lift_reward=(self.phase==1)*((s['front_z']-.045)/.075).clamp(0,1)*s['rear_fraction'],
             balance_reward=(self.phase==2)*balanced.float(),
             track_reward=(self.phase==2)*support*tracking_reward,
@@ -96,6 +99,6 @@ class CycleProgress(MovingProgress):
             handoff_reward=(self.phase==4)*ground*frame_match,
             touchdown_cost=(self.phase==3)*s['front_contact']*torch.relu(-s['front_vertical_speed']-.25).square(),
             body_cost=self.active*s['body_history'],
-            transition_track=(self.phase==1)*.1*tracking_reward,
+            transition_track=((self.phase==1)|(self.phase==3))*.1*tracking_reward,
             smooth_reward=self.active/(1+(m['tilt_rate']/.8).square()))
         self.result=result;return result

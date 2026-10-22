@@ -6,7 +6,7 @@ try:
  import torch
  from isaaclab.envs import ManagerBasedRLEnv
  from upright.cycle_task import CycleEnvCfg,SPEC,ensure
- cfg=CycleEnvCfg();cfg.scene.num_envs=16;cfg.sim.device=a.device;cfg.wheel_mode='common_diff';cfg.wheel_slew=120.;cfg.frame_slew=3.
+ cfg=CycleEnvCfg();cfg.seed=42;cfg.scene.num_envs=16;cfg.sim.device=a.device;cfg.wheel_mode='common_diff';cfg.wheel_slew=120.;cfg.frame_slew=3.
  env=ManagerBasedRLEnv(cfg=cfg);env.reset();progress=ensure(env)
  progress.active[:]=True;progress.phase[:]=3;progress.mode[:]=0;progress.destination[:]=0.;progress.external_mode[:]=True
  progress.set_command([0.,0.]);lo,hi=SPEC['joints']['left_frame']['range'];action=torch.zeros(16,3,device=env.device);action[:,0]=-(lo+hi)/(hi-lo)

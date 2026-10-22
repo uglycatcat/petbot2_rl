@@ -55,7 +55,7 @@ def main():
     save(out/'launch_status.json',state)
     starting=[]
     for v in variants:
-        dst=RUNS/v['run'];envelope=plan['envelope']+['--wheel-slew',str(v['wheel_slew'])]
+        dst=RUNS/v['run'];envelope=plan['envelope']+['--wheel-slew',str(v['wheel_slew']),'--frame-slew',str(v['frame_slew'])]
         initial=pathlib.Path(v['initial']).relative_to('demo_project/runs')
         cmd=['python3',str(dst/'tools/run_guarded.py'),'--container',plan['container'],'--gpu',str(v['gpu']),'--reserve-mib',str(v['reserve_mib']),'--workdir','/workspace/runs/'+v['run'],'--entrypoint','train_cycle.py','--log',str(out/(v['run']+'.log')),'--headless','--device','cuda:0','--num_envs',str(v['envs']),'--iterations',str(plan['iterations']),'--save-interval',str(plan['save_interval']),'--learning-rate',str(plan['learning_rate']),'--seed',str(v['seed']),'--initialize-from','/workspace/runs/'+str(initial),'--log_dir','/workspace/runs/'+v['run']+'/logs/'+v['run'],*envelope]
         with (out/(v['run']+'_guard.log')).open('w') as f:proc=subprocess.Popen(cmd,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
