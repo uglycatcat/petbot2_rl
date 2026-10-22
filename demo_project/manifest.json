@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "14dca2d9c0ecc891163276089f3355cd9b0d7556",
+      "verified_commit": "fd4651df96889c2ec87742763223b5af3bf78698",
       "groups": [
         "demo"
       ],
       "shallow": false,
       "status": "upright_rebuild_batch4_training",
-      "local_validation": "Physical-step recordings reproduce four prior evaluations exactly; typical low-force gaps 2–4ms, genuine instability also observed. CUDA current-step credit checks, 128x32 paired smokes and2048x16 resource test pass; reload holds30/17 of64, not task success. Batch4 12x2048x600 all PPO at2026-10-22 10:16+08,60 evaluations queued. See docs/upright_rebuild_batch4.md.",
+      "local_validation": "Physical-step recordings reproduce four prior evaluations exactly; typical low-force gaps 2–4ms, genuine instability also observed. CUDA current-step credit checks, 128x32 paired smokes and2048x16 resource test pass; reload holds30/17 of64, not task success. Batch4 12x2048x600 all PPO at2026-10-22 10:16+08,60 evaluations queued. See docs/upright_rebuild_batch4.md. Tool-only audit addition; running batch remains14dca2d unchanged. CUDA reproduces no effective wheel slew, small-command stationary criterion pass, and timeout/failure overlap; see docs/upright_deployment_audit_20261022.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
