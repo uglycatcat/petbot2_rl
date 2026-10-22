@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-21",
+  "updated_at": "2026-10-22",
   "purpose": "PetBot experimental training projects. Code is versioned on dedicated demoproj branches; checkouts are managed by default.xml.",
   "repositories": [
     {
@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "4d9ef191003212fc7421b50aa6774ee98dd4f675",
+      "verified_commit": "14dca2d9c0ecc891163276089f3355cd9b0d7556",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "upright_rebuild_batch3_complete_diagnosed",
-      "local_validation": "12 runs and60 evaluations complete, all scalars finite; final native A128/B119, heldout82/84, wide12/10 of384. Four trace diagnostics reproduce results; projected feedback not promoted. Next: physical-step contact duration and trajectory validation, no batch4 launched. See docs/upright_rebuild_batch3.md.",
+      "status": "upright_rebuild_batch4_training",
+      "local_validation": "Physical-step recordings reproduce four prior evaluations exactly; typical low-force gaps 2–4ms, genuine instability also observed. CUDA current-step credit checks, 128x32 paired smokes and2048x16 resource test pass; reload holds30/17 of64, not task success. Batch4 12x2048x600 all PPO at2026-10-22 10:16+08,60 evaluations queued. See docs/upright_rebuild_batch4.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
