@@ -27,7 +27,8 @@ def main():
         folder=ROOT/evidence['folder']
         metadata=json.loads((folder/'config.json').read_text())
         metrics=json.loads((ROOT/evidence['scalars']).read_text())
-        if metadata['commit']!=tested or metadata['working_tree_dirty']:raise RuntimeError('Smoke source mismatch')
+        if metadata['working_tree_dirty'] or metadata['contract']['fingerprint']!=gate['fingerprint']:raise RuntimeError('Smoke source mismatch')
+        if subprocess.check_output(['git','-C',str(SOURCE),'diff',metadata['commit'],commit,'--','train_cycle.py','upright','checks'],text=True):raise RuntimeError('Smoke task source changed')
         if not (folder/f"model_{evidence['iterations']-1}.pt").is_file():raise RuntimeError('Incomplete smoke')
         if not metrics or not all(tags and all(v['finite'] for v in tags.values()) for tags in metrics.values()):raise RuntimeError('Nonfinite smoke')
     for evidence in gate['evaluations']:
