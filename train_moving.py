@@ -11,6 +11,7 @@ p.add_argument('--feedback-mode',choices=['command','pose_feedback','heading_fee
 p.add_argument('--learning-rate',type=float,default=.0001)
 p.add_argument('--contact-audit',action='store_true')
 p.add_argument('--physical-contact-weight',type=float,default=0.)
+p.add_argument('--stability-credit',choices=['rolling','instant'],default='rolling')
 p.add_argument('--save-interval',type=int,default=250)
 p.add_argument('--wheel-slew',type=float,choices=[120.,900.],default=120.)
 p.add_argument('--wheel-mode',choices=['independent','common_diff'],default='independent')
@@ -53,13 +54,14 @@ try:
     # Identical history sampling for treatment and zero-weight control.
     cfg.scene.contact_forces.history_length=cfg.decimation
     cfg.rewards.physical_contact.weight=-args.physical_contact_weight
+    if args.stability_credit=='instant':cfg.rewards.held.params={'kind':'instant_good'}
     env=ManagerBasedRLEnv(cfg=cfg);wrapped=Adapter(env)
     folder=pathlib.Path(args.log_dir);folder.mkdir(parents=True,exist_ok=True)
     dirty=bool(subprocess.check_output(['git','status','--porcelain'],text=True).strip())
     if dirty and not args.allow_dirty:raise RuntimeError('Commit source before formal execution')
     files=['train_moving.py',*['upright/'+x for x in ['moving.py','moving_task.py','task.py','distribution.py','model.py','asset_cfg.py','prepare.py']]]
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(x).read_bytes()).hexdigest() for x in files).encode()).hexdigest()
-    contract={'task':'moving_takeover_audit_v1','observation_schema':'moving_41x5_raw_support_v1','physical_contact_weight':args.physical_contact_weight,'contact_history_steps':cfg.decimation,'feedback_mode':args.feedback_mode,'wheel_mode':args.wheel_mode,'wheel_slew':args.wheel_slew,'fingerprint':fingerprint,'action_dim':3,'control_dt':env.step_dt,'beta_shape_cap':128.,'source_sha256':SPEC['source_sha256']}
+    contract={'task':'moving_takeover_audit_v1','observation_schema':'moving_41x5_raw_support_v1','stability_credit':args.stability_credit,'physical_contact_weight':args.physical_contact_weight,'contact_history_steps':cfg.decimation,'feedback_mode':args.feedback_mode,'wheel_mode':args.wheel_mode,'wheel_slew':args.wheel_slew,'fingerprint':fingerprint,'action_dim':3,'control_dt':env.step_dt,'beta_shape_cap':128.,'source_sha256':SPEC['source_sha256']}
     if args.checkpoint:
         old=json.loads((pathlib.Path(args.checkpoint).parent/'config.json').read_text())
         if old.get('contract')!=contract:raise ValueError('Incompatible checkpoint: task, implementation or action/observation contract changed')

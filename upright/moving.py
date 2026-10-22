@@ -154,7 +154,7 @@ class MovingProgress:
         physical=(~finite)|(s['pos'][:,2]<.025)|(s['g'][:,2]>.2)|(s['vel'][:,:3].norm(dim=-1)>5)|(s['vel'][:,3:].norm(dim=-1)>30)
         warmup_failed=(~self.active)&(self.age>6.)
         failure=physical|warmup_failed|(self.active & (raw_distance>1.5))
-        self.result=dict(active=self.active.clone(),switched=switch,support=support,held=held,fresh=fresh,lift_event=lift_event,
+        self.result=dict(active=self.active.clone(),switched=switch,support=support,held=held,instant_good=good,fresh=fresh,lift_event=lift_event,
             failure=failure,warmup_failed=warmup_failed,physical_failure=physical,progress=progress,
             distance=distance,raw_distance=raw_distance,heading_error=heading_error,raw_error=raw_error,error=error,
             fixed_error=fixed_error,tilt_rate=tilt_rate,feedback_target=feedback_target,lift_fraction=lift,transition_scale=transition_scale,

@@ -15,6 +15,7 @@ for name,job in launch['train'].items():
  extras=['--wheel-slew',slew] if slew else []
  if '--feedback-mode' in job['envelope']:extras+=['--feedback-mode',job['envelope'][job['envelope'].index('--feedback-mode')+1]]
  if '--physical-contact-weight' in job['envelope']:extras+=['--physical-contact-weight',job['envelope'][job['envelope'].index('--physical-contact-weight')+1]]
+ if '--stability-credit' in job['envelope']:extras+=['--stability-credit',job['envelope'][job['envelope'].index('--stability-credit')+1]]
  jobs.append((name,job,launch['iterations']-1,'common',['--speed-limit','0.3','--yaw-limit','1.0','--frame-min=-1.0','--frame-max','1.2','--wheel-mode',mode,*extras]))
 if launch.get('heldout_seed') is not None:
  for name,job in launch['train'].items():jobs.append((name,job,launch['iterations']-1,'heldout',job['envelope']))
