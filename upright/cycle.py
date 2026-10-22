@@ -7,7 +7,7 @@ class CycleProgress(MovingProgress):
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         z=lambda:torch.zeros(self.n,device=self.device)
-        self.phase=z().long();self.mode=z()+1;self.destination=z()
+        self.phase=z().long();self.requested_mode=z()+1;self.destination=z()
         self.phase_time=z();self.land_at=z();self.ground_run=z();self.balance_time=z()
         self.rise_position=torch.zeros(self.n,2,device=self.device)
         self.transition_offset=z();self.front_previous=z()+.045
@@ -16,24 +16,29 @@ class CycleProgress(MovingProgress):
         self.track_sum=torch.zeros(self.n,2,device=self.device);self.track_count=z()
         self.track_good=z();self.balance_good=z();self.handoff_run=z();self.landing_potential=z()
 
+    def sample_commands(self, ids):
+        super().sample_commands(ids)
+        # Six ordinary-drive groups: forward, reverse, left, right, curve, stop.
+        self.raw[ids[self.mode[ids]==5]]=0.
+
     def reset(self,ids,pos,heading):
         super().reset(ids,pos,heading)
         for x in (self.phase,self.phase_time,self.ground_run,self.balance_time,self.transition_offset,
                   self.max_impact,self.max_touchdown_speed,self.last_front_speed,self.landed,self.handoff,self.balance_ever,self.external_mode,self.track_count,self.track_good,self.balance_good,self.handoff_run,self.landing_potential):x[ids]=0
-        self.track_sum[ids]=0;self.mode[ids]=1
+        self.track_sum[ids]=0;self.requested_mode[ids]=1
         self.destination[ids]=self.frame_range[0]+self.uniform(ids,8)*(self.frame_range[1]-self.frame_range[0])
         self.land_at[ids]=5.+3.*self.uniform(ids,9)
         self.rise_position[ids]=pos[ids,:2];self.front_previous[ids]=.045;self.land_height[ids]=.18
 
     def request_mode(self,mode,frame,ids=None):
         if ids is None:ids=torch.arange(self.n,device=self.device)
-        mode=torch.as_tensor(mode,device=self.device,dtype=self.mode.dtype).expand(len(ids))
+        mode=torch.as_tensor(mode,device=self.device,dtype=self.requested_mode.dtype).expand(len(ids))
         frame=torch.as_tensor(frame,device=self.device,dtype=self.destination.dtype).expand(len(ids))
         if not ((mode==0)|(mode==1)).all() or not torch.isfinite(frame).all():raise ValueError('Invalid mode request')
         if (frame<self.frame_range[0]).any() or (frame>self.frame_range[1]).any():raise ValueError('Driving frame outside envelope')
         # A requested landing is latched until stable handoff. Chattering cannot reset its deadline/reference.
         accept=(self.phase[ids]<3)
-        selected=ids[accept];self.mode[selected]=mode[accept];self.destination[selected]=frame[accept]
+        selected=ids[accept];self.requested_mode[selected]=mode[accept];self.destination[selected]=frame[accept]
         self.external_mode[ids]=True
 
     def update(self,s,fixed):
@@ -54,8 +59,8 @@ class CycleProgress(MovingProgress):
         self.balance_ever |= entering
         self.balance_time+=((self.phase==2)&support)*self.dt
         automatic=(self.phase==2)&~self.external_mode&(self.since>=self.land_at)
-        self.mode[automatic]=0
-        landing=(self.phase==2)&(self.mode==0)
+        self.requested_mode[automatic]=0
+        landing=(self.phase==2)&(self.requested_mode==0)
         self.phase[landing]=3;self.phase_time[landing]=0;self.land_height[landing]=s['front_z'][landing].clamp_min(.12)
         ground=(s['four_fraction']>=.9)&~s['body_history']&(s['g'][:,2]<-.85)&(s['g'][:,1].abs()<.15)
         frame_error=(s['q'][:,3:]-self.destination[:,None]).abs().amax(-1)

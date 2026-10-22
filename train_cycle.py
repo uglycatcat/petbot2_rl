@@ -50,7 +50,7 @@ try:
     names=['train_cycle.py']+['upright/'+n+'.py' for n in ['cycle','cycle_task','moving','task','distribution','model','asset_cfg','prepare','transfer']]
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(n).read_bytes()).hexdigest() for n in names).encode()).hexdigest()
     scales=[1.,4.,4.] if args.exploration_profile=='moderate' else [4.,16.,16.]
-    contract=dict(task='upright_cycle_v3',reward_design='peak_impact_increment_v3',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_49x5_v1',fingerprint=fingerprint,
+    contract=dict(task='upright_cycle_v4',command_sampling='independent_six_groups_v1',reward_design='peak_impact_increment_v3',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_49x5_v1',fingerprint=fingerprint,
         action_dim=3,wheel_mode='common_diff',wheel_slew=args.wheel_slew,frame_slew=args.frame_slew,
         control_dt=env.step_dt,source_sha256=SPEC['source_sha256'],rear_duty_threshold=.9,
         transition_reference='reanchor_once_on_balance',mode_request='landing_latched_until_handoff',landing_force_limit_n=20.,touchdown_speed_limit=.35)
@@ -78,7 +78,7 @@ try:
         del loaded
     if args.initialize_cycle_from:
         initial=pathlib.Path(args.initialize_cycle_from);prior=json.loads((initial.parent/'config.json').read_text())
-        if prior['commit']!='05761191b7ad328e5677a4b99d95b67203e7edd3' or prior['working_tree_dirty']:raise ValueError('Only clean cycle batch2 actor allowed')
+        if prior['commit']!='2e4243f92f495893905986e1dcfd5ad0144561f5' or prior['working_tree_dirty']:raise ValueError('Only clean cycle batch3 actor allowed')
         for k in ('observation_schema','action_dim','wheel_mode','wheel_slew','frame_slew','control_dt','source_sha256'):
             if prior['contract'][k]!=contract[k]:raise ValueError('Actor transfer mismatch '+k)
         loaded=torch.load(initial,map_location='cpu',weights_only=False)
@@ -93,6 +93,7 @@ try:
         policy=runner.get_inference_policy(device=args.device);obs=wrapped.get_observations();n=args.num_envs
         alive=torch.ones(n,device=args.device,dtype=torch.bool)
         flags={k:torch.zeros_like(alive) for k in ['takeover','balance','landing','handoff','complete','qualified','failure']}
+        coverage={stage:{name:torch.zeros(n,device=args.device,dtype=torch.bool) for name in ['forward','reverse','left','right','curve','stop']} for stage in ['active','balance']}
         trace=[];max_frame=0.;max_wheel=0.;peak_force=torch.zeros(n,device=args.device);peak_touch_speed=peak_force.clone();track_sum=torch.zeros(n,2,device=args.device);track_count=torch.zeros(n,device=args.device)
         balance_good=torch.zeros(n,device=args.device);balance_count=torch.zeros(n,device=args.device)
         offsets=torch.zeros(n,device=args.device);first_balance=torch.full((n,),-1.,device=args.device)
@@ -103,6 +104,10 @@ try:
                 obs,r,done,extra=wrapped.step(action)
                 s,m,raw,command,applied,since=env.moving_snapshot;valid=alive.clone()
                 for key,event in [('takeover',m['switched']),('balance',m['entered_balance']),('landing',m['entered_landing']),('handoff',m['entered_handoff']),('complete',m['completed']),('qualified',m['qualified']),('failure',m['failure'])]:flags[key] |= valid & event
+                rv,rw=raw.unbind(-1)
+                categories=dict(forward=(rv>0)&(rw==0),reverse=(rv<0)&(rw==0),left=(rv==0)&(rw>0),right=(rv==0)&(rw<0),curve=(rv!=0)&(rw!=0),stop=(rv==0)&(rw==0))
+                for stage,mask in [('active',valid&(m['phase']>=1)),('balance',valid&(m['phase']==2))]:
+                    for name,category in categories.items():coverage[stage][name] |= mask&category
                 entering=valid&m['entered_balance'];first_balance[entering]=since[entering]
                 # Measured pre-reset snapshot, never post-reset progress buffers.
                 offsets[entering]=m['transition_offset'][entering]
@@ -118,6 +123,7 @@ try:
                 alive &= ~done.bool()
                 if not alive.any():break
         result=dict(count=n,**{k:int(v.sum()) for k,v in flags.items()},outcomes={k:v.tolist() for k,v in flags.items()},unfinished=int(alive.sum()),contract=contract,
+            command_coverage={stage:{name:int(mask.sum()) for name,mask in groups.items()} for stage,groups in coverage.items()},
             first_balance_seconds=first_balance.tolist(),transition_offset_m=offsets.tolist(),balanced_fraction=(balance_good/balance_count.clamp_min(1)).tolist(),balance_samples=balance_count.tolist(),tracking_mae=(track_sum/track_count.clamp_min(1)[:,None]).tolist(),landing_peak_front_force=peak_force.tolist(),landing_peak_touchdown_speed=peak_touch_speed.tolist(),max_frame_target_step=max_frame,max_wheel_target_step=max_wheel)
         (folder/'evaluation.json').write_text(json.dumps(result,indent=2));(folder/'trace.json').write_text(json.dumps(trace))
         assert max_frame<=args.frame_slew*env.step_dt+1e-5 and max_wheel<=args.wheel_slew*env.step_dt+1e-4

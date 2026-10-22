@@ -1,5 +1,6 @@
 """Launch an explicit, gated fixed-version experiment; no automatic design decisions."""
 import argparse,fcntl,json,os,pathlib,shutil,subprocess,time
+from cycle_evaluation_contract import validate
 ROOT=pathlib.Path(__file__).resolve().parents[3]
 RUNS=ROOT/'demo_project/runs';SOURCE=ROOT/'demo_project/upright_rl_demo'
 def save(path,data):
@@ -32,7 +33,7 @@ def main():
         if not (folder/f"model_{evidence['iterations']-1}.pt").is_file():raise RuntimeError('Incomplete smoke')
         if not metrics or not all(tags and all(v['finite'] for v in tags.values()) for tags in metrics.values()):raise RuntimeError('Nonfinite smoke')
     for evidence in gate['evaluations']:
-        f=ROOT/evidence['path'];data=json.loads(f.read_text())
+        f=ROOT/evidence['path'];data=json.loads(f.read_text());validate(data)
         if data['contract']['fingerprint']!=gate['fingerprint']:raise RuntimeError('Gate fingerprint mismatch')
         if data['takeover']!=64 or data['unfinished']:raise RuntimeError('Gate coverage failure')
         if data['balance']<evidence.get('min_balance',1):raise RuntimeError('No balance reached in gate')

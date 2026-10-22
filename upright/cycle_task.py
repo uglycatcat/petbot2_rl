@@ -113,7 +113,7 @@ def observations(env):
         p.raw,p.command,s['pos'][:,:2]-p.reference,s['pos'][:,:2]-p.raw_reference,
         torch.stack((p.raw_yaw.sin(),p.raw_yaw.cos()),-1),a.applied,
         p.active[:,None].float(),p.since[:,None]/12,p.peak[:,None],p.support_run[:,None].clamp(max=1),p.frame[:,None]),-1)
-    return torch.cat((base,torch.nn.functional.one_hot(p.phase,num_classes=5).float(),p.mode[:,None],p.destination[:,None],p.phase_time[:,None]/4),-1)
+    return torch.cat((base,torch.nn.functional.one_hot(p.phase,num_classes=5).float(),p.requested_mode[:,None],p.destination[:,None],p.phase_time[:,None]/4),-1)
 
 
 def reward(env,kind):

@@ -14,7 +14,7 @@ p.raw[:]=torch.tensor([.01,.01],device=d);p.since[:]=3
 for _ in range(25):m=p.update(s,torch.zeros(3,device=d))
 assert not m['tracking_good'].any(),'Small forward command cannot pass while stationary'
 p.request_mode(0,.2);m=p.update(s,torch.zeros(3,device=d));assert (p.phase==3).all()
-p.request_mode(1,-.2);assert (p.mode==0).all() and (p.destination==.2).all(),'Latch landing'
+p.request_mode(1,-.2);assert (p.requested_mode==0).all() and (p.destination==.2).all(),'Latch landing'
 s['q'][:,3:]=.2;s['g'][:]=torch.tensor([0.,0.,-1.],device=d);s['front_z'][:]=.045;s['four_fraction'][:]=1
 for _ in range(30):m=p.update(s,torch.zeros(3,device=d))
 assert (p.phase==4).all() and m['completed'].all() and not m['qualified'].any()
@@ -49,3 +49,22 @@ m=p.update(s,torch.zeros(3,device=d));assert (m['impact_increment']==0).all()
 s['front_contact'][:]=False;m=p.update(s,torch.zeros(3,device=d));assert (m['impact_increment']==0).all()
 p.reset(ids,s['pos'],s['yaw']);assert (p.max_touchdown_speed==0).all()
 print('PASS impact increment once per increased maximum and reset')
+
+# Regression: cycle requests must never overwrite ordinary-drive command groups.
+n=60;ids=torch.arange(n,device=d);p=CycleProgress(n,d,dt,seed=20261023)
+pos=torch.zeros(n,3,device=d);yaw=torch.zeros(n,device=d)
+for generation in range(3):
+    p.reset(ids,pos,yaw)
+    assert torch.equal(p.mode,ids%6)
+    assert (p.requested_mode==1).all()
+    for request in [0,1,0]:
+        p.request_mode(request,0.)
+        p.sample_commands(ids)
+        v,w=p.raw.unbind(-1)
+        assert (v[p.mode==0]>0).all() and (w[p.mode==0]==0).all()
+        assert (v[p.mode==1]<0).all() and (w[p.mode==1]==0).all()
+        assert (v[p.mode==2]==0).all() and (w[p.mode==2]>0).all()
+        assert (v[p.mode==3]==0).all() and (w[p.mode==3]<0).all()
+        assert (v[p.mode==4]!=0).all() and (w[p.mode==4]!=0).all()
+        assert (p.raw[p.mode==5]==0).all()
+print('PASS all six command groups survive reset and mode requests')
