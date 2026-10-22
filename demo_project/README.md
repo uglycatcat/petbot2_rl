@@ -4,7 +4,7 @@
 
 | 项目 | 底座 | 分支 | 状态 |
 |---|---|---|---|
-| [upright_rl_demo](upright_rl_demo/README.md) | PetBot自有起立策略 | `demoproj/upright_rl_demo` | 第四批4ebd1ae六类覆盖已验证，12训练完成、独立评估进行中；原生交接362/333（各384），完整合格0，见[第四版](../docs/upright_cycle_v4.md) |
+| [upright_rl_demo](upright_rl_demo/README.md) | PetBot自有起立策略 | `demoproj/upright_rl_demo` | 第四批12训练/60评估完成、完整合格0；第五版bbd4efd跟踪反馈形状对照通过GPU验收，12组四卡部署中，见[第五版](../docs/upright_cycle_v5.md) |
 | [step_rl_demo](step_rl_demo/README.md) | PetBot自有低台阶策略 | `demoproj/step_rl_demo` | 已登记占位；前轮抬起并落到0–3cm台阶，之后加速带动后轮爬上台阶；尚无训练代码 |
 | [recovery_rl_demo](recovery_rl_demo/README.md) | PetBot自有跌倒恢复策略 | `demoproj/recovery_rl_demo` | 已登记占位；规划分段恢复并改善平滑性；任务设计待起立和台阶阶段完成后另行确定 |
 | [recovery_agile_01](recovery_agile_01/PETBOT.md) | WBC-AGILE历史原型 | `demoproj/recovery_agile_01` | 既有实验已归档；用户认为其任务设计可能有问题，此判断尚未验证，不作为新恢复任务的既定设计依据；历史结果见[实验记录](../docs/petbot_sweep4_training.md) |

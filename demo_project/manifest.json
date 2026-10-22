@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "4ebd1ae9b344ad679a0dacec7c49142dbe8554bf",
+      "verified_commit": "bbd4efdea0e57c05a6a1fad44c6b9ec9a390e040",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "upright_cycle_batch4_evaluating",
-      "local_validation": "Cycle4 fixed4ebd1ae:12 training runs completed600, exit0 and finite scalars; 2026-10-23 05:33 evaluation50/60 complete, one running, no failures. Six command groups validated. Native balance A383/B381, handoff362/333 of384 each, qualified0; only6/768 tracking fraction and17/768 touchdown speed pass. Heldout evaluation pending. See docs/upright_cycle_v4.md. Previous cycle batches1-3 were reverse-only due to mode collision and are not full command coverage baselines.",
+      "status": "upright_cycle_batch5_launching",
+      "local_validation": "Cycle4:12 trains/60 evals valid with six command groups; native handoff362/333, heldout353/317 of384 each, qualified0. Cycle5 matched-half-height Gaussian/Cauchy tracking reward comparison, same cycle4 A actors and moderate exploration. CUDA and two128x40/two2048x8 GPU gates finite; reload62/64 balance both,60/61 handoff, qualified0, all six groups covered. Fixedbbd4efd12-group four-GPU deployment in progress; see docs/upright_cycle_v5.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
