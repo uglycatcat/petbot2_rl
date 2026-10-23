@@ -16,6 +16,14 @@ def joint_tracking_score(error, tolerance):
     return .25*scores.sum(-1)+.5*scores.prod(-1)
 
 
+def bound_cycle_features(features):
+    """Keep continuous holding observations bounded without altering task clocks."""
+    features[:, 27:31].clamp_(-.3, .3)
+    features[:, 37].clamp_(0., 1.)
+    features[:, 48].clamp_(0., 1.)
+    return features
+
+
 class ContinuousProgress(CycleProgress):
     def __init__(self, *args, hold_range=(8., 12.), **kwargs):
         super().__init__(*args, **kwargs)
@@ -81,4 +89,11 @@ class ContinuousProgress(CycleProgress):
         result['motion_feedback'] = self.motion.clone()
         result['interval_motion'] = self.interval_motion.clone()
         result['effective_error'] = self.motion-self.command
+        finite = torch.isfinite(torch.cat((s['pos'], s['vel'], s['q']), -1)).all(-1)
+        reasons = [(~finite), s['pos'][:, 2]<.025, s['g'][:, 2]>.2,
+                   s['vel'][:, :3].norm(dim=-1)>5, s['vel'][:, 3:].norm(dim=-1)>30,
+                   result['warmup_failed'], (self.phase==1)&(self.phase_time>3.),
+                   (self.phase==3)&(self.phase_time>4.),
+                   self.active & ((s['pos'][:, :2]-self.rise_position).norm(dim=-1)>3.)]
+        result['failure_code'] = sum(flag.long()*(1<<i) for i, flag in enumerate(reasons))
         return result

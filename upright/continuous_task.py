@@ -8,7 +8,7 @@ from . import cycle_task as base
 from .cycle_task import SPEC, tensor, state, POSITION_JOINTS
 from .moving import slew, wheel_targets
 from .cycle import filter_differential
-from .continuous import ContinuousProgress, yaw_feedforward
+from .continuous import ContinuousProgress, yaw_feedforward, bound_cycle_features
 
 
 def ensure(env):
@@ -95,7 +95,7 @@ def observations(env):
     prepare_commands(env)
     p = ensure(env)
     s = state(env)
-    old = base.observations(env)
+    old = bound_cycle_features(base.observations(env))
     instantaneous = torch.stack((s['forward'], s['heading_rate']), -1)
     feedback = torch.cat((instantaneous, p.motion, p.command-p.motion, p.error_integral), -1)
     feedback = feedback/feedback.new_tensor([.1, .3, .1, .3, .1, .3, .2, .6])

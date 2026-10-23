@@ -3,7 +3,7 @@ import pathlib
 import sys
 import torch
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from upright.continuous import ContinuousProgress, joint_tracking_score, yaw_feedforward
+from upright.continuous import ContinuousProgress, joint_tracking_score, yaw_feedforward, bound_cycle_features
 from upright.transfer import expand_actor
 
 assert torch.cuda.is_available()
@@ -38,6 +38,10 @@ assert score[0]==1 and 0<score[2]<score[1]<.3
 u=torch.linspace(-.3,.3,11,device=device)
 assert torch.allclose(yaw_feedforward(-u),-yaw_feedforward(u))
 assert yaw_feedforward(torch.zeros(1,device=device))==0
+features=torch.full((n,49),100.,device=device)
+bounded=bound_cycle_features(features.clone())
+assert (bounded[:,27:31]==.3).all() and (bounded[:,37]==1).all() and (bounded[:,48]==1).all()
+assert torch.equal(bounded[:,:27],features[:,:27]) and torch.equal(bounded[:,38:48],features[:,38:48])
 
 s=dict(pos=torch.tensor([[0.,0.,.1]],device=device).repeat(n,1),yaw=yaw,forward=torch.zeros(n,device=device),
        vel=torch.zeros(n,6,device=device),q=torch.zeros(n,5,device=device),g=torch.tensor([[-.8,0.,-.6]],device=device).repeat(n,1),
