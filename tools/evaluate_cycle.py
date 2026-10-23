@@ -24,7 +24,13 @@ for name,job in launch['train'].items():
  envelope=[('--frame-min=-0.3' if v.startswith('--frame-min=') else v) for v in envelope]
  jobs.append((name,job,launch['iterations']-1,'common',envelope))
 if launch.get('heldout_seed') is not None:
- for name,job in launch['train'].items():jobs.append((name,job,launch['iterations']-1,'heldout',job['envelope']))
+ for name,job in launch['train'].items():
+  envelope=job['envelope'].copy()
+  if launch.get('heldout_hold_seconds'):
+   for key in ('--hold-min','--hold-max'):
+    if key in envelope:envelope[envelope.index(key)+1]=str(launch['heldout_hold_seconds'])
+    else:envelope.extend([key,str(launch['heldout_hold_seconds'])])
+  jobs.append((name,job,launch['iterations']-1,'heldout',envelope))
 deadline=time.time()+36*3600
 while time.time()<deadline:
  pending=False

@@ -16,6 +16,17 @@ def validate(result,count=64):
             for name,n in coverage[stage].items():
                 if type(n) is not int or not 0<=n<=count:raise ValueError('Invalid coverage '+name)
         if count>=6 and result['takeover']==count and not all(coverage['active'].values()):raise ValueError('Missing active command group')
+    if result.get('contract',{}).get('command_sampling')=='mixed_six_sequence_v2':
+        switches=result.get('command_switches');matrix=result.get('command_transition_matrix')
+        if not isinstance(switches,list) or len(switches)!=count or any(type(x) is not int or x<0 for x in switches):raise ValueError('Bad command switch counts')
+        if not isinstance(matrix,list) or len(matrix)!=6 or any(len(row)!=6 for row in matrix):raise ValueError('Bad transition matrix')
+        if any(type(x) is not int or x<0 for row in matrix for x in row) or sum(map(sum,matrix))!=sum(switches):raise ValueError('Transition count mismatch')
+        if any(matrix[i][i] for i in range(6)):raise ValueError('Self transition counted as category switch')
+        durations=result.get('balance_duration');motion=result.get('takeover_motion')
+        if not isinstance(durations,list) or len(durations)!=count or any(x<0 for x in durations):raise ValueError('Bad balance duration')
+        if not isinstance(motion,list) or len(motion)!=count or any(len(row)!=2 for row in motion):raise ValueError('Missing actual takeover motion')
+        for complete,changes,duration in zip(result['outcomes']['complete'],switches,durations):
+            if complete and duration>=8. and changes<1:raise ValueError('Completed long hold without mixed commands')
     def finite(x):
         if isinstance(x,float) and not math.isfinite(x):raise ValueError('Nonfinite metric')
         if isinstance(x,dict):

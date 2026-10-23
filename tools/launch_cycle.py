@@ -53,6 +53,7 @@ def main():
         total,used,util=mem[gpu]
         if used+reserve>=total*.78:raise RuntimeError(f'GPU{gpu} capacity insufficient: {used}+{reserve} >= {total*.78}')
     state=dict(eval_reserve_mib=plan.get('eval_reserve_mib',6000),name=plan['name'],expected_train=len(variants),commit=commit,container=plan['container'],thread=os.environ.get('CODEX_THREAD_ID'),iterations=plan['iterations'],checkpoints=plan['checkpoints'],heldout_seed=plan.get('heldout_seed'),train={},gate=gate,resource_plan=reservations,started_at=time.strftime('%FT%T%z'))
+    state['heldout_hold_seconds']=plan.get('heldout_hold_seconds')
     # Materialize all fixed copies before launching any training.
     for v in variants:
         dst=RUNS/v['run'];subprocess.run(['git','clone','--no-local',str(SOURCE),str(dst)],env={**os.environ,'GIT_LFS_SKIP_SMUDGE':'1'},check=True,stdout=subprocess.DEVNULL)
@@ -62,6 +63,7 @@ def main():
     starting=[]
     for v in variants:
         dst=RUNS/v['run'];envelope=plan['envelope']+(['--yaw-filter-tau',str(v['yaw_filter_tau'])] if 'yaw_filter_tau' in v else [])+(['--tracking-shape',v['tracking_shape']] if 'tracking_shape' in v else [])+['--wheel-slew',str(v['wheel_slew']),'--frame-slew',str(v['frame_slew'])]+(['--tracking-weight',str(v['tracking_weight'])] if 'tracking_weight' in v else [])+(['--exploration-profile',v['exploration_profile']] if 'exploration_profile' in v else [])
+        if 'steering_design' in v:envelope+=['--steering-design',v['steering_design']]
         initial=pathlib.Path(v['initial']).relative_to('demo_project/runs')
         cmd=['python3',str(dst/'tools/run_guarded.py'),'--container',plan['container'],'--gpu',str(v['gpu']),'--reserve-mib',str(v.get('start_reserve_mib',v['reserve_mib'])),'--workdir','/workspace/runs/'+v['run'],'--entrypoint','train_cycle.py','--log',str(out/(v['run']+'.log')),'--headless','--device','cuda:0','--num_envs',str(v['envs']),'--iterations',str(plan['iterations']-v.get('initial_iteration',0)),'--save-interval',str(plan['save_interval']),'--learning-rate',str(plan['learning_rate']),'--seed',str(v['seed']),plan.get('initialization_flag','--initialize-from'),'/workspace/runs/'+str(initial),'--log_dir','/workspace/runs/'+v['run']+'/logs/'+v['run'],*envelope]
         # Never refill capacity freed by a failed earlier job.
