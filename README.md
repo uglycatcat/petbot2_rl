@@ -8,9 +8,9 @@ PetBot2 的前轮抬起、后轮支撑、两轮遥控及前轮落地任务。训
 |---|---|---|
 | [`train.py`](train.py) | [`upright/task.py`](upright/task.py) | 历史静止初态起立任务；保留已完成的静止基线及其检查点接口。 |
 | [`train_moving.py`](train_moving.py) | [`upright/moving_task.py`](upright/moving_task.py) | 历史四轮行驶中接管和两轮遥控任务；保留旧实验复现入口。 |
-| [`train_cycle.py`](train_cycle.py) | [`upright/cycle_task.py`](upright/cycle_task.py) | 当前完整运动循环：行驶中接管、前轮抬起、两轮遥控、前轮落地、普通控制交接。 |
+| [`train_cycle.py`](train_cycle.py) | [`upright/continuous_task.py`](upright/continuous_task.py) | 当前完整运动循环：实际行驶中接管、前轮抬起、持续混合遥控、前轮落地、普通控制交接。 |
 
-三种入口的观测、模式和检查点契约不同；检查点只按其所属任务代码和固定版本加载。`upright/{moving,cycle}.py`分别提供对应任务的环境与控制实现。正式实验在 `demo_project/runs/` 中建立固定提交的独立副本；**本目录是可维护源码，不只存最新一版，也不直接存正式训练检查点**。
+三种入口的观测、模式和检查点契约不同；检查点只按其所属任务代码和固定版本加载。`upright/{moving,cycle,continuous}.py`提供各代任务状态机，`continuous_task.py`复用旧循环的基础状态与控制接口。旧完整循环检查点须在其固定提交运行；新入口仅支持显式actor迁移或同契约重载。正式实验在 `demo_project/runs/` 中建立固定提交的独立副本；**本目录是可维护源码，不只存最新一版，也不直接存正式训练检查点**。
 
 ## 工具与产物
 

@@ -8,7 +8,7 @@ def validate(result,count=64):
         if type(v) is not int or not isinstance(xs,list) or len(xs)!=count or any(type(x) is not bool for x in xs) or sum(xs)!=v:raise ValueError('Bad outcomes '+key)
     for a,b in zip(result['outcomes']['qualified'],result['outcomes']['complete']):
         if a and not b:raise ValueError('Qualified without complete cycle')
-    if result.get('contract',{}).get('command_sampling')=='independent_six_groups_v1':
+    if result.get('contract',{}).get('command_sampling') in ('independent_six_groups_v1','mixed_six_sequence_v2'):
         groups=['forward','reverse','left','right','curve','stop']
         coverage=result.get('command_coverage',{})
         for stage in ['active','balance']:
