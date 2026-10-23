@@ -1,6 +1,8 @@
 # 参考项目选择建议
 
-更新日期：2026-10-13。状态：已确认首个 PetBot demo 采用 AGILE 底座并借鉴 robot_lab 混合动作；参考训练结果待核验，不代表训练验收通过。
+> 历史选型记录：以下“当前决定”只对应2026-10-13的 `recovery_agile_01` 原型。AGILE 参考训练已于2026-10-16停止；目前只迭代 [upright_rl_demo](../demo_project/upright_rl_demo/README.md)，新 recovery 将重新设计，不能按本页直接重启训练。
+
+原记录日期：2026-10-13。当时决定以 AGILE 为早期恢复原型底座，并借鉴 robot_lab 混合动作；后续试训结果和关闭决定见[参考项目终局](reference_recovery_validation.md)及[项目里程碑](../AGENTS.md#进度报告文档主线)。
 
 ## 当前决定（2026-10-13）
 
