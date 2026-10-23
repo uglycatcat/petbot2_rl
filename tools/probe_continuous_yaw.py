@@ -10,9 +10,11 @@ p.add_argument('--probe-mode',choices=['policy','feedback'],default='policy')
 p.add_argument('--probe-kp',type=float,default=2.)
 p.add_argument('--probe-ki',type=float,default=1.)
 p.add_argument('--probe-diff-rate',type=float,default=1.)
+p.add_argument('--probe-common-tau',type=float,default=0.)
 options,remaining=p.parse_known_args()
 assert '--evaluate' in remaining
 assert 0<=options.probe_kp<=8 and 0<=options.probe_ki<=8 and 0<options.probe_diff_rate<=8
+assert 0<=options.probe_common_tau<=.2
 sys.argv=[sys.argv[0],*remaining];sys.path.insert(0,str(pathlib.Path.cwd()))
 
 
@@ -36,7 +38,12 @@ def install_probe(env,folder):
         blend=torch.where(phase==2,((clock-.6)/.6).clamp(0,1),torch.where(phase==3,(1-clock/.6).clamp(0,1),0.))
         policy_half=(a.speed[:,1]-a.speed[:,0])*.5
         difference=policy_half*(1-blend)+target*blend
-        common=a.speed.mean(-1);margin=(a.max_speed-common.abs()).clamp_min(0)
+        common=a.speed.mean(-1)
+        if options.probe_common_tau:
+            import math
+            filtered=previous.mean(-1)+(1.-math.exp(-env.step_dt/options.probe_common_tau))*(common-previous.mean(-1))
+            common=common*(1-blend)+filtered*blend
+        margin=(a.max_speed-common.abs()).clamp_min(0)
         difference=torch.maximum(torch.minimum(difference,margin),-margin)
         intervention=blend>0
         # Preserve exact policy targets before intervention, including roundoff.
