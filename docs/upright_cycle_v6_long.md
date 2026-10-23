@@ -18,3 +18,5 @@ GPU恢复短训、优化器步数连续性、重载及资源验收全部通过�
 `runs/_upright_cycle_batch6_long/launch_status.json`记录实际部署，launcher/watch PID与异常通知同目录。12组计划按GPU0/1/2/3的1/3/4/4错峰启动；中途评估检查点用1000/1600（与save_interval100对齐）及2399，最终独立种子与宽范围，共60项。首次新增检查点应早于训练结束产生，但ETA须按实际并发日志重算。正常定时与完成/异常通知持续启用。
 
 此轮专门排除训练预算不足；保持旧训练奖励包括落地代价，是为了只比较继续学习，后续新需求质量用`tools/analyze_cycle_quality.py`独立重算，不覆盖原qualified。若长训仍无改善，再讨论任务、奖励或控制结构的改动。
+
+2026-10-23用户取消每日定时续接：配置enabled=false、systemd timer已停用，不再安排04/10/16/22自动回访。当前固定长训与自身评估队列继续；完成通知属于既有评估队列，并非定时器。编号来源见[upright_training_lineage_20261023.md](upright_training_lineage_20261023.md)。
