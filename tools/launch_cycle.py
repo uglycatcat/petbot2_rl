@@ -30,13 +30,15 @@ def main():
         metrics=json.loads((ROOT/evidence['scalars']).read_text())
         if metadata['working_tree_dirty'] or metadata['contract']['fingerprint']!=gate['fingerprint']:raise RuntimeError('Smoke source mismatch')
         if subprocess.check_output(['git','-C',str(SOURCE),'diff',metadata['commit'],commit,'--','train_cycle.py','upright','checks'],text=True):raise RuntimeError('Smoke task source changed')
-        if not (folder/f"model_{evidence['iterations']-1}.pt").is_file():raise RuntimeError('Incomplete smoke')
+        if not (folder/evidence.get("checkpoint",f"model_{evidence['iterations']-1}.pt")).is_file():raise RuntimeError('Incomplete smoke')
         if not metrics or not all(tags and all(v['finite'] for v in tags.values()) for tags in metrics.values()):raise RuntimeError('Nonfinite smoke')
     for evidence in gate['evaluations']:
         f=ROOT/evidence['path'];data=json.loads(f.read_text());validate(data)
         if data['contract']['fingerprint']!=gate['fingerprint']:raise RuntimeError('Gate fingerprint mismatch')
         if data['takeover']!=64 or data['unfinished']:raise RuntimeError('Gate coverage failure')
         if data['balance']<evidence.get('min_balance',1):raise RuntimeError('No balance reached in gate')
+    for evidence in gate.get('resume_checks',[]):
+        if not json.loads((ROOT/evidence).read_text()).get('passed'):raise RuntimeError('Resume state gate failed')
     variants=plan['variants']
     if {v['gpu'] for v in variants}!={0,1,2,3}:raise RuntimeError('Four-GPU plan required')
     if len({v['run'] for v in variants})!=len(variants):raise RuntimeError('Duplicate run names')
@@ -44,6 +46,8 @@ def main():
     for v in variants:
         if (RUNS/v['run']).exists():raise RuntimeError('Run exists: '+v['run'])
         if not (ROOT/v['initial']).is_file():raise RuntimeError('Missing initialization checkpoint')
+        if v.get('initial_iteration',0):
+            if plan.get('initialization_flag')!='--checkpoint' or not 0<=v['initial_iteration']<plan['iterations']:raise RuntimeError('Invalid continuation budget')
         reservations[v['gpu']]+=v['reserve_mib']
     for gpu,reserve in reservations.items():
         total,used,util=mem[gpu]
@@ -59,7 +63,7 @@ def main():
     for v in variants:
         dst=RUNS/v['run'];envelope=plan['envelope']+(['--yaw-filter-tau',str(v['yaw_filter_tau'])] if 'yaw_filter_tau' in v else [])+(['--tracking-shape',v['tracking_shape']] if 'tracking_shape' in v else [])+['--wheel-slew',str(v['wheel_slew']),'--frame-slew',str(v['frame_slew'])]+(['--tracking-weight',str(v['tracking_weight'])] if 'tracking_weight' in v else [])+(['--exploration-profile',v['exploration_profile']] if 'exploration_profile' in v else [])
         initial=pathlib.Path(v['initial']).relative_to('demo_project/runs')
-        cmd=['python3',str(dst/'tools/run_guarded.py'),'--container',plan['container'],'--gpu',str(v['gpu']),'--reserve-mib',str(v.get('start_reserve_mib',v['reserve_mib'])),'--workdir','/workspace/runs/'+v['run'],'--entrypoint','train_cycle.py','--log',str(out/(v['run']+'.log')),'--headless','--device','cuda:0','--num_envs',str(v['envs']),'--iterations',str(plan['iterations']),'--save-interval',str(plan['save_interval']),'--learning-rate',str(plan['learning_rate']),'--seed',str(v['seed']),plan.get('initialization_flag','--initialize-from'),'/workspace/runs/'+str(initial),'--log_dir','/workspace/runs/'+v['run']+'/logs/'+v['run'],*envelope]
+        cmd=['python3',str(dst/'tools/run_guarded.py'),'--container',plan['container'],'--gpu',str(v['gpu']),'--reserve-mib',str(v.get('start_reserve_mib',v['reserve_mib'])),'--workdir','/workspace/runs/'+v['run'],'--entrypoint','train_cycle.py','--log',str(out/(v['run']+'.log')),'--headless','--device','cuda:0','--num_envs',str(v['envs']),'--iterations',str(plan['iterations']-v.get('initial_iteration',0)),'--save-interval',str(plan['save_interval']),'--learning-rate',str(plan['learning_rate']),'--seed',str(v['seed']),plan.get('initialization_flag','--initialize-from'),'/workspace/runs/'+str(initial),'--log_dir','/workspace/runs/'+v['run']+'/logs/'+v['run'],*envelope]
         # Never refill capacity freed by a failed earlier job.
         while True:
             for prior_run,prior_proc,_ in starting:
