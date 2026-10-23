@@ -14,8 +14,14 @@ import sys
 
 parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument('--probe-halfdiff', default='policy')
+parser.add_argument('--probe-controller', choices=['none', 'pi', 'ff_pi'], default='none')
 options, remaining = parser.parse_known_args()
 half_difference = None if options.probe_halfdiff == 'policy' else float(options.probe_halfdiff)
+controller = options.probe_controller
+if controller != 'none' and half_difference is not None:
+    raise ValueError('Select pulse or feedback controller, not both')
+pulse_end = 3.6 if controller == 'none' else 8.6
+landing_time = 6. if controller == 'none' else 10.
 if half_difference is not None and not -2. <= half_difference <= 2.:
     raise ValueError('Diagnostic half-difference must be within +/-2 rad/s')
 if '--evaluate' not in remaining:
@@ -62,7 +68,8 @@ def install_probe(env, folder):
     metadata = dict(
         diagnostic_only=True, checkpoint_comparison='same seed and initial commands; verify pre-pulse agreement',
         half_difference_rad_s=half_difference, intervention='replace policy differential; keep policy frame/common',
-        pulse_phase_time_s=[.6, 3.6], landing_phase_time_s=6., command_schedule='freeze initial raw sample',
+        pulse_phase_time_s=[.6, pulse_end], landing_phase_time_s=landing_time, command_schedule='freeze initial raw sample',
+        feedback_controller=controller, feedback_gains=dict(kp=2., ki=8., integral_limit=2., halfdiff_limit=2., feedforward_static=.7, feedforward_scale=.03),
         torque_semantics='Isaac Lab applied_torque: implicit actuator estimate, not measured solver drive force',
         physics_sample_semantics='beginning of each physics substep; mean/std over each control interval',
         probe_sha256=hashlib.sha256(pathlib.Path(__file__).read_bytes()).hexdigest())
@@ -83,6 +90,7 @@ def replace_once(old, new):
 replace_once(
     "        alive=torch.ones(n,device=args.device,dtype=torch.bool)",
     "        probe_wheels,probe_torques=install_probe(env,folder)\n"
+    "        probe_integral=torch.zeros(n,device=args.device)\n"
     "        alive=torch.ones(n,device=args.device,dtype=torch.bool)")
 replace_once(
     "                action=policy(obs)",
@@ -90,17 +98,26 @@ replace_once(
     "                progress=ensure(env)\n"
     "                progress.external_mode[alive]=True\n"
     "                progress.external[alive]=True\n"
-    "                progress.requested_mode[alive & (progress.phase==2) & (progress.phase_time>=6.)]=0\n"
-    "                probe_mask=alive & (progress.phase==2) & (progress.phase_time>=.6) & (progress.phase_time<3.6)\n"
+    "                progress.requested_mode[alive & (progress.phase==2) & (progress.phase_time>=landing_time)]=0\n"
+    "                probe_mask=alive & (progress.phase==2) & (progress.phase_time>=.6) & (progress.phase_time<pulse_end)\n"
     "                probe_pre_phase=progress.phase.clone();probe_pre_time=progress.phase_time.clone()\n"
     "                action=policy(obs)\n"
     "                policy_action=action.clone()\n"
     "                if half_difference is not None:\n"
-    "                    action=action.clone();action[probe_mask,2]=half_difference/5.\n")
+    "                    action=action.clone();action[probe_mask,2]=half_difference/5.\n"
+    "                if controller!='none':\n"
+    "                    from upright.cycle_task import state as probe_state\n"
+    "                    error=progress.command[:,1]-probe_state(env)['heading_rate']\n"
+    "                    probe_integral[probe_mask]=(probe_integral+8.*env.step_dt*error)[probe_mask].clamp(-2.,2.)\n"
+    "                    feedforward=progress.command[:,1]*(.1/.06)\n"
+    "                    if controller=='ff_pi':feedforward=feedforward+.7*torch.tanh(progress.command[:,1]/.03)\n"
+    "                    difference=(feedforward+2.*error+probe_integral).clamp(-2.,2.)\n"
+    "                    action=action.clone();action[probe_mask,2]=difference[probe_mask]/5.\n")
 replace_once(
     "trace.append(dict(t=",
     "trace.append(dict(probe_active=probe_mask.tolist(),probe_pre_phase=probe_pre_phase.tolist(),"
     "probe_pre_time=probe_pre_time.tolist(),policy_action=policy_action.tolist(),"
+    "probe_integral=probe_integral.tolist(),"
     "wheel_measured=s['wheel'].tolist(),wheel_interval_mean=s['probe_wheel_mean'].tolist(),"
     "wheel_interval_std=s['probe_wheel_std'].tolist(),"
     "torque_estimate_mean=s['probe_torque_mean'].tolist(),torque_estimate_abs_peak=s['probe_torque_abs_peak'].tolist(),"
