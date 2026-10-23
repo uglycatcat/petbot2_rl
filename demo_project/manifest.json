@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "6b5412bb077cb5e99dbc1c80fea30d366304c9f2",
+      "verified_commit": "b4769b35934f78bf11aeb899cccc6711c530e074",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "upright_cycle_batch6_launching",
-      "local_validation": "Cycle5:12 trains/60 evals valid, heldout handoff375/376 of384 each, qualified0; Cauchy no consistent improvement. Cycle6 compares differential-only filter tau0/.12 with common wheel request preserved; same cycle5 A actors, Gaussian reward, moderate exploration. CUDA and two128x40/two2048x8 GPU gates finite; reload62/59 balance,61/59 handoff of64, qualified0, six groups covered. Fixed6b5412b12-group four-GPU deployment in progress; see docs/upright_cycle_v6.md.",
+      "status": "upright_cycle_batch6_long_launching",
+      "local_validation": "Cycle6:12 trains/60 evals valid; heldout handoff381/380 of384 each; revised landing qualification1/1. Same-task continuation to2399 retains actor/critic/optimizer; task remains6b5412b, toolsb4769b3. Two128x40/two2048x8 full-resume gates finite, optimizer steps+800/+160 verified; reload64/64 cycle both, original qualified0.12-group four-GPU long deployment, checkpoints1000/1600/2399, eval reserve4000MiB validated. See docs/upright_cycle_v6_long.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []

@@ -47,3 +47,5 @@ CUDA任务契约与修复回归检查通过；第四轮A42热启128×12正常结
 05:45第四批60评估收齐且六类覆盖有效，独立交接353/317（各384）、完整合格0。第五版bbd4efd跟踪反馈形状对照通过CUDA契约，GPU短训/重载/六类覆盖通过，05:55开始12组四卡部署，见[upright_cycle_v5.md](upright_cycle_v5.md)。
 
 09:31第五批12训练/60评估收齐，完整合格仍0，Cauchy未一致优于高斯。第六版6b5412b仅差速低通对照通过CUDA契约，GPU短训/资源/重载及六类覆盖通过，09:42开始12组四卡部署，见[upright_cycle_v6.md](upright_cycle_v6.md)。
+
+13:18第六批收齐，新落地口径独立合格仅各1/384。暂不改设计，保留actor/critic/optimizer同配置长训到2399；GPU恢复/优化器连续性/资源验收通过，13:30开始12组同配置长训部署，见[upright_cycle_v6_long.md](upright_cycle_v6_long.md)。
