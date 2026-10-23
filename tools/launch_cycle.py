@@ -96,5 +96,7 @@ def main():
     # Use the queue from the same fixed version as the experiment.
     with (out/'eval_queue.log').open('w') as f:proc=subprocess.Popen(['python3',str(dst/'tools/evaluate_cycle.py'),'--root',str(ROOT),'--name',plan['name']],stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
     state.update(eval_pid=proc.pid,all_ppo_at=time.strftime('%FT%T%z'));save(out/'launch_status.json',state)
+    with (out/'eval_watch.log').open('w') as f:
+        subprocess.Popen(['python3',str(dst/'tools/watch_cycle_evaluation.py'),str(out)],stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
     print(json.dumps({'all_ppo_at':state['all_ppo_at'],'eval_pid':proc.pid}))
 if __name__=='__main__':main()
