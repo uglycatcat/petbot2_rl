@@ -38,8 +38,10 @@ def install_probe(env,folder):
         difference=policy_half*(1-blend)+target*blend
         common=a.speed.mean(-1);margin=(a.max_speed-common.abs()).clamp_min(0)
         difference=torch.maximum(torch.minimum(difference,margin),-margin)
-        a.speed.copy_(torch.stack((common-difference,common+difference),-1))
-        a.applied[:,1:]=a.speed/a.max_speed
+        intervention=blend>0
+        # Preserve exact policy targets before intervention, including roundoff.
+        a.speed[intervention]=torch.stack((common-difference,common+difference),-1)[intervention]
+        a.applied[intervention,1:]=a.speed[intervention]/a.max_speed
         probe['target'].copy_(target)
     a.process_actions=process
     (folder/'probe.json').write_text(json.dumps(dict(diagnostic_only=True,options=vars(options),

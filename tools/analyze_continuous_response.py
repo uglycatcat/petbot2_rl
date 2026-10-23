@@ -7,8 +7,9 @@ import numpy as np
 
 
 def analyze(folder):
-    rows=json.loads((folder/'trace.json').read_text())
-    result=json.loads((folder/'evaluation.json').read_text())
+    prefix='' if (folder/'evaluation.json').exists() else 'diagnostic_'
+    rows=json.loads((folder/(prefix+'trace.json')).read_text())
+    result=json.loads((folder/(prefix+'evaluation.json')).read_text())
     a=lambda key:np.asarray([r[key] for r in rows])
     raw=a('raw');valid=a('valid')&(a('phase')==2)&(a('phase_time')>.5)
     actual=np.stack((a('forward'),a('heading_rate')),-1)
