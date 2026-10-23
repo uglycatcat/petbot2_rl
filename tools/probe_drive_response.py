@@ -16,6 +16,7 @@ a = p.parse_args()
 app = AppLauncher(a).app
 try:
     import torch
+    import warp as wp
     from isaaclab.envs import ManagerBasedRLEnv
     from upright.cycle_task import CycleEnvCfg, ensure, state, tensor
 
@@ -55,7 +56,9 @@ try:
     for name in ('get_dof_dampings', 'get_dof_stiffnesses', 'get_dof_armatures', 'get_dof_friction_properties', 'get_dof_max_forces'):
         function = getattr(robot.root_view, name, None)
         if function is not None:
-            metadata['backend'][name] = tensor(function())[0].cpu().tolist()
+            value = function()
+            value = wp.to_torch(value) if isinstance(value, wp.array) else tensor(value)
+            metadata['backend'][name] = value[0].cpu().tolist()
     rows = []
     for tick in range(134):
         env.step(torch.zeros(len(cases), 3, device=env.device))
