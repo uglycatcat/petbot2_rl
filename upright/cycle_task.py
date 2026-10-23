@@ -6,7 +6,7 @@ from isaaclab.utils import configclass
 from isaaclab.envs import mdp as lab_mdp
 from .task import UprightEnvCfg, SPEC, POSITION_JOINTS, REAR_WHEELS, FRONT_WHEELS, tensor, state as base_state
 from .moving import slew, wheel_targets, projected_heading_rate, physical_contact_deficit
-from .cycle import CycleProgress
+from .cycle import CycleProgress, filter_differential
 
 
 def state(env):
@@ -70,6 +70,8 @@ class MovingAction(ActionTerm):
         ordinary=p.phase>=4
         desired_frame=torch.where(ordinary,p.destination,desired_frame)
         desired_speed=torch.where(ordinary[:,None],drive.clamp(-self.max_speed,self.max_speed),desired_speed)
+        filtered=filter_differential(self.speed,desired_speed,self._env.step_dt,self._env.cfg.yaw_filter_tau,self.max_speed)
+        desired_speed=torch.where((p.active&~ordinary)[:,None],filtered,desired_speed)
         frame=slew(self.target[:,3],desired_frame,self._env.cfg.frame_slew*self._env.step_dt)
         self.target[:,3:]=frame[:,None]
         self.speed.copy_(slew(self.speed,desired_speed,self._env.cfg.wheel_slew*self._env.step_dt))
@@ -188,6 +190,7 @@ class DonesCfg:
 @configclass
 class CycleEnvCfg(UprightEnvCfg):
     actions=ActionsCfg();observations=ObservationsCfg();rewards=RewardsCfg();events=EventsCfg();terminations=DonesCfg()
+    yaw_filter_tau:float=0.
     tracking_shape:str='gaussian'
     feedback_mode:str='command'
     wheel_slew:float=120.

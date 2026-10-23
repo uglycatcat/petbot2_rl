@@ -131,3 +131,17 @@ def tracking_score(error,tolerance,shape):
     if shape=='gaussian':return torch.exp(-x2).mean(-1)
     if shape=='cauchy':return (1/(1+x2/0.6931471805599453)).mean(-1)
     raise ValueError('Invalid tracking reward shape')
+
+
+def filter_differential(previous,desired,dt,tau,max_speed):
+    """Smooth yaw actuation only, preserving the requested common wheel speed."""
+    if tau==0:return desired
+    if tau<0 or dt<=0:raise ValueError('Invalid differential filter timing')
+    import math
+    common=desired.mean(-1)
+    differential=(desired[:,1]-desired[:,0])*.5
+    old=(previous[:,1]-previous[:,0])*.5
+    filtered=old+(1-math.exp(-dt/tau))*(differential-old)
+    margin=(max_speed-common.abs()).clamp_min(0.)
+    filtered=torch.maximum(torch.minimum(filtered,margin),-margin)
+    return torch.stack((common-filtered,common+filtered),-1)

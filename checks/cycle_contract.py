@@ -82,3 +82,18 @@ assert cauchy[3]>gaussian[3]*100
 assert torch.equal(cauchy,tracking_score(-err,tol,'cauchy'))
 assert torch.isfinite(tracking_score(err*1e6,tol,'cauchy')).all()
 print('PASS tracking reward bounds, symmetry, half-height matching and tail discrimination')
+
+from upright.cycle import filter_differential
+old=torch.tensor([[2.,2.],[-25.,25.]],device=d)
+target=torch.tensor([[1.,3.],[24.,25.]],device=d)
+assert torch.equal(filter_differential(old,target,.06,0.,25.),target)
+f=filter_differential(old,target,.06,.12,25.)
+assert torch.allclose(f.mean(-1),target.mean(-1)) and (f.abs()<=25.).all()
+assert 0<(f[0,1]-f[0,0])<2
+x=old[:1]
+errors=[]
+for _ in range(20):
+ x=filter_differential(x,target[:1],.06,.12,25.);errors.append((x-target[:1]).abs().max().item())
+assert all(b<a for a,b in zip(errors,errors[1:])) and errors[-1]<.001
+assert torch.allclose(filter_differential(-old,-target,.06,.12,25.),-f)
+print('PASS yaw filter bypass, common preservation, bounds, convergence and reversal')
