@@ -14,7 +14,7 @@ import sys
 
 parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument('--probe-halfdiff', default='policy')
-parser.add_argument('--probe-controller', choices=['none', 'pi', 'ff_pi'], default='none')
+parser.add_argument('--probe-controller', choices=['none', 'pi', 'ff_pi', 'pi_pose', 'ff_pi_pose'], default='none')
 options, remaining = parser.parse_known_args()
 half_difference = None if options.probe_halfdiff == 'policy' else float(options.probe_halfdiff)
 controller = options.probe_controller
@@ -91,10 +91,16 @@ replace_once(
     "        alive=torch.ones(n,device=args.device,dtype=torch.bool)",
     "        probe_wheels,probe_torques=install_probe(env,folder)\n"
     "        probe_integral=torch.zeros(n,device=args.device)\n"
+    "        from upright.cycle_task import state as probe_state\n"
+    "        probe_previous_yaw=probe_state(env)['yaw'].clone();probe_yaw_filtered=torch.zeros(n,device=args.device)\n"
     "        alive=torch.ones(n,device=args.device,dtype=torch.bool)")
 replace_once(
     "                action=policy(obs)",
     "                probe_wheels.clear();probe_torques.clear()\n"
+    "                probe_heading=probe_state(env)['yaw'];probe_delta=probe_heading-probe_previous_yaw\n"
+    "                probe_pose_rate=torch.atan2(probe_delta.sin(),probe_delta.cos())/env.step_dt\n"
+    "                probe_yaw_filtered+=(1.-__import__('math').exp(-env.step_dt/.12))*(probe_pose_rate-probe_yaw_filtered)\n"
+    "                probe_previous_yaw=probe_heading.clone()\n"
     "                progress=ensure(env)\n"
     "                progress.external_mode[alive]=True\n"
     "                progress.external[alive]=True\n"
@@ -107,10 +113,11 @@ replace_once(
     "                    action=action.clone();action[probe_mask,2]=half_difference/5.\n"
     "                if controller!='none':\n"
     "                    from upright.cycle_task import state as probe_state\n"
-    "                    error=progress.command[:,1]-probe_state(env)['heading_rate']\n"
+    "                    measurement=probe_yaw_filtered if controller.endswith('_pose') else probe_state(env)['heading_rate']\n"
+    "                    error=progress.command[:,1]-measurement\n"
     "                    probe_integral[probe_mask]=(probe_integral+8.*env.step_dt*error)[probe_mask].clamp(-2.,2.)\n"
     "                    feedforward=progress.command[:,1]*(.1/.06)\n"
-    "                    if controller=='ff_pi':feedforward=feedforward+.7*torch.tanh(progress.command[:,1]/.03)\n"
+    "                    if controller.startswith('ff_pi'):feedforward=feedforward+.7*torch.tanh(progress.command[:,1]/.03)\n"
     "                    difference=(feedforward+2.*error+probe_integral).clamp(-2.,2.)\n"
     "                    action=action.clone();action[probe_mask,2]=difference[probe_mask]/5.\n")
 replace_once(
@@ -118,6 +125,7 @@ replace_once(
     "trace.append(dict(probe_active=probe_mask.tolist(),probe_pre_phase=probe_pre_phase.tolist(),"
     "probe_pre_time=probe_pre_time.tolist(),policy_action=policy_action.tolist(),"
     "probe_integral=probe_integral.tolist(),"
+    "heading=s['yaw'].tolist(),probe_pose_rate=probe_pose_rate.tolist(),probe_yaw_filtered=probe_yaw_filtered.tolist(),"
     "wheel_measured=s['wheel'].tolist(),wheel_interval_mean=s['probe_wheel_mean'].tolist(),"
     "wheel_interval_std=s['probe_wheel_std'].tolist(),"
     "torque_estimate_mean=s['probe_torque_mean'].tolist(),torque_estimate_abs_peak=s['probe_torque_abs_peak'].tolist(),"
