@@ -9,6 +9,7 @@
 | repo、容器与版本管理 | [工程说明](engineering_handoff.md)的管理章节；[demo 索引](../demo_project/README.md)。工程说明其余训练接口主要为历史 recovery 原型。 |
 | 静止、旧移动、修复重建、完整循环的父子关系 | [训练谱系](upright_training_lineage_20261023.md) |
 | 第六版同配置续长的方案与终局 | [长训方案](upright_cycle_v6_long.md)、[长训终局](upright_cycle_batch6_long_results.md)及[原第六批终局](upright_cycle_batch6_results.md) |
+| 第八版转向反馈与精细探索 | [第八版](upright_cycle_v8.md)、[第七批终局](upright_cycle_batch7_results.md)；实时状态见[当前交接](current_handoff.md) |
 | 第七版持续遥控设计与验收 | [第七版](upright_cycle_v7.md)、[部署计划](experiments/upright_cycle_batch7.json)；运行状态以[当前交接](current_handoff.md)为准 |
 | 差速目标为何没有形成预期转向、下一步诊断 | [受控差速响应](upright_yaw_diagnostic_20261023.md)；含批次事件续接说明。 |
 | 早期静止起立成果 | [静止第五版](upright_v5_training.md)；任务设计见[upright.md](upright.md) |

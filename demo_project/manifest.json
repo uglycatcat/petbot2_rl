@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-23",
+  "updated_at": "2026-10-24",
   "purpose": "PetBot experimental training projects. Code is versioned on dedicated demoproj branches; checkouts are managed by default.xml.",
   "repositories": [
     {
@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "54c2623344621069cb50883b8be563f3e4f1d13f",
+      "verified_commit": "3121acf65bb8cf232cee0ebb7c5109aa1d89156d",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "upright_cycle_batch7; live state in docs/current_handoff.md",
-      "local_validation": "Cycle6 long: 12 trains/60 evals complete; heldout handoff767/768, revised qualification0/768. Cycle7 engineering gate: CUDA contracts, two2048x20 PPO smokes, native and30-second checkpoint reloads passed execution/coverage checks; native handoff A/B56/58, long8/27 of64 each, strict qualification0. Twelve paired fixed-version runs, four GPUs, checkpoints200/600/1199; task not achieved. See docs/upright_cycle_v7.md.",
+      "status": "upright_cycle_batch8; live state in docs/current_handoff.md",
+      "local_validation": "Cycle7: 12 trains/60 evals complete; 30-second heldout handoff749/768, joint tracking and revised qualification0/768. Cycle8: CUDA feedback/distribution/transfer checks, two2048x20 GPU PPO smokes with finite scalars, four native/30-second reloads each handoff63/64 and joint tracking0. Fixed feedback steering with paired exploration profiles; task not achieved. See docs/upright_cycle_v8.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []

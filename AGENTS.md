@@ -5,7 +5,7 @@
 ## 目标与当前工作
 
 - 三个独立策略按起立（upright）、0–3 cm 低台阶（step）、跌倒恢复（recovery）推进；目前只迭代完整运动循环起立。训练链路为 Isaac Lab + RSL-RL + PPO，后续用 MuJoCo 做 sim2sim。任务与控制契约见[需求基线](docs/current_scope.md)。
-- 静止默认初态起立已有阶段成果；运动中接管、两轮遥控、前轮落地和普通控制交接尚未整体达标。第六版同配置续长至2399已收齐12训练/60评估，独立种子交接767/768、新版完整合格0/768；不能只靠延长同配置解决。固定任务 `6b5412b`，工具 `b4769b3`，见[长训终局](docs/upright_cycle_batch6_long_results.md)。第七版`54c2623`已过GPU工程门槛并启动固定版本部署，遥控质量尚待正式训练，操作入口见[当前交接](docs/current_handoff.md)。
+- 静止默认初态起立已有阶段成果；运动中接管、两轮遥控、前轮落地和普通控制交接尚未整体达标。第六版同配置续长至2399已收齐12训练/60评估，独立种子交接767/768、新版完整合格0/768；不能只靠延长同配置解决。固定任务 `6b5412b`，工具 `b4769b3`，见[长训终局](docs/upright_cycle_batch6_long_results.md)。第七批`54c2623`已完整结束，30秒交接749/768但联合跟踪及完整质量仍0/768；当前第八版`3121acf`已通过GPU工程验收并开始部署反馈转向/探索强度对照，操作入口见[当前交接](docs/current_handoff.md)。
 - 第六版及其长训的六类遥控评估为固定类别短时场景，两轮段平均约4秒；不能作为持续混合遥控证明。第七版新增跨类换令、实际运动接管与长时遥控评估，设计见[第七版](docs/upright_cycle_v7.md)，是否通过以独立结果为准。
 - 旧移动第五轮及以后夜间结果已废弃；不自动恢复旧第十轮。用户已取消每日04/10/16/22定时续接，未经再次明确要求不得启用；批次完成/异常事件续接继续授权。编号与实际父检查点见[谱系](docs/upright_training_lineage_20261023.md)。
 - PetBot 默认四轮姿态静稳定，参考轮足项目的站立课程或奖励不可直接照搬。历史 `recovery_agile_01` 不是新的 recovery 任务模板。固定姿态恢复程序是构型与动作参照，不是训练示范数据。
@@ -17,7 +17,7 @@
 | 训练服务器 | `nvidia-smi -L` 为4块RTX 4090，家目录在 `/data/...` | 训练、评估和渲染；训练仅在专用容器内。 |
 | 桌面机 | 1块RTX 2080 Ti，家目录在 `/home/...` | 不训练；最后做 MuJoCo 等效果验证。 |
 
-仓库公开，主机地址、账号、密钥和代理配置不得入库。先读本文件，再读[当前交接](docs/current_handoff.md)。具体问题按[文档索引](docs/README.md)下钻：需求→`current_scope.md`，实现和入口→[demo README](demo_project/upright_rl_demo/README.md)，本批设计→[第七版](docs/upright_cycle_v7.md)，历史编号→[谱系](docs/upright_training_lineage_20261023.md)，参考项目→[参考项目索引](reference_project/README.md)。根目录 [README.md](README.md) 只供部署与使用，不写实验进度。
+仓库公开，主机地址、账号、密钥和代理配置不得入库。先读本文件，再读[当前交接](docs/current_handoff.md)。具体问题按[文档索引](docs/README.md)下钻：需求→`current_scope.md`，实现和入口→[demo README](demo_project/upright_rl_demo/README.md)，本批设计→[第八版](docs/upright_cycle_v8.md)，上一批→[第七批终局](docs/upright_cycle_batch7_results.md)，历史编号→[谱系](docs/upright_training_lineage_20261023.md)，参考项目→[参考项目索引](reference_project/README.md)。根目录 [README.md](README.md) 只供部署与使用，不写实验进度。
 
 ## 全局规则（硬约束）
 
@@ -63,6 +63,7 @@
 | 2026-10-23 | 受控差速诊断改变优化优先级 | 9组PhysX探针确认小输入响应衰减、大输入可转向但不对称且有平衡代价；先核对执行器/接触响应再改训练。当前批次补评估退出事件续接，周期定时器保持停用。见[诊断](docs/upright_yaw_diagnostic_20261023.md)。 |
 | 2026-10-23 | 第六版同配置长训收官 | 12训练/60评估正常完成，2399独立交接767/768但联合跟踪及新版完整合格0/768；平均误差改善未转成遥控达标。见[终局](docs/upright_cycle_batch6_long_results.md)。 |
 | 2026-10-23 | 补齐持续遥控任务并开始第七批 | 固定`54c2623`增加实际运动接管、跨类换令、运动反馈与有界观察；GPU工程验收后部署6对策略结构对照。30秒验收交接8/27（各64）且严格合格0，仍待学习优化，见[设计与验收](docs/upright_cycle_v7.md)。 |
+| 2026-10-24 | 第七批终局明确精度瓶颈 | 12训练/60评估完整，30秒交接749/768、平衡达标750/768，但联合跟踪及新版完整合格0；受控反馈改善平均转向而共同轮速低通恶化前向误差。见[终局](docs/upright_cycle_batch7_results.md)及[第八版依据](docs/upright_cycle_v8.md)。 |
 
 ## 目录职责与检查
 
