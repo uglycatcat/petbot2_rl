@@ -83,6 +83,9 @@ def metrics(env):
         env.moving_metrics = (s, m)
         env.moving_step = env.common_step_counter
         action = env.action_manager.get_term('moving')
+        if hasattr(action, 'yaw_feedback'):
+            m['yaw_feedback_integral'] = action.yaw_feedback.integral.clone()
+            m['yaw_feedback_target'] = action.yaw_feedback.target.clone()
         env.moving_snapshot = ({k:v.clone() for k,v in s.items()}, {k:v.clone() for k,v in m.items()},
                               p.raw.clone(), p.command.clone(), action.applied.clone(), p.since.clone())
         env.extras.setdefault('log', {}).update({'Cycle/active':p.active.float().mean(),

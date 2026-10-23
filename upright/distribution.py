@@ -31,7 +31,7 @@ class UprightBetaDistribution(BetaDistribution):
         if shape_cap not in (32.,128.): raise ValueError("Unsupported Beta shape cap")
         self.span=float(shape_cap)-1.
         self.concentration_scale=tuple(concentration_scale or [1.]*output_dim)
-        if len(self.concentration_scale)!=output_dim or any(not math.isfinite(x) or not 1<=x<=16 for x in self.concentration_scale):raise ValueError("Invalid concentration scale")
+        if len(self.concentration_scale)!=output_dim or any(not math.isfinite(x) or not 1<=x<=64 for x in self.concentration_scale):raise ValueError("Invalid concentration scale")
         mean = torch.as_tensor(initial_mean, dtype=torch.float32)
         std = torch.as_tensor(initial_std, dtype=torch.float32)
         if mean.shape != (output_dim,) or std.shape != (output_dim,):

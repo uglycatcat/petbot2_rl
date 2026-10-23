@@ -9,11 +9,11 @@ p.add_argument('--frame-min',type=float,default=-.3);p.add_argument('--frame-max
 p.add_argument('--wheel-slew',type=float,choices=[120.,240.,480.],default=120.)
 p.add_argument('--frame-slew',type=float,default=3.)
 p.add_argument('--learning-rate',type=float,default=.0001);p.add_argument('--save-interval',type=int,default=100)
-p.add_argument('--exploration-profile',choices=['moderate','fine'],default='moderate')
+p.add_argument('--exploration-profile',choices=['moderate','fine','precision'],default='fine')
 p.add_argument('--yaw-filter-tau',type=float,choices=[0.,.12],default=0.)
 p.add_argument('--tracking-shape',choices=['gaussian','cauchy'],default='gaussian')
 p.add_argument('--tracking-weight',type=float,choices=[6.,12.],default=12.)
-p.add_argument('--steering-design',choices=['direct','residual'],default='direct')
+p.add_argument('--steering-design',choices=['feedback'],default='feedback')
 p.add_argument('--hold-min',type=float,default=8.);p.add_argument('--hold-max',type=float,default=12.)
 p.add_argument('--initialize-cycle-from');p.add_argument('--initialize-from');p.add_argument('--checkpoint');p.add_argument('--evaluate',action='store_true')
 p.add_argument('--allow-dirty',action='store_true');p.add_argument('--probe',action='store_true')
@@ -22,7 +22,8 @@ import torch
 from tensordict import TensorDict
 from isaaclab.envs import ManagerBasedRLEnv
 from rsl_rl.runners import OnPolicyRunner
-from upright.continuous_task import ContinuousEnvCfg as CycleEnvCfg,SPEC,ensure
+from upright.feedback_task import FeedbackEnvCfg as CycleEnvCfg,SPEC,ensure
+from upright.feedback import CONTROLLER
 from upright.transfer import expand_actor
 
 class Adapter:
@@ -44,7 +45,7 @@ try:
     assert -1<=args.frame_min<=args.frame_max<=1.2 and 0<args.frame_slew<=6
     assert sum(bool(x) for x in (args.checkpoint,args.initialize_from,args.initialize_cycle_from))<=1
     assert 2.<=args.hold_min<=args.hold_max<=30.
-    if args.initialize_from:raise ValueError('V7 requires explicit cycle-v6 actor transfer')
+    if args.initialize_from:raise ValueError('V8 requires explicit cycle-v7 actor transfer')
     cfg=CycleEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
     cfg.speed_limit=args.speed_limit;cfg.yaw_limit=args.yaw_limit;cfg.frame_range=(args.frame_min,args.frame_max)
     cfg.wheel_slew=args.wheel_slew;cfg.frame_slew=args.frame_slew;cfg.wheel_mode='common_diff'
@@ -55,10 +56,10 @@ try:
     folder=pathlib.Path(args.log_dir);folder.mkdir(parents=True,exist_ok=True)
     dirty=bool(subprocess.check_output(['git','status','--porcelain'],text=True).strip())
     if dirty and not args.allow_dirty:raise RuntimeError('Commit source before formal execution')
-    names=['train_cycle.py']+['upright/'+n+'.py' for n in ['continuous','continuous_task','cycle','cycle_task','moving','task','distribution','model','asset_cfg','prepare','transfer']]
+    names=['train_cycle.py']+['upright/'+n+'.py' for n in ['feedback','feedback_task','continuous','continuous_task','cycle','cycle_task','moving','task','distribution','model','asset_cfg','prepare','transfer']]
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(n).read_bytes()).hexdigest() for n in names).encode()).hexdigest()
-    scales=[1.,4.,4.] if args.exploration_profile=='moderate' else [4.,16.,16.]
-    contract=dict(task='upright_cycle_v7',steering_design=args.steering_design,yaw_filter_tau=args.yaw_filter_tau,tracking_shape=args.tracking_shape,command_sampling='mixed_six_sequence_v2',reward_design='joint_motion_soft_landing_v1',motion_feedback='pose_delta_ema_120ms',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_57x5_bounded_motion_v2',fingerprint=fingerprint,
+    scales={'moderate':[1.,4.,4.],'fine':[4.,16.,16.],'precision':[16.,64.,64.]}[args.exploration_profile]
+    contract=dict(task='upright_cycle_v8',yaw_controller=CONTROLLER,steering_design=args.steering_design,yaw_filter_tau=args.yaw_filter_tau,tracking_shape=args.tracking_shape,command_sampling='mixed_six_sequence_v2',reward_design='joint_motion_soft_landing_v1',motion_feedback='pose_delta_ema_120ms',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_58x5_yaw_integral_v1',fingerprint=fingerprint,
         action_dim=3,wheel_mode='common_diff',wheel_slew=args.wheel_slew,frame_slew=args.frame_slew,
         control_dt=env.step_dt,source_sha256=SPEC['source_sha256'],rear_duty_threshold=.9,
         transition_reference='reanchor_once_on_balance',mode_request='landing_latched_until_handoff',landing_force_limit_n=20.,touchdown_speed_limit=.35)
@@ -74,29 +75,19 @@ try:
         algorithm=dict(class_name='PPO',value_loss_coef=1.,use_clipped_value_loss=True,clip_param=.2,entropy_coef=.001,num_learning_epochs=5,num_mini_batches=4,learning_rate=args.learning_rate,schedule='fixed',gamma=.997**3,lam=.95**3,desired_kl=.01,max_grad_norm=1.))
     runner=OnPolicyRunner(wrapped,copy.deepcopy(config),log_dir=str(folder),device=args.device)
     metadata=dict(contract=contract,args=vars(args),runner=config,working_tree_dirty=dirty,commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip())
-    if args.initialize_from:
-        initial=pathlib.Path(args.initialize_from);prior=json.loads((initial.parent/'config.json').read_text())
-        if prior['commit']!='5bb0c71a28c9b2b9733926d9768d7ae44625a224' or prior['working_tree_dirty']:raise ValueError('Only clean rebuilt batch2 actor allowed')
-        for k,v in dict(source_sha256=SPEC['source_sha256'],observation_schema='moving_41x5_raw_support_v1',action_dim=3,wheel_mode='common_diff',control_dt=env.step_dt).items():
-            if prior['contract'].get(k)!=v:raise ValueError('Source mismatch '+k)
-        loaded=torch.load(initial,map_location='cpu',weights_only=False)
-        actor=runner.alg.get_policy();actor.load_state_dict(expand_actor(loaded['actor_state_dict'],actor.state_dict()),strict=True)
-        assert runner.current_learning_iteration==0 and not runner.alg.optimizer.state
-        metadata['initialization']=dict(source_commit=prior['commit'],checkpoint_sha256=hashlib.sha256(initial.read_bytes()).hexdigest(),actor_only=True,critic_fresh=True,optimizer_loaded=False,extra_features_zero_weight=True)
-        del loaded
     if args.initialize_cycle_from:
         initial=pathlib.Path(args.initialize_cycle_from);prior=json.loads((initial.parent/'config.json').read_text())
-        if prior['contract'].get('task')!='upright_cycle_v6' or prior['working_tree_dirty']:raise ValueError('Only clean cycle-v6 actor allowed')
-        if prior['commit']!='b4769b35934f78bf11aeb899cccc6711c530e074':
-            raise ValueError('Only validated cycle-v6 long training source allowed')
-        if prior['contract']['observation_schema']!='cycle_49x5_v1':raise ValueError('Source observation schema mismatch')
+        if prior['contract'].get('task')!='upright_cycle_v7' or prior['working_tree_dirty']:raise ValueError('Only clean cycle-v7 actor allowed')
+        if prior['commit']!='54c2623344621069cb50883b8be563f3e4f1d13f':
+            raise ValueError('Only validated cycle-v7 training source allowed')
+        if prior['contract']['observation_schema']!='cycle_57x5_bounded_motion_v2' or prior['contract']['steering_design']!='direct':raise ValueError('Source observation schema mismatch')
         for k in ('action_dim','wheel_mode','wheel_slew','frame_slew','control_dt','source_sha256'):
             if prior['contract'][k]!=contract[k]:raise ValueError('Actor transfer mismatch '+k)
         loaded=torch.load(initial,map_location='cpu',weights_only=False)
         actor=runner.alg.get_policy()
-        actor.load_state_dict(expand_actor(loaded['actor_state_dict'],actor.state_dict(),old_width=49,new_width=57),strict=True)
+        actor.load_state_dict(expand_actor(loaded['actor_state_dict'],actor.state_dict(),old_width=57,new_width=58),strict=True)
         assert runner.current_learning_iteration==0 and not runner.alg.optimizer.state
-        metadata['initialization']=dict(source_commit=prior['commit'],checkpoint_sha256=hashlib.sha256(initial.read_bytes()).hexdigest(),actor_only=True,critic_fresh=True,optimizer_loaded=False,old_width=49,new_width=57,new_features_zero_weight=True)
+        metadata['initialization']=dict(source_commit=prior['commit'],checkpoint_sha256=hashlib.sha256(initial.read_bytes()).hexdigest(),actor_only=True,critic_fresh=True,optimizer_loaded=False,old_width=57,new_width=58,new_features_zero_weight=True)
         del loaded
     if args.checkpoint:runner.load(args.checkpoint)
     (folder/'config.json').write_text(json.dumps(metadata,indent=2))
@@ -143,7 +134,7 @@ try:
                 peak_touch_speed=torch.maximum(peak_touch_speed,torch.where(valid,m['max_touchdown_speed'],0.))
                 delta=(applied-previous).abs();max_frame=max(max_frame,float(delta[valid,0].max())*(hi-lo)/2 if valid.any() else 0.)
                 max_wheel=max(max_wheel,float(delta[valid,1:].max())*a.max_speed if valid.any() else 0.)
-                trace.append(dict(gravity=s['g'].tolist(),body_velocity=s['vel'].tolist(),failure_code=m['failure_code'].tolist(),t=(tick+1)*env.step_dt,valid=valid.tolist(),phase=m['phase'].tolist(),phase_time=m['phase_time'].tolist(),since=since.tolist(),raw=raw.tolist(),command=command.tolist(),pos=s['pos'].tolist(),heading=s['yaw'].tolist(),forward=s['forward'].tolist(),heading_rate=s['heading_rate'].tolist(),motion_feedback=m['motion_feedback'].tolist(),interval_motion=m['interval_motion'].tolist(),wheel_measured=s['wheel'].tolist(),front_z=s['front_z'].tolist(),front_vertical_speed=s['front_vertical_speed'].tolist(),rear_fraction=s['rear_fraction'].tolist(),four_fraction=s['four_fraction'].tolist(),applied=applied.tolist(),failure=m['failure'].tolist(),balanced=m['balanced'].tolist()))
+                trace.append(dict(yaw_feedback_integral=m['yaw_feedback_integral'].tolist(),yaw_feedback_target=m['yaw_feedback_target'].tolist(),gravity=s['g'].tolist(),body_velocity=s['vel'].tolist(),failure_code=m['failure_code'].tolist(),t=(tick+1)*env.step_dt,valid=valid.tolist(),phase=m['phase'].tolist(),phase_time=m['phase_time'].tolist(),since=since.tolist(),raw=raw.tolist(),command=command.tolist(),pos=s['pos'].tolist(),heading=s['yaw'].tolist(),forward=s['forward'].tolist(),heading_rate=s['heading_rate'].tolist(),motion_feedback=m['motion_feedback'].tolist(),interval_motion=m['interval_motion'].tolist(),wheel_measured=s['wheel'].tolist(),front_z=s['front_z'].tolist(),front_vertical_speed=s['front_vertical_speed'].tolist(),rear_fraction=s['rear_fraction'].tolist(),four_fraction=s['four_fraction'].tolist(),applied=applied.tolist(),failure=m['failure'].tolist(),balanced=m['balanced'].tolist()))
                 assert torch.isfinite(obs['policy']).all() and torch.isfinite(r).all()
                 alive &= ~done.bool()
                 if not alive.any():break

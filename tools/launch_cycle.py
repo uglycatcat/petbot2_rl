@@ -100,5 +100,8 @@ def main():
     state.update(eval_pid=proc.pid,all_ppo_at=time.strftime('%FT%T%z'));save(out/'launch_status.json',state)
     with (out/'eval_watch.log').open('w') as f:
         subprocess.Popen(['python3',str(dst/'tools/watch_cycle_evaluation.py'),str(out)],stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
+    with (out/'resource_sample.log').open('w') as f:
+        resource=subprocess.Popen(['python3',str(dst/'tools/sample_batch_resources.py'),str(out)],stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
+    state['resource_sample_pid']=resource.pid;save(out/'launch_status.json',state)
     print(json.dumps({'all_ppo_at':state['all_ppo_at'],'eval_pid':proc.pid}))
 if __name__=='__main__':main()
