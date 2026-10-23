@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "2917538ecd0a9e2b696e2643741141c0a08cf144",
+      "verified_commit": "f004d3bcd83b573b04482dd41850e5d91c831f54",
       "groups": [
         "demo"
       ],
       "shallow": false,
       "status": "upright_cycle_batch6_long_active; see docs/current_handoff.md",
-      "local_validation": "Cycle6: 12 trains/60 evals valid; heldout handoff A/B 381/380 of 384 each; revised landing qualification 1/384 each. Same-task continuation to 2399 retains actor/critic/optimizer; task remains 6b5412b, tools b4769b3. Two 128x40/two 2048x8 full-resume gates finite, optimizer steps +800/+160 verified; reload cycle 64/64 in both checks, original qualified 0. Twelve-group four-GPU deployment uses checkpoints 1000/1600/2399 and evaluated reserve 4000 MiB. See docs/upright_cycle_v6_long.md.",
+      "local_validation": "Cycle6: 12 trains/60 evals valid; heldout handoff A/B 381/380 of 384 each; revised landing qualification 1/384 each. Same-task continuation to 2399 retains actor/critic/optimizer; task remains 6b5412b, tools b4769b3. Two 128x40/two 2048x8 full-resume gates finite, optimizer steps +800/+160 verified; reload cycle 64/64 in both checks, original qualified 0. Twelve-group four-GPU deployment uses checkpoints 1000/1600/2399 and evaluated reserve 4000 MiB. See docs/upright_cycle_v6_long.md. Controlled yaw diagnostic: nine 64-environment PhysX evaluations completed using fixed probe 1f7cbdc, paired pre-pulse differences zero; small-input attenuation and asymmetric larger-input response observed, not task qualification. Evaluator-exit event hook tested for normal/crash/unknown delivery; attached to current batch. Training task unchanged. See docs/upright_yaw_diagnostic_20261023.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
