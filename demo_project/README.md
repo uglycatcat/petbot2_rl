@@ -4,7 +4,7 @@
 
 | 项目 | 职责 | 当前开发状态 |
 |---|---|---|
-| [upright_rl_demo](upright_rl_demo/README.md) | 前轮抬起、后轮支撑、两轮遥控、前轮落地；包含静止、旧移动和完整循环三种训练入口。 | 活跃开发；实验状态见[当前交接](../docs/current_handoff.md)。 |
+| [upright_rl_demo](upright_rl_demo/README.md) | 前轮抬起、后轮支撑、持续两轮遥控、前轮落地；包含静止、旧移动和完整循环三种训练入口。 | 活跃开发；实验状态见[当前交接](../docs/current_handoff.md)。 |
 | [step_rl_demo](step_rl_demo/README.md) | 前轮登上0–3 cm低台阶后加速爬升。 | 仅登记与需求说明，尚无训练代码。 |
 | [recovery_rl_demo](recovery_rl_demo/README.md) | 重新设计分阶段跌倒恢复。 | 仅登记与需求说明，尚无训练代码。 |
 | [recovery_agile_01](recovery_agile_01/PETBOT.md) | 基于AGILE的早期恢复原型。 | 历史实验，不能直接作为新恢复任务的设计或成功基线。 |
