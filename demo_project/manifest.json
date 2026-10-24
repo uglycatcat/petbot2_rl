@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "3121acf65bb8cf232cee0ebb7c5109aa1d89156d",
+      "verified_commit": "d13cd449c5e8296ef336976679c3989f56e2ae8e",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "upright_cycle_batch8; live state in docs/current_handoff.md",
-      "local_validation": "Cycle7: 12 trains/60 evals complete; 30-second heldout handoff749/768, joint tracking and revised qualification0/768. Cycle8: CUDA feedback/distribution/transfer checks, two2048x20 GPU PPO smokes with finite scalars, four native/30-second reloads each handoff63/64 and joint tracking0. Fixed feedback steering with paired exploration profiles; task not achieved. See docs/upright_cycle_v8.md.",
+      "status": "upright_cycle_batch9; live state in docs/current_handoff.md",
+      "local_validation": "Cycle8 complete under old code; original joint tracking0, contact-duty interpretation withdrawn. Cycle9 GPU audit: actual contact captures1-to30 per60ms, history exact; two2048x20 PPO smokes finite, native reload handoff64/64 each,30-second59/60 each64 (landing timeouts), original/new joint tracking0. Wheel-axis alignment error below1e-6. Fixed d13cd44 task-equivalent to tested64510a5; task not achieved. See docs/upright_cycle_v9.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []

@@ -4,13 +4,17 @@
 
 ## 当前结论与工作
 
-第七批已于2026-10-24 04:44:58完整结束：12组均跑至1199并正常退出，60/60评估有效，无缺失/失败，实际训练/评估进程已退出。原生交接742/768、30秒独立场景749/768，但两者联合跟踪及新版完整质量合格均0。该批修复了实际运动接管和持续混合换令覆盖，长时存活改善，遥控精度仍未达标。固定提交`54c2623`，见[第七批终局](upright_cycle_batch7_results.md)；不重复启动或无依据延长本批。
+第八批`3121acf`已于2026-10-24 12:25:41完整结束：12训练完成1199且退出0，60/60评估完整执行，无缺失/执行失败，实际进程已退出。旧口径30秒交接752/768、平衡计数753/768，但瞬时联合跟踪和新版完整质量合格均0。转向平均响应改善，短时波动仍明显；precision探索没有一致胜出，不直接重复或延长同配置。见[第八批终局](upright_cycle_batch8_results.md)。
 
-**第八批已通过GPU工程验收，于2026-10-24 06:10:41开始分批部署。** 固定提交`3121acf`，六对种子，A/B比较fine与标准差约减半的precision探索；均从第七批同种子A组1199迁移actor，critic/optimizer新建。转向反馈使用受控诊断支持的Kp2/Ki4/半差限速4，策略保留车架/共同轮速控制并提供小幅转向修正。设计、初始化、资源和评估安排见[第八版](upright_cycle_v8.md)。实际状态查`runs/_upright_cycle_batch8/launch_status.json`，不能重复启动。
+**第九批已于2026-10-24 13:06:37开始分批部署。** 发布`d13cd44`（任务代码与`64510a5`相同），两组GPU短训及四项重载已通过工程门槛，见`runs/_cycle9_gate_candidate3/release_gate.json`。实际启动状态查`runs/_upright_cycle_batch9/launch_status.json`。新坐标使用轮轴地面航向，保留旧机身投影诊断；A/B只比较瞬时跟踪奖励占比0.3/0.7，均用fine探索。定义、证据和评估边界见[第九版](upright_cycle_v9.md)。
 
-四组反馈及三组共同轮速滤波诊断均已结束；修正版探针干预前轨迹最大差0。转向反馈改善低频误差，共同轮速低通反而恶化前向误差，因此不加入。所有探针仍不是正式训练效果，窗口诊断不能替代瞬时验收。
+子步插值诊断已结束，修正版f442d5a逐项复现原轨迹，三种插值均恶化跟踪，因此不采用。首版f741f66改变接触传感器lazy history采样时序，已排除。航向反馈探针614d826的baseline/lateral交接61/64和64/64，但瞬时联合均0；这不是新训练成功率。
 
-第七批原始证据在`runs/_upright_cycle_batch7/{launch_status,eval_status,eval_finished,quality_review,continuous_response_review,scalars_final}.json`及逐项config/trace/evaluation。原训练标量全部有限，60项评估固定版本和fingerprint一致。剔除换令后0.6秒，120 ms平滑转向误差仍约0.024 rad/s；单纯改统计窗口不能宣称达标。新结构已通过两组2048×20 GPU短训及四项重载：各交接63/64，瞬时联合跟踪仍0；工程通过不表示遥控达标，证据在`runs/_cycle8_gate_candidate1/release_gate.json`。
+**新增接触采样缺口：** 旧配置lazy更新导致30条接触历史并非每物理步的30帧，旧交接/平衡数字只按旧代码解释，不证明原文所称的2 ms接触占空比。已实测旧配置每60 ms只更新1帧、新配置30帧且历史逐项差0；新候选关闭懒更新并已完成GPU门槛；候选1/2不作为发布门槛。详见第九版“接触采样缺口与修复”。
+
+修复后工程重载原生各64/64交接，30秒59/60（各64），失败均落地超时；新旧瞬时联合仍0。基于第八批A42–A47/1199迁移actor，critic/optimizer新建，不是同配置续训。
+
+第八批原始证据在`runs/_upright_cycle_batch8/{launch_status,eval_status,eval_finished,quality_review,continuous_response_review,scalars_final}.json`及逐项config/trace/evaluation。诊断窗口不能替代原瞬时验收。此前共同轮速低通已证明会恶化前向误差，不能未经新证据照搬；此次区间插值也已证实恶化误差，不采用。
 
 ## 需求与约束
 
@@ -24,19 +28,19 @@
 
 每日04/10/16/22定时器已取消：`runs/_recurring_upright/config.json`为`enabled=false`，用户systemd timer inactive；未经再次明确要求不得启用，也未创建goal。用户继续授权批次完成/异常事件向本会话排队；事件只通知agent先核查再决策，不自动重启训练。
 
-第七批已正常发送完成通知，退出监督未重复发送，相关进程已结束。第八批部署/训练异常监督已附加；部署器在12组全部进入PPO后自动附加评估队列和评估退出监督。核查`launch_status.json`中的`eval_pid`及对应`eval_watch.log`，不能把部署器开始运行当成评估队列已经附加。
+第八批完成通知正常送达原会话，退出监督未重复投递，相关进程已退出。诊断任务不是正式批次；第九批部署/训练异常监督已运行；全部12组进入PPO后，部署器自动挂接60项评估及评估完成/退出事件续接。以launch_status的eval_pid及实际进程为准，不把部署启动当成评估已附加。
 
 ## 接手与证据
 
 1. 先读根目录[AGENTS.md](../AGENTS.md)硬规则和本页，按需下钻，不遍历全部docs或runs。
-2. 先核对`_upright_cycle_batch8/launch_status.json`、实际PID、训练日志及退出文件；如中断，诊断并恢复本批，不重开整批。
-3. 第八批计划12组、四卡1/3/4/4分配、1200更新、60项评估；全部PPO启动后有限资源采样写`deployed_resource_samples.json`。200/600/1199及终局30秒独立种子20261026结果决定下一步，历史批次已收官。
+2. 先核对`_upright_cycle_batch9/launch_status.json`、实际PID、日志及退出；如中断，恢复当前轮，不重复启动。
+3. 第九批计划12组、各1200更新，200/600/1199及终局较宽/30秒独立种子共60项；全部启动后记录deployed_resource_samples.json。第八批实测GPU1/2/3利用率约80/93/93%，GPU0受常驻显存限制仅15%，不得冒称四卡都达80%。
 4. 按同口径区分实际接管、长时两轮平衡、遥控分轴/联合跟踪、前轮落地、交接与完整合格。记录跨类别切换和瞬态/稳态误差；滤波速度辅助分析不能替代瞬时速度严格验收。
 
 | 问题 | 阅读入口 |
 |---|---|
-| 当前设计、验收、部署 | [第八版](upright_cycle_v8.md)、本页对应状态文件 |
-| 上一批终局和为何改结构 | [第七批终局](upright_cycle_batch7_results.md)、[第八版诊断](upright_cycle_v8.md) |
+| 当前设计、验收及部署 | [第九版](upright_cycle_v9.md)、本页对应状态文件 |
+| 上一批设计与初始化 | [第八版](upright_cycle_v8.md)、[第七批终局](upright_cycle_batch7_results.md) |
 | 控制契约与工程边界 | [需求](current_scope.md)、[工程约定](engineering_handoff.md) |
 | 源码和历史编号 | [demo导览](../demo_project/upright_rl_demo/README.md)、[谱系](upright_training_lineage_20261023.md) |
 | 其他历史证据 | [文档索引](README.md)，按问题读取 |
