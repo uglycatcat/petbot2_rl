@@ -5,23 +5,55 @@ from isaaclab.utils import configclass
 from . import continuous_task as base
 from .continuous_task import SPEC, ensure
 from .feedback import YawFeedback
+from .fast_feedback import FastYawFeedback
 
 
 class FeedbackAction(base.ContinuousAction):
     def __init__(self,cfg,env):
         super().__init__(cfg,env)
         self.yaw_feedback=YawFeedback(env.num_envs,env.device,env.step_dt,self.max_speed,env.cfg.wheel_slew)
+        self.fast_feedback=FastYawFeedback(env.num_envs,env.device,self.max_speed,env.step_dt,env.cfg.wheel_slew)
+        self.fast_enabled=env.cfg.yaw_feedback_design=='fast20'
+        self.inner_index=0
+        self.inner_mask=torch.zeros(env.num_envs,device=env.device,dtype=torch.bool)
+        self.inner_speed=self.speed.clone();self.inner_policy=self.speed.clone();self.inner_anchor=self.speed.clone()
 
     def process_actions(self,actions):
         previous=self.speed.clone()
+        old_integral=self.yaw_feedback.integral.clone()
         super().process_actions(actions)
         p=ensure(self._env)
         self.speed.copy_(self.yaw_feedback.process(previous,self.speed,p.phase,p.phase_time,p.command,p.motion,actions[:,2]))
         self.applied[:,1:]=self.speed/self.max_speed
+        if self.fast_enabled:
+            self.inner_index=0
+            self.inner_mask=(p.phase==2)&(p.phase_time>=1.2)
+            self.inner_anchor.copy_(previous);self.inner_speed.copy_(previous);self.inner_policy.copy_(self.speed)
+            self.fast_feedback.integral.copy_(old_integral)
+            self.yaw_feedback.integral[self.inner_mask]=old_integral[self.inner_mask]
+
+    def apply_actions(self):
+        if self.fast_enabled and self.inner_index%10==0:
+            from .cycle_task import tensor
+            from .ground_motion import wheel_heading
+            p=ensure(self._env);d=self.robot.data
+            rate=wheel_heading(tensor(d.root_link_pose_w)[:,3:7],tensor(d.root_com_vel_w))[2]
+            candidate=self.fast_feedback.process(self.inner_speed,self.inner_policy,self.inner_anchor,
+                p.command,rate,self.raw_actions[:,2],self.inner_mask)
+            self.inner_speed.copy_(candidate);self.speed.copy_(candidate)
+            self.applied[:,1:]=self.speed/self.max_speed
+            self.yaw_feedback.integral[self.inner_mask]=self.fast_feedback.integral[self.inner_mask]
+            self.yaw_feedback.target[self.inner_mask]=self.fast_feedback.target[self.inner_mask]
+        super().apply_actions()
+        self.inner_index+=1
 
     def reset(self,env_ids=None):
         super().reset(env_ids)
         self.yaw_feedback.reset(env_ids)
+        self.fast_feedback.reset(env_ids)
+        ids=slice(None) if env_ids is None else env_ids
+        self.inner_mask[ids]=False
+        self.inner_speed[ids]=0.;self.inner_policy[ids]=0.;self.inner_anchor[ids]=0.
 
 
 def observations(env):
@@ -52,6 +84,7 @@ class FeedbackEnvCfg(base.ContinuousEnvCfg):
     steering_design:str='feedback'
     heading_reference:str='wheel_lateral'
     instant_tracking_weight:float=.3
+    yaw_feedback_design:str='legacy60'
     def __post_init__(self):
         super().__post_init__()
         # A configured update period alone does not advance a lazy sensor's
