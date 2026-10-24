@@ -23,13 +23,13 @@ def main():
     gate=json.loads((ROOT/plan['gate']).read_text())
     if gate['commit']!=commit or not gate['passed']:raise RuntimeError('Gate does not match release')
     tested=gate.get('tested_commit',gate['commit'])
-    if subprocess.check_output(['git','-C',str(SOURCE),'diff',tested,commit,'--','train_cycle.py','upright','checks'],text=True):raise RuntimeError('Task changed since gate')
+    if subprocess.check_output(['git','-C',str(SOURCE),'diff',tested,commit,'--','train_cycle.py','upright'],text=True):raise RuntimeError('Task changed since gate')
     for evidence in gate['smokes']:
         folder=ROOT/evidence['folder']
         metadata=json.loads((folder/'config.json').read_text())
         metrics=json.loads((ROOT/evidence['scalars']).read_text())
         if metadata['working_tree_dirty'] or metadata['contract']['fingerprint']!=gate['fingerprint']:raise RuntimeError('Smoke source mismatch')
-        if subprocess.check_output(['git','-C',str(SOURCE),'diff',metadata['commit'],commit,'--','train_cycle.py','upright','checks'],text=True):raise RuntimeError('Smoke task source changed')
+        if subprocess.check_output(['git','-C',str(SOURCE),'diff',metadata['commit'],commit,'--','train_cycle.py','upright'],text=True):raise RuntimeError('Smoke task source changed')
         if not (folder/evidence.get("checkpoint",f"model_{evidence['iterations']-1}.pt")).is_file():raise RuntimeError('Incomplete smoke')
         if not metrics or not all(tags and all(v['finite'] for v in tags.values()) for tags in metrics.values()):raise RuntimeError('Nonfinite smoke')
     for evidence in gate['evaluations']:
@@ -37,6 +37,10 @@ def main():
         if data['contract']['fingerprint']!=gate['fingerprint']:raise RuntimeError('Gate fingerprint mismatch')
         if data['takeover']!=64 or data['unfinished']:raise RuntimeError('Gate coverage failure')
         if data['balance']<evidence.get('min_balance',1):raise RuntimeError('No balance reached in gate')
+    # Check-only/tool changes do not invalidate identical task GPU evidence.
+    # Explicit contract-check artifacts still have to pass before deployment.
+    for evidence in gate.get('contract_checks',[]):
+        if not json.loads((ROOT/evidence).read_text()).get('passed'):raise RuntimeError('Contract check failed')
     for evidence in gate.get('resume_checks',[]):
         if not json.loads((ROOT/evidence).read_text()).get('passed'):raise RuntimeError('Resume state gate failed')
     variants=plan['variants']

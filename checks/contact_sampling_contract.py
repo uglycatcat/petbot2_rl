@@ -9,6 +9,7 @@ p=argparse.ArgumentParser();p.add_argument('--lazy',action='store_true');p.add_a
 AppLauncher.add_app_launcher_args(p);args=p.parse_args();app=AppLauncher(args).app
 try:
     import torch
+    import subprocess
     import warp as wp
     from isaaclab.envs import ManagerBasedRLEnv
     from upright.feedback_task import FeedbackEnvCfg
@@ -18,11 +19,14 @@ try:
     env=ManagerBasedRLEnv(cfg=cfg);env.reset();sensor=env.scene['contact_forces'];original=sensor._update_buffers_impl
     samples=[]
     def update(*a,**kw):
+        mask=a[0] if a else kw.get('env_mask')
+        # The backend invokes this method even for an all-false mask. Count
+        # actual selected-environment captures, not no-op kernel submissions.
+        selected=True if mask is None else bool(wp.to_torch(mask).any())
         original(*a,**kw)
-        # Read the completed raw buffer, not the .data property that schedules work.
-        samples.append(wp.to_torch(sensor._data._net_forces_w).clone())
+        if selected:samples.append(wp.to_torch(sensor._data._net_forces_w).clone())
     sensor._update_buffers_impl=update
-    report=dict(lazy=cfg.scene.lazy_sensor_update,physics_dt=env.physics_dt,control_dt=env.step_dt,decimation=cfg.decimation,intervals=[])
+    report=dict(source_commit=subprocess.check_output(["git","rev-parse","HEAD"],text=True).strip(),lazy=cfg.scene.lazy_sensor_update,physics_dt=env.physics_dt,control_dt=env.step_dt,decimation=cfg.decimation,intervals=[])
     for _ in range(5):
         samples.clear();obs,reward,terminated,truncated,info=env.step(torch.zeros(8,3,device=args.device))
         assert not (terminated|truncated).any()
