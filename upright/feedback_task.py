@@ -50,3 +50,5 @@ class ObservationsCfg:
 class FeedbackEnvCfg(base.ContinuousEnvCfg):
     actions=ActionsCfg();observations=ObservationsCfg()
     steering_design:str='feedback'
+    heading_reference:str='wheel_lateral'
+    instant_tracking_weight:float=.3

@@ -25,9 +25,11 @@ def bound_cycle_features(features):
 
 
 class ContinuousProgress(CycleProgress):
-    def __init__(self, *args, hold_range=(8., 12.), **kwargs):
+    def __init__(self, *args, hold_range=(8., 12.), instant_tracking_weight=.3, **kwargs):
         super().__init__(*args, **kwargs)
         self.hold_range = hold_range
+        assert 0.<=instant_tracking_weight<=1.
+        self.instant_tracking_weight=instant_tracking_weight
         self.hold_duration = torch.zeros(self.n, device=self.device)
         self.previous_position = torch.zeros(self.n, 2, device=self.device)
         self.previous_heading = torch.zeros(self.n, device=self.device)
@@ -84,7 +86,8 @@ class ContinuousProgress(CycleProgress):
         filtered_score = joint_tracking_score(self.motion-self.command, tolerance)
         instant = torch.stack((s['forward'], s['heading_rate']), -1)
         instant_score = joint_tracking_score(instant-self.command, tolerance)
-        result['track_reward'] = (self.phase==2)*result['support']*(.7*filtered_score+.3*instant_score)
+        mix=self.instant_tracking_weight
+        result['track_reward'] = (self.phase==2)*result['support']*((1.-mix)*filtered_score+mix*instant_score)
         result['motion_attained'] = attained
         result['motion_feedback'] = self.motion.clone()
         result['interval_motion'] = self.interval_motion.clone()

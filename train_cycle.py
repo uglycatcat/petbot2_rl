@@ -13,6 +13,7 @@ p.add_argument('--exploration-profile',choices=['moderate','fine','precision'],d
 p.add_argument('--yaw-filter-tau',type=float,choices=[0.,.12],default=0.)
 p.add_argument('--tracking-shape',choices=['gaussian','cauchy'],default='gaussian')
 p.add_argument('--tracking-weight',type=float,choices=[6.,12.],default=12.)
+p.add_argument('--instant-tracking-weight',type=float,choices=[.3,.7],default=.3)
 p.add_argument('--steering-design',choices=['feedback'],default='feedback')
 p.add_argument('--hold-min',type=float,default=8.);p.add_argument('--hold-max',type=float,default=12.)
 p.add_argument('--initialize-cycle-from');p.add_argument('--initialize-from');p.add_argument('--checkpoint');p.add_argument('--evaluate',action='store_true')
@@ -24,7 +25,6 @@ from isaaclab.envs import ManagerBasedRLEnv
 from rsl_rl.runners import OnPolicyRunner
 from upright.feedback_task import FeedbackEnvCfg as CycleEnvCfg,SPEC,ensure
 from upright.feedback import CONTROLLER
-from upright.transfer import expand_actor
 
 class Adapter:
     def __init__(self,env):
@@ -45,21 +45,22 @@ try:
     assert -1<=args.frame_min<=args.frame_max<=1.2 and 0<args.frame_slew<=6
     assert sum(bool(x) for x in (args.checkpoint,args.initialize_from,args.initialize_cycle_from))<=1
     assert 2.<=args.hold_min<=args.hold_max<=30.
-    if args.initialize_from:raise ValueError('V8 requires explicit cycle-v7 actor transfer')
+    if args.initialize_from:raise ValueError('V9 requires explicit cycle-v8 actor transfer')
     cfg=CycleEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
     cfg.speed_limit=args.speed_limit;cfg.yaw_limit=args.yaw_limit;cfg.frame_range=(args.frame_min,args.frame_max)
     cfg.wheel_slew=args.wheel_slew;cfg.frame_slew=args.frame_slew;cfg.wheel_mode='common_diff'
     cfg.feedback_mode='pose_feedback_tight';cfg.rewards.tracking.weight=args.tracking_weight;cfg.tracking_shape=args.tracking_shape;cfg.yaw_filter_tau=args.yaw_filter_tau
     cfg.steering_design=args.steering_design;cfg.hold_range=(args.hold_min,args.hold_max)
+    cfg.instant_tracking_weight=args.instant_tracking_weight
     cfg.active_seconds=args.hold_max+12.;cfg.episode_length_s=cfg.active_seconds+8.
     torch.manual_seed(args.seed);env=ManagerBasedRLEnv(cfg=cfg);wrapped=Adapter(env)
     folder=pathlib.Path(args.log_dir);folder.mkdir(parents=True,exist_ok=True)
     dirty=bool(subprocess.check_output(['git','status','--porcelain'],text=True).strip())
     if dirty and not args.allow_dirty:raise RuntimeError('Commit source before formal execution')
-    names=['train_cycle.py']+['upright/'+n+'.py' for n in ['feedback','feedback_task','continuous','continuous_task','cycle','cycle_task','moving','task','distribution','model','asset_cfg','prepare','transfer']]
+    names=['train_cycle.py']+['upright/'+n+'.py' for n in ['ground_motion','feedback','feedback_task','continuous','continuous_task','cycle','cycle_task','moving','task','distribution','model','asset_cfg','prepare','transfer']]
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(n).read_bytes()).hexdigest() for n in names).encode()).hexdigest()
     scales={'moderate':[1.,4.,4.],'fine':[4.,16.,16.],'precision':[16.,64.,64.]}[args.exploration_profile]
-    contract=dict(task='upright_cycle_v8',yaw_controller=CONTROLLER,steering_design=args.steering_design,yaw_filter_tau=args.yaw_filter_tau,tracking_shape=args.tracking_shape,command_sampling='mixed_six_sequence_v2',reward_design='joint_motion_soft_landing_v1',motion_feedback='pose_delta_ema_120ms',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_58x5_yaw_integral_v1',fingerprint=fingerprint,
+    contract=dict(task='upright_cycle_v9',heading_reference='wheel_lateral',instant_tracking_weight=args.instant_tracking_weight,yaw_controller=CONTROLLER,steering_design=args.steering_design,yaw_filter_tau=args.yaw_filter_tau,tracking_shape=args.tracking_shape,command_sampling='mixed_six_sequence_v2',reward_design='joint_ground_motion_soft_landing_v2',motion_feedback='pose_delta_ema_120ms',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_58x5_wheel_lateral_v2',fingerprint=fingerprint,
         action_dim=3,wheel_mode='common_diff',wheel_slew=args.wheel_slew,frame_slew=args.frame_slew,
         control_dt=env.step_dt,source_sha256=SPEC['source_sha256'],rear_duty_threshold=.9,
         transition_reference='reanchor_once_on_balance',mode_request='landing_latched_until_handoff',landing_force_limit_n=20.,touchdown_speed_limit=.35)
@@ -77,17 +78,17 @@ try:
     metadata=dict(contract=contract,args=vars(args),runner=config,working_tree_dirty=dirty,commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip())
     if args.initialize_cycle_from:
         initial=pathlib.Path(args.initialize_cycle_from);prior=json.loads((initial.parent/'config.json').read_text())
-        if prior['contract'].get('task')!='upright_cycle_v7' or prior['working_tree_dirty']:raise ValueError('Only clean cycle-v7 actor allowed')
-        if prior['commit']!='54c2623344621069cb50883b8be563f3e4f1d13f':
-            raise ValueError('Only validated cycle-v7 training source allowed')
-        if prior['contract']['observation_schema']!='cycle_57x5_bounded_motion_v2' or prior['contract']['steering_design']!='direct':raise ValueError('Source observation schema mismatch')
+        if prior['contract'].get('task')!='upright_cycle_v8' or prior['working_tree_dirty']:raise ValueError('Only clean cycle-v8 actor allowed')
+        if prior['commit']!='3121acf65bb8cf232cee0ebb7c5109aa1d89156d':
+            raise ValueError('Only validated cycle-v8 training source allowed')
+        if prior['contract']['observation_schema']!='cycle_58x5_yaw_integral_v1' or prior['contract']['steering_design']!='feedback':raise ValueError('Source observation schema mismatch')
         for k in ('action_dim','wheel_mode','wheel_slew','frame_slew','control_dt','source_sha256'):
             if prior['contract'][k]!=contract[k]:raise ValueError('Actor transfer mismatch '+k)
         loaded=torch.load(initial,map_location='cpu',weights_only=False)
         actor=runner.alg.get_policy()
-        actor.load_state_dict(expand_actor(loaded['actor_state_dict'],actor.state_dict(),old_width=57,new_width=58),strict=True)
+        actor.load_state_dict(loaded['actor_state_dict'],strict=True)
         assert runner.current_learning_iteration==0 and not runner.alg.optimizer.state
-        metadata['initialization']=dict(source_commit=prior['commit'],checkpoint_sha256=hashlib.sha256(initial.read_bytes()).hexdigest(),actor_only=True,critic_fresh=True,optimizer_loaded=False,old_width=57,new_width=58,new_features_zero_weight=True)
+        metadata['initialization']=dict(source_commit=prior['commit'],checkpoint_sha256=hashlib.sha256(initial.read_bytes()).hexdigest(),actor_only=True,critic_fresh=True,optimizer_loaded=False,old_width=58,new_width=58,heading_semantics_changed=True)
         del loaded
     if args.checkpoint:runner.load(args.checkpoint)
     (folder/'config.json').write_text(json.dumps(metadata,indent=2))
@@ -103,6 +104,11 @@ try:
         takeover_motion=torch.zeros(n,2,device=args.device);last_category=torch.full((n,),-1,device=args.device,dtype=torch.long)
         switches=torch.zeros(n,device=args.device,dtype=torch.long);transition_matrix=torch.zeros(6,6,device=args.device,dtype=torch.long)
         balance_duration=torch.zeros(n,device=args.device)
+        legacy_error_sum=torch.zeros(n,2,device=args.device);legacy_good=torch.zeros(n,device=args.device)
+        wheel_axis_error=0.
+        from upright.ground_motion import lateral_axis
+        from upright.cycle_task import tensor
+        rear_body_ids=env.scene['robot'].find_bodies(['left_rear_wheel','right_rear_wheel'],preserve_order=True)[0]
         with torch.inference_mode():
             for tick in range(env.max_episode_length+4):
                 a=env.action_manager.get_term('moving');previous=a.applied.clone()
@@ -129,16 +135,25 @@ try:
                 offsets[entering]=m['transition_offset'][entering]
                 b=valid&(m['phase']==2)&(m['phase_time']>.5)
                 track_sum+=m['raw_error'].abs()*b[:,None];track_count+=b
+                legacy_error=torch.stack((s['legacy_forward'],s['legacy_heading_rate']),-1)-raw
+                legacy_error_sum+=legacy_error.abs()*b[:,None]
+                legacy_good+=b&(legacy_error.abs()<raw.new_tensor([.005,.015])+.25*raw.abs()).all(-1)
+                wheel_axis=lateral_axis(tensor(env.scene['robot'].data.body_quat_w)[:,rear_body_ids])
+                root_axis=lateral_axis(s['quat'])[:,None]
+                axis_valid=valid&~done.bool()
+                if axis_valid.any():wheel_axis_error=max(wheel_axis_error,float((wheel_axis-root_axis)[axis_valid].norm(dim=-1).max()))
                 balance_good+=b&m['balanced'];balance_count+=b
                 peak_force=torch.maximum(peak_force,torch.where(valid&(m['phase']==3),s['front_force_peak'],0.))
                 peak_touch_speed=torch.maximum(peak_touch_speed,torch.where(valid,m['max_touchdown_speed'],0.))
                 delta=(applied-previous).abs();max_frame=max(max_frame,float(delta[valid,0].max())*(hi-lo)/2 if valid.any() else 0.)
                 max_wheel=max(max_wheel,float(delta[valid,1:].max())*a.max_speed if valid.any() else 0.)
-                trace.append(dict(yaw_feedback_integral=m['yaw_feedback_integral'].tolist(),yaw_feedback_target=m['yaw_feedback_target'].tolist(),gravity=s['g'].tolist(),body_velocity=s['vel'].tolist(),failure_code=m['failure_code'].tolist(),t=(tick+1)*env.step_dt,valid=valid.tolist(),phase=m['phase'].tolist(),phase_time=m['phase_time'].tolist(),since=since.tolist(),raw=raw.tolist(),command=command.tolist(),pos=s['pos'].tolist(),heading=s['yaw'].tolist(),forward=s['forward'].tolist(),heading_rate=s['heading_rate'].tolist(),motion_feedback=m['motion_feedback'].tolist(),interval_motion=m['interval_motion'].tolist(),wheel_measured=s['wheel'].tolist(),front_z=s['front_z'].tolist(),front_vertical_speed=s['front_vertical_speed'].tolist(),rear_fraction=s['rear_fraction'].tolist(),four_fraction=s['four_fraction'].tolist(),applied=applied.tolist(),failure=m['failure'].tolist(),balanced=m['balanced'].tolist()))
+                trace.append(dict(legacy_yaw=s['legacy_yaw'].tolist(),legacy_forward=s['legacy_forward'].tolist(),legacy_heading_rate=s['legacy_heading_rate'].tolist(),yaw_feedback_integral=m['yaw_feedback_integral'].tolist(),yaw_feedback_target=m['yaw_feedback_target'].tolist(),gravity=s['g'].tolist(),body_velocity=s['vel'].tolist(),failure_code=m['failure_code'].tolist(),t=(tick+1)*env.step_dt,valid=valid.tolist(),phase=m['phase'].tolist(),phase_time=m['phase_time'].tolist(),since=since.tolist(),raw=raw.tolist(),command=command.tolist(),pos=s['pos'].tolist(),heading=s['yaw'].tolist(),forward=s['forward'].tolist(),heading_rate=s['heading_rate'].tolist(),motion_feedback=m['motion_feedback'].tolist(),interval_motion=m['interval_motion'].tolist(),wheel_measured=s['wheel'].tolist(),front_z=s['front_z'].tolist(),front_vertical_speed=s['front_vertical_speed'].tolist(),rear_fraction=s['rear_fraction'].tolist(),four_fraction=s['four_fraction'].tolist(),applied=applied.tolist(),failure=m['failure'].tolist(),balanced=m['balanced'].tolist()))
                 assert torch.isfinite(obs['policy']).all() and torch.isfinite(r).all()
                 alive &= ~done.bool()
                 if not alive.any():break
-        result=dict(count=n,**{k:int(v.sum()) for k,v in flags.items()},outcomes={k:v.tolist() for k,v in flags.items()},unfinished=int(alive.sum()),contract=contract,
+        result=dict(max_wheel_axis_alignment_error=wheel_axis_error,
+            legacy_tracking_mae=(legacy_error_sum/track_count.clamp_min(1)[:,None]).tolist(),
+            legacy_joint_tracking_pass=int(((track_count>=20)&(legacy_good/track_count.clamp_min(1)>=.8)).sum()),count=n,**{k:int(v.sum()) for k,v in flags.items()},outcomes={k:v.tolist() for k,v in flags.items()},unfinished=int(alive.sum()),contract=contract,
             takeover_motion=takeover_motion.tolist(),balance_duration=balance_duration.tolist(),command_switches=switches.tolist(),command_transition_matrix=transition_matrix.tolist(),
             command_coverage={stage:{name:int(mask.sum()) for name,mask in groups.items()} for stage,groups in coverage.items()},
             first_balance_seconds=first_balance.tolist(),transition_offset_m=offsets.tolist(),balanced_fraction=(balance_good/balance_count.clamp_min(1)).tolist(),balance_samples=balance_count.tolist(),tracking_mae=(track_sum/track_count.clamp_min(1)[:,None]).tolist(),landing_peak_front_force=peak_force.tolist(),landing_peak_touchdown_speed=peak_touch_speed.tolist(),max_frame_target_step=max_frame,max_wheel_target_step=max_wheel)

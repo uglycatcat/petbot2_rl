@@ -15,6 +15,13 @@ def state(env):
     x,y,z,w=s['quat'].unbind(-1)
     forward_axis=torch.cat((h,(2*(x*z-w*y))[:,None]),-1)
     s['heading_rate']=projected_heading_rate(forward_axis,s['vel'][:,3:])
+    if getattr(env.cfg,'heading_reference','body_forward')=='wheel_lateral':
+        from .ground_motion import wheel_heading
+        s['legacy_yaw']=s['yaw'].clone();s['legacy_forward']=s['forward'].clone();s['legacy_heading_rate']=s['heading_rate'].clone()
+        ground,s['yaw'],s['heading_rate']=wheel_heading(s['quat'],s['vel'])
+        s['forward']=(s['vel'][:,:2]*ground).sum(-1)
+        # Keep the old feature amplitude (pitch information) during actor transfer.
+        s['heading']=ground*h.norm(dim=-1,keepdim=True)
     sensor=env.scene['contact_forces']
     sf=env.upright_ids[2];f=tensor(sensor.data.net_forces_w)
     body=[i for i,n in enumerate(sensor.body_names) if n not in (*REAR_WHEELS,*FRONT_WHEELS)]
