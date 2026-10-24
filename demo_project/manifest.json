@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "7a8e38c9dd8236936a6acdb644fc1a758a1835db",
+      "verified_commit": "90d55f0f9f0d9428c49fce1d99805c89a0785469",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "cycle9_complete; cycle10_GPU_acceptance; live state in docs/current_handoff.md",
-      "local_validation": "Cycle9:12 training and60 evaluations complete;30-second handoff767/768 but joint/revised quality0. Fast-yaw fixed-policy probe lowers yaw MAE23%, joint still0. Cycle10 legacy and fast initial reloads exactly reproduce their respective diagnostic traces; CUDA bounds and real30-sample contact checks passed. Short PPO/reload gates pending; no formal cycle10 launch yet. See docs/upright_cycle_v10.md.",
+      "status": "upright_cycle_batch10; live state in docs/current_handoff.md",
+      "local_validation": "Cycle9:12 training/60 evaluations complete;30-second handoff767/768 but joint/revised quality0. Cycle10 tested7a8e38c/release90d55f0 task-identical: two2048x20 finite PPO; four native/30-second reloads handoff64/64 each, joint0. Fast feedback initial trace exactly matches probe; yaw MAE down23% but forward slightly worse.30 physical contact captures per control step verified. Training deploying with completion/abnormal event hooks; task not achieved. See docs/upright_cycle_v10.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []

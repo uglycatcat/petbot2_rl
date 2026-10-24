@@ -1,6 +1,6 @@
 {
   "name": "upright_cycle_batch10",
-  "commit": "7a8e38c9dd8236936a6acdb644fc1a758a1835db",
+  "commit": "90d55f0f9f0d9428c49fce1d99805c89a0785469",
   "gate": "demo_project/runs/_cycle10_gate/release_gate.json",
   "container": "petbot-upright-night",
   "iterations": 1200,
