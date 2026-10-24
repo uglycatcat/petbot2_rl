@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-24",
+  "updated_at": "2026-10-25",
   "purpose": "PetBot experimental training projects. Code is versioned on dedicated demoproj branches; checkouts are managed by default.xml.",
   "repositories": [
     {
@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "90d55f0f9f0d9428c49fce1d99805c89a0785469",
+      "verified_commit": "0613a3919a2cafb0558ae7209f547094487c5dc3",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "upright_cycle_batch10; live state in docs/current_handoff.md",
-      "local_validation": "Cycle9:12 training/60 evaluations complete;30-second handoff767/768 but joint/revised quality0. Cycle10 tested7a8e38c/release90d55f0 task-identical: two2048x20 finite PPO; four native/30-second reloads handoff64/64 each, joint0. Fast feedback initial trace exactly matches probe; yaw MAE down23% but forward slightly worse.30 physical contact captures per control step verified. Training deploying with completion/abnormal event hooks; task not achieved. See docs/upright_cycle_v10.md.",
+      "status": "upright_cycle_batch11; live state in docs/current_handoff.md",
+      "local_validation": "Cycle10:12 training/60 evaluations complete;30-second A/B handoff382/384 each; fast yaw feedback lowers yaw MAE about23%, joint/revised quality0. Cycle11 tested839be25/release0613a39 task-identical: six-parent CUDA rebase equivalence, two2048x20 finite PPO, four native/30-second reloads A64/64 and B63/64 each, joint0; isolated incremental VRAM3425-3428MiB. Actor normalization A/B deploying with completion/abnormal event hooks; task not achieved. See docs/upright_cycle_v11.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
@@ -67,7 +67,7 @@
       ],
       "shallow": false,
       "status": "registered_placeholder_readme_only",
-      "local_validation": "Task goal only: lift the front wheels onto a 0\u20133cm step below rear-wheel radius, then accelerate to climb. No implementation or training. See README.md.",
+      "local_validation": "Task goal only: lift the front wheels onto a 0–3cm step below rear-wheel radius, then accelerate to climb. No implementation or training. See README.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
