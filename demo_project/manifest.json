@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "d13cd449c5e8296ef336976679c3989f56e2ae8e",
+      "verified_commit": "7a8e38c9dd8236936a6acdb644fc1a758a1835db",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "upright_cycle_batch9; live state in docs/current_handoff.md",
-      "local_validation": "Cycle8 complete under old code; original joint tracking0, contact-duty interpretation withdrawn. Cycle9 GPU audit: actual contact captures1-to30 per60ms, history exact; two2048x20 PPO smokes finite, native reload handoff64/64 each,30-second59/60 each64 (landing timeouts), original/new joint tracking0. Wheel-axis alignment error below1e-6. Fixed d13cd44 task-equivalent to tested64510a5; task not achieved. See docs/upright_cycle_v9.md.",
+      "status": "cycle9_complete; cycle10_GPU_acceptance; live state in docs/current_handoff.md",
+      "local_validation": "Cycle9:12 training and60 evaluations complete;30-second handoff767/768 but joint/revised quality0. Fast-yaw fixed-policy probe lowers yaw MAE23%, joint still0. Cycle10 legacy and fast initial reloads exactly reproduce their respective diagnostic traces; CUDA bounds and real30-sample contact checks passed. Short PPO/reload gates pending; no formal cycle10 launch yet. See docs/upright_cycle_v10.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
@@ -67,7 +67,7 @@
       ],
       "shallow": false,
       "status": "registered_placeholder_readme_only",
-      "local_validation": "Task goal only: lift the front wheels onto a 0–3cm step below rear-wheel radius, then accelerate to climb. No implementation or training. See README.md.",
+      "local_validation": "Task goal only: lift the front wheels onto a 0\u20133cm step below rear-wheel radius, then accelerate to climb. No implementation or training. See README.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
