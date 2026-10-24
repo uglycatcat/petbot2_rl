@@ -21,11 +21,13 @@ def install_substep_probe(env, folder):
     import numpy as np
     import torch
     from upright.continuous_task import ensure
-    from upright.cycle_task import state, tensor
+    from upright.cycle_task import tensor
+    from upright.moving import projected_heading_rate
 
     action = env.action_manager.get_term('moving')
     original_process = action.process_actions
     original_apply = action.apply_actions
+    rear_ids = action.robot.find_bodies(["left_rear_wheel", "right_rear_wheel"], preserve_order=True)[0]
     probe = dict(samples=[], intervals=[], selected=[], old_speed=action.speed.clone(),
                  old_frame=action.target.clone(), index=0, blend=torch.zeros(env.num_envs, device=env.device))
 
@@ -56,12 +58,26 @@ def install_substep_probe(env, folder):
                 ramp_frame = probe['old_frame']+(action.target-probe['old_frame'])*factor[:, None]
                 frame[mask] = ramp_frame[mask]
                 action.robot.set_joint_position_target(frame, joint_ids=action.pos_ids)
-        s = state(env)
-        torque = tensor(action.robot.data.applied_torque)[:, action.wheel_ids]
+        # Do not read ContactSensor.data here: a read can advance its lazy history
+        # at a different time from the uninstrumented task.
+        data = action.robot.data;root = tensor(data.root_state_w)
+        x,y,z,w = root[:,3:7].unbind(-1)
+        longitudinal = torch.stack((1-2*(y*y+z*z),2*(x*y+w*z),2*(x*z-w*y)),-1)
+        lateral = torch.stack((2*(x*y-w*z),1-2*(x*x+z*z),2*(y*z+w*x)),-1)
+        heading = longitudinal[:,:2]/longitudinal[:,:2].norm(dim=-1,keepdim=True).clamp_min(1e-6)
+        forward = (root[:,7:9]*heading).sum(-1)
+        yaw_rate = projected_heading_rate(longitudinal,root[:,10:13])
+        lateral_rate = projected_heading_rate(lateral,root[:,10:13])
+        lateral_heading = torch.atan2(-lateral[:,0],lateral[:,1])
+        centers = tensor(data.body_pos_w)[:,rear_ids]
+        axis = centers[:,0]-centers[:,1]
+        center_heading = torch.atan2(-axis[:,0],axis[:,1])
+        torque = tensor(data.applied_torque)[:,action.wheel_ids]
         # Physical samples precede each 2ms step, including interval start.
-        sample = torch.cat((s['forward'][:, None], s['heading_rate'][:, None],
-                            s['wheel'], speed, frame[:, 3:4], s['q'][:, 3:4],
-                            s['vel'][:, 3:], torque, s['rear_fraction'][:, None]), -1)
+        sample = torch.cat((forward[:,None],yaw_rate[:,None],
+                            tensor(data.joint_vel)[:,action.wheel_ids],speed,frame[:,3:4],
+                            tensor(data.joint_pos)[:,action.pos_ids[3:4]],root[:,10:13],torque,
+                            lateral_heading[:,None],lateral_rate[:,None],center_heading[:,None]),-1)
         probe['samples'].append(sample)
         probe['index'] += 1
 
@@ -81,7 +97,7 @@ def install_substep_probe(env, folder):
     (folder/'substep_probe.json').write_text(json.dumps(dict(diagnostic_only=True,
         mode=options.substep_mode, intervention='phase2 after0.6s, ramp blend over0.6s; targets reach original endpoint each control interval',
         physics_dt=env.physics_dt, control_dt=env.step_dt, selected_envs=[0, 1, 2, 3],
-        fields=['forward', 'heading_rate', 'wheel_left', 'wheel_right', 'target_left', 'target_right', 'frame_target', 'frame_measured', 'wx', 'wy', 'wz', 'torque_left', 'torque_right', 'rear_fraction'],
+        fields=['forward', 'heading_rate', 'wheel_left', 'wheel_right', 'target_left', 'target_right', 'frame_target', 'frame_measured', 'wx', 'wy', 'wz', 'torque_left', 'torque_right', 'lateral_heading', 'lateral_rate', 'rear_center_heading'],
         sample_semantics='before each physics step; torque is implicit actuator estimate',
         script_sha256=hashlib.sha256(pathlib.Path(__file__).read_bytes()).hexdigest()), indent=2))
     return probe
