@@ -52,3 +52,9 @@ class FeedbackEnvCfg(base.ContinuousEnvCfg):
     steering_design:str='feedback'
     heading_reference:str='wheel_lateral'
     instant_tracking_weight:float=.3
+    def __post_init__(self):
+        super().__post_init__()
+        # A configured update period alone does not advance a lazy sensor's
+        # history. Capture every PhysX substep, not only the policy's reads.
+        self.scene.lazy_sensor_update=False
+        self.scene.contact_forces.update_period=0.
