@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "32eb42d601a13247d84c406866593c868aa446c3",
+      "verified_commit": "2b41c8fdceeb1afbb52cb9d84483ac4dcd89284f",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "upright_cycle_batch12; live state in docs/current_handoff.md",
-      "local_validation": "Cycle11:12 training/60 evaluations complete;30-second A/B handoff383/384 and384/384; joint/revised quality0; normalization rebase no consistent benefit. Cycle12 tested9ddefcf/release32eb42d task-identical: six-parent CUDA frozen-base adapter equivalence/phase isolation/gradient/JIT checks; initial64-case PhysX trace exactly matches cycle11 A42; two2048x20 finite PPO with frozen-base/learned-adapter state verification; four native/30-second reloads64/64 each, joint0. Incremental VRAM3407/3406MiB; deploying with completion/abnormal event hooks. See docs/upright_cycle_v12.md.",
+      "status": "cycle12 complete; cycle13 GPU acceptance passed and fixed-version deployment started; live state in docs/current_handoff.md",
+      "local_validation": "Cycle12:12 training/60 evaluations complete;30-second handoff384/384 each; lower-noise B improves forward MAE in all six seed pairs about4%, joint/revised quality0. Cycle13 release2b41c8f/task43c0f98: six-parent CUDA exact transfer/frozen-state/gradient/phase/JIT checks; initial64-case trace exactly matches cycle12 B42; two2048x20 smokes exited0; four native/30-second reloads each64/64 complete with strict joint0. Six paired seeds deploy on GPUs0/1/2/3 as1/3/4/4 under78% guard. See docs/upright_cycle_v13.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
