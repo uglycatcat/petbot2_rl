@@ -51,5 +51,5 @@ replace('policy=runner.get_inference_policy(device=args.device);obs=',
         'install_distribution_probe(runner,env);policy=runner.get_inference_policy(device=args.device);obs=')
 replace("folder/'evaluation.json'","folder/'diagnostic_evaluation.json'")
 replace("folder/'trace.json'","folder/'diagnostic_trace.json'")
-replace('finally:', '    if captured:finish_distribution_probe(folder)\nfinally:')
+replace('    env.close()', '    if captured:finish_distribution_probe(folder)\n    env.close()')
 exec(compile(source,'train_cycle.py','exec'),globals())
