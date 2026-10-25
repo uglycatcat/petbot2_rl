@@ -25,6 +25,10 @@ class BalanceAdapterModel(MLPModel):
         self.adapter=torch.nn.Sequential(torch.nn.Linear(290,64),torch.nn.ELU(),
             torch.nn.Linear(64,64),torch.nn.ELU(),torch.nn.Linear(64,2))
         torch.nn.init.zeros_(self.adapter[-1].weight);torch.nn.init.zeros_(self.adapter[-1].bias)
+        self.yaw_adapter=torch.nn.Sequential(torch.nn.Linear(290,64),torch.nn.ELU(),
+            torch.nn.Linear(64,64),torch.nn.ELU(),torch.nn.Linear(64,1))
+        torch.nn.init.zeros_(self.yaw_adapter[-1].weight);torch.nn.init.zeros_(self.yaw_adapter[-1].bias)
+        self.register_buffer('yaw_adapter_scale',torch.tensor(.8))
 
     def forward(self,obs,masks=None,hidden_state=None,stochastic_output=False):
         obs=unpad_trajectories(obs,masks) if masks is not None else obs
@@ -32,9 +36,11 @@ class BalanceAdapterModel(MLPModel):
         logits=self.mlp(self.obs_normalizer(raw))
         original=BoundedBetaMean(127.)(logits)
         gate=balance_gate(raw)
-        refinement=torch.tanh(self.adapter((raw-self.adapter_mean)/(self.adapter_std+.01)))
+        features=(raw-self.adapter_mean)/(self.adapter_std+.01)
+        refinement=torch.tanh(self.adapter(features))
         delta=refinement*self.adapter_scale*gate[:,None]
-        delta=torch.cat((delta,torch.zeros_like(delta[:,:1])),-1)
+        yaw_delta=torch.tanh(self.yaw_adapter(features))*self.yaw_adapter_scale*gate[:,None]
+        delta=torch.cat((delta,yaw_delta),-1)
         mean=(original+delta).clamp(-.99,.99)
         if not stochastic_output:return mean
         a,b=logits.unbind(-2);scale=a.new_tensor([4.,16.,16.])
@@ -64,6 +70,8 @@ class BalanceAdapterInference(torch.nn.Module):
         super().__init__()
         self.normalizer=copy.deepcopy(model.obs_normalizer)
         self.mlp=copy.deepcopy(model.mlp);self.adapter=copy.deepcopy(model.adapter)
+        self.yaw_adapter=copy.deepcopy(model.yaw_adapter)
+        self.register_buffer('yaw_scale',model.yaw_adapter_scale.clone())
         self.register_buffer('mean',model.adapter_mean.clone())
         self.register_buffer('std',model.adapter_std.clone())
         self.register_buffer('scale',model.adapter_scale.clone())
@@ -71,8 +79,10 @@ class BalanceAdapterInference(torch.nn.Module):
 
     def forward(self,raw: torch.Tensor) -> torch.Tensor:
         original=self.mean_output(self.mlp(self.normalizer(raw)))
-        delta=torch.tanh(self.adapter((raw-self.mean)/(self.std+.01)))*self.scale*balance_gate(raw)[:,None]
-        delta=torch.cat((delta,torch.zeros_like(delta[:,:1])),-1)
+        features=(raw-self.mean)/(self.std+.01);gate=balance_gate(raw)[:,None]
+        delta=torch.tanh(self.adapter(features))*self.scale*gate
+        yaw_delta=torch.tanh(self.yaw_adapter(features))*self.yaw_scale*gate
+        delta=torch.cat((delta,yaw_delta),-1)
         return (original+delta).clamp(-.99,.99)
 
     @torch.jit.export
@@ -88,4 +98,15 @@ def initialize_adapter(actor,parent_actor,parent_critic):
         state[key]=value.clone()
     state['adapter_mean']=parent_critic['obs_normalizer._mean'].clone()
     state['adapter_std']=parent_critic['obs_normalizer._std'].clone()
+    actor.load_state_dict(state,strict=True)
+
+
+def initialize_cycle12_adapter(actor,parent_actor):
+    """Retain the learned two-channel refinement, adding only a zero yaw head."""
+    state=actor.state_dict()
+    missing=set(state)-set(parent_actor)
+    assert missing=={'yaw_adapter_scale',*[f'yaw_adapter.{i}.{k}' for i in (0,2,4) for k in ('weight','bias')]}
+    for key,value in parent_actor.items():
+        assert key in state and state[key].shape==value.shape,key
+        state[key]=value.clone()
     actor.load_state_dict(state,strict=True)

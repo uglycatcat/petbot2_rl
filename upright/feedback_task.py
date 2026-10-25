@@ -85,6 +85,7 @@ class FeedbackEnvCfg(base.ContinuousEnvCfg):
     heading_reference:str='wheel_lateral'
     instant_tracking_weight:float=.3
     yaw_feedback_design:str='legacy60'
+    tracking_objective:str='mixed'
     def __post_init__(self):
         super().__post_init__()
         # A configured update period alone does not advance a lazy sensor's

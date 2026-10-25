@@ -17,7 +17,8 @@ def ensure(env):
         env.moving_progress = ContinuousProgress(env.num_envs, env.device, env.step_dt,
             env.cfg.speed_limit, env.cfg.yaw_limit, env.cfg.frame_range, env.cfg.seed,
             env.cfg.feedback_mode, hold_range=env.cfg.hold_range,
-            instant_tracking_weight=getattr(env.cfg,'instant_tracking_weight',.3))
+            instant_tracking_weight=getattr(env.cfg,'instant_tracking_weight',.3),
+            tracking_objective=getattr(env.cfg,'tracking_objective','mixed'))
         env.moving_progress.reset(torch.arange(env.num_envs, device=env.device), s['pos'], s['yaw'])
         env.moving_step = -1
     return env.moving_progress

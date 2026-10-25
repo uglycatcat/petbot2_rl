@@ -16,6 +16,13 @@ def joint_tracking_score(error, tolerance):
     return .25*scores.sum(-1)+.5*scores.prod(-1)
 
 
+def instantaneous_tolerance_score(error,tolerance):
+    """Smooth occupancy surrogate with a steeper slope at the existing tolerance."""
+    normalized=(error/tolerance).abs()
+    scores=torch.sigmoid(4.*(1.-normalized))/torch.sigmoid(normalized.new_tensor(4.))
+    return .25*scores.sum(-1)+.5*scores.prod(-1)
+
+
 def bound_cycle_features(features):
     """Keep continuous holding observations bounded without altering task clocks."""
     features[:, 27:31].clamp_(-.3, .3)
@@ -25,11 +32,13 @@ def bound_cycle_features(features):
 
 
 class ContinuousProgress(CycleProgress):
-    def __init__(self, *args, hold_range=(8., 12.), instant_tracking_weight=.3, **kwargs):
+    def __init__(self, *args, hold_range=(8., 12.), instant_tracking_weight=.3, tracking_objective='mixed', **kwargs):
         super().__init__(*args, **kwargs)
         self.hold_range = hold_range
         assert 0.<=instant_tracking_weight<=1.
         self.instant_tracking_weight=instant_tracking_weight
+        assert tracking_objective in ('mixed','instant_tolerance')
+        self.tracking_objective=tracking_objective
         self.hold_duration = torch.zeros(self.n, device=self.device)
         self.previous_position = torch.zeros(self.n, 2, device=self.device)
         self.previous_heading = torch.zeros(self.n, device=self.device)
@@ -88,6 +97,8 @@ class ContinuousProgress(CycleProgress):
         instant_score = joint_tracking_score(instant-self.command, tolerance)
         mix=self.instant_tracking_weight
         result['track_reward'] = (self.phase==2)*result['support']*((1.-mix)*filtered_score+mix*instant_score)
+        if self.tracking_objective=='instant_tolerance':
+            result['track_reward']=(self.phase==2)*result['support']*instantaneous_tolerance_score(instant-self.command,tolerance)
         result['motion_attained'] = attained
         result['motion_feedback'] = self.motion.clone()
         result['interval_motion'] = self.interval_motion.clone()
