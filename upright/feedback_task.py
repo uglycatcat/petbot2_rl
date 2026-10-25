@@ -12,8 +12,11 @@ class FeedbackAction(base.ContinuousAction):
     def __init__(self,cfg,env):
         super().__init__(cfg,env)
         self.yaw_feedback=YawFeedback(env.num_envs,env.device,env.step_dt,self.max_speed,env.cfg.wheel_slew)
-        self.fast_feedback=FastYawFeedback(env.num_envs,env.device,self.max_speed,env.step_dt,env.cfg.wheel_slew)
-        self.fast_enabled=env.cfg.yaw_feedback_design=='fast20'
+        period=.002 if env.cfg.yaw_feedback_design=='fast2' else .02
+        self.fast_feedback=FastYawFeedback(env.num_envs,env.device,self.max_speed,env.step_dt,env.cfg.wheel_slew,period)
+        self.fast_stride=round(period/env.physics_dt)
+        assert self.fast_stride>=1 and abs(self.fast_stride*env.physics_dt-period)<1e-9
+        self.fast_enabled=env.cfg.yaw_feedback_design in ('fast20','fast2')
         self.inner_index=0
         self.inner_mask=torch.zeros(env.num_envs,device=env.device,dtype=torch.bool)
         self.inner_speed=self.speed.clone();self.inner_policy=self.speed.clone();self.inner_anchor=self.speed.clone()
@@ -33,7 +36,7 @@ class FeedbackAction(base.ContinuousAction):
             self.yaw_feedback.integral[self.inner_mask]=old_integral[self.inner_mask]
 
     def apply_actions(self):
-        if self.fast_enabled and self.inner_index%10==0:
+        if self.fast_enabled and self.inner_index%self.fast_stride==0:
             from .cycle_task import tensor
             from .ground_motion import wheel_heading
             p=ensure(self._env);d=self.robot.data
