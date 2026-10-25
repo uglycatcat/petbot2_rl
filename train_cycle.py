@@ -14,6 +14,7 @@ p.add_argument('--yaw-filter-tau',type=float,choices=[0.,.12],default=0.)
 p.add_argument('--tracking-shape',choices=['gaussian','cauchy'],default='gaussian')
 p.add_argument('--tracking-weight',type=float,choices=[6.,12.],default=12.)
 p.add_argument('--instant-tracking-weight',type=float,choices=[.3,.7],default=.3)
+p.add_argument('--balance-noise-factor',type=float,choices=[1.,16.],default=1.)
 p.add_argument('--actor-normalization',choices=['inherited','rebase_recent'],default='inherited')
 p.add_argument('--yaw-feedback-design',choices=['legacy60','fast20'],default='legacy60')
 p.add_argument('--steering-design',choices=['feedback'],default='feedback')
@@ -48,7 +49,8 @@ try:
     assert -1<=args.frame_min<=args.frame_max<=1.2 and 0<args.frame_slew<=6
     assert sum(bool(x) for x in (args.checkpoint,args.initialize_from,args.initialize_cycle_from))<=1
     assert 2.<=args.hold_min<=args.hold_max<=30.
-    if args.initialize_from:raise ValueError('V11 requires explicit cycle-v10 actor transfer')
+    if args.initialize_from:raise ValueError('V12 requires explicit cycle-v11 actor transfer')
+    assert args.actor_normalization=='inherited' and args.exploration_profile=='fine' and args.yaw_feedback_design=='fast20'
     cfg=CycleEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
     cfg.speed_limit=args.speed_limit;cfg.yaw_limit=args.yaw_limit;cfg.frame_range=(args.frame_min,args.frame_max)
     cfg.wheel_slew=args.wheel_slew;cfg.frame_slew=args.frame_slew;cfg.wheel_mode='common_diff'
@@ -60,10 +62,10 @@ try:
     folder=pathlib.Path(args.log_dir);folder.mkdir(parents=True,exist_ok=True)
     dirty=bool(subprocess.check_output(['git','status','--porcelain'],text=True).strip())
     if dirty and not args.allow_dirty:raise RuntimeError('Commit source before formal execution')
-    names=['train_cycle.py']+['upright/'+n+'.py' for n in ['normalization','fast_feedback','ground_motion','feedback','feedback_task','continuous','continuous_task','cycle','cycle_task','moving','task','distribution','model','asset_cfg','prepare','transfer']]
+    names=['train_cycle.py','upright/balance_adapter.py']+['upright/'+n+'.py' for n in ['normalization','fast_feedback','ground_motion','feedback','feedback_task','continuous','continuous_task','cycle','cycle_task','moving','task','distribution','model','asset_cfg','prepare','transfer']]
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(n).read_bytes()).hexdigest() for n in names).encode()).hexdigest()
     scales={'moderate':[1.,4.,4.],'fine':[4.,16.,16.],'precision':[16.,64.,64.]}[args.exploration_profile]
-    contract=dict(task='upright_cycle_v11',actor_normalization=args.actor_normalization,normalization_prior_count=10000000 if args.actor_normalization=='rebase_recent' else None,yaw_feedback_design=args.yaw_feedback_design,fast_yaw_controller=FAST_CONTROLLER if args.yaw_feedback_design=='fast20' else None,heading_reference='wheel_lateral',contact_sampling='eager_physics_step_history30_v1',instant_tracking_weight=args.instant_tracking_weight,yaw_controller=CONTROLLER,steering_design=args.steering_design,yaw_filter_tau=args.yaw_filter_tau,tracking_shape=args.tracking_shape,command_sampling='mixed_six_sequence_v2',reward_design='joint_ground_motion_soft_landing_v2',motion_feedback='pose_delta_ema_120ms',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_58x5_wheel_lateral_v2',fingerprint=fingerprint,
+    contract=dict(task='upright_cycle_v12',actor_design='frozen_base_balance_adapter_v1',balance_noise_factor=args.balance_noise_factor,adapter_limits=[.03,.08],adapter_gate=[1.2,1.8],adapter_observation_stats='frozen_parent_critic',actor_normalization=args.actor_normalization,normalization_prior_count=10000000 if args.actor_normalization=='rebase_recent' else None,yaw_feedback_design=args.yaw_feedback_design,fast_yaw_controller=FAST_CONTROLLER if args.yaw_feedback_design=='fast20' else None,heading_reference='wheel_lateral',contact_sampling='eager_physics_step_history30_v1',instant_tracking_weight=args.instant_tracking_weight,yaw_controller=CONTROLLER,steering_design=args.steering_design,yaw_filter_tau=args.yaw_filter_tau,tracking_shape=args.tracking_shape,command_sampling='mixed_six_sequence_v2',reward_design='joint_ground_motion_soft_landing_v2',motion_feedback='pose_delta_ema_120ms',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_58x5_wheel_lateral_v2',fingerprint=fingerprint,
         action_dim=3,wheel_mode='common_diff',wheel_slew=args.wheel_slew,frame_slew=args.frame_slew,
         control_dt=env.step_dt,source_sha256=SPEC['source_sha256'],rear_duty_threshold=.9,
         transition_reference='reanchor_once_on_balance',mode_request='landing_latched_until_handoff',landing_force_limit_n=20.,touchdown_speed_limit=.35)
@@ -74,34 +76,33 @@ try:
     lo,hi=SPEC['joints']['left_frame']['range'];home=(2*SPEC['joints']['left_frame']['default']-lo-hi)/(hi-lo)
     config=dict(seed=args.seed,device=args.device,num_steps_per_env=32,save_interval=args.save_interval,logger='tensorboard',experiment_name='upright_cycle',run_name=f'seed{args.seed}',
         obs_groups={'actor':['policy'],'critic':['policy']},
-        actor=dict(class_name='MLPModel',hidden_dims=[128,128],activation='elu',obs_normalization=True,distribution_cfg=dict(class_name='upright.distribution:UprightBetaDistribution',initial_mean=[home,0.,0.],initial_std=[.35,.45,.45],shape_cap=128.,concentration_scale=scales)),
+        actor=dict(class_name='upright.balance_adapter:BalanceAdapterModel',balance_noise_factor=args.balance_noise_factor,hidden_dims=[128,128],activation='elu',obs_normalization=True,distribution_cfg=dict(class_name='upright.distribution:UprightBetaDistribution',initial_mean=[home,0.,0.],initial_std=[.35,.45,.45],shape_cap=128.,concentration_scale=scales)),
         critic=dict(class_name='MLPModel',hidden_dims=[256,128],activation='elu',obs_normalization=True),
         algorithm=dict(class_name='PPO',value_loss_coef=1.,use_clipped_value_loss=True,clip_param=.2,entropy_coef=.001,num_learning_epochs=5,num_mini_batches=4,learning_rate=args.learning_rate,schedule='fixed',gamma=.997**3,lam=.95**3,desired_kl=.01,max_grad_norm=1.))
     runner=OnPolicyRunner(wrapped,copy.deepcopy(config),log_dir=str(folder),device=args.device)
     metadata=dict(contract=contract,args=vars(args),runner=config,working_tree_dirty=dirty,commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip())
     if args.initialize_cycle_from:
         initial=pathlib.Path(args.initialize_cycle_from);prior=json.loads((initial.parent/'config.json').read_text())
-        if prior['contract'].get('task')!='upright_cycle_v10' or prior['working_tree_dirty']:raise ValueError('Only clean cycle-v10 actor allowed')
-        if prior['commit']!='90d55f0f9f0d9428c49fce1d99805c89a0785469':
-            raise ValueError('Only validated cycle-v10 training source allowed')
+        if prior['contract'].get('task')!='upright_cycle_v11' or prior['working_tree_dirty']:raise ValueError('Only clean cycle-v11 source allowed')
+        if prior['commit']!='0613a3919a2cafb0558ae7209f547094487c5dc3':raise ValueError('Only validated cycle-v11 source allowed')
         if prior['contract']['observation_schema']!='cycle_58x5_wheel_lateral_v2' or prior['contract']['steering_design']!='feedback':raise ValueError('Source observation schema mismatch')
-        for k in ('action_dim','wheel_mode','wheel_slew','frame_slew','control_dt','source_sha256'):
-            if prior['contract'][k]!=contract[k]:raise ValueError('Actor transfer mismatch '+k)
+        for k in ('action_dim','wheel_mode','wheel_slew','frame_slew','control_dt','source_sha256','yaw_feedback_design','concentration_scale','instant_tracking_weight','tracking_weight'):
+            if prior['contract'][k]!=contract[k]:raise ValueError('Transfer mismatch '+k)
+        if prior['contract']['actor_normalization']!='inherited':raise ValueError('V12 uses cycle11 A parents')
         loaded=torch.load(initial,map_location='cpu',weights_only=False)
         actor=runner.alg.get_policy()
-        assert prior['contract']['yaw_feedback_design']=='fast20'
-        state_dict=loaded['actor_state_dict']
-        if args.actor_normalization=='rebase_recent':
-            from upright.normalization import rebase_actor_normalization
-            state_dict=rebase_actor_normalization(state_dict,loaded['critic_state_dict'],eps=actor.obs_normalizer.eps)
-        actor.load_state_dict(state_dict,strict=True)
+        from upright.balance_adapter import initialize_adapter
+        initialize_adapter(actor,loaded['actor_state_dict'],loaded['critic_state_dict'])
+        runner.alg.critic.load_state_dict(loaded['critic_state_dict'],strict=True)
         assert runner.current_learning_iteration==0 and not runner.alg.optimizer.state
-        metadata['initialization']=dict(source_commit=prior['commit'],checkpoint_sha256=hashlib.sha256(initial.read_bytes()).hexdigest(),actor_only=True,critic_fresh=True,optimizer_loaded=False,old_width=58,new_width=58,heading_semantics_changed=False,yaw_feedback_changed=args.yaw_feedback_design!=prior['contract']['yaw_feedback_design'],normalization_design=args.actor_normalization,source_actor_count=int(loaded['actor_state_dict']['obs_normalizer.count']),recent_count=int(loaded['critic_state_dict']['obs_normalizer.count']),initial_actor_count=int(state_dict['obs_normalizer.count']))
+        metadata['initialization']=dict(source_commit=prior['commit'],checkpoint_sha256=hashlib.sha256(initial.read_bytes()).hexdigest(),actor_base_frozen=True,critic_loaded=True,optimizer_loaded=False,adapter_zero=True,observation_width=58)
         del loaded
     if args.checkpoint:runner.load(args.checkpoint)
     (folder/'config.json').write_text(json.dumps(metadata,indent=2))
     if not args.evaluate and not args.probe:runner.learn(num_learning_iterations=args.iterations,init_at_random_ep_len=False)
     else:
+        from upright.balance_adapter import balance_gate
+        from upright.distribution import BoundedBetaMean
         policy=runner.get_inference_policy(device=args.device);obs=wrapped.get_observations();n=args.num_envs
         alive=torch.ones(n,device=args.device,dtype=torch.bool)
         flags={k:torch.zeros_like(alive) for k in ['takeover','balance','landing','handoff','complete','qualified','failure']}
@@ -122,6 +123,14 @@ try:
                 a=env.action_manager.get_term('moving');previous=a.applied.clone()
                 decision_raw=ensure(env).raw.clone()
                 action=policy(obs)
+                actor=runner.alg.get_policy();gate=balance_gate(obs['policy'])
+                progress=ensure(env)
+                expected_gate=(progress.phase==2)*((progress.phase_time-1.2)/.6).clamp(0.,1.)
+                assert torch.allclose(gate[alive],expected_gate[alive],atol=1e-6), 'Adapter phase/history mismatch'
+                base_action=BoundedBetaMean(127.)(actor.mlp(actor.obs_normalizer(obs['policy'])))
+                correction=action-base_action
+                assert (correction[:,:2].abs()<=correction.new_tensor([.03,.08])+1e-6).all()
+                assert not correction[:,2].any() and not correction[gate==0].any()
                 obs,r,done,extra=wrapped.step(action)
                 s,m,raw,command,applied,since=env.moving_snapshot;valid=alive.clone()
                 assert torch.equal(raw[valid],decision_raw[valid]), 'Command changed after policy decision'
@@ -155,7 +164,7 @@ try:
                 peak_touch_speed=torch.maximum(peak_touch_speed,torch.where(valid,m['max_touchdown_speed'],0.))
                 delta=(applied-previous).abs();max_frame=max(max_frame,float(delta[valid,0].max())*(hi-lo)/2 if valid.any() else 0.)
                 max_wheel=max(max_wheel,float(delta[valid,1:].max())*a.max_speed if valid.any() else 0.)
-                trace.append(dict(legacy_yaw=s['legacy_yaw'].tolist(),legacy_forward=s['legacy_forward'].tolist(),legacy_heading_rate=s['legacy_heading_rate'].tolist(),yaw_feedback_integral=m['yaw_feedback_integral'].tolist(),yaw_feedback_target=m['yaw_feedback_target'].tolist(),gravity=s['g'].tolist(),body_velocity=s['vel'].tolist(),failure_code=m['failure_code'].tolist(),t=(tick+1)*env.step_dt,valid=valid.tolist(),phase=m['phase'].tolist(),phase_time=m['phase_time'].tolist(),since=since.tolist(),raw=raw.tolist(),command=command.tolist(),pos=s['pos'].tolist(),heading=s['yaw'].tolist(),forward=s['forward'].tolist(),heading_rate=s['heading_rate'].tolist(),motion_feedback=m['motion_feedback'].tolist(),interval_motion=m['interval_motion'].tolist(),wheel_measured=s['wheel'].tolist(),front_z=s['front_z'].tolist(),front_vertical_speed=s['front_vertical_speed'].tolist(),rear_fraction=s['rear_fraction'].tolist(),four_fraction=s['four_fraction'].tolist(),applied=applied.tolist(),failure=m['failure'].tolist(),balanced=m['balanced'].tolist()))
+                trace.append(dict(adapter_gate=gate.tolist(),adapter_correction=correction.tolist(),legacy_yaw=s['legacy_yaw'].tolist(),legacy_forward=s['legacy_forward'].tolist(),legacy_heading_rate=s['legacy_heading_rate'].tolist(),yaw_feedback_integral=m['yaw_feedback_integral'].tolist(),yaw_feedback_target=m['yaw_feedback_target'].tolist(),gravity=s['g'].tolist(),body_velocity=s['vel'].tolist(),failure_code=m['failure_code'].tolist(),t=(tick+1)*env.step_dt,valid=valid.tolist(),phase=m['phase'].tolist(),phase_time=m['phase_time'].tolist(),since=since.tolist(),raw=raw.tolist(),command=command.tolist(),pos=s['pos'].tolist(),heading=s['yaw'].tolist(),forward=s['forward'].tolist(),heading_rate=s['heading_rate'].tolist(),motion_feedback=m['motion_feedback'].tolist(),interval_motion=m['interval_motion'].tolist(),wheel_measured=s['wheel'].tolist(),front_z=s['front_z'].tolist(),front_vertical_speed=s['front_vertical_speed'].tolist(),rear_fraction=s['rear_fraction'].tolist(),four_fraction=s['four_fraction'].tolist(),applied=applied.tolist(),failure=m['failure'].tolist(),balanced=m['balanced'].tolist()))
                 assert torch.isfinite(obs['policy']).all() and torch.isfinite(r).all()
                 alive &= ~done.bool()
                 if not alive.any():break
