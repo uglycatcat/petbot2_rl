@@ -14,6 +14,7 @@
 | 轮轴地面航向与物理步接触 | upright_cycle_batch9 | 发布d13cd44、任务64510a5；从第八批A42–A47/model_1199成对迁移actor，critic/optimizer新建，观察宽度仍58但航向语义改变。修复lazy接触历史，A/B仅瞬时跟踪奖励占比0.3/0.7；不是废弃旧移动第九轮。 |
 | 快速转向反馈对照 | upright_cycle_batch10 | 发布90d55f0，任务实测7a8e38c；从第九批A42–A47/model_1199成对迁移actor，critic/optimizer新建，观察58×5和任务范围不变。A保留60 ms反馈、B稳定两轮段20 ms瞬时反馈；不是废弃的旧移动第十轮。 |
 | actor归一化统计对照 | upright_cycle_batch11 | 发布0613a39，任务实测839be25；从第十批B42–B47/model_1199成对迁移actor，critic/optimizer新建。两组保留快速转向和同一任务/奖励；A沿用旧统计，B以父critic近期输入统计和第一层等价变换重置统计权重。不是从头训练，也不是完整optimizer续训；见[第十一版](upright_cycle_v11.md)。 |
+| 稳定两轮有界精度修正 | upright_cycle_batch12 | 发布32eb42d、任务实测9ddefcf；从第十一批A42–A47/model_1199成对加载并冻结父actor，同时继承可继续训练的critic，新建两轮修正网络和optimizer。A保留探索、B仅稳定两轮车架/共同轮速降低噪声；不改变任务/奖励，不能称完整optimizer续训。见[第十二版](upright_cycle_v12.md)。 |
 
 谱系主干可简写为：旧移动第4轮 → 重建第1批 → 重建第2批 → 完整循环第1至6批 → 第6批同配置长训。重建第3、4批从第2批分叉；静止起立第五版另线保留。完整循环第1至3批还存在“请求模式覆盖遥控指令类别”的缺陷，两轮阶段只抽到后退直行，不作为六类遥控能力证据；第4批起修复并验证六类覆盖。
 

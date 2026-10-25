@@ -1,6 +1,6 @@
 # 完整循环第十一版：归一化统计与学习条件（2026-10-25）
 
-发布0613a39；任务代码与GPU验收839be25一致，后续仅修改数值检查。工程验收通过，2026-10-25 03:22开始正式部署。运行状态见[当前交接](current_handoff.md)和`runs/_upright_cycle_batch11/launch_status.json`，工程证据位于`runs/_cycle11_gate/`。前一批结果见[第十批终局](upright_cycle_batch10_results.md)。
+第十一批已于2026-10-25 10:03:33完整结束，12训练/60评估，无执行缺失或失败；归一化对照无一致优势，严格联合仍0，见[终局](upright_cycle_batch11_results.md)。以下保留发布0613a39（任务839be25）的设计和验收；03:22启动、03:45全部进入PPO。运行状态见[当前交接](current_handoff.md)和`runs/_upright_cycle_batch11/launch_status.json`，工程证据位于`runs/_cycle11_gate/`。前一批结果见[第十批终局](upright_cycle_batch10_results.md)。
 
 ## 第十批带来的决策
 

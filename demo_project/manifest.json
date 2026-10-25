@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "0613a3919a2cafb0558ae7209f547094487c5dc3",
+      "verified_commit": "32eb42d601a13247d84c406866593c868aa446c3",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "upright_cycle_batch11; live state in docs/current_handoff.md",
-      "local_validation": "Cycle10:12 training/60 evaluations complete;30-second A/B handoff382/384 each; fast yaw feedback lowers yaw MAE about23%, joint/revised quality0. Cycle11 tested839be25/release0613a39 task-identical: six-parent CUDA rebase equivalence, two2048x20 finite PPO, four native/30-second reloads A64/64 and B63/64 each, joint0; isolated incremental VRAM3425-3428MiB. Actor normalization A/B deploying with completion/abnormal event hooks; task not achieved. See docs/upright_cycle_v11.md.",
+      "status": "upright_cycle_batch12; live state in docs/current_handoff.md",
+      "local_validation": "Cycle11:12 training/60 evaluations complete;30-second A/B handoff383/384 and384/384; joint/revised quality0; normalization rebase no consistent benefit. Cycle12 tested9ddefcf/release32eb42d task-identical: six-parent CUDA frozen-base adapter equivalence/phase isolation/gradient/JIT checks; initial64-case PhysX trace exactly matches cycle11 A42; two2048x20 finite PPO with frozen-base/learned-adapter state verification; four native/30-second reloads64/64 each, joint0. Incremental VRAM3407/3406MiB; deploying with completion/abnormal event hooks. See docs/upright_cycle_v12.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []

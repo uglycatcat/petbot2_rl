@@ -9,7 +9,9 @@
 | repo、容器与版本管理 | [工程说明](engineering_handoff.md)的管理章节；[demo 索引](../demo_project/README.md)。工程说明其余训练接口主要为历史 recovery 原型。 |
 | 静止、旧移动、修复重建、完整循环的父子关系 | [训练谱系](upright_training_lineage_20261023.md) |
 | 第六版同配置续长的方案与终局 | [长训方案](upright_cycle_v6_long.md)、[长训终局](upright_cycle_batch6_long_results.md)及[原第六批终局](upright_cycle_batch6_results.md) |
-| 当前actor统计与等价迁移对照 | [第十一版](upright_cycle_v11.md)，实际状态见[交接](current_handoff.md) |
+| 当前稳定两轮精度修正对照 | [第十二版](upright_cycle_v12.md)，实际状态见[交接](current_handoff.md) |
+| 第十一批归一化对照终局 | [第十一批结果](upright_cycle_batch11_results.md)，当前诊断见[交接](current_handoff.md) |
+| actor统计与等价迁移设计 | [第十一版](upright_cycle_v11.md)，实际状态见[交接](current_handoff.md) |
 | 第十批终局和前向控制诊断 | [第十批结果](upright_cycle_batch10_results.md)，实际进程见[交接](current_handoff.md) |
 | 第十版快速转向反馈对照与工程验收 | [第十版](upright_cycle_v10.md)；已终局，固定设计与结果分开阅读 |
 | 第九版地面航向与瞬时跟踪对照 | [第九版](upright_cycle_v9.md)；新旧坐标分开报告，实时状态见[当前交接](current_handoff.md) |
