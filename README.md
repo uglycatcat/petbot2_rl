@@ -24,6 +24,7 @@ PetBot2 的前轮抬起、后轮支撑、两轮遥控及前轮落地任务。训
 | `tools/probe_cycle_substeps.py`、`tools/probe_heading_reference.py` | 固定版本的物理子步/航向定义诊断；只读采样不得改变接触传感器历史时序，探针须配套其固定任务版本。 |
 | `tools/probe_fast_feedback.py` | 固定第九版策略的反馈时序/增益诊断，baseline须复现原轨迹；诊断不改变检查点契约，也不替代正式评估。 |
 | `tools/probe_policy_cadence.py`、`tools/probe_common_feedback.py`、`tools/probe_balance_frame.py` | 固定第十版actor的策略周期、前向反馈与车架变化率诊断；均单独保存诊断输出，不覆盖正式评估。 |
+| `tools/probe_policy_distribution.py` | 固定第十一版策略在稳定两轮段的网络输出、动作分布和均值灵敏度诊断；只读钩子不采样新动作，仍须核对原轨迹。 |
 | `tools/analyze_cycle_quality.py`、`tools/check_resume_state.py` | 离线质量重算与续训状态核查。 |
 | `tools/launch_moving.py`、`tools/evaluate_moving.py`及早期 `launch_round.py`、`evaluate_v2.py` | 历史任务工具，仅用于复现相应固定实验。 |
 | `artifacts/` | 从只读源模型生成的本地派生资产，已忽略，不是唯一源码。 |
