@@ -70,6 +70,7 @@ def main():
         if 'steering_design' in v:envelope+=['--steering-design',v['steering_design']]
         if 'instant_tracking_weight' in v:envelope+=['--instant-tracking-weight',str(v['instant_tracking_weight'])]
         if 'yaw_feedback_design' in v:envelope+=['--yaw-feedback-design',v['yaw_feedback_design']]
+        if 'yaw_feedback_gain' in v:envelope+=['--yaw-feedback-gain',str(v['yaw_feedback_gain'])]
         if 'actor_normalization' in v:envelope+=['--actor-normalization',v['actor_normalization']]
         if 'balance_noise_factor' in v:envelope+=['--balance-noise-factor',str(v['balance_noise_factor'])]
         if 'tracking_objective' in v:envelope+=['--tracking-objective',v['tracking_objective']]

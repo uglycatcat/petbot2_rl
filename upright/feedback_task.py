@@ -13,7 +13,7 @@ class FeedbackAction(base.ContinuousAction):
         super().__init__(cfg,env)
         self.yaw_feedback=YawFeedback(env.num_envs,env.device,env.step_dt,self.max_speed,env.cfg.wheel_slew)
         period=.002 if env.cfg.yaw_feedback_design=='fast2' else .02
-        self.fast_feedback=FastYawFeedback(env.num_envs,env.device,self.max_speed,env.step_dt,env.cfg.wheel_slew,period)
+        self.fast_feedback=FastYawFeedback(env.num_envs,env.device,self.max_speed,env.step_dt,env.cfg.wheel_slew,period,env.cfg.yaw_feedback_gain)
         self.fast_stride=round(period/env.physics_dt)
         assert self.fast_stride>=1 and abs(self.fast_stride*env.physics_dt-period)<1e-9
         self.fast_enabled=env.cfg.yaw_feedback_design in ('fast20','fast2')
@@ -88,6 +88,7 @@ class FeedbackEnvCfg(base.ContinuousEnvCfg):
     heading_reference:str='wheel_lateral'
     instant_tracking_weight:float=.3
     yaw_feedback_design:str='legacy60'
+    yaw_feedback_gain:float=8.
     tracking_objective:str='mixed'
     def __post_init__(self):
         super().__post_init__()

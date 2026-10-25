@@ -8,9 +8,11 @@ FAST_CONTROLLER=dict(period=.02,kp=8.,ki=4.,integral_limit=1.5,half_difference_l
 
 
 class FastYawFeedback:
-    def __init__(self,n,device,max_speed=25.,control_dt=.06,wheel_slew=480.,period=.02):
+    def __init__(self,n,device,max_speed=25.,control_dt=.06,wheel_slew=480.,period=.02,kp=8.):
         assert period in (.02,.002)
+        assert kp in (8.,16.)
         self.period=period
+        self.kp=kp
         self.max_speed=max_speed;self.control_limit=control_dt*wheel_slew
         self.integral=torch.zeros(n,device=device);self.target=torch.zeros_like(self.integral)
 
@@ -22,7 +24,7 @@ class FastYawFeedback:
         error=command[:,1]-rate
         integral=(self.integral+self.period*4.*error).clamp(-1.5,1.5)
         self.integral[active]=integral[active]
-        desired=(yaw_feedforward(command[:,1])+8.*error+self.integral+.25*residual).clamp(-2.,2.)
+        desired=(yaw_feedforward(command[:,1])+self.kp*error+self.integral+.25*residual).clamp(-2.,2.)
         old=(previous[:,1]-previous[:,0])*.5
         half=old+(desired-old).clamp(-12.*self.period,12.*self.period)
         common=policy.mean(-1)

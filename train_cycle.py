@@ -18,6 +18,7 @@ p.add_argument('--tracking-objective',choices=['mixed','instant_tolerance'],defa
 p.add_argument('--balance-noise-factor',type=float,choices=[1.,16.],default=1.)
 p.add_argument('--actor-normalization',choices=['inherited','rebase_recent'],default='inherited')
 p.add_argument('--yaw-feedback-design',choices=['legacy60','fast20','fast2'],default='legacy60')
+p.add_argument('--yaw-feedback-gain',type=float,choices=[8.,16.],default=8.)
 p.add_argument('--steering-design',choices=['feedback'],default='feedback')
 p.add_argument('--hold-min',type=float,default=8.);p.add_argument('--hold-max',type=float,default=12.)
 p.add_argument('--initialize-cycle-from');p.add_argument('--initialize-from');p.add_argument('--checkpoint');p.add_argument('--evaluate',action='store_true')
@@ -58,7 +59,7 @@ try:
     cfg.feedback_mode='pose_feedback_tight';cfg.rewards.tracking.weight=args.tracking_weight;cfg.tracking_shape=args.tracking_shape;cfg.yaw_filter_tau=args.yaw_filter_tau
     cfg.steering_design=args.steering_design;cfg.hold_range=(args.hold_min,args.hold_max)
     cfg.tracking_objective=args.tracking_objective
-    cfg.instant_tracking_weight=args.instant_tracking_weight;cfg.yaw_feedback_design=args.yaw_feedback_design
+    cfg.instant_tracking_weight=args.instant_tracking_weight;cfg.yaw_feedback_design=args.yaw_feedback_design;cfg.yaw_feedback_gain=args.yaw_feedback_gain
     cfg.active_seconds=args.hold_max+12.;cfg.episode_length_s=cfg.active_seconds+8.
     torch.manual_seed(args.seed);env=ManagerBasedRLEnv(cfg=cfg);wrapped=Adapter(env)
     folder=pathlib.Path(args.log_dir);folder.mkdir(parents=True,exist_ok=True)
@@ -67,7 +68,7 @@ try:
     names=['train_cycle.py','upright/balance_adapter.py']+['upright/'+n+'.py' for n in ['normalization','fast_feedback','ground_motion','feedback','feedback_task','continuous','continuous_task','cycle','cycle_task','moving','task','distribution','model','asset_cfg','prepare','transfer']]
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(n).read_bytes()).hexdigest() for n in names).encode()).hexdigest()
     scales={'moderate':[1.,4.,4.],'fine':[4.,16.,16.],'precision':[16.,64.,64.]}[args.exploration_profile]
-    contract=dict(task='upright_cycle_v14',tracking_objective=args.tracking_objective,actor_design='frozen_base_balance_yaw_adapter_v1',balance_noise_factor=args.balance_noise_factor,adapter_limits=[.03,.08,.8],adapter_gate=[1.2,1.8],adapter_observation_stats='frozen_parent_critic',actor_normalization=args.actor_normalization,normalization_prior_count=10000000 if args.actor_normalization=='rebase_recent' else None,yaw_feedback_design=args.yaw_feedback_design,fast_yaw_controller=dict(FAST_CONTROLLER,period=.002 if args.yaw_feedback_design=='fast2' else .02),heading_reference='wheel_lateral',contact_sampling='eager_physics_step_history30_v1',instant_tracking_weight=args.instant_tracking_weight,yaw_controller=CONTROLLER,steering_design=args.steering_design,yaw_filter_tau=args.yaw_filter_tau,tracking_shape=args.tracking_shape,command_sampling='mixed_six_sequence_v2',reward_design=('instant_tolerance_soft_landing_v1' if args.tracking_objective=='instant_tolerance' else 'joint_ground_motion_soft_landing_v2'),motion_feedback='pose_delta_ema_120ms',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_58x5_wheel_lateral_v2',fingerprint=fingerprint,
+    contract=dict(task='upright_cycle_v14',tracking_objective=args.tracking_objective,actor_design='frozen_base_balance_yaw_adapter_v1',balance_noise_factor=args.balance_noise_factor,adapter_limits=[.03,.08,.8],adapter_gate=[1.2,1.8],adapter_observation_stats='frozen_parent_critic',actor_normalization=args.actor_normalization,normalization_prior_count=10000000 if args.actor_normalization=='rebase_recent' else None,yaw_feedback_design=args.yaw_feedback_design,fast_yaw_controller=dict(FAST_CONTROLLER,period=.002 if args.yaw_feedback_design=='fast2' else .02,kp=args.yaw_feedback_gain),heading_reference='wheel_lateral',contact_sampling='eager_physics_step_history30_v1',instant_tracking_weight=args.instant_tracking_weight,yaw_controller=CONTROLLER,steering_design=args.steering_design,yaw_filter_tau=args.yaw_filter_tau,tracking_shape=args.tracking_shape,command_sampling='mixed_six_sequence_v2',reward_design=('instant_tolerance_soft_landing_v1' if args.tracking_objective=='instant_tolerance' else 'joint_ground_motion_soft_landing_v2'),motion_feedback='pose_delta_ema_120ms',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_58x5_wheel_lateral_v2',fingerprint=fingerprint,
         action_dim=3,wheel_mode='common_diff',wheel_slew=args.wheel_slew,frame_slew=args.frame_slew,
         control_dt=env.step_dt,source_sha256=SPEC['source_sha256'],rear_duty_threshold=.9,
         transition_reference='reanchor_once_on_balance',mode_request='landing_latched_until_handoff',landing_force_limit_n=20.,touchdown_speed_limit=.35)
@@ -97,7 +98,7 @@ try:
         actor.load_state_dict(loaded['actor_state_dict'],strict=True)
         runner.alg.critic.load_state_dict(loaded['critic_state_dict'],strict=True)
         assert runner.current_learning_iteration==0 and not runner.alg.optimizer.state
-        metadata['initialization']=dict(source_commit=prior['commit'],checkpoint_sha256=hashlib.sha256(initial.read_bytes()).hexdigest(),actor_base_frozen=True,critic_loaded=True,optimizer_loaded=False,prior_adapter_loaded=True,yaw_adapter_loaded=True,reward_changed=False,feedback_period_changed=args.yaw_feedback_design=='fast2',observation_width=58)
+        metadata['initialization']=dict(source_commit=prior['commit'],checkpoint_sha256=hashlib.sha256(initial.read_bytes()).hexdigest(),actor_base_frozen=True,critic_loaded=True,optimizer_loaded=False,prior_adapter_loaded=True,yaw_adapter_loaded=True,reward_changed=False,feedback_period_changed=args.yaw_feedback_design=='fast2',feedback_gain_changed=args.yaw_feedback_gain!=8.,observation_width=58)
         del loaded
     if args.checkpoint:runner.load(args.checkpoint)
     (folder/'config.json').write_text(json.dumps(metadata,indent=2))
