@@ -16,6 +16,7 @@
 | actor归一化统计对照 | upright_cycle_batch11 | 发布0613a39，任务实测839be25；从第十批B42–B47/model_1199成对迁移actor，critic/optimizer新建。两组保留快速转向和同一任务/奖励；A沿用旧统计，B以父critic近期输入统计和第一层等价变换重置统计权重。不是从头训练，也不是完整optimizer续训；见[第十一版](upright_cycle_v11.md)。 |
 | 稳定两轮有界精度修正 | upright_cycle_batch12 | 发布32eb42d、任务实测9ddefcf；从第十一批A42–A47/model_1199成对加载并冻结父actor，同时继承可继续训练的critic，新建两轮修正网络和optimizer。A保留探索、B仅稳定两轮车架/共同轮速降低噪声；不改变任务/奖励，不能称完整optimizer续训。见[第十二版](upright_cycle_v12.md)。 |
 | 瞬时容差奖励与转向修正 | upright_cycle_batch13 | 发布2b41c8f、任务实测43c0f98；从第十二批B42–B47/model_1199成对继承完整actor与可训练critic，保留原两路已学修正并增加初始为零的转向修正；基线/统计继续冻结，optimizer新建。两组保留低噪声与相同结构，仅混合奖励/瞬时容差奖励不同。见[第十三版](upright_cycle_v13.md)。 |
+| 转向反馈周期与增益对照 | upright_cycle_batch14 | 固定272aaea；从第十三批B42–B47/model_1199成对继承完整actor和可训练critic，基线/统计继续冻结，optimizer新建。两组均沿用瞬时容差奖励及原修正范围；A为20 ms/Kp8，B为2 ms/Kp16，策略仍60 ms。是反馈组合对照，不单独归因于周期，见[第十四版](upright_cycle_v14.md)。 |
 
 谱系主干可简写为：旧移动第4轮 → 重建第1批 → 重建第2批 → 完整循环第1至6批 → 第6批同配置长训。重建第3、4批从第2批分叉；静止起立第五版另线保留。完整循环第1至3批还存在“请求模式覆盖遥控指令类别”的缺陷，两轮阶段只抽到后退直行，不作为六类遥控能力证据；第4批起修复并验证六类覆盖。
 

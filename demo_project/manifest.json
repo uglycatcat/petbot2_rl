@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-25",
+  "updated_at": "2026-10-26",
   "purpose": "PetBot experimental training projects. Code is versioned on dedicated demoproj branches; checkouts are managed by default.xml.",
   "repositories": [
     {
@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "2b41c8fdceeb1afbb52cb9d84483ac4dcd89284f",
+      "verified_commit": "272aaea822c0df0f7460ae9b0e372228e32718b5",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "cycle12 complete; cycle13 GPU acceptance passed and fixed-version deployment started; live state in docs/current_handoff.md",
-      "local_validation": "Cycle12:12 training/60 evaluations complete;30-second handoff384/384 each; lower-noise B improves forward MAE in all six seed pairs about4%, joint/revised quality0. Cycle13 release2b41c8f/task43c0f98: six-parent CUDA exact transfer/frozen-state/gradient/phase/JIT checks; initial64-case trace exactly matches cycle12 B42; two2048x20 smokes exited0; four native/30-second reloads each64/64 complete with strict joint0. Six paired seeds deploy on GPUs0/1/2/3 as1/3/4/4 under78% guard. See docs/upright_cycle_v13.md.",
+      "status": "cycle13 complete; cycle14 fixed272aaea GPU acceptance passed and deployment started; live state in docs/current_handoff.md",
+      "local_validation": "Cycle13:12 training/60 evaluations complete;30-second handoff384/384 and balance383/384 each; strict joint0, instantaneous reward improves forward MAE in all six seed pairs about5.8%. Cycle14 release272aaea: six-parent CUDA and20ms/Kp8 versus2ms/Kp16 feedback checks; initial64-case traces exactly match parent/probe; two2048x20 finite smokes, four native/30-second reloads64/64 complete each with strict joint0. Incremental VRAM3429/3428MiB; fixed deployment on four GPUs under78% guard. See docs/upright_cycle_v14.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
