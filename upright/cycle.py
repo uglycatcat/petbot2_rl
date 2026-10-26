@@ -4,9 +4,11 @@ from .moving import MovingProgress, wrap
 
 
 class CycleProgress(MovingProgress):
-    def __init__(self,*args,tracking_shape="gaussian",**kwargs):
+    def __init__(self,*args,tracking_shape="gaussian",handoff_alignment="before",**kwargs):
         if tracking_shape not in ("gaussian","cauchy"):raise ValueError("Invalid tracking reward shape")
+        if handoff_alignment not in ('before','after'):raise ValueError('Invalid handoff alignment')
         self.tracking_shape=tracking_shape
+        self.handoff_alignment=handoff_alignment
         super().__init__(*args,**kwargs)
         z=lambda:torch.zeros(self.n,device=self.device)
         self.phase=z().long();self.requested_mode=z()+1;self.destination=z()
@@ -67,7 +69,11 @@ class CycleProgress(MovingProgress):
         ground=(s['four_fraction']>=.9)&~s['body_history']&(s['g'][:,2]<-.85)&(s['g'][:,1].abs()<.15)
         frame_error=(s['q'][:,3:]-self.destination[:,None]).abs().amax(-1)
         gentle=(s['front_vertical_speed'].abs()<.25)&(s['vel'][:,3:5].norm(dim=-1)<1.)
-        self.ground_run=torch.where((self.phase==3)&ground&gentle&(frame_error<.1),self.ground_run+self.dt,0.)
+        # Ordinary drive already slews the frame to its requested destination.
+        # Start it only after stable physical landing; final completion still
+        # requires aligned frame and one continuous second of stable support.
+        aligned=(frame_error<.1) if self.handoff_alignment=='before' else torch.ones_like(ground)
+        self.ground_run=torch.where((self.phase==3)&ground&gentle&aligned,self.ground_run+self.dt,0.)
         handoff=(self.phase==3)&(self.ground_run>=.30)
         self.phase[handoff]=4;self.phase_time[handoff]=0;self.landed |= handoff
         self.handoff_run=torch.where((self.phase==4)&ground&gentle&(frame_error<.1),self.handoff_run+self.dt,0.)

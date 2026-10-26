@@ -11,8 +11,8 @@ p=argparse.ArgumentParser();p.add_argument('checkpoint');p.add_argument('--outpu
 assert torch.cuda.is_available();device='cuda:0';torch.manual_seed(13)
 checkpoint=pathlib.Path(args.checkpoint);saved=torch.load(checkpoint,map_location=device,weights_only=False)
 metadata=json.loads((checkpoint.parent/'config.json').read_text())
-assert metadata['contract']['task']=='upright_cycle_v16' and metadata['contract']['balance_noise_factor']==16.
-assert metadata['commit']=='03deaca07644e244040319df07ebfc1347fb5f1e'
+assert metadata['contract']['task'] in ('upright_cycle_v16','upright_cycle_v17') and metadata['contract']['balance_noise_factor']==16.
+assert metadata['commit'] in ('03deaca07644e244040319df07ebfc1347fb5f1e','a64c75569fb50b6f24a122a3affd16fc0d25e2ca')
 spec=importlib.util.spec_from_file_location('upright.balance_reflex_v16_reference',checkpoint.parents[2]/'upright/balance_reflex.py')
 reference=importlib.util.module_from_spec(spec);spec.loader.exec_module(reference)
 parent=saved['actor_state_dict'];recent=saved['critic_state_dict']
