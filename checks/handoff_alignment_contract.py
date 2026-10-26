@@ -29,9 +29,9 @@ def progress(mode):
     return p
 
 before=progress('before');after=progress('after')
-for step in range(5):
+for step in range(6):
     before.update(s,z(3));m=after.update(s,z(3))
-    if step<4:assert (after.phase==3).all(), 'Contact dwell must not be shortened'
+    if step<5:assert (after.phase==3).all(), 'Contact dwell must not be shortened'
 assert (before.phase==3).all()
 assert after.phase.tolist()==[4,3,3,3,3,3], 'Bad contact/posture/motion must not hand over'
 for _ in range(20):m=after.update(s,z(3))
