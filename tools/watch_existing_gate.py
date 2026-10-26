@@ -21,13 +21,15 @@ def save(path, value):
     temporary.replace(path)
 
 
-def attach(out, names, queue_name):
+def attach(out, names, queue_name, context_doc='docs/upright_handoff_alignment_v18.md'):
     lock = (out/'gate_watch.lock').open('a')
     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     assert not (out/'launch_status.json').exists(), 'Existing attachment; inspect before recovery'
     thread = os.environ.get('CODEX_THREAD_ID')
     executable = shutil.which('codex')
     assert thread and executable, 'Same-session queue unavailable'
+    context = pathlib.PurePosixPath(context_doc)
+    assert context.parts[0]=='docs' and '..' not in context.parts and context.suffix=='.md'
     jobs = json.loads((out/'jobs.json').read_text())
     assert names and len(names) == len(set(names)) and all(n in jobs for n in names)
     descriptors = {}
@@ -52,7 +54,7 @@ def attach(out, names, queue_name):
         state[name] = dict(status='running' if fd is not None else 'exited', pid=pid, gpu=jobs[name]['gpu'])
     save(out/'launch_status.json', dict(name=queue_name, eval_pid=os.getpid(),
          evaluator_entrypoint='watch_existing_gate.py', thread=thread, attached_existing_only=True,
-         expected_jobs=len(names), jobs=names, started_at=time.strftime('%FT%T%z')))
+         expected_jobs=len(names), jobs=names, context_doc=context_doc, started_at=time.strftime('%FT%T%z')))
     save(out/'eval_status.json', state)
     with (out/'eval_watch.log').open('x') as log:
         subprocess.Popen(['python3', str(pathlib.Path(__file__).with_name('watch_cycle_evaluation.py')), str(out)],
@@ -80,12 +82,12 @@ def attach(out, names, queue_name):
     save(out/'eval_finished.json', dict(expected=len(names), complete=complete,
          failed=len(names)-complete, acceptance_pending=True, finished_at=time.strftime('%FT%T%z')))
     message = (
-        'upright_rl_demo交接修正v18工程验收进程已结束。先读AGENTS.md、docs/current_handoff.md、'
-        'docs/upright_handoff_alignment_v18.md，核查runs/_cycle18_gate的launch_status/eval_status/'
-        'eval_finished及实际进程、两项180秒结果和物理约束。GPU0短训曾触发显存守护，已从model_10'
-        '完整续接到model_18，检查training_review/resume_state，不能遗漏原中断或重复启动。'
-        '这是工程验收，不是第18批正式PPO。先完成验收与结果分析，再决定独立范围验证、'
-        '起立初态课程或MuJoCo闭环；网络导出不是sim2sim通过。继续今晚已授权事件迭代，'
+        f'upright_rl_demo工程验收{queue_name}进程已结束。先读AGENTS.md、docs/current_handoff.md、'
+        f'{context_doc}，核查runs/{out.name}的launch_status/eval_status/'
+        'eval_finished及实际进程、短训/重载结果和物理约束。检查是否发生显存中断及恢复，'
+        '不能遗漏失败、假设退出0代表通过或重复启动。这是工程验收，不是正式PPO批次终局。'
+        '先完成验收与结果分析，再决定针对起立缺陷的训练或MuJoCo闭环；'
+        '网络导出不是sim2sim通过。继续今晚已授权事件迭代，'
         '稳定优先，不恢复周期定时器或goal。')
     save(out/'completion_notice.json', dict(submission_unknown='attempt_started'))
     try:
@@ -100,7 +102,8 @@ def attach(out, names, queue_name):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--name', required=True)
+    parser.add_argument('--context-doc', default='docs/upright_handoff_alignment_v18.md')
     parser.add_argument('directory', type=pathlib.Path)
     parser.add_argument('jobs', nargs='+')
     args = parser.parse_args()
-    attach(args.directory.resolve(), args.jobs, args.name)
+    attach(args.directory.resolve(), args.jobs, args.name, args.context_doc)
