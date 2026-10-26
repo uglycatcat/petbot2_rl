@@ -49,8 +49,8 @@
         "demo"
       ],
       "shallow": false,
-      "status": "cycle14 complete; cycle15 fixed fb6cfd0 GPU acceptance passed and deployment started; live state in docs/current_handoff.md",
-      "local_validation": "Cycle14:12 training/60 evaluations complete;30-second handoff379/380 of384; strict joint0;2ms/Kp16 yaw MAE improves10.6%. Cycle15 tested ee82e6e, release fb6cfd0 README-only: six-parent CUDA; frozen balance feedback and physical clocks/limits validated; initial traces reproduce parent and diagnostic; two2048x20 finite smokes; four64-case reloads complete64/64 each,30-second strict joint0. Incremental VRAM3428/3427MiB; formal deployment starts on four GPUs under78% guard. See docs/upright_cycle_v15.md.",
+      "status": "cycle15 complete; iteration paused by explicit user request pending discussion; task quality not achieved",
+      "local_validation": "Cycle15 fixed fb6cfd0:12 training runs to1199 and60 evaluations complete with exit0, no missing or guard stops. Frozen base/statistics/inner controller exact; trainable refinements updated; scalar and artifact checks passed. Independent30-second A/B handoff381/382 of384, forward passes45/207, yaw passes72/84, joint0/0; B forward MAE improves13.7%, yaw1.2%. All batch processes exited; no new batch authorized. See docs/upright_cycle_batch15_results.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
