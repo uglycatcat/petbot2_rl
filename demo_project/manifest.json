@@ -49,12 +49,12 @@
         "demo"
       ],
       "shallow": false,
-      "status": "v18 engineering audit complete; six fixed-policy envelope/rise diagnostics active; no formal cycle18 PPO",
-      "local_validation": "a57054d task: same-parent handoff42/64 to57/64 with final alignment/hold preserved. Parent180s64/64 complete63/64 basic; short-trained reload180s63/64 both, one phase1 backward-tilt failure. Physical constraints and full optimizer continuation after memory guard verified. Source af2c01e runs six unchanged-task diagnostics, with full-local input only as a counterfactual. MuJoCo pending. See docs/upright_handoff18_validation.md.",
+      "status": "six range/rise validations complete; rise-only candidate ef9c2bc has two long GPU reloads pending; no formal cycle18 PPO",
+      "local_validation": "Fixed B43 replay matches74 failure frames. Frame20/30 completion125/106 of128, all failures in rise. Full-local rescues1/regresses1, not adopted. Rise-only CUDA checks and2048/4096x20 GPU smoke passed; inherited state frozen. Zero-init60/180s original1123/3122 frames exact. Two180s reloads remain active. Dual4096 throughput11.2k steps/s, 1.79x single; mean compute40.2%. Source57b626e; verified release remains a57054d pending gate. See docs/upright_rise_adapter_v19.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_handoff18_validation"
+        "upright_rise19_gate"
       ]
     },
     {
