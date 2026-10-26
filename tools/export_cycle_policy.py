@@ -18,6 +18,7 @@ from tensordict import TensorDict
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from upright.balance_reflex import ReflexAdapterModel
+from upright.rise_adapter import RiseAdapterModel
 from upright.model import load_model, POSITION_JOINTS, POSITION_KP, POSITION_KD, REAR_WHEELS
 
 
@@ -35,7 +36,7 @@ def export(evaluation, output):
     assert end['exit_code'] == 0 and not end['guard_stopped'] and not end.get('physics_error')
     assert result['count'] == 64 and result['unfinished'] == 0
     contract = meta['contract']
-    assert contract['task'] == 'upright_cycle_v18'
+    assert contract['task'] in ('upright_cycle_v18', 'upright_cycle_v19')
     assert contract['balance_reflex'] == 'frozen20' and contract['yaw_feedback_design'] == 'fast2'
     assert not meta['working_tree_dirty']
     model = load_model()
@@ -64,9 +65,14 @@ def export(evaluation, output):
     raw[:, -58+48] = torch.linspace(0., 1., len(raw), device=raw.device)
     obs = TensorDict({'policy': raw}, batch_size=[len(raw)])
     cfg = copy.deepcopy(meta['runner']['actor']); cfg.pop('class_name')
-    actor = ReflexAdapterModel(obs, obs_groups={'actor': ['policy']}, obs_set='actor',
+    actor_class = RiseAdapterModel if contract.get('refinement_target')=='rise' else ReflexAdapterModel
+    actor = actor_class(obs, obs_groups={'actor': ['policy']}, obs_set='actor',
                               output_dim=3, **cfg).to('cuda:0').eval()
-    actor.load_state_dict(saved['actor_state_dict'], strict=True)
+    if actor_class is RiseAdapterModel and not any(k.startswith('rise_') for k in saved['actor_state_dict']):
+        assert args['probe'] and args['initialize_cycle_from']
+        actor.initialize_rise(saved['actor_state_dict'], saved['critic_state_dict'])
+    else:
+        actor.load_state_dict(saved['actor_state_dict'], strict=True)
     output.mkdir(parents=True, exist_ok=False)
     outer = torch.jit.script(copy.deepcopy(actor.as_jit()).cpu().eval())
     inner = torch.jit.script(copy.deepcopy(actor.balance_reflex).cpu().eval())
@@ -84,7 +90,7 @@ def export(evaluation, output):
             assert torch.allclose(expected, actual, atol=1e-6, rtol=1e-6), name
             errors[name] = float((expected-actual).abs().max())
         assert loaded_outer(raw).abs().max() <= .99 + 1e-6
-    sources = ['upright/balance_reflex.py', 'upright/feedback_task.py',
+    sources = ['upright/rise_adapter.py', 'upright/balance_reflex.py', 'upright/feedback_task.py',
                'upright/continuous_task.py', 'upright/continuous.py', 'upright/cycle.py',
                'upright/cycle_task.py', 'upright/local_frame.py', 'upright/fast_feedback.py',
                'upright/feedback.py', 'upright/ground_motion.py', 'upright/model.py',

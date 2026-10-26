@@ -25,7 +25,7 @@ source = pathlib.Path('train_cycle.py').read_text()
 anchor = '    cfg=CycleEnvCfg();'
 assert source.count(anchor) == 1
 source = source.replace(anchor, '    install_capture()\n'+anchor)
-anchor = '                trace.append(dict(instability='
+anchor = '                trace.append(dict(rise_adapter_gate='
 assert source.count(anchor) == 1
 source = source.replace(anchor, '''                trace.append(dict(
                     joint_positions=s['q'].tolist(),
@@ -33,5 +33,5 @@ source = source.replace(anchor, '''                trace.append(dict(
                     initial_frame=m['audit_initial_frame'].tolist(),
                     landing_ground_run=m['audit_ground_run'].tolist(),
                     angular_velocity=s['vel'][:,3:5].tolist(),
-                    instability=''')
+                    rise_adapter_gate=''')
 exec(compile(source, 'train_cycle.py', 'exec'), globals())
