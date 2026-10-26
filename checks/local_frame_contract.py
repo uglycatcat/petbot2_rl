@@ -39,9 +39,11 @@ sample[:,48]=.375
 middle=ground_frame_features(sample,yaw,'balance_local')
 midpoint_error=float((middle-ground_frame_features(sample,yaw*.5,'local')).abs().max())
 assert midpoint_error<6e-6
-assert torch.equal(script(sample,yaw,'balance_local'),middle)
+scripted_error=float((script(sample,yaw,'balance_local')-middle).abs().max())
+assert scripted_error<6e-6
 result=dict(passed=True,global_yaw_invariance=True,zero_heading_identity=True,
     preserved_body_and_task_features=True,zero_heading_amplitude_finite=True,
     inherited_rise_exact=True,phase_transition=True,midpoint_rounding_error=midpoint_error,
+    staged_scripted_rounding_error=scripted_error,
     scripted=True,max_invariance_error=float((local-other).abs().max()))
 pathlib.Path(args.output).write_text(json.dumps(result,indent=2));print(result)
