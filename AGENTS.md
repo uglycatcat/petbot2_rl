@@ -5,7 +5,7 @@
 ## 目标与当前工作
 
 - 三个独立策略按起立（upright）、0–3 cm 低台阶（step）、跌倒恢复（recovery）推进；目前只迭代完整运动循环起立。训练链路为 Isaac Lab + RSL-RL + PPO，后续用 MuJoCo 做 sim2sim。任务与控制契约见[需求基线](docs/current_scope.md)。
-- 静止默认初态起立已有阶段成果；完整运动循环尚未整体达标。第十三批`2b41c8f`12训练/60评估完整，30秒A/B交接均384/384、平衡各383/384，严格联合及完整质量仍0。瞬时奖励B前向误差六对均改善约5.8%，转向仅小幅改善；第十四版反馈周期/增益对照已过GPU验收并开始部署，未放宽门槛。入口见[当前交接](docs/current_handoff.md)。
+- 静止默认初态起立已有阶段成果；完整运动循环尚未整体达标。第十四批272aaea的12训练/60评估完整，30秒A/B交接379/380（各384）、严格联合及完整质量仍0；2 ms/Kp16转向误差改善约10.6%，前向精度和少量流程失败仍待解决。局部刷新诊断在三个父策略一致改善前向误差，第十五版已过GPU验收并开始唯一正式批次部署，不重复部署；入口见[当前交接](docs/current_handoff.md)。
 - 第六版及其长训的六类遥控评估为固定类别短时场景，两轮段平均约4秒；不能作为持续混合遥控证明。第七版新增跨类换令、实际运动接管与长时遥控评估，设计见[第七版](docs/upright_cycle_v7.md)，是否通过以独立结果为准。
 - 旧移动第五轮及以后夜间结果已废弃；不自动恢复旧第十轮。用户已取消每日04/10/16/22定时续接，未经再次明确要求不得启用；批次完成/异常事件续接继续授权。编号与实际父检查点见[谱系](docs/upright_training_lineage_20261023.md)。
 - PetBot 默认四轮姿态静稳定，参考轮足项目的站立课程或奖励不可直接照搬。历史 `recovery_agile_01` 不是新的 recovery 任务模板。固定姿态恢复程序是构型与动作参照，不是训练示范数据。
@@ -17,7 +17,7 @@
 | 训练服务器 | `nvidia-smi -L` 为4块RTX 4090，家目录在 `/data/...` | 训练、评估和渲染；训练仅在专用容器内。 |
 | 桌面机 | 1块RTX 2080 Ti，家目录在 `/home/...` | 不训练；最后做 MuJoCo 等效果验证。 |
 
-仓库公开，主机地址、账号、密钥和代理配置不得入库。先读本文件，再读[当前交接](docs/current_handoff.md)。具体问题按[文档索引](docs/README.md)下钻：需求→`current_scope.md`，实现和入口→[demo README](demo_project/upright_rl_demo/README.md)，本批设计→[第十四版](docs/upright_cycle_v14.md)，结果→[第十三批终局](docs/upright_cycle_batch13_results.md)，历史编号→[谱系](docs/upright_training_lineage_20261023.md)，参考项目→[参考项目索引](reference_project/README.md)。根目录 [README.md](README.md) 只供部署与使用，不写实验进度。
+仓库公开，主机地址、账号、密钥和代理配置不得入库。先读本文件，再读[当前交接](docs/current_handoff.md)。具体问题按[文档索引](docs/README.md)下钻：需求→`current_scope.md`，实现和入口→[demo README](demo_project/upright_rl_demo/README.md)，本批设计→[第十五版](docs/upright_cycle_v15.md)，结果→[第十四批终局](docs/upright_cycle_batch14_results.md)，历史编号→[谱系](docs/upright_training_lineage_20261023.md)，参考项目→[参考项目索引](reference_project/README.md)。根目录 [README.md](README.md) 只供部署与使用，不写实验进度。
 
 ## 全局规则（硬约束）
 
@@ -71,6 +71,7 @@
 | 2026-10-25 | 第十一批归一化对照未打破精度瓶颈 | 12训练/60评估完整；30秒交接383/384、384/384，严格联合仍0，B仅三对种子前向误差改善且原生交接退步，无一致胜者。见[终局](docs/upright_cycle_batch11_results.md)。 |
 | 2026-10-25 | 第十二批两轮修正改善均值但瞬时精度未达标 | 12训练/60评估完整；30秒A/B交接均384/384，B前向误差六对种子一致降低约4%，瞬时联合仍0；平滑诊断381/384不能替代验收。见[终局](docs/upright_cycle_batch12_results.md)。 |
 | 2026-10-26 | 第十三批瞬时奖励有小幅收益但精度仍未通过 | 12训练/60评估完整；30秒A/B交接各384/384、严格联合0；B前向误差六对改善约5.8%，稳态联合仍0。见[终局](docs/upright_cycle_batch13_results.md)。 |
+| 2026-10-26 | 第十四批转向收益保留但完整质量仍未通过 | 12训练/60评估完整；30秒A/B交接379/380、严格联合0，B转向MAE改善约10.6%，少量失败含超时与失稳越界。见[终局](docs/upright_cycle_batch14_results.md)。 |
 
 ## 目录职责与检查
 

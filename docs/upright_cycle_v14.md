@@ -1,6 +1,6 @@
 # 完整循环第十四版：转向内环周期与增益对照（2026-10-26）
 
-固定272aaea已通过最终GPU工程验收，2026-10-26 01:00:45开始唯一正式批次部署。父代为第十三批同种子B42–B47/model_1199；[批次计划](experiments/upright_cycle_batch14.json)记录固定配置。当前操作见[交接](current_handoff.md)。
+固定272aaea已于2026-10-26 08:30:36终局：12训练/60评估完整，见[结果](upright_cycle_batch14_results.md)。以下保留当时设计与部署证据。父代为第十三批同种子B42–B47/model_1199；[批次计划](experiments/upright_cycle_batch14.json)记录固定配置。当前操作见[交接](current_handoff.md)。
 
 ## 决策依据
 

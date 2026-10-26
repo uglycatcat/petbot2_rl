@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "272aaea822c0df0f7460ae9b0e372228e32718b5",
+      "verified_commit": "fb6cfd031e029767538b8ce33adc5adcf23a6345",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "cycle13 complete; cycle14 fixed272aaea GPU acceptance passed and deployment started; live state in docs/current_handoff.md",
-      "local_validation": "Cycle13:12 training/60 evaluations complete;30-second handoff384/384 and balance383/384 each; strict joint0, instantaneous reward improves forward MAE in all six seed pairs about5.8%. Cycle14 release272aaea: six-parent CUDA and20ms/Kp8 versus2ms/Kp16 feedback checks; initial64-case traces exactly match parent/probe; two2048x20 finite smokes, four native/30-second reloads64/64 complete each with strict joint0. Incremental VRAM3429/3428MiB; fixed deployment on four GPUs under78% guard. See docs/upright_cycle_v14.md.",
+      "status": "cycle14 complete; cycle15 fixed fb6cfd0 GPU acceptance passed and deployment started; live state in docs/current_handoff.md",
+      "local_validation": "Cycle14:12 training/60 evaluations complete;30-second handoff379/380 of384; strict joint0;2ms/Kp16 yaw MAE improves10.6%. Cycle15 tested ee82e6e, release fb6cfd0 README-only: six-parent CUDA; frozen balance feedback and physical clocks/limits validated; initial traces reproduce parent and diagnostic; two2048x20 finite smokes; four64-case reloads complete64/64 each,30-second strict joint0. Incremental VRAM3428/3427MiB; formal deployment starts on four GPUs under78% guard. See docs/upright_cycle_v15.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
@@ -67,7 +67,7 @@
       ],
       "shallow": false,
       "status": "registered_placeholder_readme_only",
-      "local_validation": "Task goal only: lift the front wheels onto a 0–3cm step below rear-wheel radius, then accelerate to climb. No implementation or training. See README.md.",
+      "local_validation": "Task goal only: lift the front wheels onto a 0\u20133cm step below rear-wheel radius, then accelerate to climb. No implementation or training. See README.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
