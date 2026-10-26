@@ -61,7 +61,7 @@ def main():
         f"upright_rl_demo批次{state['name']}评估进程已退出，正常完成通知缺失或失败。"
         "读取AGENTS.md、docs/current_handoff.md与本批launch_status/eval_status/eval_finished、"
         "实际进程及日志。先判断正常结束、评估失败或中断；未完成则恢复当前轮，禁止重复启动。"
-        "若结果齐全，结合差速响应诊断分析并继续迭代。保持固定版本、78%显存守护与周期定时器停用。")
+        "若结果齐全，按最新稳定优先与基本遥控需求分析后继续迭代；旧瞬时精度不作为主要否决条件。保持固定版本、78%显存守护与周期定时器停用。")
     try:
         result = subprocess.run([executable, 'queue', '--thread', state['thread'], '--message', message],
                                 capture_output=True, text=True, timeout=120)

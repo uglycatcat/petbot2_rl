@@ -15,7 +15,7 @@ pos=torch.zeros(n,3,device=device)
 yaw=torch.zeros(n,device=device)
 p.reset(ids,pos,yaw)
 seen=torch.zeros(n,6,dtype=torch.bool,device=device)
-for _ in range(6):
+for _ in range(30):
     seen[ids,p.mode]=True
     p.sample_commands(ids)
 assert seen.all(), 'Each environment must visit all six categories'

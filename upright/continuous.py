@@ -3,6 +3,7 @@ import math
 import torch
 from .cycle import CycleProgress
 from .moving import wrap
+from .stability import StabilityMonitor, coarse_tracking_score
 
 
 def yaw_feedforward(command):
@@ -37,7 +38,7 @@ class ContinuousProgress(CycleProgress):
         self.hold_range = hold_range
         assert 0.<=instant_tracking_weight<=1.
         self.instant_tracking_weight=instant_tracking_weight
-        assert tracking_objective in ('mixed','instant_tolerance')
+        assert tracking_objective in ('mixed','instant_tolerance','stability_first')
         self.tracking_objective=tracking_objective
         self.hold_duration = torch.zeros(self.n, device=self.device)
         self.previous_position = torch.zeros(self.n, 2, device=self.device)
@@ -46,10 +47,13 @@ class ContinuousProgress(CycleProgress):
         self.interval_motion = torch.zeros_like(self.motion)
         self.error_integral = torch.zeros_like(self.motion)
         self.prepared_step = -1
+        self.stability_monitor=StabilityMonitor(self.n,self.device,self.dt)
+        self.travel_limit=3.+self.speed_limit*(hold_range[1]+12.)
 
     def sample_commands(self, ids):
-        order = torch.tensor([0, 5, 1, 2, 3, 4], device=self.device)
-        self.mode[ids] = order[(ids+self.command_count[ids]) % 6]
+        # Euler cycle: all 30 directed transitions between the six command classes.
+        order = torch.tensor([0,1,0,2,0,3,0,4,0,5,1,2,1,3,1,4,1,5,2,3,2,4,2,5,3,4,3,5,4,5],device=self.device)
+        self.mode[ids] = order[(ids+self.command_count[ids]) % len(order)]
         super().sample_commands(ids)
         self.next_command[ids] = self.since[ids]+3.+self.uniform(ids, 2)
 
@@ -62,6 +66,7 @@ class ContinuousProgress(CycleProgress):
         self.interval_motion[ids] = 0.
         self.error_integral[ids] = 0.
         self.prepared_step = -1
+        self.stability_monitor.reset(ids)
 
     def update_motion(self, s):
         turn = wrap(s['yaw']-self.previous_heading)
@@ -99,6 +104,16 @@ class ContinuousProgress(CycleProgress):
         result['track_reward'] = (self.phase==2)*result['support']*((1.-mix)*filtered_score+mix*instant_score)
         if self.tracking_objective=='instant_tolerance':
             result['track_reward']=(self.phase==2)*result['support']*instantaneous_tolerance_score(instant-self.command,tolerance)
+        elif self.tracking_objective=='stability_first':
+            result['track_reward']=(self.phase==2)*result['support']*coarse_tracking_score(self.motion,self.command)
+            # Support earns balance credit without requiring negligible instantaneous sway.
+            result['balance_reward']=(self.phase==2)*result['support'].float()
+        instability=self.stability_monitor.update(self.phase,s,self.motion,self.command)
+        result['instability']=instability.clone()
+        result['instability_dwell']=self.stability_monitor.dwell.clone()
+        result['failure'] |= instability.any(-1)
+        result['completed'] &= ~result['failure']
+        result['qualified'] &= ~result['failure']
         result['motion_attained'] = attained
         result['motion_feedback'] = self.motion.clone()
         result['interval_motion'] = self.interval_motion.clone()
@@ -108,6 +123,7 @@ class ContinuousProgress(CycleProgress):
                    s['vel'][:, :3].norm(dim=-1)>5, s['vel'][:, 3:].norm(dim=-1)>30,
                    result['warmup_failed'], (self.phase==1)&(self.phase_time>3.),
                    (self.phase==3)&(self.phase_time>4.),
-                   self.active & ((s['pos'][:, :2]-self.rise_position).norm(dim=-1)>3.)]
+                   self.active & ((s['pos'][:, :2]-self.rise_position).norm(dim=-1)>self.travel_limit)]
+        reasons.extend(instability.unbind(-1))
         result['failure_code'] = sum(flag.long()*(1<<i) for i, flag in enumerate(reasons))
         return result

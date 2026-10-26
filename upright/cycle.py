@@ -95,7 +95,7 @@ class CycleProgress(MovingProgress):
         descent_cost=torch.relu(-s['front_vertical_speed']-allowed_down).square()/.25**2
         # Safety termination has priority over time limits, including the final handoff step.
         failure=m['physical_failure']|m['warmup_failed']|((self.phase==1)&(self.phase_time>3.))|((self.phase==3)&(self.phase_time>4.))
-        failure |= self.active & ((s['pos'][:,:2]-self.rise_position).norm(dim=-1)>3.)
+        failure |= self.active & ((s['pos'][:,:2]-self.rise_position).norm(dim=-1)>getattr(self,'travel_limit',3.))
         self.max_impact=torch.maximum(self.max_impact,torch.where((self.phase==3),s['front_force_peak'],0.))
         touchdown_speed=torch.maximum((-s['front_vertical_speed']).clamp_min(0),(-self.last_front_speed).clamp_min(0))
         previous_impact_excess=torch.relu(self.max_touchdown_speed/.35-1).square()

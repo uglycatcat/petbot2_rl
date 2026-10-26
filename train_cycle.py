@@ -12,9 +12,9 @@ p.add_argument('--learning-rate',type=float,default=.0001);p.add_argument('--sav
 p.add_argument('--exploration-profile',choices=['moderate','fine','precision'],default='fine')
 p.add_argument('--yaw-filter-tau',type=float,choices=[0.,.12],default=0.)
 p.add_argument('--tracking-shape',choices=['gaussian','cauchy'],default='gaussian')
-p.add_argument('--tracking-weight',type=float,choices=[6.,12.],default=12.)
+p.add_argument('--tracking-weight',type=float,choices=[4.,6.,12.],default=12.)
 p.add_argument('--instant-tracking-weight',type=float,choices=[.3,.7],default=.3)
-p.add_argument('--tracking-objective',choices=['mixed','instant_tolerance'],default='mixed')
+p.add_argument('--tracking-objective',choices=['mixed','instant_tolerance','stability_first'],default='mixed')
 p.add_argument('--balance-reflex',choices=['off','frozen20'],default='off')
 p.add_argument('--balance-noise-factor',type=float,choices=[1.,16.],default=1.)
 p.add_argument('--actor-normalization',choices=['inherited','rebase_recent'],default='inherited')
@@ -55,8 +55,8 @@ try:
     assert 0<args.speed_limit<=.3 and 0<args.yaw_limit<=1
     assert -1<=args.frame_min<=args.frame_max<=1.2 and 0<args.frame_slew<=6
     assert sum(bool(x) for x in (args.checkpoint,args.initialize_from,args.initialize_cycle_from))<=1
-    assert 2.<=args.hold_min<=args.hold_max<=30.
-    if args.initialize_from:raise ValueError('V15 requires explicit cycle-v14 actor transfer')
+    assert 2.<=args.hold_min<=args.hold_max<=180.
+    if args.initialize_from:raise ValueError('V16 requires explicit cycle-v15 actor transfer')
     assert args.actor_normalization=='inherited' and args.exploration_profile=='fine' and args.yaw_feedback_design=='fast2' and args.yaw_feedback_gain==16.
     cfg=CycleEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
     cfg.speed_limit=args.speed_limit;cfg.yaw_limit=args.yaw_limit;cfg.frame_range=(args.frame_min,args.frame_max)
@@ -70,13 +70,16 @@ try:
     folder=pathlib.Path(args.log_dir);folder.mkdir(parents=True,exist_ok=True)
     dirty=bool(subprocess.check_output(['git','status','--porcelain'],text=True).strip())
     if dirty and not args.allow_dirty:raise RuntimeError('Commit source before formal execution')
-    names=['train_cycle.py','upright/balance_adapter.py','upright/balance_reflex.py']+['upright/'+n+'.py' for n in ['normalization','fast_feedback','ground_motion','feedback','feedback_task','continuous','continuous_task','cycle','cycle_task','moving','task','distribution','model','asset_cfg','prepare','transfer']]
+    names=['train_cycle.py','upright/balance_adapter.py','upright/balance_reflex.py','upright/stability.py','upright/functional.py']+['upright/'+n+'.py' for n in ['normalization','fast_feedback','ground_motion','feedback','feedback_task','continuous','continuous_task','cycle','cycle_task','moving','task','distribution','model','asset_cfg','prepare','transfer']]
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(n).read_bytes()).hexdigest() for n in names).encode()).hexdigest()
     scales={'moderate':[1.,4.,4.],'fine':[4.,16.,16.],'precision':[16.,64.,64.]}[args.exploration_profile]
-    contract=dict(task='upright_cycle_v15',balance_reflex=args.balance_reflex,reflex_contract=dict(parent='cycle14B',period=.02,gate_after=1.8,frozen=True,clock='outer60ms',physical_features_only=True),tracking_objective=args.tracking_objective,actor_design='frozen_base_balance_yaw_adapter_v1',balance_noise_factor=args.balance_noise_factor,adapter_limits=[.03,.08,.8],adapter_gate=[1.2,1.8],adapter_observation_stats='frozen_parent_critic',actor_normalization=args.actor_normalization,normalization_prior_count=10000000 if args.actor_normalization=='rebase_recent' else None,yaw_feedback_design=args.yaw_feedback_design,fast_yaw_controller=dict(FAST_CONTROLLER,period=.002 if args.yaw_feedback_design=='fast2' else .02,kp=args.yaw_feedback_gain),heading_reference='wheel_lateral',contact_sampling='eager_physics_step_history30_v1',instant_tracking_weight=args.instant_tracking_weight,yaw_controller=CONTROLLER,steering_design=args.steering_design,yaw_filter_tau=args.yaw_filter_tau,tracking_shape=args.tracking_shape,command_sampling='mixed_six_sequence_v2',reward_design=('instant_tolerance_soft_landing_v1' if args.tracking_objective=='instant_tolerance' else 'joint_ground_motion_soft_landing_v2'),motion_feedback='pose_delta_ema_120ms',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_58x5_wheel_lateral_v2',fingerprint=fingerprint,
+    contract=dict(task='upright_cycle_v16',balance_reflex=args.balance_reflex,reflex_contract=dict(parent='cycle15B',period=.02,gate_after=1.8,frozen=True,clock='outer60ms',physical_features_only=True),tracking_objective=args.tracking_objective,actor_design='frozen_base_balance_yaw_adapter_v1',balance_noise_factor=args.balance_noise_factor,adapter_limits=[.03,.08,.8],adapter_gate=[1.2,1.8],adapter_observation_stats='frozen_parent_critic',actor_normalization=args.actor_normalization,normalization_prior_count=10000000 if args.actor_normalization=='rebase_recent' else None,yaw_feedback_design=args.yaw_feedback_design,fast_yaw_controller=dict(FAST_CONTROLLER,period=.002 if args.yaw_feedback_design=='fast2' else .02,kp=args.yaw_feedback_gain),heading_reference='wheel_lateral',contact_sampling='eager_physics_step_history30_v1',instant_tracking_weight=args.instant_tracking_weight,yaw_controller=CONTROLLER,steering_design=args.steering_design,yaw_filter_tau=args.yaw_filter_tau,tracking_shape=args.tracking_shape,command_sampling='all_directed_six_sequence_v3',reward_design=('stability_first_coarse_motion_v1' if args.tracking_objective=='stability_first' else 'instant_tolerance_soft_landing_v1' if args.tracking_objective=='instant_tolerance' else 'joint_ground_motion_soft_landing_v2'),motion_feedback='pose_delta_ema_120ms',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_58x5_wheel_lateral_v2',fingerprint=fingerprint,
         action_dim=3,wheel_mode='common_diff',wheel_slew=args.wheel_slew,frame_slew=args.frame_slew,
         control_dt=env.step_dt,source_sha256=SPEC['source_sha256'],rear_duty_threshold=.9,
         transition_reference='reanchor_once_on_balance',mode_request='landing_latched_until_handoff',landing_force_limit_n=20.,touchdown_speed_limit=.35)
+    from upright.stability import STABILITY_CONTRACT
+    from upright.functional import FUNCTIONAL_CONTRACT
+    contract.update(stability=STABILITY_CONTRACT,functional=FUNCTIONAL_CONTRACT,workspace='3m_plus_speed_times_hold_and_transition_v1')
     if args.checkpoint:
         prior=json.loads((pathlib.Path(args.checkpoint).parent/'config.json').read_text())
         if prior['contract']!=contract:raise ValueError('Checkpoint contract mismatch')
@@ -91,19 +94,19 @@ try:
     metadata=dict(contract=contract,args=vars(args),runner=config,working_tree_dirty=dirty,commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip())
     if args.initialize_cycle_from:
         initial=pathlib.Path(args.initialize_cycle_from);prior=json.loads((initial.parent/'config.json').read_text())
-        if prior['contract'].get('task')!='upright_cycle_v14' or prior['working_tree_dirty']:raise ValueError('Only clean cycle-v14 source allowed')
-        if prior['commit']!='272aaea822c0df0f7460ae9b0e372228e32718b5':raise ValueError('Only validated cycle-v14 source allowed')
+        if prior['contract'].get('task')!='upright_cycle_v15' or prior['working_tree_dirty']:raise ValueError('Only clean cycle-v15 source allowed')
+        if prior['commit']!='fb6cfd031e029767538b8ce33adc5adcf23a6345':raise ValueError('Only validated cycle-v15 source allowed')
         if prior['contract']['observation_schema']!='cycle_58x5_wheel_lateral_v2' or prior['contract']['steering_design']!='feedback':raise ValueError('Source observation schema mismatch')
-        for k in ('action_dim','wheel_mode','wheel_slew','frame_slew','control_dt','source_sha256','concentration_scale','instant_tracking_weight','tracking_weight','balance_noise_factor'):
+        for k in ('action_dim','wheel_mode','wheel_slew','frame_slew','control_dt','source_sha256','concentration_scale','instant_tracking_weight','balance_noise_factor'):
             if prior['contract'][k]!=contract[k]:raise ValueError('Transfer mismatch '+k)
-        if prior['contract']['balance_noise_factor']!=16. or prior['contract']['tracking_objective']!='instant_tolerance' or prior['contract']['yaw_feedback_design']!='fast2' or prior['contract']['fast_yaw_controller']['kp']!=16.:raise ValueError('V15 uses cycle14 B parents')
-        if args.tracking_objective!='instant_tolerance':raise ValueError('V15 retains the cycle14 B reward')
+        if prior['contract']['balance_noise_factor']!=16. or prior['contract']['tracking_objective']!='instant_tolerance' or prior['contract']['yaw_feedback_design']!='fast2' or prior['contract']['fast_yaw_controller']['kp']!=16.:raise ValueError('V16 uses cycle15 B parents')
+        if prior['contract']['balance_reflex']!='frozen20' or args.balance_reflex!='frozen20':raise ValueError('V16 preserves validated frozen20 feedback')
         loaded=torch.load(initial,map_location='cpu',weights_only=False)
         actor=runner.alg.get_policy()
-        actor.initialize_parent(loaded['actor_state_dict'])
+        actor.load_state_dict(loaded['actor_state_dict'],strict=True)
         runner.alg.critic.load_state_dict(loaded['critic_state_dict'],strict=True)
         assert runner.current_learning_iteration==0 and not runner.alg.optimizer.state
-        metadata['initialization']=dict(source_commit=prior['commit'],checkpoint_sha256=hashlib.sha256(initial.read_bytes()).hexdigest(),actor_base_frozen=True,critic_loaded=True,optimizer_loaded=False,prior_adapter_loaded=True,yaw_adapter_loaded=True,reward_changed=False,feedback_period_changed=False,feedback_gain_changed=False,frozen_balance_reflex=args.balance_reflex,observation_width=58)
+        metadata['initialization']=dict(source_commit=prior['commit'],checkpoint_sha256=hashlib.sha256(initial.read_bytes()).hexdigest(),actor_base_frozen=True,critic_loaded=True,optimizer_loaded=False,prior_adapter_loaded=True,yaw_adapter_loaded=True,reward_changed=args.tracking_objective!='instant_tolerance' or args.tracking_weight!=12.,task_changed=True,feedback_period_changed=False,feedback_gain_changed=False,frozen_balance_reflex=args.balance_reflex,observation_width=58)
         del loaded
     if args.checkpoint:runner.load(args.checkpoint)
     from upright.balance_reflex import attach_balance_reflex
@@ -174,7 +177,7 @@ try:
                 peak_touch_speed=torch.maximum(peak_touch_speed,torch.where(valid,m['max_touchdown_speed'],0.))
                 delta=(applied-previous).abs();max_frame=max(max_frame,float(delta[valid,0].max())*(hi-lo)/2 if valid.any() else 0.)
                 max_wheel=max(max_wheel,float(delta[valid,1:].max())*a.max_speed if valid.any() else 0.)
-                trace.append(dict(adapter_gate=gate.tolist(),adapter_correction=correction.tolist(),legacy_yaw=s['legacy_yaw'].tolist(),legacy_forward=s['legacy_forward'].tolist(),legacy_heading_rate=s['legacy_heading_rate'].tolist(),yaw_feedback_integral=m['yaw_feedback_integral'].tolist(),yaw_feedback_target=m['yaw_feedback_target'].tolist(),gravity=s['g'].tolist(),body_velocity=s['vel'].tolist(),failure_code=m['failure_code'].tolist(),t=(tick+1)*env.step_dt,valid=valid.tolist(),phase=m['phase'].tolist(),phase_time=m['phase_time'].tolist(),since=since.tolist(),raw=raw.tolist(),command=command.tolist(),pos=s['pos'].tolist(),heading=s['yaw'].tolist(),forward=s['forward'].tolist(),heading_rate=s['heading_rate'].tolist(),motion_feedback=m['motion_feedback'].tolist(),interval_motion=m['interval_motion'].tolist(),wheel_measured=s['wheel'].tolist(),front_z=s['front_z'].tolist(),front_vertical_speed=s['front_vertical_speed'].tolist(),rear_fraction=s['rear_fraction'].tolist(),four_fraction=s['four_fraction'].tolist(),applied=applied.tolist(),failure=m['failure'].tolist(),balanced=m['balanced'].tolist()))
+                trace.append(dict(instability=m['instability'].tolist(),instability_dwell=m['instability_dwell'].tolist(),body_contact=s['body_history'].tolist(),adapter_gate=gate.tolist(),adapter_correction=correction.tolist(),legacy_yaw=s['legacy_yaw'].tolist(),legacy_forward=s['legacy_forward'].tolist(),legacy_heading_rate=s['legacy_heading_rate'].tolist(),yaw_feedback_integral=m['yaw_feedback_integral'].tolist(),yaw_feedback_target=m['yaw_feedback_target'].tolist(),gravity=s['g'].tolist(),body_velocity=s['vel'].tolist(),failure_code=m['failure_code'].tolist(),t=(tick+1)*env.step_dt,valid=valid.tolist(),phase=m['phase'].tolist(),phase_time=m['phase_time'].tolist(),since=since.tolist(),raw=raw.tolist(),command=command.tolist(),pos=s['pos'].tolist(),heading=s['yaw'].tolist(),forward=s['forward'].tolist(),heading_rate=s['heading_rate'].tolist(),motion_feedback=m['motion_feedback'].tolist(),interval_motion=m['interval_motion'].tolist(),wheel_measured=s['wheel'].tolist(),front_z=s['front_z'].tolist(),front_vertical_speed=s['front_vertical_speed'].tolist(),rear_fraction=s['rear_fraction'].tolist(),four_fraction=s['four_fraction'].tolist(),applied=applied.tolist(),failure=m['failure'].tolist(),balanced=m['balanced'].tolist()))
                 assert torch.isfinite(obs['policy']).all() and torch.isfinite(r).all()
                 alive &= ~done.bool()
                 if not alive.any():break
@@ -184,6 +187,8 @@ try:
             takeover_motion=takeover_motion.tolist(),balance_duration=balance_duration.tolist(),command_switches=switches.tolist(),command_transition_matrix=transition_matrix.tolist(),
             command_coverage={stage:{name:int(mask.sum()) for name,mask in groups.items()} for stage,groups in coverage.items()},
             first_balance_seconds=first_balance.tolist(),transition_offset_m=offsets.tolist(),balanced_fraction=(balance_good/balance_count.clamp_min(1)).tolist(),balance_samples=balance_count.tolist(),tracking_mae=(track_sum/track_count.clamp_min(1)[:,None]).tolist(),landing_peak_front_force=peak_force.tolist(),landing_peak_touchdown_speed=peak_touch_speed.tolist(),max_frame_target_step=max_frame,max_wheel_target_step=max_wheel)
+        from upright.functional import score_trajectories
+        result['functional']=score_trajectories(trace,result['outcomes'])
         (folder/'evaluation.json').write_text(json.dumps(result,indent=2));(folder/'trace.json').write_text(json.dumps(trace))
         assert max_frame<=args.frame_slew*env.step_dt+1e-5 and max_wheel<=args.wheel_slew*env.step_dt+1e-4
         assert not alive.any()

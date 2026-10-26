@@ -58,6 +58,7 @@ def main():
         if used+reserve>=total*.78:raise RuntimeError(f'GPU{gpu} capacity insufficient: {used}+{reserve} >= {total*.78}')
     state=dict(eval_reserve_mib=plan.get('eval_reserve_mib',6000),name=plan['name'],expected_train=len(variants),commit=commit,container=plan['container'],thread=os.environ.get('CODEX_THREAD_ID'),iterations=plan['iterations'],checkpoints=plan['checkpoints'],heldout_seed=plan.get('heldout_seed'),train={},gate=gate,resource_plan=reservations,started_at=time.strftime('%FT%T%z'))
     state['heldout_hold_seconds']=plan.get('heldout_hold_seconds')
+    if 'evaluation_envelopes' in plan:state['evaluation_envelopes']=plan['evaluation_envelopes']
     # Materialize all fixed copies before launching any training.
     for v in variants:
         dst=RUNS/v['run'];subprocess.run(['git','clone','--no-local',str(SOURCE),str(dst)],env={**os.environ,'GIT_LFS_SKIP_SMUDGE':'1'},check=True,stdout=subprocess.DEVNULL)

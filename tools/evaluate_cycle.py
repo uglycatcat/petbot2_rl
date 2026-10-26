@@ -18,11 +18,15 @@ if a.resume:
  path.write_text(json.dumps(state,indent=2))
 for iteration in launch['checkpoints']:
  for name,job in launch['train'].items():jobs.append((name,job,iteration,'native',job['envelope']))
-for name,job in launch['train'].items():
- envelope=job['envelope'].copy()
- for key,value in [('--speed-limit','0.1'),('--yaw-limit','0.3'),('--frame-max','0.3')]:envelope[envelope.index(key)+1]=value
- envelope=[('--frame-min=-0.3' if v.startswith('--frame-min=') else v) for v in envelope]
- jobs.append((name,job,launch['iterations']-1,'common',envelope))
+for scope,overrides in launch.get('evaluation_envelopes',{'common':{'--speed-limit':'.1','--yaw-limit':'.3','--frame-min':'-.3','--frame-max':'.3'}}).items():
+ for name,job in launch['train'].items():
+  envelope=job['envelope'].copy()
+  for key,value in overrides.items():
+   match=next((i for i,x in enumerate(envelope) if x.startswith(key+'=')),None)
+   if match is not None:envelope[match]=key+'='+str(value)
+   elif key in envelope:envelope[envelope.index(key)+1]=str(value)
+   else:envelope.extend([key,str(value)])
+  jobs.append((name,job,launch['iterations']-1,scope,envelope))
 if launch.get('heldout_seed') is not None:
  for name,job in launch['train'].items():
   envelope=job['envelope'].copy()
@@ -70,7 +74,7 @@ path.write_text(json.dumps(state,indent=2))
 summary=dict(failed=sum(x['status']!='complete' for x in state.values()),finished_at=time.strftime('%FT%T%z'),complete=sum(x['status']=='complete' for x in state.values()),expected=len(jobs))
 (out/'eval_finished.json').write_text(json.dumps(summary))
 if launch.get('thread') and shutil.which('codex'):
- message=f'upright_rl_demo完整循环批次{a.name}评估队列已结束。先读AGENTS.md、docs/current_handoff.md及本批设计/结果文档，核查该批launch_status/eval_status/eval_finished；按需读取docs/upright_training_lineage_20261023.md。先核查实际进程、缺失/失败和结果，再分析优化。不要重复启动；旧移动第五轮及之后夜间结果已废弃，不作优化来源（不指完整循环同号批次）；若受迫中断先继续当前轮；保留最新用户授权与约束，不能把队列结束当任务成功。'
+ message=f'upright_rl_demo完整循环批次{a.name}评估队列已结束。先读AGENTS.md、docs/current_handoff.md、docs/upright_stability_first_plan_20261026.md及本批设计/结果文档，核查该批launch_status/eval_status/eval_finished；按需读取docs/upright_training_lineage_20261023.md。先核查实际进程、缺失/失败和结果，再按稳定优先与基本遥控分析优化；旧瞬时精度不作为主要否决条件。用户已授权今晚事件驱动自动迭代，勿恢复周期定时器或goal。不要重复启动；旧移动第五轮及之后夜间结果已废弃，不作优化来源（不指完整循环同号批次）；若受迫中断先继续当前轮；保留最新用户授权与约束，不能把队列结束当任务成功。'
  try:
   r=subprocess.run([shutil.which('codex'),'queue','--thread',launch['thread'],'--message',message],capture_output=True,text=True,timeout=120);notice=dict(returncode=r.returncode,stdout=r.stdout,stderr=r.stderr)
  except Exception as e:notice=dict(submission_unknown=str(e))
