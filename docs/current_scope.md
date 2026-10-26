@@ -1,6 +1,6 @@
 # PetBot RL 功能demo：当前需求基线
 
-更新日期：2026-10-25。本文记录**已确认的需求与选型**，不记录安装配置或运行中进度。当前训练与评估入口见[交接页](current_handoff.md)，重要里程碑见[AGENTS.md](../AGENTS.md#进度报告文档主线)。本阶段仅迭代 upright；step 尚未启动，recovery 将另行设计。
+更新日期：2026-10-26。本文记录**已确认的需求与选型**，不记录安装配置或运行中进度。当前训练与评估入口见[交接页](current_handoff.md)，重要里程碑见[AGENTS.md](../AGENTS.md#进度报告文档主线)。本阶段仅迭代 upright；step 尚未启动，recovery 将另行设计。
 
 ## 三个功能demo与实施顺序（2026-10-20用户确认）
 

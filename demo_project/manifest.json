@@ -44,16 +44,18 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "fb6cfd031e029767538b8ce33adc5adcf23a6345",
+      "verified_commit": "03deaca07644e244040319df07ebfc1347fb5f1e",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "cycle16 stability-first candidate in GPU engineering acceptance; user resumed training and event-driven iteration",
-      "local_validation": "Cycle15 fb6cfd0 completed 12 training and60 evaluations. User now prioritizes stability and basic remote control over strict instantaneous precision. Candidate c6eacc6 passes CUDA reward/guard/transfer/JIT checks; PhysX short training and resource profiling in progress, no new formal batch yet. See docs/upright_cycle_v16.md and docs/current_handoff.md.",
+      "status": "cycle16 stability-first batch running; 9/9 PPO started; parallel evaluation and same-session exit hooks attached",
+      "local_validation": "Valid 2048/4096-env 20-update GPU training, frozen/learned state checks, clean checkpoint reload and PhysX substep checks passed. 8192/16384-env profiles and derived evaluations rejected for material limit; runtime physical-error guard enabled. Batch16 uses the same cycle15 B46/1199 parent for all9 runs, four paired seeds plus one lower-memory run, 24 scheduled evaluations. See docs/upright_cycle_v16.md and docs/current_handoff.md.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": []
+      "active_tasks": [
+        "upright_cycle_batch16"
+      ]
     },
     {
       "name": "step_rl_demo",
@@ -67,7 +69,7 @@
       ],
       "shallow": false,
       "status": "registered_placeholder_readme_only",
-      "local_validation": "Task goal only: lift the front wheels onto a 0–3cm step below rear-wheel radius, then accelerate to climb. No implementation or training. See README.md.",
+      "local_validation": "Task goal only: lift the front wheels onto a 0\u20133cm step below rear-wheel radius, then accelerate to climb. No implementation or training. See README.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
