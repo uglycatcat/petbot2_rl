@@ -15,7 +15,7 @@ p.add_argument('--tracking-shape',choices=['gaussian','cauchy'],default='gaussia
 p.add_argument('--tracking-weight',type=float,choices=[4.,6.,12.],default=12.)
 p.add_argument('--instant-tracking-weight',type=float,choices=[.3,.7],default=.3)
 p.add_argument('--tracking-objective',choices=['mixed','instant_tolerance','stability_first'],default='mixed')
-p.add_argument('--observation-frame',choices=['world','local'],default='world')
+p.add_argument('--observation-frame',choices=['world','local','balance_local'],default='world')
 p.add_argument('--balance-reflex',choices=['off','frozen20'],default='off')
 p.add_argument('--balance-noise-factor',type=float,choices=[1.,16.],default=1.)
 p.add_argument('--actor-normalization',choices=['inherited','rebase_recent'],default='inherited')
@@ -83,6 +83,7 @@ try:
     from upright.local_frame import LOCAL_FRAME_CONTRACT
     contract.update(observation_frame=args.observation_frame,local_frame=LOCAL_FRAME_CONTRACT)
     if args.observation_frame=='local':contract['observation_schema']='cycle_58x5_wheel_ground_local_v3'
+    if args.observation_frame=='balance_local':contract['observation_schema']='cycle_58x5_balance_local_v4'
     contract.update(stability=STABILITY_CONTRACT,functional=FUNCTIONAL_CONTRACT,workspace='3m_plus_speed_times_hold_and_transition_v1')
     if args.checkpoint:
         prior=json.loads((pathlib.Path(args.checkpoint).parent/'config.json').read_text())

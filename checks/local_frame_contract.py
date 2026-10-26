@@ -28,7 +28,19 @@ assert torch.allclose(local[:,31],(reference-yaw).sin(),atol=2e-6)
 assert torch.allclose(local[:,32],(reference-yaw).cos(),atol=2e-6)
 script=torch.jit.script(ground_frame_features)
 assert torch.equal(script(x,yaw,'local'),local)
+for phase in range(5):
+    sample=x.clone();sample[:,41:46]=0;sample[:,41+phase]=1;sample[:,48]=.6
+    encoded=ground_frame_features(sample,yaw,'balance_local')
+    if phase in (0,1):assert torch.equal(encoded,sample)
+    else:assert torch.equal(encoded,ground_frame_features(sample,yaw,'local'))
+sample=x.clone();sample[:,41:46]=0;sample[:,43]=1;sample[:,48]=.3
+assert torch.equal(ground_frame_features(sample,yaw,'balance_local'),sample)
+sample[:,48]=.375
+middle=ground_frame_features(sample,yaw,'balance_local')
+assert torch.equal(middle,ground_frame_features(sample,yaw*.5,'local'))
+assert torch.equal(script(sample,yaw,'balance_local'),middle)
 result=dict(passed=True,global_yaw_invariance=True,zero_heading_identity=True,
     preserved_body_and_task_features=True,zero_heading_amplitude_finite=True,
+    inherited_rise_exact=True,phase_transition=True,
     scripted=True,max_invariance_error=float((local-other).abs().max()))
 pathlib.Path(args.output).write_text(json.dumps(result,indent=2));print(result)
