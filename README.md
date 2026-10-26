@@ -10,7 +10,7 @@ PetBot2 的前轮抬起、后轮支撑、两轮遥控及前轮落地任务。训
 | [`train_moving.py`](train_moving.py) | [`upright/moving_task.py`](upright/moving_task.py) | 历史四轮行驶中接管和两轮遥控任务；保留旧实验复现入口。 |
 | [`train_cycle.py`](train_cycle.py) | [`upright/feedback_task.py`](upright/feedback_task.py) | 当前完整运动循环：实际行驶中接管、前轮抬起、以轮轴地面航向反馈的持续遥控、前轮落地、普通控制交接。 |
 
-三种入口的观测、模式和检查点契约不同；检查点只按其所属任务代码和固定版本加载。`upright/{moving,cycle,continuous}.py`提供各代任务状态机，`feedback_task.py`复用持续循环并添加转向反馈，`fast_feedback.py`提供20 ms或2 ms的有界转向内环，策略车架/共同轮速仍每60 ms更新；`ground_motion.py`定义轮轴地面航向；机身前向投影另作历史诊断，不与新坐标口径混用。`balance_adapter.py`提供冻结完整循环actor上的有界车架/共同轮速及独立转向修正，只在稳定两轮阶段启用；含独立JIT导出，ONNX尚未实现。`continuous.py`可显式选择混合运动或瞬时容差跟踪奖励，独立验收口径不随奖励选择改变。旧完整循环检查点及对应checks须在其固定提交运行；新入口仅支持显式父actor/critic迁移或同契约重载。正式实验在 `demo_project/runs/` 中建立固定提交的独立副本；**本目录是可维护源码，不只存最新一版，也不直接存正式训练检查点**。
+三种入口的观测、模式和检查点契约不同；检查点只按其所属任务代码和固定版本加载。`upright/{moving,cycle,continuous}.py`提供各代任务状态机，`feedback_task.py`复用持续循环并添加转向反馈，`fast_feedback.py`提供20 ms或2 ms的有界转向内环，外层策略仍每60 ms更新，`balance_reflex.py`可在稳定两轮段增加20 ms的冻结车架/共同轮速反馈；`ground_motion.py`定义轮轴地面航向；机身前向投影另作历史诊断，不与新坐标口径混用。`balance_adapter.py`提供冻结完整循环actor上的有界车架/共同轮速及独立转向修正，只在稳定两轮阶段启用；含独立JIT导出，ONNX尚未实现。`continuous.py`可显式选择混合运动或瞬时容差跟踪奖励，独立验收口径不随奖励选择改变。旧完整循环检查点及对应checks须在其固定提交运行；新入口仅支持显式父actor/critic迁移或同契约重载。正式实验在 `demo_project/runs/` 中建立固定提交的独立副本；**本目录是可维护源码，不只存最新一版，也不直接存正式训练检查点**。
 
 ## 工具与产物
 
@@ -44,4 +44,4 @@ PetBot2 的前轮抬起、后轮支撑、两轮遥控及前轮落地任务。训
 
 `train_cycle.py`支持`--balance-reflex off|frozen20`。主策略、五帧观察历史与PPO采样始终60 ms；`frozen20`仅在两轮阶段1.8秒之后，每20 ms用冻结父修正器更新车架/共同轮速。冻结控制器作为环境内部反馈随actor检查点保存，不随PPO更新；实际执行保留绝对限位和整60 ms变化率边界。起立、落地和普通控制交接不启用该反馈。
 
-部署必须同时保留外层actor和`actor.balance_reflex`（可独立`torch.jit.script`导出），以及相同历史缓存、阶段门控、目标约束和转向反馈；仅导出外层actor不能复现`frozen20`。固定父策略提频诊断入口`tools/probe_balance_cadence.py`只用于确定性评估，不能用作PPO训练入口。
+部署必须同时保留外层actor和`actor.balance_reflex`（可独立`torch.jit.script`导出），以及相同历史缓存、阶段门控、目标约束和转向反馈；仅导出外层actor不能复现`frozen20`。固定父策略提频诊断入口`tools/probe_balance_cadence.py`只用于确定性评估，不能用作PPO训练入口；第十四批诊断复现使用95dded7固定副本。
