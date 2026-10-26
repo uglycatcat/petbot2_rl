@@ -49,13 +49,11 @@
         "demo"
       ],
       "shallow": false,
-      "status": "cycle16 stability-first batch running; 9/9 PPO started; parallel evaluation and same-session exit hooks attached",
-      "local_validation": "Valid 2048/4096-env 20-update GPU training, frozen/learned state checks, clean checkpoint reload and PhysX substep checks passed. 8192/16384-env profiles and derived evaluations rejected for material limit; runtime physical-error guard enabled. Batch16 uses the same cycle15 B46/1199 parent for all9 runs, four paired seeds plus one lower-memory run, 24 scheduled evaluations. See docs/upright_cycle_v16.md and docs/current_handoff.md.",
+      "status": "cycle16 complete: 9 training and24 evaluations; cycle17 local-frame diagnostic and GPU gate in progress",
+      "local_validation": "Cycle16 long heldout paired handoff A213/B210 of256, basic remote A207/B206; no consistent stability-first reward gain. Frozen controllers preserved and learned adapters updated; scalar logs finite, no PhysX errors. Candidate ace46f7 adds local observation frame; metamorphic CUDA and exact actor transfer pass, physical probes and short training pending. See docs/upright_cycle_batch16_results.md and docs/upright_cycle_v17.md.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [
-        "upright_cycle_batch16"
-      ]
+      "active_tasks": []
     },
     {
       "name": "step_rl_demo",
