@@ -37,7 +37,7 @@ A/B终局独立30秒结果（各384）：交接381/382、平衡合格380/381、�
 1. 先读根目录[AGENTS.md](../AGENTS.md)与本页，尊重暂停边界；重复送达完成通知也不得恢复训练。
 2. 讨论效果读[第十五批结果](upright_cycle_batch15_results.md)。结果把流程、平衡、分轴/联合跟踪、长时失败和范围边界分开报告。
 3. 证据在`runs/_upright_cycle_batch15/`：launch_status、eval_status、eval_finished、verification、quality_review、paired_review、continuous_response_review、category_summary、failure_review、scalars_final、adapter_runtime_seed42–47，以及逐项exit/config/evaluation/trace。没有缺失项待恢复。
-4. 当前任务未达标。待用户讨论并明确恢复后，再决定调整方向和实施方案；本次没有更改验收标准、生产代码或启动新实验。
+4. 当前任务未达标。待用户讨论并明确恢复后，再决定调整方向和实施方案；本次没有更改验收标准、生产代码或启动新实验。 路线评估与待讨论建议见[方向评估](upright_cycle_batch15_results.md#调整方向评估待讨论未实施)，未形成新实施授权。
 
 | 问题 | 阅读入口 |
 |---|---|
