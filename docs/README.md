@@ -9,8 +9,10 @@
 | repo、容器与版本管理 | [工程说明](engineering_handoff.md)的管理章节；[demo 索引](../demo_project/README.md)。工程说明其余训练接口主要为历史 recovery 原型。 |
 | 静止、旧移动、修复重建、完整循环的父子关系 | [训练谱系](upright_training_lineage_20261023.md) |
 | 第六版同配置续长的方案与终局 | [长训方案](upright_cycle_v6_long.md)、[长训终局](upright_cycle_batch6_long_results.md)及[原第六批终局](upright_cycle_batch6_results.md) |
-| 第十五批终局与当前暂停边界 | [第十五批结果](upright_cycle_batch15_results.md)、[当前交接](current_handoff.md) |
+| 第十五批终局与当前执行边界 | [第十五批结果](upright_cycle_batch15_results.md)、[当前交接](current_handoff.md) |
 | 瞬时联合0%的含义、平衡波动与遥控验收 | [验收口径复核](upright_tracking_acceptance_review_20261026.md)，分析建议，未变更正式标准 |
+| 放宽精度、两轮不跌倒优先的最新需求与改法 | [稳定优先方案](upright_stability_first_plan_20261026.md)，已获实施与训练授权，状态见交接 |
+| 稳定优先版本与新功能验收 | [第十六版](upright_cycle_v16.md)；部署状态见[交接](current_handoff.md) |
 | 稳定两轮局部反馈设计与验收 | [第十五版](upright_cycle_v15.md) |
 | 第十四批完整结果与后续诊断 | [第十四批终局](upright_cycle_batch14_results.md) |
 | 转向内环周期/增益对照 | [第十四版](upright_cycle_v14.md)，实际状态见[交接](current_handoff.md) |

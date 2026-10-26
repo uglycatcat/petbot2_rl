@@ -49,8 +49,8 @@
         "demo"
       ],
       "shallow": false,
-      "status": "cycle15 complete; iteration paused by explicit user request pending discussion; task quality not achieved",
-      "local_validation": "Cycle15 fixed fb6cfd0:12 training runs to1199 and60 evaluations complete with exit0, no missing or guard stops. Frozen base/statistics/inner controller exact; trainable refinements updated; scalar and artifact checks passed. Independent30-second A/B handoff381/382 of384, forward passes45/207, yaw passes72/84, joint0/0; B forward MAE improves13.7%, yaw1.2%. All batch processes exited; no new batch authorized. See docs/upright_cycle_batch15_results.md.",
+      "status": "cycle16 stability-first candidate in GPU engineering acceptance; user resumed training and event-driven iteration",
+      "local_validation": "Cycle15 fb6cfd0 completed 12 training and60 evaluations. User now prioritizes stability and basic remote control over strict instantaneous precision. Candidate c6eacc6 passes CUDA reward/guard/transfer/JIT checks; PhysX short training and resource profiling in progress, no new formal batch yet. See docs/upright_cycle_v16.md and docs/current_handoff.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
@@ -67,7 +67,7 @@
       ],
       "shallow": false,
       "status": "registered_placeholder_readme_only",
-      "local_validation": "Task goal only: lift the front wheels onto a 0\u20133cm step below rear-wheel radius, then accelerate to climb. No implementation or training. See README.md.",
+      "local_validation": "Task goal only: lift the front wheels onto a 0–3cm step below rear-wheel radius, then accelerate to climb. No implementation or training. See README.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []

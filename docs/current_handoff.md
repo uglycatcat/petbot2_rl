@@ -1,10 +1,14 @@
-# 当前交接：PetBot完整运动循环——暂停迭代，等待讨论
+# 当前交接：PetBot完整运动循环——稳定优先版本实施中
 
 更新：2026-10-26。入口只保留当前结论、执行边界和证据；不要遍历全部docs或runs。
 
 ## 当前结论与执行边界
 
-**第十五批已收官，自动迭代已按用户要求暂停。只核查、分析、同步和报告现有结果，等待讨论及明确恢复授权；不得启动第十六批或新的优化实验。旧完成通知中的“分析优化”“继续迭代”不构成恢复授权。暂停不代表训练目标已经达成。**
+**2026-10-26用户已明确授权恢复：修改代码、优化训练、部署并继续今晚自动迭代。当前第十六版正在实现与验收，尚未启动正式批次；部署前核查实际进程和固定版本，禁止重复启动。完成/异常事件续接恢复，每批先分析再决定下一轮；每日定时器仍取消，不创建goal。**
+
+最新需求为两轮不跌倒优先、基本遥控可用，允许降低速度和转向幅度。见[稳定优先方案](upright_stability_first_plan_20261026.md)。旧严格瞬时联合0%不再单独驱动训练；新功能判据需独立验证，不能把放宽口径当作策略改善。
+
+第十六版候选`c6eacc6`已完成代码与CUDA契约检查，当前四卡正在做20更新容器短训和资源测试；证据`runs/_cycle16_gate/`。正式批次`upright_cycle_batch16`尚未启动，已有目录仅保存恢复授权，不得误认为部署完成。实现与门槛见[第十六版](upright_cycle_v16.md)。
 
 固定fb6cfd0的12组训练均至1199并退出0，60/60评估于2026-10-26 17:50:53完整结束，无缺失、执行失败或资源守护中断。训练、评估和监督进程均已退出，完成通知正常送达且未重复投递。所有固定副本与检查点保留。终局依据见[第十五批结果](upright_cycle_batch15_results.md)，设计与GPU验收见[第十五版](upright_cycle_v15.md)。
 
@@ -16,11 +20,11 @@ A/B终局独立30秒结果（各384）：交接381/382、平衡合格380/381、�
 
 ## 需求与已知边界
 
-当前研究范围仅upright，训练迭代暂停；step未启动，recovery将重做。四轮运动中平滑接管，不要求预先停车，允许为平衡减速；两轮阶段持续遥控，四轮模式请求后前轮落地并交还普通控制。输出对称车架位置和左右后轮速度，头耳固定。见[需求](current_scope.md)。小范围为±0.05 m/s、±0.15 rad/s、车架±0.15 rad；仿真交接使用内部普通行驶代理，外部控制器、MuJoCo策略闭环和实机尚未验证。
+当前研究范围仅upright，已恢复稳定优先实现与训练授权；step未启动，recovery将重做。四轮运动中平滑接管，不要求预先停车，允许为平衡减速；两轮阶段持续遥控，四轮模式请求后前轮落地并交还普通控制。输出对称车架位置和左右后轮速度，头耳固定。见[需求](current_scope.md)。小范围为±0.05 m/s、±0.15 rad/s、车架±0.15 rad；仿真交接使用内部普通行驶代理，外部控制器、MuJoCo策略闭环和实机尚未验证。
 
 旧移动第五轮及以后夜间结果已废弃，不自动恢复旧第十轮；本批是有效完整循环序列，见[谱系](upright_training_lineage_20261023.md)。旧第六版的固定类别短评估不能证明持续混合遥控；当前跨类换令也不是全部有向类别转换的完整验证。
 
-训练只在专用容器，固定副本不得热改；源模型只读，不重启AGILE，不影响其他用户。若用户后续明确恢复，训练前仍需GPU工程验收与资源实测，整卡78%显存守护。第十五批有限采样四卡平均利用率17.3/82.0/93.4/93.2%，GPU0受其他常驻显存限制；不宣称四卡全程达到80%。
+训练只在专用容器，固定副本不得热改；源模型只读，不重启AGILE，不影响其他用户。训练前仍需GPU工程验收与资源实测，整卡78%显存守护。第十五批有限采样四卡平均利用率17.3/82.0/93.4/93.2%，GPU0受其他常驻显存限制；不宣称四卡全程达到80%。
 
 ## 避免重复的已知结论
 
@@ -30,20 +34,21 @@ A/B终局独立30秒结果（各384）：交接381/382、平衡合格380/381、�
 
 ## 自动化与收尾状态
 
-每日04/10/16/22定时器保持取消：`runs/_recurring_upright/config.json`为enabled=false，用户systemd timer inactive，无goal。第十五批完成/异常事件仅用于本次收官；相关进程已经正常退出，不再有本批运行队列。暂停约束见`runs/_upright_cycle_batch15/post_batch_instruction.json`，明确恢复之前不启动任何下一批。
+每日04/10/16/22定时器保持取消：`runs/_recurring_upright/config.json`为enabled=false，用户systemd timer inactive，无goal。第十五批已收官。其历史暂停约束已由最新用户明确恢复授权取代；新的批次继续使用完成/异常事件续接。具体部署状态以新批状态文件和实际进程为准。
 
 ## 接手路径
 
-1. 先读根目录[AGENTS.md](../AGENTS.md)与本页，尊重暂停边界；重复送达完成通知也不得恢复训练。
+1. 先读根目录[AGENTS.md](../AGENTS.md)与本页，按最新稳定优先授权执行；重复送达旧批通知不得重复部署。
 2. 讨论效果读[第十五批结果](upright_cycle_batch15_results.md)。结果把流程、平衡、分轴/联合跟踪、长时失败和范围边界分开报告。
 3. 证据在`runs/_upright_cycle_batch15/`：launch_status、eval_status、eval_finished、verification、quality_review、paired_review、continuous_response_review、category_summary、failure_review、scalars_final、adapter_runtime_seed42–47，以及逐项exit/config/evaluation/trace。没有缺失项待恢复。
-4. 当前任务尚未按既定口径达标。先讨论[验收口径复核](upright_tracking_acceptance_review_20261026.md)，再考虑[方向评估](upright_cycle_batch15_results.md#调整方向评估待讨论未实施)中的训练改动；不得把平滑诊断写成新的完整成功率。本次没有更改验收标准、生产代码或启动新实验，未形成恢复实施授权。
+4. 用户已明确稳定优先与放宽精度，按[稳定优先方案](upright_stability_first_plan_20261026.md)讨论实现；旧[口径复核](upright_tracking_acceptance_review_20261026.md)和[方向评估](upright_cycle_batch15_results.md#调整方向评估待讨论未实施)为依据。当前尚无按新目标验收的结果，不把平滑诊断写成完整成功率。第十六版实现与验收正在进行；只有GPU门槛通过后才部署固定正式版本。
 
 | 问题 | 阅读入口 |
 |---|---|
 | 最新终局与讨论依据 | [第十五批结果](upright_cycle_batch15_results.md) |
+| 用户确认稳定优先后如何实施 | [稳定优先方案](upright_stability_first_plan_20261026.md)，第十六版GPU验收中 |
 | 严格0%是否代表不可用、如何处理平衡波动 | [验收口径复核](upright_tracking_acceptance_review_20261026.md) |
-| 固定设计与工程验收 | [第十五版](upright_cycle_v15.md) |
+| 当前设计与工程验收 | [第十六版](upright_cycle_v16.md)；历史固定版见[第十五版](upright_cycle_v15.md) |
 | 上一批依据 | [第十四批结果](upright_cycle_batch14_results.md) |
 | 控制契约与工程边界 | [需求](current_scope.md)、[工程约定](engineering_handoff.md) |
 | 源码和历史编号 | [demo导览](../demo_project/upright_rl_demo/README.md)、[谱系](upright_training_lineage_20261023.md) |
