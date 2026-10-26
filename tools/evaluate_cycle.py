@@ -16,11 +16,19 @@ if a.resume:
   if v['status']=='complete':
    validate(v['result']);state[k]=v
  path.write_text(json.dumps(state,indent=2))
+def diagnostic_envelope(job):
+ envelope=job['envelope'].copy()
+ if launch.get('diagnostic_hold_seconds'):
+  for key in ('--hold-min','--hold-max'):
+   if key in envelope:envelope[envelope.index(key)+1]=str(launch['diagnostic_hold_seconds'])
+   else:envelope.extend([key,str(launch['diagnostic_hold_seconds'])])
+ return envelope
 for iteration in launch['checkpoints']:
- for name,job in launch['train'].items():jobs.append((name,job,iteration,'native',job['envelope']))
+ for name,job in launch['train'].items():jobs.append((name,job,iteration,'native',diagnostic_envelope(job)))
 for scope,overrides in launch.get('evaluation_envelopes',{'common':{'--speed-limit':'.1','--yaw-limit':'.3','--frame-min':'-.3','--frame-max':'.3'}}).items():
  for name,job in launch['train'].items():
-  envelope=job['envelope'].copy()
+  if name not in launch.get('range_evaluation_runs',launch['train']):continue
+  envelope=diagnostic_envelope(job)
   for key,value in overrides.items():
    match=next((i for i,x in enumerate(envelope) if x.startswith(key+'=')),None)
    if match is not None:envelope[match]=key+'='+str(value)
@@ -36,12 +44,30 @@ if launch.get('heldout_seed') is not None:
     else:envelope.extend([key,str(launch['heldout_hold_seconds'])])
   jobs.append((name,job,launch['iterations']-1,'heldout',envelope))
 deadline=time.time()+36*3600
-while time.time()<deadline:
+running={}
+parallelism=launch.get('eval_parallelism',1)
+if not 1<=parallelism<=4:raise ValueError('Invalid evaluation parallelism')
+while time.time()<deadline or running:
+ for key,active in list(running.items()):
+  code=active['process'].poll()
+  if code is None:continue
+  result=out/f'eval_{key}/evaluation.json'
+  state[key].update(status='complete' if code==0 and result.exists() else 'failed',exit_code=code,finished_at=time.strftime('%FT%T%z'))
+  if result.exists():
+   try:
+    if result.stat().st_mtime<active['started']:raise ValueError('Stale evaluation artifact')
+    state[key]['result']=validate(json.loads(result.read_text()))
+   except (ValueError,KeyError,TypeError) as error:
+    state[key].update(status='failed',validation_error=str(error))
+  del running[key]
+  path.write_text(json.dumps(state,indent=2))
  pending=False
  for name,job,iteration,scope,envelope in jobs:
   key=f'{name}_i{iteration}_{scope}'
   if state.get(key,{}).get('status') in ('complete','failed','missing_checkpoint'):continue
-  pending=True;checkpoint=root/f'demo_project/runs/{name}/logs/{name}/model_{iteration}.pt'
+  pending=True
+  if key in running or len(running)>=parallelism or time.time()>=deadline:continue
+  checkpoint=root/f'demo_project/runs/{name}/logs/{name}/model_{iteration}.pt'
   # Recovery may re-save its starting iteration; retain the pre-interruption checkpoint identity.
   preserved=out/launch.get('recovery_archive','_no_recovery')/name/f'model_{iteration}.pt'
   if preserved.exists():checkpoint=preserved
@@ -52,20 +78,15 @@ while time.time()<deadline:
   if time.time()-checkpoint.stat().st_mtime<30:continue
   rows=subprocess.check_output(['nvidia-smi','--query-gpu=index,memory.total,memory.used','--format=csv,noheader,nounits'],text=True)
   mem={int(i):(int(t),int(u)) for i,t,u in (x.split(',') for x in rows.splitlines())}
-  gpu=next((i for i in (2,3,1) if i not in launch.get('excluded_gpus',[]) and mem[i][1]+eval_reserve<mem[i][0]*.78),None)
+  gpu=next((i for i in (2,3,1,0) if i not in launch.get('excluded_gpus',[]) and i not in [v['gpu'] for v in running.values()] and mem[i][1]+eval_reserve<mem[i][0]*.78),None)
   if gpu is None:continue
   state[key]=dict(status='running',gpu=gpu,envelope=envelope,started_at=time.strftime('%FT%T%z'));path.write_text(json.dumps(state,indent=2))
   cmd=['python3',str(pathlib.Path(__file__).with_name('run_guarded.py')),'--container',launch['container'],'--gpu',str(gpu),'--reserve-mib',str(eval_reserve),'--entrypoint','train_cycle.py','--workdir',f'/workspace/runs/{name}','--log',str(out/f'eval_{key}.log'),'--headless','--device','cuda:0','--num_envs','64','--evaluate','--seed',str(launch['heldout_seed'] if scope=='heldout' else (20261019 if scope=='native' else 20261020)),*envelope,'--checkpoint','/workspace/runs/'+str(checkpoint.relative_to(root/'demo_project/runs')),'--log_dir',f'/workspace/runs/_{a.name}/eval_{key}']
-  started=time.time();code=subprocess.run(cmd).returncode;result=out/f'eval_{key}/evaluation.json'
-  state[key].update(status='complete' if code==0 and result.exists() else 'failed',exit_code=code,finished_at=time.strftime('%FT%T%z'))
-  if result.exists():
-   try:
-    if result.stat().st_mtime < started:raise ValueError('Stale evaluation artifact')
-    state[key]['result']=validate(json.loads(result.read_text()))
-   except (ValueError,KeyError,TypeError) as error:
-    state[key].update(status='failed',validation_error=str(error))
+  started=time.time();proc=subprocess.Popen(cmd)
+  running[key]=dict(process=proc,gpu=gpu,started=started)
+  state[key].update(pid=proc.pid,command=cmd)
   path.write_text(json.dumps(state,indent=2))
- if not pending:break
+ if not pending and not running:break
  time.sleep(15)
 for name,job,iteration,scope,envelope in jobs:
  key=f'{name}_i{iteration}_{scope}'

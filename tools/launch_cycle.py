@@ -1,6 +1,7 @@
 """Launch an explicit, gated fixed-version experiment; no automatic design decisions."""
-import argparse,fcntl,json,os,pathlib,shutil,subprocess,time
+import argparse,fcntl,hashlib,json,os,pathlib,shutil,subprocess,time
 from cycle_evaluation_contract import validate
+from physics_log import PhysicsLogReader
 ROOT=pathlib.Path(__file__).resolve().parents[3]
 RUNS=ROOT/'demo_project/runs';SOURCE=ROOT/'demo_project/upright_rl_demo'
 def save(path,data):
@@ -24,16 +25,24 @@ def main():
     if gate['commit']!=commit or not gate['passed']:raise RuntimeError('Gate does not match release')
     tested=gate.get('tested_commit',gate['commit'])
     if subprocess.check_output(['git','-C',str(SOURCE),'diff',tested,commit,'--','train_cycle.py','upright'],text=True):raise RuntimeError('Task changed since gate')
+    smoke_hashes=set()
     for evidence in gate['smokes']:
         folder=ROOT/evidence['folder']
+        if PhysicsLogReader(folder.with_suffix('.log')).check():raise RuntimeError('PhysX error in smoke evidence')
         metadata=json.loads((folder/'config.json').read_text())
         metrics=json.loads((ROOT/evidence['scalars']).read_text())
         if metadata['working_tree_dirty'] or metadata['contract']['fingerprint']!=gate['fingerprint']:raise RuntimeError('Smoke source mismatch')
         if subprocess.check_output(['git','-C',str(SOURCE),'diff',metadata['commit'],commit,'--','train_cycle.py','upright'],text=True):raise RuntimeError('Smoke task source changed')
-        if not (folder/evidence.get("checkpoint",f"model_{evidence['iterations']-1}.pt")).is_file():raise RuntimeError('Incomplete smoke')
+        checkpoint=folder/evidence.get("checkpoint",f"model_{evidence['iterations']-1}.pt")
+        if not checkpoint.is_file():raise RuntimeError('Incomplete smoke')
+        smoke_hashes.add(hashlib.sha256(checkpoint.read_bytes()).hexdigest())
         if not metrics or not all(tags and all(v['finite'] for v in tags.values()) for tags in metrics.values()):raise RuntimeError('Nonfinite smoke')
     for evidence in gate['evaluations']:
         f=ROOT/evidence['path'];data=json.loads(f.read_text());validate(data)
+        if PhysicsLogReader(f.parent.with_suffix('.log')).check():raise RuntimeError('PhysX error in evaluation evidence')
+        evaluation_meta=json.loads((f.parent/'config.json').read_text())
+        evaluated_checkpoint=RUNS/pathlib.Path(evaluation_meta['args']['checkpoint']).relative_to('/workspace/runs')
+        if hashlib.sha256(evaluated_checkpoint.read_bytes()).hexdigest() not in smoke_hashes:raise RuntimeError('Evaluation did not reload an accepted smoke checkpoint')
         if data['contract']['fingerprint']!=gate['fingerprint']:raise RuntimeError('Gate fingerprint mismatch')
         if data['takeover']!=64 or data['unfinished']:raise RuntimeError('Gate coverage failure')
         if data['balance']<evidence.get('min_balance',1):raise RuntimeError('No balance reached in gate')
@@ -44,6 +53,7 @@ def main():
     for evidence in gate.get('resume_checks',[]):
         if not json.loads((ROOT/evidence).read_text()).get('passed'):raise RuntimeError('Resume state gate failed')
     variants=plan['variants']
+    if any(not 1<=v['envs']<=4096 for v in variants):raise RuntimeError('Unvalidated environment count; PetBot per-process maximum4096')
     if {v['gpu'] for v in variants}!={0,1,2,3}:raise RuntimeError('Four-GPU plan required')
     if len({v['run'] for v in variants})!=len(variants):raise RuntimeError('Duplicate run names')
     mem=usage();reservations={i:0 for i in range(4)}
@@ -58,7 +68,10 @@ def main():
         if used+reserve>=total*.78:raise RuntimeError(f'GPU{gpu} capacity insufficient: {used}+{reserve} >= {total*.78}')
     state=dict(eval_reserve_mib=plan.get('eval_reserve_mib',6000),name=plan['name'],expected_train=len(variants),commit=commit,container=plan['container'],thread=os.environ.get('CODEX_THREAD_ID'),iterations=plan['iterations'],checkpoints=plan['checkpoints'],heldout_seed=plan.get('heldout_seed'),train={},gate=gate,resource_plan=reservations,started_at=time.strftime('%FT%T%z'))
     state['heldout_hold_seconds']=plan.get('heldout_hold_seconds')
+    state['eval_parallelism']=plan.get('eval_parallelism',1)
+    state['diagnostic_hold_seconds']=plan.get('diagnostic_hold_seconds')
     if 'evaluation_envelopes' in plan:state['evaluation_envelopes']=plan['evaluation_envelopes']
+    if 'range_evaluation_runs' in plan:state['range_evaluation_runs']=plan['range_evaluation_runs']
     # Materialize all fixed copies before launching any training.
     for v in variants:
         dst=RUNS/v['run'];subprocess.run(['git','clone','--no-local',str(SOURCE),str(dst)],env={**os.environ,'GIT_LFS_SKIP_SMUDGE':'1'},check=True,stdout=subprocess.DEVNULL)
@@ -79,25 +92,24 @@ def main():
         initial=pathlib.Path(v['initial']).relative_to('demo_project/runs')
         cmd=['python3',str(dst/'tools/run_guarded.py'),'--container',plan['container'],'--gpu',str(v['gpu']),'--reserve-mib',str(v.get('start_reserve_mib',v['reserve_mib'])),'--workdir','/workspace/runs/'+v['run'],'--entrypoint','train_cycle.py','--log',str(out/(v['run']+'.log')),'--headless','--device','cuda:0','--num_envs',str(v['envs']),'--iterations',str(plan['iterations']-v.get('initial_iteration',0)),'--save-interval',str(plan['save_interval']),'--learning-rate',str(plan['learning_rate']),'--seed',str(v['seed']),plan.get('initialization_flag','--initialize-from'),'/workspace/runs/'+str(initial),'--log_dir','/workspace/runs/'+v['run']+'/logs/'+v['run'],*envelope]
         # Never refill capacity freed by a failed earlier job.
+        capacity_deadline=time.monotonic()+900
         while True:
-            for prior_run,prior_proc,_ in starting:
+            for prior_run,prior_proc,prior_deadline in starting:
                 if prior_proc.poll() is not None and prior_proc.returncode!=0:raise RuntimeError('Earlier job interrupted: '+prior_run)
+                prior_log=out/(prior_run+'.log')
+                if prior_log.exists() and 'Learning iteration' in prior_log.read_text(errors='replace'):
+                    state['train'][prior_run]['status']='ppo_started'
+                elif time.monotonic()>prior_deadline:raise RuntimeError('Startup timeout: '+prior_run)
+            # Different GPUs can initialize together; same-GPU allocations wait for verified PPO.
+            pending_same_gpu=any(j['gpu']==v['gpu'] and j['status']!='ppo_started' for j in state['train'].values())
             total,used,_=usage()[v['gpu']]
-            if used+v.get('start_reserve_mib',v['reserve_mib'])<total*.78:break
-            time.sleep(5)
+            if not pending_same_gpu and used+v.get('start_reserve_mib',v['reserve_mib'])<total*.78:break
+            if time.monotonic()>capacity_deadline:raise RuntimeError('Capacity/startup wait expired: '+v['run'])
+            save(out/'launch_status.json',state)
+            time.sleep(2)
         with (out/(v['run']+'_guard.log')).open('w') as f:proc=subprocess.Popen(cmd,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
         state['train'][v['run']]=dict(pid=proc.pid,gpu=v['gpu'],envelope=envelope,command=cmd,status='initializing',num_envs=v['envs']);save(out/'launch_status.json',state)
         starting.append((v['run'],proc,time.monotonic()+900))
-        # Wait for this allocation/PPO before another launch.
-        deadline=time.monotonic()+900
-        while True:
-            for prior_run,prior_proc,_ in starting:
-                if prior_proc.poll() is not None and prior_proc.returncode!=0:raise RuntimeError('Earlier job interrupted: '+prior_run)
-            log=out/(v['run']+'.log')
-            if log.exists() and 'Learning iteration' in log.read_text(errors='replace'):break
-            if time.monotonic()>deadline:raise RuntimeError('Startup timeout')
-            time.sleep(2)
-        state['train'][v['run']]['status']='ppo_started';save(out/'launch_status.json',state)
     while starting:
         for run,proc,deadline in list(starting):
             if proc.poll() is not None and proc.returncode!=0:raise RuntimeError(f'{run} exited before PPO verification; inspect partial launch')
