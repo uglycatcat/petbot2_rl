@@ -19,6 +19,7 @@ PetBot2 的前轮抬起、后轮支撑、两轮遥控及前轮落地任务。训
 | `tools/launch_cycle.py`、`tools/evaluate_cycle.py`、`tools/watch_cycle_jobs.py` | 完整循环批次的固定版本部署、独立评估与进程监视；启动前核查已有状态，避免重复启动。 |
 | `tools/run_guarded.py` | 宿主机显存守护与容器训练编排。 |
 | `tools/watch_cycle_evaluation.py` | 单批评估进程退出事件监督；已有完成通知则不重复，异常退出时向原会话排队，禁止自行重启训练。 |
+| `tools/watch_existing_gate.py` | 为已经启动的工程验收进程接入一次性完成/异常续接；核对PID身份，不启动或重试仿真，进程正常退出仍需agent核查结果。 |
 | `tools/evaluate_candidates.py` | 按固定计划只做候选验证；支持原检查点或未经PPO更新的显式父策略迁移，核对源码/检查点哈希并保留完成/异常事件，不启动训练。 |
 | `tools/export_cycle_policy.py` | 从已完成的固定策略评估导出外层actor和冻结内部反馈、哈希及控制契约，并做CUDA重载一致性检查；网络包不包含完整控制器，不能视为MuJoCo闭环验证。 |
 | `tools/probe_landing_state.py` | 在原评估循环中记录复位前的车架关节、落地目标与地面保持计时；新增诊断必须先对照原轨迹，不能以增加记录替代任务验证。 |
