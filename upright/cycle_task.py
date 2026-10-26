@@ -122,7 +122,9 @@ def observations(env):
         p.raw,p.command,s['pos'][:,:2]-p.reference,s['pos'][:,:2]-p.raw_reference,
         torch.stack((p.raw_yaw.sin(),p.raw_yaw.cos()),-1),a.applied,
         p.active[:,None].float(),p.since[:,None]/12,p.peak[:,None],p.support_run[:,None].clamp(max=1),p.frame[:,None]),-1)
-    return torch.cat((base,torch.nn.functional.one_hot(p.phase,num_classes=5).float(),p.requested_mode[:,None],p.destination[:,None],p.phase_time[:,None]/4),-1)
+    features=torch.cat((base,torch.nn.functional.one_hot(p.phase,num_classes=5).float(),p.requested_mode[:,None],p.destination[:,None],p.phase_time[:,None]/4),-1)
+    from .local_frame import ground_frame_features
+    return ground_frame_features(features,s['yaw'],getattr(env.cfg,'observation_frame','world'))
 
 
 def reward(env,kind):
@@ -200,6 +202,7 @@ class CycleEnvCfg(UprightEnvCfg):
     yaw_filter_tau:float=0.
     tracking_shape:str='gaussian'
     feedback_mode:str='command'
+    observation_frame:str='world'
     wheel_slew:float=120.
     frame_slew:float=3.
     wheel_mode:str='independent'

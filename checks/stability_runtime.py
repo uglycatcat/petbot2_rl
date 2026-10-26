@@ -5,7 +5,7 @@ p=argparse.ArgumentParser();p.add_argument('folders',nargs='+');p.add_argument('
 runs={}
 for name in args.folders:
     folder=pathlib.Path(name);meta=json.loads((folder/'config.json').read_text())
-    assert not meta['working_tree_dirty'] and meta['contract']['task']=='upright_cycle_v16'
+    assert not meta['working_tree_dirty'] and meta['contract']['task']in ('upright_cycle_v16','upright_cycle_v17')
     initial=pathlib.Path(meta['args']['initialize_cycle_from'])
     parent=torch.load(initial,map_location='cpu',weights_only=False)
     iteration=meta['args']['iterations']-1

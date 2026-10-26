@@ -1,4 +1,4 @@
-"""CUDA exact v15 full actor transfer, frozen reflex, gradients, phase isolation and JIT."""
+"""CUDA exact v16 full actor transfer, frozen reflex, gradients, phase isolation and JIT."""
 import argparse,copy,importlib.util,json,pathlib,sys
 import torch
 from tensordict import TensorDict
@@ -11,9 +11,9 @@ p=argparse.ArgumentParser();p.add_argument('checkpoint');p.add_argument('--outpu
 assert torch.cuda.is_available();device='cuda:0';torch.manual_seed(13)
 checkpoint=pathlib.Path(args.checkpoint);saved=torch.load(checkpoint,map_location=device,weights_only=False)
 metadata=json.loads((checkpoint.parent/'config.json').read_text())
-assert metadata['contract']['task']=='upright_cycle_v15' and metadata['contract']['balance_noise_factor']==16.
-assert metadata['commit']=='fb6cfd031e029767538b8ce33adc5adcf23a6345'
-spec=importlib.util.spec_from_file_location('upright.balance_reflex_v15_reference',checkpoint.parents[2]/'upright/balance_reflex.py')
+assert metadata['contract']['task']=='upright_cycle_v16' and metadata['contract']['balance_noise_factor']==16.
+assert metadata['commit']=='03deaca07644e244040319df07ebfc1347fb5f1e'
+spec=importlib.util.spec_from_file_location('upright.balance_reflex_v16_reference',checkpoint.parents[2]/'upright/balance_reflex.py')
 reference=importlib.util.module_from_spec(spec);spec.loader.exec_module(reference)
 parent=saved['actor_state_dict'];recent=saved['critic_state_dict']
 raw=recent['obs_normalizer._mean']+torch.randn(1024,290,device=device)*(recent['obs_normalizer._std']+.01)

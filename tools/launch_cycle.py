@@ -89,6 +89,7 @@ def main():
         if 'balance_reflex' in v:envelope+=['--balance-reflex',v['balance_reflex']]
         if 'balance_noise_factor' in v:envelope+=['--balance-noise-factor',str(v['balance_noise_factor'])]
         if 'tracking_objective' in v:envelope+=['--tracking-objective',v['tracking_objective']]
+        if 'observation_frame' in v:envelope+=['--observation-frame',v['observation_frame']]
         initial=pathlib.Path(v['initial']).relative_to('demo_project/runs')
         cmd=['python3',str(dst/'tools/run_guarded.py'),'--container',plan['container'],'--gpu',str(v['gpu']),'--reserve-mib',str(v.get('start_reserve_mib',v['reserve_mib'])),'--workdir','/workspace/runs/'+v['run'],'--entrypoint','train_cycle.py','--log',str(out/(v['run']+'.log')),'--headless','--device','cuda:0','--num_envs',str(v['envs']),'--iterations',str(plan['iterations']-v.get('initial_iteration',0)),'--save-interval',str(plan['save_interval']),'--learning-rate',str(plan['learning_rate']),'--seed',str(v['seed']),plan.get('initialization_flag','--initialize-from'),'/workspace/runs/'+str(initial),'--log_dir','/workspace/runs/'+v['run']+'/logs/'+v['run'],*envelope]
         # Never refill capacity freed by a failed earlier job.
