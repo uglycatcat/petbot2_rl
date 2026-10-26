@@ -72,6 +72,7 @@ def main():
         if 'yaw_feedback_design' in v:envelope+=['--yaw-feedback-design',v['yaw_feedback_design']]
         if 'yaw_feedback_gain' in v:envelope+=['--yaw-feedback-gain',str(v['yaw_feedback_gain'])]
         if 'actor_normalization' in v:envelope+=['--actor-normalization',v['actor_normalization']]
+        if 'balance_reflex' in v:envelope+=['--balance-reflex',v['balance_reflex']]
         if 'balance_noise_factor' in v:envelope+=['--balance-noise-factor',str(v['balance_noise_factor'])]
         if 'tracking_objective' in v:envelope+=['--tracking-objective',v['tracking_objective']]
         initial=pathlib.Path(v['initial']).relative_to('demo_project/runs')

@@ -13,6 +13,13 @@ for name in args.folders:
     if 'yaw_adapter.4.weight' in prior:
         assert any(not torch.equal(actor[k],v) for k,v in prior.items() if k.startswith('yaw_adapter.'))
     assert all(torch.isfinite(v).all() for v in actor.values())
+    if 'balance_reflex.mean' in actor:
+        mapping={'balance_reflex.mean':'adapter_mean','balance_reflex.std':'adapter_std','balance_reflex.scale':'adapter_scale'}
+        for key in actor:
+            if key.startswith('balance_reflex.mlp.'):mapping[key]=key.removeprefix('balance_reflex.')
+            if key.startswith('balance_reflex.normalizer.'):mapping[key]=key.replace('balance_reflex.normalizer.','obs_normalizer.')
+            if key.startswith('balance_reflex.refinement.'):mapping[key]=key.replace('balance_reflex.refinement.','adapter.')
+        assert all(torch.equal(actor[k],prior[v]) for k,v in mapping.items()), 'Inner controller changed during PPO'
     samples=meta['args']['num_envs']*meta['runner']['num_steps_per_env']*meta['args']['iterations']
     assert int(critic['obs_normalizer.count'])==int(parent['critic_state_dict']['obs_normalizer.count'])+samples
     checks[folder.name]=dict(frozen_base_and_coordinates_exact=True,old_adapter_updated=True,yaw_adapter_learned=True,
