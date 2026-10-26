@@ -10,7 +10,7 @@ import pathlib
 import sys
 
 p=argparse.ArgumentParser(add_help=False)
-p.add_argument('--observation-frame-probe',choices=['world','local'],required=True)
+p.add_argument('--observation-frame-probe',choices=['world','local','balance_local'],required=True)
 options,remaining=p.parse_known_args()
 assert '--evaluate' in remaining and '--checkpoint' in remaining
 sys.argv=[sys.argv[0],*remaining]
@@ -25,6 +25,11 @@ def install_probe(env,folder):
         if options.observation_frame_probe=='world':return result
         h=result[:,3:5];unit=h/h.norm(dim=-1,keepdim=True).clamp_min(1e-6)
         c,s=unit.unbind(-1)
+        if options.observation_frame_probe=='balance_local':
+            blend=(result[:,43]>.5)*((result[:,48]*4.-1.2)/.6).clamp(0.,1.)
+            blend=torch.where((result[:,44]>.5)|(result[:,45]>.5),1.,blend)
+            angle=torch.atan2(s,c)*blend
+            c,s=angle.cos(),angle.sin()
         # Heading amplitude retains pitch information. Linear and angular
         # horizontal world velocities and both path errors share this rotation.
         for first in (3,5,8,27,29):
