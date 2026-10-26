@@ -1,0 +1,155 @@
+{
+  "name": "upright_cycle17_validation",
+  "commit": "9fcc3d245f1e38b4b19f1626cffdbd22cabf54b1",
+  "accepted_task_commit": "a64c75569fb50b6f24a122a3affd16fc0d25e2ca",
+  "fixed": "demo_project/runs/_upright_cycle17_validation/fixed",
+  "container": "petbot-upright-night",
+  "common_args": [
+    "--speed-limit",
+    ".05",
+    "--yaw-limit",
+    ".15",
+    "--frame-min=-.15",
+    "--frame-max",
+    ".15",
+    "--wheel-slew",
+    "480",
+    "--frame-slew",
+    "3",
+    "--tracking-weight",
+    "4",
+    "--tracking-objective",
+    "stability_first",
+    "--exploration-profile",
+    "fine",
+    "--steering-design",
+    "feedback",
+    "--yaw-filter-tau",
+    "0.0",
+    "--instant-tracking-weight",
+    "0.3",
+    "--yaw-feedback-design",
+    "fast2",
+    "--actor-normalization",
+    "inherited",
+    "--balance-noise-factor",
+    "16",
+    "--yaw-feedback-gain",
+    "16",
+    "--balance-reflex",
+    "frozen20",
+    "--observation-frame",
+    "balance_local"
+  ],
+  "jobs": [
+    {
+      "name": "landing_replay_b42",
+      "checkpoint": "demo_project/runs/upright_cycle_batch17_b42/logs/upright_cycle_batch17_b42/model_199.pt",
+      "checkpoint_sha256": "b879210eda49f4b7f644fb969c7ec3e400d30114928e8c188a7db70c5cb4cb58",
+      "mode": "checkpoint",
+      "seed": 20261020,
+      "args": [
+        "--hold-min",
+        "60",
+        "--hold-max",
+        "60",
+        "--frame-min=-.3",
+        "--frame-max",
+        ".3"
+      ],
+      "entrypoint": "tools/probe_landing_state.py"
+    },
+    {
+      "name": "parent_b43_seed30",
+      "checkpoint": "demo_project/runs/upright_cycle_batch16_b43/logs/upright_cycle_batch16_b43/model_199.pt",
+      "checkpoint_sha256": "8ffad3bdb0dc37407c5f6cc6d58b5537485aa61e3d918b3ed33feea1ff7b9375",
+      "mode": "untuned_parent",
+      "seed": 20261130,
+      "args": [
+        "--hold-min",
+        "180",
+        "--hold-max",
+        "180"
+      ],
+      "entrypoint": "train_cycle.py"
+    },
+    {
+      "name": "trained_b46_seed30",
+      "checkpoint": "demo_project/runs/upright_cycle_batch17_b46/logs/upright_cycle_batch17_b46/model_199.pt",
+      "checkpoint_sha256": "5abf27395cd29e85dc595953e317ee92caa32a9e0da8ea08f38c4718bdbec0e8",
+      "mode": "checkpoint",
+      "seed": 20261130,
+      "args": [
+        "--hold-min",
+        "180",
+        "--hold-max",
+        "180"
+      ],
+      "entrypoint": "train_cycle.py"
+    },
+    {
+      "name": "parent_b43_frame",
+      "checkpoint": "demo_project/runs/upright_cycle_batch16_b43/logs/upright_cycle_batch16_b43/model_199.pt",
+      "checkpoint_sha256": "8ffad3bdb0dc37407c5f6cc6d58b5537485aa61e3d918b3ed33feea1ff7b9375",
+      "mode": "untuned_parent",
+      "seed": 20261020,
+      "args": [
+        "--hold-min",
+        "60",
+        "--hold-max",
+        "60",
+        "--frame-min=-.3",
+        "--frame-max",
+        ".3"
+      ],
+      "entrypoint": "tools/probe_landing_state.py"
+    },
+    {
+      "name": "trained_b46_frame",
+      "checkpoint": "demo_project/runs/upright_cycle_batch17_b46/logs/upright_cycle_batch17_b46/model_199.pt",
+      "checkpoint_sha256": "5abf27395cd29e85dc595953e317ee92caa32a9e0da8ea08f38c4718bdbec0e8",
+      "mode": "checkpoint",
+      "seed": 20261020,
+      "args": [
+        "--hold-min",
+        "60",
+        "--hold-max",
+        "60",
+        "--frame-min=-.3",
+        "--frame-max",
+        ".3"
+      ],
+      "entrypoint": "tools/probe_landing_state.py"
+    },
+    {
+      "name": "parent_b43_seed31",
+      "checkpoint": "demo_project/runs/upright_cycle_batch16_b43/logs/upright_cycle_batch16_b43/model_199.pt",
+      "checkpoint_sha256": "8ffad3bdb0dc37407c5f6cc6d58b5537485aa61e3d918b3ed33feea1ff7b9375",
+      "mode": "untuned_parent",
+      "seed": 20261131,
+      "args": [
+        "--hold-min",
+        "180",
+        "--hold-max",
+        "180"
+      ],
+      "entrypoint": "train_cycle.py"
+    },
+    {
+      "name": "trained_b46_seed31",
+      "checkpoint": "demo_project/runs/upright_cycle_batch17_b46/logs/upright_cycle_batch17_b46/model_199.pt",
+      "checkpoint_sha256": "5abf27395cd29e85dc595953e317ee92caa32a9e0da8ea08f38c4718bdbec0e8",
+      "mode": "checkpoint",
+      "seed": 20261131,
+      "args": [
+        "--hold-min",
+        "180",
+        "--hold-max",
+        "180"
+      ],
+      "entrypoint": "train_cycle.py"
+    }
+  ],
+  "purpose": "Confirm small-envelope180s stability on two new seeds; reproduce widened-frame failures and record pre-reset landing conditions. No PPO or acceptance threshold changes.",
+  "replay_reference": "demo_project/runs/_upright_cycle_batch17/eval_upright_cycle_batch17_b42_i199_frame"
+}

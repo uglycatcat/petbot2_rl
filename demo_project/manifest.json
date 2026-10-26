@@ -49,12 +49,12 @@
         "demo"
       ],
       "shallow": false,
-      "status": "cycle16 closed; cycle17 a64c755 nine PPO runs verified,24-evaluation queue active; independent result pending",
-      "local_validation": "Cycle16 9 training/24 evaluations complete. Fixed-policy staged local-frame 120s development intervention improves B42/B43 handoff52/54 to64/64 and basic51/53 to64/64. Task dcd4436/release a64c755 passes CUDA geometry/phase/transfer, valid20-update smokes and180s reload (local64/64 handoff/basic). Cycle17 formal9-run plan has24 evaluations plus2 predeclared untuned parents; independent trained-policy result pending. See docs/upright_cycle_v17.md.",
+      "status": "cycle17 complete; seven fixed-policy validation jobs active; no cycle18 PPO",
+      "local_validation": "Cycle17 a64c755:9 training/24 evaluations valid;180s paired world/local handoff204/256 versus256/256, basic192/256 versus244/256. Untuned B43 and auxiliary trained B46 each64/64; no consistent PPO gain. Tools9fcc3d2 run new-seed and pre-reset landing diagnostics with unchanged accepted task; see docs/upright_cycle17_validation.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_cycle_batch17"
+        "upright_cycle17_validation"
       ]
     },
     {
