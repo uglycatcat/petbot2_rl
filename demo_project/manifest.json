@@ -44,17 +44,18 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "a57054d941f5dc6c029f64b53bd951e47f664b2a",
+      "verified_commit": "57b626eac0eb4d1c52b5966703bedb83ff8b5ec8",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "six range/rise validations complete; rise-only candidate ef9c2bc has two long GPU reloads pending; no formal cycle18 PPO",
-      "local_validation": "Fixed B43 replay matches74 failure frames. Frame20/30 completion125/106 of128, all failures in rise. Full-local rescues1/regresses1, not adopted. Rise-only CUDA checks and2048/4096x20 GPU smoke passed; inherited state frozen. Zero-init60/180s original1123/3122 frames exact. Two180s reloads remain active. Dual4096 throughput11.2k steps/s, 1.79x single; mean compute40.2%. Source57b626e; verified release remains a57054d pending gate. See docs/upright_rise_adapter_v19.md.",
+      "status": "cycle18 formal rise-only PPO deploying, one fixed57b626e batch",
+      "local_validation": "v19 original8 engineering jobs and additional5 resource jobs complete, no memory/physics failures. 2048/4096 short-trained180s complete/basic63/64 and64/64; known rise failure remains in2048. Extra1024x20 smoke and8s physical reload64/64 passed. Triple4096 throughput13.04k steps/s, mean compute89.3% onGPU2 only. Formal batch18 inherits cycle16B43/199, trains only rise head plus critic, new180s heldout20261136. MuJoCo pending. See docs/upright_cycle_v19_training.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_rise19_gate"
+        "upright_cycle_batch18",
+        "upright_cycle_batch18_parent_baseline"
       ]
     },
     {
