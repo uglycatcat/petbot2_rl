@@ -49,12 +49,12 @@
         "demo"
       ],
       "shallow": false,
-      "status": "cycle17 complete; seven fixed-policy validation jobs active; no cycle18 PPO",
-      "local_validation": "Cycle17 a64c755:9 training/24 evaluations valid;180s paired world/local handoff204/256 versus256/256, basic192/256 versus244/256. Untuned B43 and auxiliary trained B46 each64/64; no consistent PPO gain. Tools9fcc3d2 run new-seed and pre-reset landing diagnostics with unchanged accepted task; see docs/upright_cycle17_validation.md.",
+      "status": "cycle17 and7 validations complete; task a57054d handoff GPU gate ongoing; source af2c01e; no formal cycle18 PPO",
+      "local_validation": "Two candidates each128/128 full/basic on new180s seeds. Handoff ordering same-parent development intervention42/64 to57/64, all15 landed timeouts rescued with final alignment/hold retained;7 rise failures remain.20 saved GPU smoke updates verified across guarded interruption and full optimizer resume; new180s parent64/64 completed,63/64 basic with no failure and physical limits passed; checkpoint180s reload still running. Paired network export CUDA parity passed; MuJoCo not validated. See docs/upright_handoff_alignment_v18.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_cycle17_validation"
+        "upright_handoff18_gate"
       ]
     },
     {
