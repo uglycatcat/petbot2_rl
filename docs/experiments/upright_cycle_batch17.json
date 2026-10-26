@@ -252,5 +252,10 @@
       "balance_reflex": "frozen20",
       "observation_frame": "balance_local"
     }
-  ]
+  ],
+  "heldout_baseline_evaluations": {
+    "parent_b42": "demo_project/runs/_cycle17_gate/untuned_b42_heldout/evaluation.json",
+    "parent_b43": "demo_project/runs/_cycle17_gate/untuned_b43_heldout/evaluation.json"
+  },
+  "heldout_baseline_policy": "Predeclared source parents without PPO updates; compare with the trained paired candidates after the batch. Do not use baseline heldout results to change this fixed plan."
 }

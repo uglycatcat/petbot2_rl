@@ -44,16 +44,18 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "03deaca07644e244040319df07ebfc1347fb5f1e",
+      "verified_commit": "a64c75569fb50b6f24a122a3affd16fc0d25e2ca",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "cycle16 closed; staged local-frame development probes128/128, candidate GPU reload acceptance pending",
-      "local_validation": "Cycle16 9 training/24 evaluations complete; paired120s handoff213/210 of256, no reward-objective gain. Fixed-policy staged local-frame development intervention improves B42/B43 handoff52/54 to64/64 and basic51/53 to64/64. Candidate task dcd4436/release a64c755 passes CUDA geometry/phase/transfer and valid20-update smokes;180s reload pending. No formal cycle17 training yet. See docs/upright_cycle_v17.md.",
+      "status": "cycle16 closed; cycle17 a64c755 nine PPO runs verified,24-evaluation queue active; independent result pending",
+      "local_validation": "Cycle16 9 training/24 evaluations complete. Fixed-policy staged local-frame 120s development intervention improves B42/B43 handoff52/54 to64/64 and basic51/53 to64/64. Task dcd4436/release a64c755 passes CUDA geometry/phase/transfer, valid20-update smokes and180s reload (local64/64 handoff/basic). Cycle17 formal9-run plan has24 evaluations plus2 predeclared untuned parents; independent trained-policy result pending. See docs/upright_cycle_v17.md.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": []
+      "active_tasks": [
+        "upright_cycle_batch17"
+      ]
     },
     {
       "name": "step_rl_demo",
