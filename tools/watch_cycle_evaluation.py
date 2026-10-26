@@ -36,7 +36,11 @@ def main():
             command = cmdline_path.read_bytes()
         except FileNotFoundError:
             command = b''
-        if command and (b'evaluate_cycle.py' not in command or state['name'].encode() not in command):
+        entrypoint = state.get('evaluator_entrypoint', 'evaluate_cycle.py')
+        if entrypoint not in ('evaluate_cycle.py', 'evaluate_candidates.py'):
+            os.close(fd)
+            raise RuntimeError('Unknown evaluator entrypoint')
+        if command and (entrypoint.encode() not in command or state['name'].encode() not in command):
             os.close(fd)
             raise RuntimeError('Evaluator PID identity mismatch')
         (out / 'eval_watch_pid.json').write_text(json.dumps(dict(pid=os.getpid(), evaluator_pid=pid)))

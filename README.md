@@ -19,6 +19,8 @@ PetBot2 的前轮抬起、后轮支撑、两轮遥控及前轮落地任务。训
 | `tools/launch_cycle.py`、`tools/evaluate_cycle.py`、`tools/watch_cycle_jobs.py` | 完整循环批次的固定版本部署、独立评估与进程监视；启动前核查已有状态，避免重复启动。 |
 | `tools/run_guarded.py` | 宿主机显存守护与容器训练编排。 |
 | `tools/watch_cycle_evaluation.py` | 单批评估进程退出事件监督；已有完成通知则不重复，异常退出时向原会话排队，禁止自行重启训练。 |
+| `tools/evaluate_candidates.py` | 按固定计划只做候选验证；支持原检查点或未经PPO更新的显式父策略迁移，核对源码/检查点哈希并保留完成/异常事件，不启动训练。 |
+| `tools/probe_landing_state.py` | 在原评估循环中记录复位前的车架关节、落地目标与地面保持计时；新增诊断必须先对照原轨迹，不能以增加记录替代任务验证。 |
 | `tools/probe_cycle_yaw.py` | 固定策略下的受控差速诊断，记录实测轮速和执行器力矩估计；诊断输出不作为任务成功评估。 |
 | `tools/probe_continuous_yaw.py`、`tools/analyze_continuous_response.py` | 第七版固定策略反馈干预及离线响应分析；探针须使用相应固定版本，窗口诊断不替代验收。 |
 | `tools/probe_cycle_substeps.py`、`tools/probe_heading_reference.py` | 固定版本的物理子步/航向定义诊断；只读采样不得改变接触传感器历史时序，探针须配套其固定任务版本。 |
