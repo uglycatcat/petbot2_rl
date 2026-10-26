@@ -48,6 +48,6 @@ B的15次交接超时均已前轮落地：终止帧四轮接触占比0.967–1.0
 
 ## 后续验证与证据
 
-后续[固定策略验证](upright_cycle17_validation.md)7/7项已完成，两候选新种子各128/128完整及基本通过，并定位交接顺序缺陷。目前进行[任务v18工程验收](upright_handoff_alignment_v18.md)，不是完整循环第十八批正式PPO。旧严格质量分数不作为本轮主要否决条件。
+后续[固定策略验证](upright_cycle17_validation.md)7/7项已完成，两候选新种子各128/128完整及基本通过，并定位交接顺序缺陷。后续[任务v18工程验收](upright_handoff_alignment_v18.md)已结束，当前进入[独立范围与起立诊断](upright_handoff18_validation.md)，不是完整循环第十八批正式PPO。旧严格质量分数不作为本轮主要否决条件。
 
 `runs/_upright_cycle_batch17/`保留`launch_status.json`、`eval_status.json`、`eval_finished.json`、`stability_review.json`、`runtime_final.json`、`scalars_final.json`、`final_audit.json`及原始逐回合轨迹。两份未微调基线位于`runs/_cycle17_gate/untuned_b42_heldout/`与`untuned_b43_heldout/`，单列，不混入四对训练种子统计。
