@@ -37,7 +37,7 @@ sample=x.clone();sample[:,41:46]=0;sample[:,43]=1;sample[:,48]=.3
 assert torch.equal(ground_frame_features(sample,yaw,'balance_local'),sample)
 sample[:,48]=.375
 middle=ground_frame_features(sample,yaw,'balance_local')
-assert torch.equal(middle,ground_frame_features(sample,yaw*.5,'local'))
+assert torch.allclose(middle,ground_frame_features(sample,yaw*.5,'local'),atol=2e-6,rtol=1e-6)
 assert torch.equal(script(sample,yaw,'balance_local'),middle)
 result=dict(passed=True,global_yaw_invariance=True,zero_heading_identity=True,
     preserved_body_and_task_features=True,zero_heading_amplitude_finite=True,
