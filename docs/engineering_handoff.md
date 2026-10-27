@@ -24,6 +24,8 @@
 
 正式项目补充（2026-10-27）：`rl_project/std_train_upright_project`和`std_s2s_upright_project`由同一repo清单物化，远程独立`rlproj/<项目名>`分支。训练目录保持空，sim2sim存放推理程序及必要小型网络；main维护`rl_project/README.md`、`manifest.json`和忽略规则。训练仍在原demo，runs未移动；后续归档到忽略的history前先保存检查点依赖与来源。见[sim2sim方案](upright_sim2sim_20261027.md)。
 
+根目录`tools/`不是训练源码入口：截至2026-10-27，唯一受版本管理的程序是`tools/session_resume/dispatch.py`，为旧04/10/16/22周期续接的投递/去重脚本；配置保持enabled=false，timer未启用。`tools/upright_training/`当前只剩旧Python缓存，没有训练启动源码。实际训练、评估和有限队列事件工具在`demo_project/upright_rl_demo/tools/`，固定副本随各批次保存在runs；MuJoCo工具在正式sim2sim项目内。目录存在不表示定时器或训练正在运行。
+
 
 - demo 是独立 checkout，代码推送到本仓库专用分支 `demoproj/recovery_agile_01`；后续 demo 按任务、底座与编号另建，参考分支仍使用 `refproj/`。
 - 与参考项目共用根目录 `default.xml` 的 repo 管理：计划使用 `remote="ours"`、`name="petbot2_rl"`、`path="demo_project/recovery_agile_01"`、`revision="demoproj/recovery_agile_01"`，并设独立 `demo` 分组。分支首次推送后再登记清单，避免指向不存在的远程分支。
