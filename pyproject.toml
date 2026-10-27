@@ -1,0 +1,13 @@
+[project]
+name = "petbot-upright-sim2sim"
+version = "0.1.0"
+requires-python = ">=3.10,<3.13"
+dependencies = ["mujoco==3.16.0", "torch==2.10.0", "glfw>=2.9,<3", "numpy>=1.24,<3", "pillow>=10,<13"]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }

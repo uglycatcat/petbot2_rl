@@ -1,0 +1,25 @@
+{
+  "selected": "cycle18_long_r42",
+  "checkpoint": "model_598.pt",
+  "actual_cumulative_ppo_updates": 600,
+  "criterion": "Batch complete: r42/r48/r50 tie at 62/64 held-out complete/basic. r42 native complete/basic64/60 exceeds r48 63/59 and r50 64/58; r50 has only1024 training environments. Selected r42 also completed MuJoCo180s mixed control. This is not a universal optimum.",
+  "independent_isaac": {
+    "seed": 20261137,
+    "count": 64,
+    "complete": 62,
+    "functional": 62,
+    "hold_seconds": 180,
+    "frame_range": [
+      -0.2,
+      0.2
+    ],
+    "speed_limit": 0.05,
+    "yaw_limit": 0.15,
+    "evidence": "demo_project/runs/_upright_cycle_batch18_long/eval_upright_cycle_batch18_long_r42_i598_heldout/evaluation.json",
+    "sha256": "6d83d0133540fc86a305c702711d429eba33df92c932e31c59aef94642ad348d"
+  },
+  "comparison": "cycle18_long_r43 kept for reproducible transfer comparison",
+  "mujoco_evidence": "validation/20261027/scenarios.json",
+  "limitation": "Fixed MuJoCo scenarios are not random-initial-state success or hardware validation; static landing and repeated takeover failures remain.",
+  "batch_engineering_status": "9/9 training and29/29 evaluation complete; continuation state verified; no remaining processes"
+}

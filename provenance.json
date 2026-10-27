@@ -1,0 +1,21 @@
+{
+  "source_branch": "demoproj/upright_rl_demo",
+  "source_commit": "5d03bd0a825309462f0c73931cad6adb5d74c009",
+  "task_commit": "001a54e98ff18f1274e2d7e961404325de4e50f7",
+  "source_sha256": {
+    "upright/moving.py": "5502826b471b9a7b8208d1568c713a4370a8c21e5d2fdfb85033d5ab8b503152",
+    "upright/cycle.py": "6010cdaa5c01effe5581a458af2c3240f1ba3832ac19ba3c68aa3b804e79de0d",
+    "upright/continuous.py": "f8c90ce9d8c9284d066afdfa7dab60124e237fda36c0d87b54b9bea49325439e",
+    "upright/stability.py": "c94013e288a195d18e670e25567ebfa17a287f66633c53dcd4e11c2fef4af816",
+    "upright/feedback.py": "a95baaa71250a98d6ebda7f3cf1aff7134ed2a673bb051a9c79349e2e5291ae0",
+    "upright/fast_feedback.py": "342c506be193a8ca979500d8cddfe69b8800b80b4601227ca76621b269c6f854",
+    "upright/ground_motion.py": "0357a4b06ea102d650ff43272cf6c0385343c3e212de790a7084d936ff85c74f",
+    "upright/local_frame.py": "dc40891e98b90c2699d26811842f0841aa0000ba248f8827e5205c579ab895b4",
+    "upright/functional.py": "89371df66f1dfde066b6ae550356941249050eb869d9d333a0acc771bdd7a514",
+    "upright/cycle_task.py": "885fb8de117eee59a6728050a3eee96c515d608c7a3a62bb64d707f3abb7c59e",
+    "upright/continuous_task.py": "b8e007778a8d25309daa18dbc498657a087c759fa9298823fd1028aa1e84c82e",
+    "upright/feedback_task.py": "4302b1067d8f41c9bba1fab4cc2f4cdf70b200692d5221f075b8b67245da57c8",
+    "upright/balance_reflex.py": "f92a8f18532d97d669b8e658f0f2a5853b9554b029870ec2031e09b2dbc13f19"
+  },
+  "notes": "Pure tensor core copied verbatim; action_terms extracts four definitions, replaces imports/base class references and SPEC access only. Runtime adapter is new."
+}
