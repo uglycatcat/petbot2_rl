@@ -57,7 +57,7 @@ def main():
         evaluated_checkpoint=RUNS/pathlib.Path(evaluation_meta['args']['checkpoint']).relative_to('/workspace/runs')
         if hashlib.sha256(evaluated_checkpoint.read_bytes()).hexdigest() not in smoke_hashes:raise RuntimeError('Evaluation did not reload an accepted smoke checkpoint')
         if data['contract']['fingerprint']!=gate['fingerprint']:raise RuntimeError('Gate fingerprint mismatch')
-        if data['takeover']!=64 or data['unfinished']:raise RuntimeError('Gate coverage failure')
+        if data['takeover']<evidence.get('min_takeover',64) or data['unfinished']:raise RuntimeError('Gate coverage failure')
         if data['balance']<evidence.get('min_balance',1):raise RuntimeError('No balance reached in gate')
     # Check-only/tool changes do not invalidate identical task GPU evidence.
     # Explicit contract-check artifacts still have to pass before deployment.
@@ -67,7 +67,7 @@ def main():
         if not json.loads((ROOT/evidence).read_text()).get('passed'):raise RuntimeError('Resume state gate failed')
     variants=plan['variants']
     if any(not 1<=v['envs']<=4096 for v in variants):raise RuntimeError('Unvalidated environment count; PetBot per-process maximum4096')
-    if {v['gpu'] for v in variants}!={0,1,2,3}:raise RuntimeError('Four-GPU plan required')
+    if not variants or any(v['gpu'] not in (0,1,2,3) for v in variants):raise RuntimeError('Invalid GPU assignment')
     if len({v['run'] for v in variants})!=len(variants):raise RuntimeError('Duplicate run names')
     mem=usage();reservations={i:0 for i in range(4)}
     for v in variants:

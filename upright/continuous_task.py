@@ -14,7 +14,11 @@ from .continuous import ContinuousProgress, yaw_feedforward, bound_cycle_feature
 def ensure(env):
     if not hasattr(env, 'moving_progress'):
         s = state(env)
-        env.moving_progress = ContinuousProgress(env.num_envs, env.device, env.step_dt,
+        progress_type=ContinuousProgress
+        if getattr(env.cfg,'task_profile','legacy')=='full_range':
+            from .full_range import FullRangeProgress
+            progress_type=FullRangeProgress
+        env.moving_progress = progress_type(env.num_envs, env.device, env.step_dt,
             env.cfg.speed_limit, env.cfg.yaw_limit, env.cfg.frame_range, env.cfg.seed,
             env.cfg.feedback_mode, hold_range=env.cfg.hold_range,
             instant_tracking_weight=getattr(env.cfg,'instant_tracking_weight',.3),
@@ -90,6 +94,9 @@ def metrics(env):
         if hasattr(action, 'yaw_feedback'):
             m['yaw_feedback_integral'] = action.yaw_feedback.integral.clone()
             m['yaw_feedback_target'] = action.yaw_feedback.target.clone()
+        m['position_target']=action.target.clone()
+        m['wheel_target']=action.speed.clone()
+        m['effort']=tensor(env.scene['robot'].data.applied_torque)[:,action.pos_ids+action.wheel_ids].clone()
         env.moving_snapshot = ({k:v.clone() for k,v in s.items()}, {k:v.clone() for k,v in m.items()},
                               p.raw.clone(), p.command.clone(), action.applied.clone(), p.since.clone())
         env.extras.setdefault('log', {}).update({'Cycle/active':p.active.float().mean(),
@@ -182,6 +189,7 @@ class ContinuousEnvCfg(base.CycleEnvCfg):
     rewards = RewardsCfg()
     events = EventsCfg()
     terminations = DonesCfg()
+    task_profile: str = 'legacy'
     steering_design: str = 'direct'
     hold_range: tuple = (8., 12.)
     active_seconds: float = 24.

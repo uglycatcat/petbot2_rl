@@ -118,8 +118,12 @@ def set_remote_command(env, command, env_ids=None):
 
 def observations(env):
     s=state(env);p=ensure(env);a=env.action_manager.get_term('moving')
+    request=p.raw
+    if getattr(p,'full_range',False):
+        from .full_range import effective_request
+        request=effective_request(p)
     base=torch.cat((s['g'],s['heading'],s['vel'],s['q'],s['qd']*.1,s['wheel']*.05,
-        p.raw,p.command,s['pos'][:,:2]-p.reference,s['pos'][:,:2]-p.raw_reference,
+        request,p.command,s['pos'][:,:2]-p.reference,s['pos'][:,:2]-p.raw_reference,
         torch.stack((p.raw_yaw.sin(),p.raw_yaw.cos()),-1),a.applied,
         p.active[:,None].float(),p.since[:,None]/12,p.peak[:,None],p.support_run[:,None].clamp(max=1),p.frame[:,None]),-1)
     features=torch.cat((base,torch.nn.functional.one_hot(p.phase,num_classes=5).float(),p.requested_mode[:,None],p.destination[:,None],p.phase_time[:,None]/4),-1)

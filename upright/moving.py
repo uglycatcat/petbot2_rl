@@ -152,7 +152,7 @@ class MovingProgress:
         new_peak=torch.maximum(phi,self.peak);progress=(new_peak-self.peak)/self.dt;self.peak=new_peak
         finite=torch.isfinite(torch.cat((s['pos'],s['vel'],s['q']),-1)).all(-1)
         physical=(~finite)|(s['pos'][:,2]<.025)|(s['g'][:,2]>.2)|(s['vel'][:,:3].norm(dim=-1)>5)|(s['vel'][:,3:].norm(dim=-1)>30)
-        warmup_failed=(~self.active)&(self.age>6.)
+        warmup_failed=(~self.active)&(self.age>getattr(self,'warmup_timeout',6.))
         failure=physical|warmup_failed|(self.active & (raw_distance>1.5))
         self.result=dict(active=self.active.clone(),switched=switch,support=support,held=held,instant_good=good,fresh=fresh,lift_event=lift_event,
             failure=failure,warmup_failed=warmup_failed,physical_failure=physical,progress=progress,

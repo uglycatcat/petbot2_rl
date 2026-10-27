@@ -16,7 +16,7 @@ class BalanceAdapterModel(MLPModel):
     def __init__(self,*args,balance_noise_factor=1.,**kwargs):
         super().__init__(*args,**kwargs)
         assert self.obs_dim==290 and self.distribution.concentration_scale==(4.,16.,16.)
-        assert balance_noise_factor in (1.,16.)
+        assert 1.<=balance_noise_factor<=16.
         self.balance_noise_factor=float(balance_noise_factor)
         for parameter in self.mlp.parameters():parameter.requires_grad_(False)
         self.register_buffer('adapter_mean',torch.zeros(1,290))

@@ -36,7 +36,7 @@ def export(evaluation, output):
     assert end['exit_code'] == 0 and not end['guard_stopped'] and not end.get('physics_error')
     assert result['count'] == 64 and result['unfinished'] == 0
     contract = meta['contract']
-    assert contract['task'] in ('upright_cycle_v18', 'upright_cycle_v19', 'upright_cycle_v20')
+    assert contract['task'] in ('upright_cycle_v18', 'upright_cycle_v19', 'upright_cycle_v20', 'upright_cycle_v21')
     assert contract['balance_reflex'] == 'frozen20' and contract['yaw_feedback_design'] == 'fast2'
     assert not meta['working_tree_dirty']
     model = load_model()
@@ -97,6 +97,7 @@ def export(evaluation, output):
                'upright/task.py', 'upright/asset_cfg.py', 'upright/moving.py']
     if contract.get('transition_contract') == 'linear_heading':
         sources += ['upright/kinematics.py', 'upright/stability.py']
+    if contract.get('task_profile')=='full_range':sources+=['upright/full_range.py']
     manifest = dict(
         format='petbot_cycle_network_bundle_v1', task_commit=meta['commit'],
         exporter_commit=subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip(),
