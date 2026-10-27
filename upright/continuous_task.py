@@ -19,7 +19,8 @@ def ensure(env):
             env.cfg.feedback_mode, hold_range=env.cfg.hold_range,
             instant_tracking_weight=getattr(env.cfg,'instant_tracking_weight',.3),
             tracking_objective=getattr(env.cfg,'tracking_objective','mixed'),
-            handoff_alignment=getattr(env.cfg,'handoff_alignment','before'))
+            handoff_alignment=getattr(env.cfg,'handoff_alignment','before'),
+            transition_contract=getattr(env.cfg,'transition_contract','legacy'))
         env.moving_progress.reset(torch.arange(env.num_envs, device=env.device), s['pos'], s['yaw'])
         env.moving_step = -1
     return env.moving_progress
