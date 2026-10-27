@@ -20,6 +20,7 @@ p.add_argument('--handoff-alignment',choices=['before','after'],default='before'
 p.add_argument('--refinement-target',choices=['balance','rise','all'],default='balance')
 p.add_argument('--transition-contract',choices=['legacy','linear_heading'],default='legacy')
 p.add_argument('--task-profile',choices=['legacy','full_range'],default='legacy')
+p.add_argument('--training-mixture',choices=['off','stratified_v1'],default='off')
 p.add_argument('--distributed',action='store_true')
 p.add_argument('--balance-reflex',choices=['off','frozen20'],default='off')
 p.add_argument('--balance-noise-factor',type=float,choices=[1.,4.,16.],default=1.)
@@ -75,6 +76,7 @@ try:
     if args.task_profile=='full_range':
         assert args.refinement_target=='all' and args.transition_contract=='linear_heading'
     else:assert args.actor_normalization=='inherited'
+    if args.training_mixture!='off':assert args.task_profile=='full_range'
     cfg=CycleEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
     cfg.speed_limit=args.speed_limit;cfg.yaw_limit=args.yaw_limit;cfg.frame_range=(args.frame_min,args.frame_max)
     cfg.wheel_slew=args.wheel_slew;cfg.frame_slew=args.frame_slew;cfg.wheel_mode='common_diff'
@@ -83,6 +85,7 @@ try:
     cfg.tracking_objective=args.tracking_objective;cfg.observation_frame=args.observation_frame
     cfg.handoff_alignment=args.handoff_alignment
     cfg.transition_contract=args.transition_contract;cfg.task_profile=args.task_profile
+    cfg.training_mixture='off' if args.evaluate else args.training_mixture
     if args.transition_contract=='linear_heading':cfg.rewards.transition.weight=2.
     cfg.instant_tracking_weight=args.instant_tracking_weight;cfg.yaw_feedback_design=args.yaw_feedback_design;cfg.yaw_feedback_gain=args.yaw_feedback_gain
     cfg.active_seconds=args.hold_max+(18. if args.task_profile=='full_range' else 12.)
@@ -129,6 +132,9 @@ try:
         contract.update(task='upright_cycle_v21',task_profile='full_range',independent_call=FULL_RANGE_CONTRACT,command_sampling='feasible_six_sequence_v4',reward_design='independent_call_stability_v1',observation_request='phase_effective_v1')
         contract['stability']=dict(contract['stability'],persistent_overspeed_termination=False,early_return='armed_lift_then_return_in_rise_or_balance')
         contract['fast_yaw_controller'].update(anti_windup=True,transition_heading_rate_limit=15.)
+        from upright.full_range import TRAINING_MIXTURE
+        contract['task']='upright_cycle_v22'
+        contract['training_distribution']=TRAINING_MIXTURE if args.training_mixture!='off' else dict(version='off')
     if args.checkpoint:
         prior=json.loads((pathlib.Path(args.checkpoint).parent/'config.json').read_text())
         if prior['contract']!=contract:raise ValueError('Checkpoint contract mismatch')
@@ -154,13 +160,16 @@ try:
         allowed_sources={'upright_cycle_v16':'03deaca07644e244040319df07ebfc1347fb5f1e','upright_cycle_v17':'a64c75569fb50b6f24a122a3affd16fc0d25e2ca'}
         if args.refinement_target=='all' and args.transition_contract=='linear_heading':
             allowed_sources['upright_cycle_v19']='001a54e98ff18f1274e2d7e961404325de4e50f7'
-        if args.task_profile=='full_range':allowed_sources['upright_cycle_v20']='b269d49aacb50d5bf5d8a3d9cd618696e087734e'
+        if args.task_profile=='full_range':
+            allowed_sources['upright_cycle_v20']='b269d49aacb50d5bf5d8a3d9cd618696e087734e'
+            allowed_sources['upright_cycle_v21']='c30b2c209d7c212e442c7614b17aeaf69205f19d'
         if prior['working_tree_dirty'] or allowed_sources.get(prior['contract'].get('task'))!=prior['commit']:raise ValueError('Only validated clean cycle-v16/v17 source allowed')
         if prior['contract']['observation_schema'] not in ('cycle_58x5_wheel_lateral_v2','cycle_58x5_balance_local_v4') or prior['contract']['steering_design']!='feedback':raise ValueError('Source observation schema mismatch')
         for k in ('action_dim','wheel_mode','wheel_slew','frame_slew','control_dt','source_sha256','concentration_scale','instant_tracking_weight','balance_noise_factor'):
             if k=='balance_noise_factor' and args.task_profile=='full_range':continue
             if prior['contract'][k]!=contract[k]:raise ValueError('Transfer mismatch '+k)
-        if prior['contract']['balance_noise_factor']!=16. or prior['contract']['tracking_objective']!='stability_first' or prior['contract']['yaw_feedback_design']!='fast2' or prior['contract']['fast_yaw_controller']['kp']!=16.:raise ValueError('V19 preserves validated stability-first parents')
+        if prior['contract']['task']!='upright_cycle_v21' and prior['contract']['balance_noise_factor']!=16.:raise ValueError('Legacy parents require validated exploration')
+        if prior['contract']['tracking_objective']!='stability_first' or prior['contract']['yaw_feedback_design']!='fast2' or prior['contract']['fast_yaw_controller']['kp']!=16.:raise ValueError('Preserve validated stability-first parents')
         if prior['contract']['balance_reflex']!='frozen20' or args.balance_reflex!='frozen20':raise ValueError('V19 preserves validated frozen20 feedback')
         loaded=torch.load(initial,map_location='cpu',weights_only=False)
         actor=runner.alg.get_policy()
@@ -182,6 +191,7 @@ try:
     from upright.balance_reflex import attach_balance_reflex
     attach_balance_reflex(env,runner.alg.get_policy(),args.balance_reflex=='frozen20')
     metadata['distributed']=dict(world_size=world_size,rank=rank,local_envs=args.num_envs,total_envs=world_size*args.num_envs)
+    metadata['effective_training_mixture']=cfg.training_mixture
     if rank==0:(folder/'config.json').write_text(json.dumps(metadata,indent=2))
     if not args.evaluate and not args.probe:runner.learn(num_learning_iterations=args.iterations,init_at_random_ep_len=False)
     else:

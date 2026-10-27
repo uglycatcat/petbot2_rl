@@ -86,3 +86,7 @@ PetBot2 的前轮抬起、后轮支撑、两轮遥控及前轮落地任务。训
 `--task-profile full_range --transition-contract linear_heading --refinement-target all`选择新版独立调用任务。后轮目标仍限±25 rad/s；线速度/转向请求投影到左右轮联合可达域，起落使用捕获航向和速度，两轮段恢复遥控。曾离地后意外回落或真实失稳结束本次调用，单独记录中断；训练重置不代表部署自动再次起立。
 
 `--balance-noise-factor 1|4|16`控制稳定两轮探索，`--actor-normalization rebase_recent`在显式任务迁移时按父critic统计重参数化，须验证确定性输出不变及内部反馈冻结。评估保存`behavior`分阶段运动/关节/力矩及最大过渡偏航，汇总成功率不能替代行为审查。新旧合同禁止直接混用，旧策略在各自固定版本运行。
+
+### 全范围训练分层采样
+
+`train_cycle.py --task-profile full_range --training-mixture stratified_v1`将训练环境等分为低范围保留、中等运动、较高运动、低运动全车架、全范围五组。分组在环境生命周期固定，避免困难回合较短而丢失物理步覆盖；一次调用内幅度分组不变。该参数只影响训练抽样，`--evaluate`强制关闭分层并使用显式评估范围，外部遥控和源电机限制保持不变。`off`为相同任务的原全范围抽样对照。日志`Stratum0`–`Stratum4`记录各层起立/完成比例，配置记录实际启用状态；正式批次必须先过容器短训及关闭分层后的重载检查。

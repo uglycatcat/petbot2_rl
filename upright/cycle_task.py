@@ -154,6 +154,12 @@ def time_out(env):
 def reset(env,env_ids):
     p=ensure(env);r=env.scene['robot']
     env.extras.setdefault('log',{}).update({'Cycle/episode_balance':p.balance_ever[env_ids].float().mean(),'Cycle/episode_handoff':p.handoff[env_ids].float().mean(),'Cycle/episode_takeover':p.active[env_ids].float().mean()})
+    if getattr(p,'training_mixture','off')!='off':
+        for level in range(5):
+            selected=env_ids[p.training_level[env_ids]==level]
+            if selected.numel():
+                for label,value in [('balance',p.balance_ever),('handoff',p.handoff),('takeover',p.active)]:
+                    env.extras['log'][f'Stratum{level}/episode_{label}']=value[selected].float().mean()
     root=tensor(r.data.default_root_state)[env_ids].clone();root[:,:3]+=tensor(env.scene.env_origins)[env_ids];root[:,7:]=0
     r.write_root_state_to_sim(root,env_ids=env_ids)
     q=tensor(r.data.default_joint_pos)[env_ids].clone();r.write_joint_state_to_sim(q,torch.zeros_like(q),env_ids=env_ids)

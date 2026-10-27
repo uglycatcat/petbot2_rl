@@ -28,7 +28,7 @@ def validate(result,count=64):
         switching_bound=11. if result['contract'].get('task_profile')=='full_range' else 8.
         for complete,changes,duration in zip(result['outcomes']['complete'],switches,durations):
             if complete and duration>=switching_bound and changes<1:raise ValueError('Completed long hold without mixed commands')
-    if result.get('contract',{}).get('task')in ('upright_cycle_v16','upright_cycle_v17','upright_cycle_v18','upright_cycle_v19','upright_cycle_v20','upright_cycle_v21'):
+    if result.get('contract',{}).get('task')in ('upright_cycle_v16','upright_cycle_v17','upright_cycle_v18','upright_cycle_v19','upright_cycle_v20','upright_cycle_v21','upright_cycle_v22'):
         f=result.get('functional',{});episodes=f.get('episodes',[])
         if f.get('count')!=count or len(episodes)!=count:raise ValueError('Missing functional report')
         if f.get('definition')!=result['contract'].get('functional'):raise ValueError('Functional definition mismatch')

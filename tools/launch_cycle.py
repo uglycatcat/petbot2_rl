@@ -102,6 +102,7 @@ def main():
         if 'actor_normalization' in v:envelope+=['--actor-normalization',v['actor_normalization']]
         if 'balance_reflex' in v:envelope+=['--balance-reflex',v['balance_reflex']]
         if 'balance_noise_factor' in v:envelope+=['--balance-noise-factor',str(v['balance_noise_factor'])]
+        if 'training_mixture' in v:envelope+=['--training-mixture',v['training_mixture']]
         if 'tracking_objective' in v:envelope+=['--tracking-objective',v['tracking_objective']]
         if 'observation_frame' in v:envelope+=['--observation-frame',v['observation_frame']]
         initial=pathlib.Path(v['initial']).relative_to('demo_project/runs')
