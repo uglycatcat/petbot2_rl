@@ -16,10 +16,10 @@
       "remote": "ours",
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "branch": "rlproj/std_s2s_upright_project",
-      "verified_commit": "3954dd8c80a04e503149d98602304cf2e6590356",
+      "verified_commit": "a3276f360f6a811743631abadccf0ed7cc575e27",
       "status": "interactive_mujoco_demo_with_known_transfer_failures",
       "usage": "README.md",
-      "local_validation": "r42 mixed180s full cycle/basic remote passed; static landing, positive frame and second takeover can fail. Port parity35 cases zero error; CUDA export1024 zero error; GLFW and read-only source checks passed. See validation/README.md."
+      "local_validation": "r42 mixed180s full cycle/basic remote passed under original metrics; static landing, positive frame and second takeover can fail. Port parity35 cases zero error; CUDA export1024 zero error. Desktop CPU keyboard-limit mixed18s passed original full cycle/phase2 basic metrics and EGL rendering; transition yaw remains outside those metrics. MuJoCo 3.16 mouse camera calls fixed; real OpenGL drag, zoom and clean exit verified. Source model unchanged. See validation/README.md and docs/upright_sim2sim_20261027.md."
     }
   ]
 }
