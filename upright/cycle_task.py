@@ -124,7 +124,8 @@ def observations(env):
         p.active[:,None].float(),p.since[:,None]/12,p.peak[:,None],p.support_run[:,None].clamp(max=1),p.frame[:,None]),-1)
     features=torch.cat((base,torch.nn.functional.one_hot(p.phase,num_classes=5).float(),p.requested_mode[:,None],p.destination[:,None],p.phase_time[:,None]/4),-1)
     from .local_frame import ground_frame_features
-    return ground_frame_features(features,s['yaw'],getattr(env.cfg,'observation_frame','world'))
+    initial=p.transition_heading if getattr(p,'transition_contract','legacy')=='linear_heading' else None
+    return ground_frame_features(features,s['yaw'],getattr(env.cfg,'observation_frame','world'),initial)
 
 
 def reward(env,kind):

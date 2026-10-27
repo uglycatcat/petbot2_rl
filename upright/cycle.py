@@ -186,8 +186,11 @@ class CycleProgress(MovingProgress):
             transition=(self.phase==1)|(self.phase==3)
             yaw_error=wrap(s['yaw']-self.transition_heading)
             rate_error=s['heading_rate']-self.command[:,1]
+            speed_tolerance=.15+.5*self.transition_speed.abs()
+            speed_error=(s['forward']-self.transition_speed)/speed_tolerance
             result['transition_track']=transition*(
-                .5/(1.+(yaw_error/.15).square())+.5/(1.+(rate_error/.5).square()))
+                .3/(1.+(yaw_error/.15).square())+.3/(1.+(rate_error/.5).square())+
+                .4/(1.+speed_error.square()))
             result['geometry_ground']=geometry
             result['wheel_gap']=gap
             result['transition_heading_error']=yaw_error

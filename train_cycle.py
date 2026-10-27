@@ -110,6 +110,8 @@ try:
     if args.transition_contract=='linear_heading':
         contract['handoff_alignment'].update(physical_ground_hold_s=None,kinematic_ground_hold_s=.12)
         contract['transition_reference']='capture_measured_forward_speed_and_heading_v1'
+        contract['local_frame']=dict(LOCAL_FRAME_CONTRACT,initial_heading='captured_takeover_heading',
+            transition_interpolation='shortest_angle',original_rise=False)
         contract['fast_yaw_controller'].update(active_after=0.,active_phases=[1,2,3],half_difference_limit=25.,transition_policy_residual=0.)
     if args.observation_frame=='local':contract['observation_schema']='cycle_58x5_wheel_ground_local_v3'
     if args.observation_frame=='balance_local':contract['observation_schema']='cycle_58x5_balance_local_v4'

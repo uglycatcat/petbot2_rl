@@ -9,12 +9,16 @@ LOCAL_FRAME_CONTRACT=dict(version='wheel_ground_local_v1',
                                   retain_through_landing=True,original_rise=True))
 
 
-def ground_frame_features(features: torch.Tensor, heading: torch.Tensor, frame: str) -> torch.Tensor:
+def ground_frame_features(features: torch.Tensor, heading: torch.Tensor, frame: str, initial_heading=None) -> torch.Tensor:
     if frame=='world':return features
     if frame=='balance_local':
         blend=(features[:,43]>.5)*((features[:,48]*4.-1.2)/.6).clamp(0.,1.)
         blend=torch.where((features[:,44]>.5)|(features[:,45]>.5),1.,blend)
-        heading=heading*blend
+        if initial_heading is None:
+            heading=heading*blend
+        else:
+            from .moving import wrap
+            heading=initial_heading+wrap(heading-initial_heading)*blend
     elif frame!='local':raise ValueError('Unknown observation frame')
     result=features.clone()
     c,s=heading.cos(),heading.sin()
