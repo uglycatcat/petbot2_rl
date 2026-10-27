@@ -43,11 +43,11 @@ class ReflexAdapterModel(BalanceAdapterModel):
         self.balance_reflex.load_state_dict(FrozenBalanceReflex(self).state_dict(),strict=True)
 
 
-def attach_balance_reflex(env,actor,enabled):
+def attach_balance_reflex(env,actor,enabled,*,full_parent=False):
     """Install fixed inner feedback without changing the rollout action density."""
     if not enabled:return
     from .feedback_task import observations,ensure
-    a=env.action_manager.get_term('moving');fixed=actor.balance_reflex
+    a=env.action_manager.get_term('moving');fixed=actor.parent_balance if full_parent else actor.balance_reflex
     assert env.step_dt==.06 and env.physics_dt==.002 and a.fast_stride==1
     assert not any(p.requires_grad for p in fixed.parameters())
     process=a.process_actions;apply=a.apply_actions;reset=a.reset
@@ -58,8 +58,12 @@ def attach_balance_reflex(env,actor,enabled):
         assert raw.shape==(env.num_envs,290)
         cache['raw']=raw.clone();cache['frame_anchor']=a.target[:,3].clone()
         with torch.no_grad():
-            base=fixed.base(raw);parent=(base+fixed(raw)).clamp(-.99,.99)
-            cache['base']=base;cache['offset']=actions[:,:2].detach()-parent
+            if full_parent:
+                parent=fixed(raw)[:,:2]
+            else:
+                base=fixed.base(raw);parent=(base+fixed(raw)).clamp(-.99,.99)
+                cache['base']=base
+            cache['offset']=actions[:,:2].detach()-parent
         process(actions)
 
     def apply_actions():
@@ -67,7 +71,8 @@ def attach_balance_reflex(env,actor,enabled):
         if a.inner_index in (10,20) and mask.any():
             raw=cache['raw'].clone();raw[:,-58:]=observations(env)
             with torch.no_grad():
-                action=(cache['base']+fixed(raw)+cache['offset']).clamp(-.99,.99)
+                mean=fixed(raw)[:,:2] if full_parent else cache['base']+fixed(raw)
+                action=(mean+cache['offset']).clamp(-.99,.99)
             previous=a.inner_policy.mean(-1);desired=action[:,1]*a.max_speed
             common=previous+(desired-previous).clamp(-env.cfg.wheel_slew*.02,env.cfg.wheel_slew*.02)
             bound=env.cfg.wheel_slew*env.step_dt;anchor=a.inner_anchor

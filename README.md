@@ -47,7 +47,9 @@ PetBot2 的前轮抬起、后轮支撑、两轮遥控及前轮落地任务。训
 
 ### 稳定两轮阶段的固定反馈
 
-`train_cycle.py`支持`--balance-reflex off|frozen20`。主策略、五帧观察历史与PPO采样始终60 ms；`frozen20`仅在两轮阶段1.8秒之后，每20 ms用冻结父修正器更新车架/共同轮速。冻结控制器作为环境内部反馈随actor检查点保存，不随PPO更新；实际执行保留绝对限位和整60 ms变化率边界。起立、落地和普通控制交接不启用该反馈。
+`train_cycle.py`支持`--balance-reflex off|frozen20|parent_full20`。主策略、五帧观察历史与PPO采样始终60 ms；`frozen20`仅在两轮阶段1.8秒之后，每20 ms用冻结父修正器更新车架/共同轮速。冻结控制器作为环境内部反馈随actor检查点保存，不随PPO更新；实际执行保留绝对限位和整60 ms变化率边界。起立、落地和普通控制交接不启用该反馈。
+
+`parent_full20`仅用于全范围任务，从指定v22父检查点建立完整确定性网络快照，保存为`actor.parent_balance`。每60ms记录“外层采样动作−冻结父均值”，随后20/40ms只刷新冻结父的当前物理帧并加回该偏移；外层PPO更新不会改变内环参数，转向仍沿用原2ms反馈。`checks/parent_feedback_contract.py`检查CUDA输出、采样偏移、冻结梯度和严格重载，`checks/full_range_runtime.py`检查真实PPO更新及两份内部模块冻结。该训练候选需独立工程和效果验收；现有MuJoCo导出器不支持此新合同，不能只导出外层网络用于部署。
 
 部署必须同时保留外层actor和`actor.balance_reflex`（可独立`torch.jit.script`导出），以及相同历史缓存、阶段门控、目标约束和转向反馈；仅导出外层actor不能复现`frozen20`。固定父策略提频诊断入口`tools/probe_balance_cadence.py`只用于确定性评估，不能用作PPO训练入口；第十四批诊断复现使用95dded7固定副本。
 

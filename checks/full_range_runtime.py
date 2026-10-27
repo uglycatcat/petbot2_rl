@@ -9,7 +9,7 @@ last=torch.load(a.folder/a.final,map_location='cpu',weights_only=False)
 x,y=first['actor_state_dict'],last['actor_state_dict']
 updated={prefix:sum(not torch.equal(v,y[k]) for k,v in x.items() if k.startswith(prefix)) for prefix in ('mlp.','adapter.','yaw_adapter.','rise_adapter.')}
 assert all(updated.values()),updated
-frozen=[k for k in x if k.startswith(('balance_reflex.','obs_normalizer.')) or k in ('adapter_mean','adapter_std','rise_mean','rise_std')]
+frozen=[k for k in x if k.startswith(('balance_reflex.','parent_balance.','obs_normalizer.')) or k in ('adapter_mean','adapter_std','rise_mean','rise_std')]
 assert all(torch.equal(x[k],y[k]) for k in frozen)
 assert all(torch.isfinite(v).all() for v in y.values())
 assert int(last['critic_state_dict']['obs_normalizer.count'])>int(first['critic_state_dict']['obs_normalizer.count'])

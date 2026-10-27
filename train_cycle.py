@@ -22,7 +22,7 @@ p.add_argument('--transition-contract',choices=['legacy','linear_heading'],defau
 p.add_argument('--task-profile',choices=['legacy','full_range'],default='legacy')
 p.add_argument('--training-mixture',choices=['off','stratified_v1'],default='off')
 p.add_argument('--distributed',action='store_true')
-p.add_argument('--balance-reflex',choices=['off','frozen20'],default='off')
+p.add_argument('--balance-reflex',choices=['off','frozen20','parent_full20'],default='off')
 p.add_argument('--balance-noise-factor',type=float,choices=[1.,4.,16.],default=1.)
 p.add_argument('--actor-normalization',choices=['inherited','rebase_recent'],default='inherited')
 p.add_argument('--yaw-feedback-design',choices=['legacy60','fast20','fast2'],default='legacy60')
@@ -77,6 +77,8 @@ try:
         assert args.refinement_target=='all' and args.transition_contract=='linear_heading'
     else:assert args.actor_normalization=='inherited'
     if args.training_mixture!='off':assert args.task_profile=='full_range'
+    if args.balance_reflex=='parent_full20':
+        assert args.task_profile=='full_range' and (args.initialize_cycle_from or args.checkpoint)
     cfg=CycleEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
     cfg.speed_limit=args.speed_limit;cfg.yaw_limit=args.yaw_limit;cfg.frame_range=(args.frame_min,args.frame_max)
     cfg.wheel_slew=args.wheel_slew;cfg.frame_slew=args.frame_slew;cfg.wheel_mode='common_diff'
@@ -95,7 +97,7 @@ try:
     dirty=bool(subprocess.check_output(['git','status','--porcelain'],text=True).strip())
     if dirty and not args.allow_dirty:raise RuntimeError('Commit source before formal execution')
     names=['train_cycle.py','upright/rise_adapter.py','upright/balance_adapter.py','upright/balance_reflex.py','upright/stability.py','upright/functional.py','upright/local_frame.py']+['upright/'+n+'.py' for n in ['normalization','fast_feedback','ground_motion','feedback','feedback_task','continuous','continuous_task','cycle','cycle_task','moving','task','distribution','model','asset_cfg','prepare','transfer']]
-    names+=['upright/kinematics.py','upright/full_range.py','upright/behavior.py']
+    names+=['upright/kinematics.py','upright/full_range.py','upright/behavior.py','upright/parent_feedback.py']
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(n).read_bytes()).hexdigest() for n in names).encode()).hexdigest()
     scales={'moderate':[1.,4.,4.],'fine':[4.,16.,16.],'precision':[16.,64.,64.]}[args.exploration_profile]
     contract=dict(task='upright_cycle_v19',balance_reflex=args.balance_reflex,reflex_contract=dict(parent='cycle15B',period=.02,gate_after=1.8,frozen=True,clock='outer60ms',physical_features_only=True),tracking_objective=args.tracking_objective,actor_design='frozen_base_balance_yaw_adapter_v1',balance_noise_factor=args.balance_noise_factor,adapter_limits=[.03,.08,.8],adapter_gate=[1.2,1.8],adapter_observation_stats='frozen_parent_critic',actor_normalization=args.actor_normalization,normalization_prior_count=10000000 if args.actor_normalization=='rebase_recent' else None,yaw_feedback_design=args.yaw_feedback_design,fast_yaw_controller=dict(FAST_CONTROLLER,period=.002 if args.yaw_feedback_design=='fast2' else .02,kp=args.yaw_feedback_gain),heading_reference='wheel_lateral',contact_sampling='eager_physics_step_history30_v1',instant_tracking_weight=args.instant_tracking_weight,yaw_controller=CONTROLLER,steering_design=args.steering_design,yaw_filter_tau=args.yaw_filter_tau,tracking_shape=args.tracking_shape,command_sampling='all_directed_six_sequence_v3',reward_design=('stability_first_coarse_motion_v1' if args.tracking_objective=='stability_first' else 'instant_tolerance_soft_landing_v1' if args.tracking_objective=='instant_tolerance' else 'joint_ground_motion_soft_landing_v2'),motion_feedback='pose_delta_ema_120ms',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_58x5_wheel_lateral_v2',fingerprint=fingerprint,
@@ -135,6 +137,9 @@ try:
         from upright.full_range import TRAINING_MIXTURE
         contract['task']='upright_cycle_v22'
         contract['training_distribution']=TRAINING_MIXTURE if args.training_mixture!='off' else dict(version='off')
+    if args.balance_reflex=='parent_full20':
+        from upright.parent_feedback import PARENT_FEEDBACK_CONTRACT
+        contract.update(task='upright_cycle_v23',reflex_contract=PARENT_FEEDBACK_CONTRACT)
     if args.checkpoint:
         prior=json.loads((pathlib.Path(args.checkpoint).parent/'config.json').read_text())
         if prior['contract']!=contract:raise ValueError('Checkpoint contract mismatch')
@@ -148,10 +153,11 @@ try:
     if args.refinement_target in ('rise','all'):
         config['actor']['class_name']='upright.rise_adapter:RiseAdapterModel'
         config['algorithm']['lam']=RISE_CONTRACT['gae_lambda']
+    if args.balance_reflex=='parent_full20':config['actor']['class_name']='upright.parent_feedback:ParentFeedbackModel'
     runner=OnPolicyRunner(wrapped,copy.deepcopy(config),log_dir=str(folder),device=args.device)
     if args.refinement_target=='all':
         actor=runner.alg.get_policy()
-        for name,parameter in actor.named_parameters():parameter.requires_grad_(not name.startswith('balance_reflex.'))
+        for name,parameter in actor.named_parameters():parameter.requires_grad_(not name.startswith(('balance_reflex.','parent_balance.')))
         optimized={id(p) for g in runner.alg.optimizer.param_groups for p in g['params']}
         assert all(id(p) in optimized for p in actor.parameters() if p.requires_grad)
     metadata=dict(contract=contract,args=vars(args),runner=config,working_tree_dirty=dirty,commit=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip())
@@ -163,33 +169,38 @@ try:
         if args.task_profile=='full_range':
             allowed_sources['upright_cycle_v20']='b269d49aacb50d5bf5d8a3d9cd618696e087734e'
             allowed_sources['upright_cycle_v21']='c30b2c209d7c212e442c7614b17aeaf69205f19d'
+            allowed_sources['upright_cycle_v22']='4c0c813a943dfbbf26ec91da8ce2114faf0ef06a'
         if prior['working_tree_dirty'] or allowed_sources.get(prior['contract'].get('task'))!=prior['commit']:raise ValueError('Only validated clean cycle-v16/v17 source allowed')
         if prior['contract']['observation_schema'] not in ('cycle_58x5_wheel_lateral_v2','cycle_58x5_balance_local_v4') or prior['contract']['steering_design']!='feedback':raise ValueError('Source observation schema mismatch')
         for k in ('action_dim','wheel_mode','wheel_slew','frame_slew','control_dt','source_sha256','concentration_scale','instant_tracking_weight','balance_noise_factor'):
             if k=='balance_noise_factor' and args.task_profile=='full_range':continue
             if prior['contract'][k]!=contract[k]:raise ValueError('Transfer mismatch '+k)
-        if prior['contract']['task']!='upright_cycle_v21' and prior['contract']['balance_noise_factor']!=16.:raise ValueError('Legacy parents require validated exploration')
+        if prior['contract']['task'] not in ('upright_cycle_v21','upright_cycle_v22') and prior['contract']['balance_noise_factor']!=16.:raise ValueError('Legacy parents require validated exploration')
         if prior['contract']['tracking_objective']!='stability_first' or prior['contract']['yaw_feedback_design']!='fast2' or prior['contract']['fast_yaw_controller']['kp']!=16.:raise ValueError('Preserve validated stability-first parents')
-        if prior['contract']['balance_reflex']!='frozen20' or args.balance_reflex!='frozen20':raise ValueError('V19 preserves validated frozen20 feedback')
+        if prior['contract']['balance_reflex']!='frozen20' or args.balance_reflex not in ('frozen20','parent_full20'):raise ValueError('Transfer requires a validated frozen20 parent')
+        if args.balance_reflex=='parent_full20' and prior['contract']['task']!='upright_cycle_v22':raise ValueError('Full parent feedback requires validated v22')
         loaded=torch.load(initial,map_location='cpu',weights_only=False)
         actor=runner.alg.get_policy()
-        if args.refinement_target=='rise':actor.initialize_rise(loaded['actor_state_dict'],loaded['critic_state_dict'])
+        if args.balance_reflex=='parent_full20':actor.initialize_outer(loaded['actor_state_dict'])
+        elif args.refinement_target=='rise':actor.initialize_rise(loaded['actor_state_dict'],loaded['critic_state_dict'])
         else:actor.load_state_dict(loaded['actor_state_dict'],strict=True)
         runner.alg.critic.load_state_dict(loaded['critic_state_dict'],strict=True)
         normalization_review=None
         if args.actor_normalization=='rebase_recent':
             from upright.normalization import rebase_all_branches
             normalization_review=rebase_all_branches(actor,loaded['critic_state_dict'])
+        if args.balance_reflex=='parent_full20':actor.snapshot_parent()
         assert runner.current_learning_iteration==0 and not runner.alg.optimizer.state
         metadata['initialization']=dict(source_commit=prior['commit'],checkpoint_sha256=hashlib.sha256(initial.read_bytes()).hexdigest(),actor_base_frozen=True,critic_loaded=True,optimizer_loaded=False,prior_adapter_loaded=True,yaw_adapter_loaded=True,reward_changed=args.tracking_objective!=prior['contract']['tracking_objective'] or args.tracking_weight!=prior['contract']['tracking_weight'],observation_frame_changed=args.observation_frame!=prior['contract'].get('observation_frame','world'),task_changed=True,handoff_alignment_changed=args.handoff_alignment!='before',feedback_period_changed=False,feedback_gain_changed=False,frozen_balance_reflex=args.balance_reflex,observation_width=58)
         metadata['initialization']['normalization_review']=normalization_review
         metadata['initialization']['exploration_changed']=prior['contract']['balance_noise_factor']!=args.balance_noise_factor
         metadata['initialization']['trainable_actor_scope']=args.refinement_target
         metadata['initialization']['actor_base_frozen']=args.refinement_target!='all'
+        metadata['initialization']['full_parent_feedback_snapshot']=args.balance_reflex=='parent_full20'
         del loaded
     if args.checkpoint:runner.load(args.checkpoint)
     from upright.balance_reflex import attach_balance_reflex
-    attach_balance_reflex(env,runner.alg.get_policy(),args.balance_reflex=='frozen20')
+    attach_balance_reflex(env,runner.alg.get_policy(),args.balance_reflex in ('frozen20','parent_full20'),full_parent=args.balance_reflex=='parent_full20')
     metadata['distributed']=dict(world_size=world_size,rank=rank,local_envs=args.num_envs,total_envs=world_size*args.num_envs)
     metadata['effective_training_mixture']=cfg.training_mixture
     if rank==0:(folder/'config.json').write_text(json.dumps(metadata,indent=2))
