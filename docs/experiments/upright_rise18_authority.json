@@ -1,0 +1,195 @@
+{
+  "name": "upright_rise18_authority",
+  "commit": "001a54e98ff18f1274e2d7e961404325de4e50f7",
+  "accepted_task_commit": "57b626eac0eb4d1c52b5966703bedb83ff8b5ec8",
+  "fixed": "demo_project/runs/_upright_rise18_authority/fixed",
+  "container": "petbot-upright-night",
+  "context_doc": "docs/upright_rise_authority_diagnostic.md",
+  "common_args": [
+    "--speed-limit",
+    ".05",
+    "--yaw-limit",
+    ".15",
+    "--frame-min=-.20",
+    "--frame-max",
+    ".20",
+    "--wheel-slew",
+    "480",
+    "--frame-slew",
+    "3",
+    "--tracking-weight",
+    "4",
+    "--tracking-objective",
+    "stability_first",
+    "--exploration-profile",
+    "fine",
+    "--steering-design",
+    "feedback",
+    "--yaw-filter-tau",
+    "0.0",
+    "--instant-tracking-weight",
+    "0.3",
+    "--yaw-feedback-design",
+    "fast2",
+    "--actor-normalization",
+    "inherited",
+    "--balance-noise-factor",
+    "16",
+    "--yaw-feedback-gain",
+    "16",
+    "--balance-reflex",
+    "frozen20",
+    "--observation-frame",
+    "balance_local",
+    "--handoff-alignment",
+    "after",
+    "--refinement-target",
+    "rise"
+  ],
+  "jobs": [
+    {
+      "name": "r43_identity",
+      "checkpoint": "demo_project/runs/upright_cycle_batch18_r43/logs/upright_cycle_batch18_r43/model_199.pt",
+      "checkpoint_sha256": "ce6785972d37ad553ba78529cef05b4c4e65458009e41f4bd2628f8a740946c5",
+      "mode": "checkpoint",
+      "seed": 20261136,
+      "entrypoint": "tools/probe_rise_authority.py",
+      "args": [
+        "--hold-min",
+        "180",
+        "--hold-max",
+        "180",
+        "--rise-frame-gain",
+        "1",
+        "--rise-wheel-gain",
+        "1"
+      ]
+    },
+    {
+      "name": "r45_identity",
+      "checkpoint": "demo_project/runs/upright_cycle_batch18_r45/logs/upright_cycle_batch18_r45/model_199.pt",
+      "checkpoint_sha256": "1edc34556cc7a40cd54c8f66813e6b838ba0a6142bca057b5f9e0007eb1cef81",
+      "mode": "checkpoint",
+      "seed": 20261136,
+      "entrypoint": "tools/probe_rise_authority.py",
+      "args": [
+        "--hold-min",
+        "180",
+        "--hold-max",
+        "180",
+        "--rise-frame-gain",
+        "1",
+        "--rise-wheel-gain",
+        "1"
+      ]
+    },
+    {
+      "name": "r43_frame2",
+      "checkpoint": "demo_project/runs/upright_cycle_batch18_r43/logs/upright_cycle_batch18_r43/model_199.pt",
+      "checkpoint_sha256": "ce6785972d37ad553ba78529cef05b4c4e65458009e41f4bd2628f8a740946c5",
+      "mode": "checkpoint",
+      "seed": 20261136,
+      "entrypoint": "tools/probe_rise_authority.py",
+      "args": [
+        "--hold-min",
+        "60",
+        "--hold-max",
+        "60",
+        "--rise-frame-gain",
+        "2",
+        "--rise-wheel-gain",
+        "1"
+      ]
+    },
+    {
+      "name": "r43_wheel4",
+      "checkpoint": "demo_project/runs/upright_cycle_batch18_r43/logs/upright_cycle_batch18_r43/model_199.pt",
+      "checkpoint_sha256": "ce6785972d37ad553ba78529cef05b4c4e65458009e41f4bd2628f8a740946c5",
+      "mode": "checkpoint",
+      "seed": 20261136,
+      "entrypoint": "tools/probe_rise_authority.py",
+      "args": [
+        "--hold-min",
+        "60",
+        "--hold-max",
+        "60",
+        "--rise-frame-gain",
+        "1",
+        "--rise-wheel-gain",
+        "4"
+      ]
+    },
+    {
+      "name": "r43_both",
+      "checkpoint": "demo_project/runs/upright_cycle_batch18_r43/logs/upright_cycle_batch18_r43/model_199.pt",
+      "checkpoint_sha256": "ce6785972d37ad553ba78529cef05b4c4e65458009e41f4bd2628f8a740946c5",
+      "mode": "checkpoint",
+      "seed": 20261136,
+      "entrypoint": "tools/probe_rise_authority.py",
+      "args": [
+        "--hold-min",
+        "60",
+        "--hold-max",
+        "60",
+        "--rise-frame-gain",
+        "2",
+        "--rise-wheel-gain",
+        "4"
+      ]
+    },
+    {
+      "name": "r45_frame2",
+      "checkpoint": "demo_project/runs/upright_cycle_batch18_r45/logs/upright_cycle_batch18_r45/model_199.pt",
+      "checkpoint_sha256": "1edc34556cc7a40cd54c8f66813e6b838ba0a6142bca057b5f9e0007eb1cef81",
+      "mode": "checkpoint",
+      "seed": 20261136,
+      "entrypoint": "tools/probe_rise_authority.py",
+      "args": [
+        "--hold-min",
+        "60",
+        "--hold-max",
+        "60",
+        "--rise-frame-gain",
+        "2",
+        "--rise-wheel-gain",
+        "1"
+      ]
+    },
+    {
+      "name": "r45_wheel4",
+      "checkpoint": "demo_project/runs/upright_cycle_batch18_r45/logs/upright_cycle_batch18_r45/model_199.pt",
+      "checkpoint_sha256": "1edc34556cc7a40cd54c8f66813e6b838ba0a6142bca057b5f9e0007eb1cef81",
+      "mode": "checkpoint",
+      "seed": 20261136,
+      "entrypoint": "tools/probe_rise_authority.py",
+      "args": [
+        "--hold-min",
+        "60",
+        "--hold-max",
+        "60",
+        "--rise-frame-gain",
+        "1",
+        "--rise-wheel-gain",
+        "4"
+      ]
+    },
+    {
+      "name": "r45_both",
+      "checkpoint": "demo_project/runs/upright_cycle_batch18_r45/logs/upright_cycle_batch18_r45/model_199.pt",
+      "checkpoint_sha256": "1edc34556cc7a40cd54c8f66813e6b838ba0a6142bca057b5f9e0007eb1cef81",
+      "mode": "checkpoint",
+      "seed": 20261136,
+      "entrypoint": "tools/probe_rise_authority.py",
+      "args": [
+        "--hold-min",
+        "60",
+        "--hold-max",
+        "60",
+        "--rise-frame-gain",
+        "2",
+        "--rise-wheel-gain",
+        "4"
+      ]
+    }
+  ]
+}

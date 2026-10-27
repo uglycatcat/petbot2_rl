@@ -44,17 +44,17 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "57b626eac0eb4d1c52b5966703bedb83ff8b5ec8",
+      "verified_commit": "001a54e98ff18f1274e2d7e961404325de4e50f7",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "cycle18 nine fixed57b626e PPO jobs verified running;29 evaluations/event hook active; parent baseline complete61/64",
-      "local_validation": "v19 original8 engineering jobs and additional5 resource jobs complete, no memory/physics failures. 2048/4096 short-trained180s complete/basic63/64 and64/64; known rise failure remains in2048. Extra1024x20 smoke and8s physical reload64/64 passed. Triple4096 throughput13.04k steps/s, mean compute89.3% onGPU2 only. Formal batch18 inherits cycle16B43/199, trains only rise head plus critic, new180s heldout20261136. MuJoCo pending. See docs/upright_cycle_v19_training.md.",
+      "status": "cycle18 complete9train/29eval; fixed rise authority diagnostics running, not new PPO",
+      "local_validation": "cycle18 fixed57b626e: all nine runs clean, no memory or physics interruption. Same64 heldout180s parent61/64; most rise policies63/64, all failures during rise; frame30 no consistent gain. All inherited control frozen,200 updates not proven converged. Diagnostic001a54e CUDA/preflight passed; physical identity and gain results pending. MuJoCo pending. See docs/upright_cycle_batch18_results.md and docs/upright_rise_authority_diagnostic.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_cycle_batch18"
+        "upright_rise18_authority"
       ]
     },
     {
