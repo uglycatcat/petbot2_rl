@@ -59,13 +59,13 @@ def run_viewer(sim, smoke_seconds=None):
         if mouse[0] is not None and glfw.get_mouse_button(window,glfw.MOUSE_BUTTON_LEFT)==glfw.PRESS:
             width,height = glfw.get_window_size(window)
             mujoco.mjv_moveCamera(sim.model,mujoco.mjtMouse.mjMOUSE_ROTATE_V,
-                                 (x-mouse[0])/height,(y-mouse[1])/height,scene,camera)
+                                 (x-mouse[0])/height,(y-mouse[1])/height,camera)
         mouse[:] = x,y
 
     glfw.set_key_callback(window,key_callback)
     glfw.set_cursor_pos_callback(window,cursor_callback)
     glfw.set_scroll_callback(window,lambda w,x,y: mujoco.mjv_moveCamera(
-        sim.model,mujoco.mjtMouse.mjMOUSE_ZOOM,0.,-.05*y,scene,camera))
+        sim.model,mujoco.mjtMouse.mjMOUSE_ZOOM,0.,-.05*y,camera))
     glfw.set_window_focus_callback(window,lambda w,focused: keys.down.clear() if not focused else None)
     next_step = start = time.monotonic()
     try:
