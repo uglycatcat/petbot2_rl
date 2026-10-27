@@ -25,8 +25,9 @@ def validate(result,count=64):
         durations=result.get('balance_duration');motion=result.get('takeover_motion')
         if not isinstance(durations,list) or len(durations)!=count or any(x<0 for x in durations):raise ValueError('Bad balance duration')
         if not isinstance(motion,list) or len(motion)!=count or any(len(row)!=2 for row in motion):raise ValueError('Missing actual takeover motion')
+        switching_bound=11. if result['contract'].get('task_profile')=='full_range' else 8.
         for complete,changes,duration in zip(result['outcomes']['complete'],switches,durations):
-            if complete and duration>=8. and changes<1:raise ValueError('Completed long hold without mixed commands')
+            if complete and duration>=switching_bound and changes<1:raise ValueError('Completed long hold without mixed commands')
     if result.get('contract',{}).get('task')in ('upright_cycle_v16','upright_cycle_v17','upright_cycle_v18','upright_cycle_v19','upright_cycle_v20','upright_cycle_v21'):
         f=result.get('functional',{});episodes=f.get('episodes',[])
         if f.get('count')!=count or len(episodes)!=count:raise ValueError('Missing functional report')

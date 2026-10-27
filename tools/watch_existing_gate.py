@@ -87,7 +87,7 @@ def attach(out, names, queue_name, context_doc='docs/upright_handoff_alignment_v
         'eval_finished及实际进程、短训/重载结果和物理约束。检查是否发生显存中断及恢复，'
         '不能遗漏失败、假设退出0代表通过或重复启动。这是工程验收，不是正式PPO批次终局。'
         '先完成验收与结果分析，再决定针对起立缺陷的训练或MuJoCo闭环；'
-        '网络导出不是sim2sim通过。继续今晚已授权事件迭代，'
+        '网络导出不是sim2sim通过。继续已授权事件迭代，'
         '稳定优先，不恢复周期定时器或goal。')
     save(out/'completion_notice.json', dict(submission_unknown='attempt_started'))
     try:
