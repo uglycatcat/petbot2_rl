@@ -30,7 +30,9 @@ def main():
     parser.add_argument('--seconds',type=float,default=36.)
     parser.add_argument('--hold-seconds',type=float,default=18.)
     parser.add_argument('--cycles',type=int,default=1)
-    parser.add_argument('--command-scale',type=float,default=1.,help='Scale headless commands; 1.25 reaches the keyboard limits')
+    parser.add_argument('--command-scale',type=float,default=1.,help='Multiply headless commands within the exported policy range')
+    parser.add_argument('--forward-speed',type=float,default=.04,help='Headless forward/reverse amplitude in m/s')
+    parser.add_argument('--turn-rate',type=float,default=.12,help='Headless mixed turn amplitude in rad/s')
     parser.add_argument('--scenario',choices=['stationary','forward','reverse','mixed','ordinary'],default='mixed')
     parser.add_argument('--takeover-yaw',type=float,default=0.,help='Ordinary-drive turn command before the first balance phase')
     parser.add_argument('--output',type=Path,default=ROOT/'outputs/latest')
@@ -40,12 +42,15 @@ def main():
     import math
     if any(not math.isfinite(v) or v<=0 for v in (args.seconds,args.hold_seconds)) or args.cycles<1:
         parser.error('Durations and cycle count must be positive and finite')
-    if not math.isfinite(args.command_scale) or not 0<args.command_scale<=1.25:
-        parser.error('Command scale must be in (0, 1.25]')
+    if not math.isfinite(args.command_scale) or args.command_scale<=0:
+        parser.error('Command scale must be positive and finite')
     if args.headless and args.snapshot:
         os.environ.setdefault('MUJOCO_GL','egl')
     from petbot_s2s.simulation import Simulation
     sim = Simulation(args.policy,args.model_dir,args.frame,args.transition_contract)
+    for value,limit in ((args.forward_speed,sim.controller.speed_limit),(args.turn_rate,sim.controller.yaw_limit)):
+        if not math.isfinite(value) or value<0 or value*args.command_scale>limit:
+            parser.error('Headless amplitudes must fit the exported policy range')
     if not math.isfinite(args.takeover_yaw) or abs(args.takeover_yaw*args.command_scale)>sim.controller.yaw_limit:
         parser.error('Takeover yaw must fit the exported policy range')
     if not args.headless:
@@ -66,13 +71,14 @@ def main():
     rows = []
     while sim.data.time < args.seconds and not c.failure_code:
         t = float(sim.data.time)
-        command = (0.,0.) if args.scenario=='stationary' else (.04,0.)
+        command = (0.,0.) if args.scenario=='stationary' else (args.forward_speed,0.)
         if args.scenario=='reverse':
-            command = (-.04,0.)
+            command = (-args.forward_speed,0.)
         if balanced_at is None:
             command = (command[0],args.takeover_yaw)
         if args.scenario=='mixed' and balanced_at is not None:
-            commands = [(.04,0.),(0.,.12),(-.04,0.),(0.,-.12),(.03,.10),(0.,0.)]
+            v,w=args.forward_speed,args.turn_rate
+            commands = [(v,0.),(0.,w),(-v,0.),(0.,-w),(.75*v,(5./6.)*w),(0.,0.)]
             command = commands[int((t-balanced_at)//3)%len(commands)]
         c.set_command(*(v*args.command_scale for v in command))
         if t>=next_arm and not armed and args.scenario!='ordinary':
@@ -97,7 +103,7 @@ def main():
     result = dict(policy=args.policy.name,checkpoint_sha256=c.manifest['checkpoint_sha256'],
         transition_contract=c.transition_contract,development_intervention=args.transition_contract is not None,
         source_model_sha256=sim.model_sha256,mujoco_version=__import__('mujoco').__version__,
-        scenario=args.scenario,takeover_yaw=args.takeover_yaw,command_scale=args.command_scale,frame=args.frame,wall_seconds=time.monotonic()-start,
+        scenario=args.scenario,forward_speed=args.forward_speed,turn_rate=args.turn_rate,takeover_yaw=args.takeover_yaw,command_scale=args.command_scale,frame=args.frame,wall_seconds=time.monotonic()-start,
         simulated_seconds=float(sim.data.time),entered_balance=ever_balanced,
         requested_cycles=args.cycles,
         completed_cycles=c.cycles,interrupted_calls=c.interruptions,last_exit_code=c.last_exit_code,failure_code=c.failure_code,events=c.events,
