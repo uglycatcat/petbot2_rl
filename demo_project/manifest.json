@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "5d03bd0a825309462f0c73931cad6adb5d74c009",
+      "verified_commit": "edce522e673a123eb6ed6416076f604435f63e29",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "cycle18_long 9train/29eval complete; no running jobs; priority moved to MuJoCo experience in rl_project",
-      "local_validation": "Full continuation400 updates:12 optimizer states each+8000 steps, frozen actor/statistics unchanged. Seed37 heldout complete61-62/64; no improvement over paired parent62/64. Default sim2sim candidate r42 selected; MuJoCo180s mixed case passes, static landing/repeated takeover failures retained. See docs/upright_cycle_batch18_long_results.md and docs/upright_sim2sim_20261027.md.",
+      "status": "transition correction engineering complete; formal deployment paused by user for full-MJCF-range alignment",
+      "local_validation": "Fixed b269d49: 4096env8updates, new-seed64/64 short-cycle reload, no guard or PhysX error. Three-GPU synchronized PPO resource gate passed at4096env per card. Full physical command range is not yet implemented/accepted; see docs/upright_cycle_correction_20261027.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []

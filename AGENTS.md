@@ -4,7 +4,7 @@
 
 ## 目标与当前工作
 
-- **当前优先级（2026-10-27）：根据桌面MuJoCo体验继续在`demo_project/upright_rl_demo`迭代，直到用户亲自确认sim2sim可以通过，才讨论正式迁移；正式训练目录此前保持空。用户16:51要求重新对齐任务细节后迅速修改并推送一版训练，以当日18:30前看到矫正效果为目标，取代此前暂停实施的要求；当前处于任务对齐，修复和新批次尚未实施。旧批次延迟事件仅复核，不据此重复启动。稳定优先、源模型只读、周期定时器取消且不创建goal的约束保留。**
+- **当前优先级（2026-10-27最新）：暂停部署，继续对齐新版upright任务。用户明确以MJCF电机全部上限训练，取消80%与旧低速工作范围；晚间训练待对齐后推进，只部署一份同步PPO。过渡修正工程短训已结束，没有正式新训练在跑；源模型只读、周期定时器取消、不创建goal、正式训练目录保持空。见[当前交接](docs/current_handoff.md)。**
 - 三个独立策略按起立（upright）、0–3 cm 低台阶（step）、跌倒恢复（recovery）推进；当前研究范围仅完整运动循环起立，正在实施稳定优先版本。训练链路为 Isaac Lab + RSL-RL + PPO，后续用 MuJoCo 做 sim2sim。任务与控制契约见[需求基线](docs/current_scope.md)。
 - 稳定优先与分阶段局部观测已改善两轮长时稳定，v18已修正落地后的交接顺序。第十八批57b626e的9训练/29评估完整有效，新种子180秒原父61/64，多数起立专用策略63/64；失败均在起立，进入两轮者全部完成后续。±0.30 rad仍无一致收益；幅度诊断8/8有效但增益放大无跨策略一致收益，原幅度完整状态续训9训练/29评估已结束，新种子完整61–62/64，没有突破同种子原父基线；见[当前交接](docs/current_handoff.md)与[第十八批终局](docs/upright_cycle_batch18_results.md)。
 - MuJoCo首版已实现：默认r42完成180秒固定混合遥控、落地和交接，旧基本遥控判据通过；用户桌面体验后确认过渡偏航缺口：Isaac零转向起立33回合偏航绝对中位38.61°，MuJoCo静止起立约57°。旧评分只覆盖两轮段，不能据此认定全过程动作合格；静止落地、正车架角度、重复起落仍有失败。下一阶段需扩速，并对齐控制/判据修正；实施授权以上方最新要求为准。见[方案与实测](docs/upright_sim2sim_20261027.md)。
@@ -19,7 +19,7 @@
 | 训练服务器 | `nvidia-smi -L` 为4块RTX 4090，家目录在 `/data/...` | 训练、评估和渲染；训练仅在专用容器内。 |
 | 桌面机 | 1块RTX 2080 Ti，家目录在 `/home/...` | 不训练；最后做 MuJoCo 等效果验证。 |
 
-仓库公开，主机地址、账号、密钥和代理配置不得入库。先读本文件，再读[当前交接](docs/current_handoff.md)。具体问题按[文档索引](docs/README.md)下钻：需求→`current_scope.md`，实现和入口→[demo README](demo_project/upright_rl_demo/README.md)，当前实现→[起立专用修正](docs/upright_rise_adapter_v19.md)，本批→[第十八批起立训练](docs/upright_cycle_v19_training.md)，结果→[第十八批终局](docs/upright_cycle_batch18_results.md)，历史编号→[谱系](docs/upright_training_lineage_20261023.md)，参考项目→[参考项目索引](reference_project/README.md)。根目录 [README.md](README.md) 只供部署与使用，不写实验进度。
+仓库公开，主机地址、账号、密钥和代理配置不得入库。先读本文件，再读[当前交接](docs/current_handoff.md)。具体问题按[文档索引](docs/README.md)下钻：需求→`current_scope.md`，实现和入口→[demo README](demo_project/upright_rl_demo/README.md)，当前修正→[过渡修正与验收](docs/upright_cycle_correction_20261027.md)，上一正式批→[第十八批起立训练](docs/upright_cycle_v19_training.md)，结果→[第十八批终局](docs/upright_cycle_batch18_results.md)，历史编号→[谱系](docs/upright_training_lineage_20261023.md)，参考项目→[参考项目索引](reference_project/README.md)。根目录 [README.md](README.md) 只供部署与使用，不写实验进度。
 
 ## 全局规则（硬约束）
 
@@ -90,6 +90,7 @@
 | 2026-10-27 | 正式项目分支登记与MuJoCo真实策略闭环 | 训练占位保持空；r42固定180秒混合遥控完整/基本通过，但静止落地、部分车架及重复起落失败，成熟度迁移待验证。见[sim2sim实测](docs/upright_sim2sim_20261027.md)。 |
 | 2026-10-27 | 桌面体验暴露起落偏航与验收覆盖缺口 | 两引擎均有零转向下大幅过渡偏航；旧基本评分只覆盖两轮段，原完成数不能视为全过程动作合格。用户确认下一阶段扩速但暂不实施，先讨论连续转向及落地接管；见[行为审查](docs/upright_sim2sim_20261027.md#桌面体验后的过渡行为审查2026-10-27)。 |
 | 2026-10-27 | 用户确认继续在demo迭代及正式迁移前提 | 训练仍在`demo_project/upright_rl_demo`，直到用户亲自确认sim2sim可以通过；正式训练目录保持空，自动评估或agent判断不能替代用户验收。见[需求基线](docs/current_scope.md#正式项目与体验验证2026-10-27)。 |
+| 2026-10-27 | 修正过渡行为并重新对齐全部模型能力范围 | 用户取消80%口径，按MJCF电机全部上限；暂停部署、先对齐，晚间再训练。修正短训重载64/64，新权重MuJoCo180秒通过但重复第3次/转弯接管失败；见[修正验收](docs/upright_cycle_correction_20261027.md)。 |
 
 ## 目录职责与检查
 

@@ -16,10 +16,10 @@
       "remote": "ours",
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "branch": "rlproj/std_s2s_upright_project",
-      "verified_commit": "a3276f360f6a811743631abadccf0ed7cc575e27",
-      "status": "interactive_mujoco_demo_with_known_transfer_failures",
+      "verified_commit": "af02fc44058ec30c6cc9fc70b1edbfc50507215b",
+      "status": "legacy default retained; corrected transition candidate available with known repeated/turning takeover failures",
       "usage": "README.md",
-      "local_validation": "r42 mixed180s full cycle/basic remote passed under original metrics; static landing, positive frame and second takeover can fail. Port parity35 cases zero error; CUDA export1024 zero error. Desktop CPU keyboard-limit mixed18s passed original full cycle/phase2 basic metrics and EGL rendering; transition yaw remains outside those metrics. MuJoCo 3.16 mouse camera calls fixed; real OpenGL drag, zoom and clean exit verified. Source model unchanged. See validation/README.md and docs/upright_sim2sim_20261027.md."
+      "local_validation": "correction20_gate_r42: GPU64/64 short-cycle reload; MuJoCo stationary, mixed180s and2cycles complete; third rise timeout and turning takeover failure retained. New/legacy35-case parity zero; FK200poses <=1.11e-16m; render substep refactor395frames exact, Xvfb smoke passed. Full-range training not deployed. User desktop camera fix preserved."
     }
   ]
 }
