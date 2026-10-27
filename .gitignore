@@ -45,3 +45,6 @@ Thumbs.db
 # Formal repo projects and local historical run archives.
 /rl_project/*/
 /history/
+
+# Retired host-side helpers; active tools live inside their managed projects.
+/tools/
