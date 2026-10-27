@@ -14,7 +14,7 @@
 | 瞬时联合0%的含义、平衡波动与遥控验收 | [验收口径复核](upright_tracking_acceptance_review_20261026.md)，分析建议，未变更正式标准 |
 | 放宽精度、两轮不跌倒优先的最新需求与改法 | [稳定优先方案](upright_stability_first_plan_20261026.md)，已获实施与训练授权，状态见交接 |
 | 稳定优先版本与新功能验收 | [第十六版](upright_cycle_v16.md)；部署状态见[交接](current_handoff.md) |
-| 最新起立修正与独立范围结果 | [第十七批结果](upright_cycle_batch17_results.md)、[固定策略验证](upright_cycle17_validation.md)、[交接顺序修正](upright_handoff_alignment_v18.md)、[独立范围/起立诊断](upright_handoff18_validation.md)、[起立专用修正v19](upright_rise_adapter_v19.md)、[第十八批起立训练](upright_cycle_v19_training.md)、[第十八批终局](upright_cycle_batch18_results.md)、[起立幅度诊断](upright_rise_authority_diagnostic.md)、[同配置续训](upright_cycle_v19_long.md)；原对照见[第十七版](upright_cycle_v17.md) |
+| 最新起立修正与独立范围结果 | [第十七批结果](upright_cycle_batch17_results.md)、[固定策略验证](upright_cycle17_validation.md)、[交接顺序修正](upright_handoff_alignment_v18.md)、[独立范围/起立诊断](upright_handoff18_validation.md)、[起立专用修正v19](upright_rise_adapter_v19.md)、[第十八批起立训练](upright_cycle_v19_training.md)、[第十八批终局](upright_cycle_batch18_results.md)、[起立幅度诊断](upright_rise_authority_diagnostic.md)、[同配置续训](upright_cycle_v19_long.md)、[续训终局](upright_cycle_batch18_long_results.md)；原对照见[第十七版](upright_cycle_v17.md) |
 | 稳定两轮局部反馈设计与验收 | [第十五版](upright_cycle_v15.md) |
 | 第十四批完整结果与后续诊断 | [第十四批终局](upright_cycle_batch14_results.md) |
 | 转向内环周期/增益对照 | [第十四版](upright_cycle_v14.md)，实际状态见[交接](current_handoff.md) |

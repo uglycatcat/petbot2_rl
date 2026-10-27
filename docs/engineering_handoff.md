@@ -22,6 +22,9 @@
 
 ### 版本管理与双端协作
 
+正式项目补充（2026-10-27）：`rl_project/std_train_upright_project`和`std_s2s_upright_project`由同一repo清单物化，远程独立`rlproj/<项目名>`分支。训练目录保持空，sim2sim存放推理程序及必要小型网络；main维护`rl_project/README.md`、`manifest.json`和忽略规则。训练仍在原demo，runs未移动；后续归档到忽略的history前先保存检查点依赖与来源。见[sim2sim方案](upright_sim2sim_20261027.md)。
+
+
 - demo 是独立 checkout，代码推送到本仓库专用分支 `demoproj/recovery_agile_01`；后续 demo 按任务、底座与编号另建，参考分支仍使用 `refproj/`。
 - 与参考项目共用根目录 `default.xml` 的 repo 管理：计划使用 `remote="ours"`、`name="petbot2_rl"`、`path="demo_project/recovery_agile_01"`、`revision="demoproj/recovery_agile_01"`，并设独立 `demo` 分组。分支首次推送后再登记清单，避免指向不存在的远程分支。
 - 主线管理清单、`demo_project/README.md`、`demo_project/manifest.json` 和忽略规则；嵌套 checkout 不重复纳入 main，代码、配置和必要说明必须在 demo 分支版本化。新增、删除、变更来源或分支时同步更新 `default.xml` 与 demo 索引、manifest；参考项目记录仍归 `reference_project/manifest.json`。

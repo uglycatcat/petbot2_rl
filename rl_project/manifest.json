@@ -16,8 +16,10 @@
       "remote": "ours",
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "branch": "rlproj/std_s2s_upright_project",
-      "verified_commit": "f2fd16d0b3e2a4b14b9193361ee4b9cd15bac669",
-      "status": "implementation_in_progress"
+      "verified_commit": "3954dd8c80a04e503149d98602304cf2e6590356",
+      "status": "interactive_mujoco_demo_with_known_transfer_failures",
+      "usage": "README.md",
+      "local_validation": "r42 mixed180s full cycle/basic remote passed; static landing, positive frame and second takeover can fail. Port parity35 cases zero error; CUDA export1024 zero error; GLFW and read-only source checks passed. See validation/README.md."
     }
   ]
 }

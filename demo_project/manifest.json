@@ -49,13 +49,11 @@
         "demo"
       ],
       "shallow": false,
-      "status": "cycle18_long nine fixed001a54e PPO jobs verified;29 evaluations/hooks active; parent seed37 baseline2/2 complete62/64 each",
-      "local_validation": "5d03bd0 adds host checkpoint cadence validation only; active fixed001a54e task remains identical to57b626e. Resume8 state and two short physical reloads passed engineering, both63/64 with phase2 failures retained. Formal400 additional updates from original same-seed cycle18 model199, final598. Empty evaluation plan corrected399 to400 before any jobs, training untouched. Parent seed37 baselines62/64 each. MuJoCo pending; docs/upright_cycle_v19_long.md.",
+      "status": "cycle18_long 9train/29eval complete; no running jobs; priority moved to MuJoCo experience in rl_project",
+      "local_validation": "Full continuation400 updates:12 optimizer states each+8000 steps, frozen actor/statistics unchanged. Seed37 heldout complete61-62/64; no improvement over paired parent62/64. Default sim2sim candidate r42 selected; MuJoCo180s mixed case passes, static landing/repeated takeover failures retained. See docs/upright_cycle_batch18_long_results.md and docs/upright_sim2sim_20261027.md.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [
-        "upright_cycle_batch18_long"
-      ]
+      "active_tasks": []
     },
     {
       "name": "step_rl_demo",
