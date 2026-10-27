@@ -9,6 +9,7 @@ import torch
 from .core.action_terms import FeedbackAction, attach_balance_reflex
 from .core.continuous import ContinuousProgress, bound_cycle_features
 from .core.local_frame import ground_frame_features
+from .core.full_range import FullRangeProgress, effective_request
 
 
 class RobotTargets:
@@ -50,13 +51,16 @@ class Controller:
             frame_slew=c['frame_slew'], wheel_slew=c['wheel_slew'],
             yaw_feedback_design='fast2', yaw_feedback_gain=c['fast_yaw_controller']['kp'])
         self.cfg.transition_contract=self.transition_contract
+        self.full_range=c.get('task_profile')=='full_range'
+        self.cfg.task_profile=c.get('task_profile','legacy')
         limits = self.manifest['tested_range']
         self.speed_limit, self.yaw_limit = limits['speed_limit'], limits['yaw_limit']
         self.frame_range = (limits['frame_min'], limits['frame_max'])
         if not self.frame_range[0] <= frame <= self.frame_range[1]:
             raise ValueError(f'Frame outside exported envelope {self.frame_range}')
         self.frame = frame
-        self.progress = ContinuousProgress(1, 'cpu', .06, self.speed_limit, self.yaw_limit,
+        progress_type=FullRangeProgress if self.full_range else ContinuousProgress
+        self.progress = progress_type(1, 'cpu', .06, self.speed_limit, self.yaw_limit,
             self.frame_range, 42, 'pose_feedback_tight', hold_range=(180.,180.),
             tracking_objective='stability_first', handoff_alignment='after',
             transition_contract=self.transition_contract)
@@ -71,10 +75,13 @@ class Controller:
         self.armed = False
         self.failure_code = 0
         self.cycles = 0
+        self.interruptions = 0
+        self.last_exit_code = 0
         self.events = []
         self.last_metrics = {}
         self.reset_progress(initial_state, preserve=False)
 
+    @torch.inference_mode()
     def reset_progress(self, s, preserve=True):
         """Re-arm after handoff, preserving physical state, targets and motion."""
         p = self.progress
@@ -89,16 +96,24 @@ class Controller:
             p.motion.copy_(motion)
         self.armed = False
         self.history = None
+        if self.full_range and preserve:
+            # Clear per-call feedback/history without jumping held motor targets.
+            saved={k:getattr(self.action,k).clone() for k in ('target','speed','applied','previous')}
+            self.action.reset()
+            for k,v in saved.items():getattr(self.action,k).copy_(v)
 
+    @torch.inference_mode()
     def set_command(self, forward, yaw):
         self.progress.set_command([forward, yaw])
 
+    @torch.inference_mode()
     def toggle(self):
         if self.failure_code:
             return
         p = self.progress
         phase = int(p.phase[0])
         if phase == 0 and not self.armed:
+            if self.full_range:self.reset_progress(self.s)
             self.armed = True
             p.age[:] = 0.
             p.switch_at[:] = 0.
@@ -112,7 +127,7 @@ class Controller:
     def features(self):
         s, p, a = self.s, self.progress, self.action
         base = torch.cat((s['g'],s['heading'],s['vel'],s['q'],s['qd']*.1,s['wheel']*.05,
-            p.raw,p.command,s['pos'][:,:2]-p.reference,s['pos'][:,:2]-p.raw_reference,
+            effective_request(p) if self.full_range else p.raw,p.command,s['pos'][:,:2]-p.reference,s['pos'][:,:2]-p.raw_reference,
             torch.stack((p.raw_yaw.sin(),p.raw_yaw.cos()),-1),a.applied,
             p.active[:,None].float(),p.since[:,None]/12,p.peak[:,None],
             p.support_run[:,None].clamp(max=1),p.frame[:,None]),-1)
@@ -164,7 +179,17 @@ class Controller:
         self.last_metrics = m = p.update(s,fixed)
         if int(p.phase[0]) != previous:
             self.events.append(dict(time=time,phase=int(p.phase[0])))
-        if bool(m['failure'][0]):
+        if bool(m['failure'][0]) and self.full_range and not (int(m['failure_code'][0])&1):
+            # Physical failure ends the call; ordinary control continues in the
+            # actual pose, even when overturned. A new Space request is required.
+            if self.armed or bool(p.active[0]):
+                self.interruptions += 1
+                self.last_exit_code = int(m['failure_code'][0])
+                self.events.append(dict(time=time,interrupted_call=self.interruptions,
+                    failure_code=self.last_exit_code,exit_phase=int(m.get('exit_phase',p.phase)[0]),
+                    ordinary_pose=bool(m.get('geometry_ground',s['four'])[0])))
+                self.reset_progress(s)
+        elif bool(m['failure'][0]):
             self.failure_code = int(m['failure_code'][0])
             self.events.append(dict(time=time,failure_code=self.failure_code))
         elif bool(m['completed'][0]):

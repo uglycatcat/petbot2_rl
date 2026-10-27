@@ -106,6 +106,8 @@ def run_viewer(sim, smoke_seconds=None):
                     labels.update({1024:'rear axle height mismatch',2048:'overturned'})
                 reason=', '.join(text for bit,text in labels.items() if r['failure_code']&bit)
                 status += f" / PAUSED: {reason} (R to reset)"
+            if c.full_range and c.interruptions and not c.armed:
+                status += ' / CALL ENDED: Space for a new request'
             left = 'W/S: forward/reverse | A/D: turn\nSpace: rise / front wheels down | R: reset | Esc: exit\n'
             left += 'Mouse drag: orbit | Wheel: zoom\n\n'+status
             right = (f"Command {r['raw'][0]:+.3f} m/s  {r['raw'][1]:+.3f} rad/s\n"

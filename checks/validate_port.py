@@ -18,6 +18,7 @@ from petbot_s2s.simulation import Simulation
 from petbot_s2s.core.local_frame import ground_frame_features
 from petbot_s2s.core.continuous import bound_cycle_features
 from petbot_s2s.viewer import Keyboard
+from petbot_s2s.core.full_range import effective_request
 
 
 def definition(path,name):
@@ -29,12 +30,13 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--source',type=Path,required=True)
     parser.add_argument('--output',type=Path,required=True)
-    parser.add_argument('--transition-contract',choices=['legacy','linear_heading'],default='legacy')
+    parser.add_argument('--policy',type=Path,default=ROOT/'policies/cycle18_long_r43')
+    parser.add_argument('--transition-contract',choices=['legacy','linear_heading'],default=None)
     args=parser.parse_args()
     provenance=json.loads((ROOT/'provenance.json').read_text())
     for name,sha in provenance['source_sha256'].items():
         assert hashlib.sha256((args.source/name).read_bytes()).hexdigest()==sha,name
-    for name in ('moving','cycle','continuous','stability','feedback','fast_feedback','ground_motion','local_frame','functional','kinematics'):
+    for name in ('moving','cycle','continuous','stability','feedback','fast_feedback','ground_motion','local_frame','functional','kinematics','full_range'):
         assert (ROOT/'petbot_s2s/core'/f'{name}.py').read_bytes()==(args.source/'upright'/f'{name}.py').read_bytes()
     for filename,name in [('cycle_task.py','MovingAction'),('continuous_task.py','ContinuousAction'),
                           ('feedback_task.py','FeedbackAction'),('balance_reflex.py','attach_balance_reflex')]:
@@ -47,14 +49,14 @@ def main():
         actual=definition(ROOT/'petbot_s2s/core/action_terms.py',name)
         assert ast.dump(ast.parse(expected))==ast.dump(ast.parse(actual)),name
 
-    sim=Simulation(ROOT/'policies/cycle18_long_r43',transition_contract=args.transition_contract)
+    sim=Simulation(args.policy,transition_contract=args.transition_contract)
     c,p=sim.controller,sim.controller.progress
     c.cfg.observation_frame='balance_local'
     base=None
     for filename in ('cycle_task.py','continuous_task.py','feedback_task.py'):
         code=definition(args.source/'upright'/filename,'observations')
-        code=code.replace('    from .local_frame import ground_frame_features\n','')
-        ns=dict(torch=torch,state=lambda env:env.s,ensure=lambda env:env.progress,
+        code=code.replace('    from .local_frame import ground_frame_features\n','').replace('        from .full_range import effective_request\n','')
+        ns=dict(effective_request=effective_request,torch=torch,state=lambda env:env.s,ensure=lambda env:env.progress,
                 ground_frame_features=ground_frame_features,bound_cycle_features=bound_cycle_features,
                 prepare_commands=lambda env:None,base=SimpleNamespace(observations=base))
         exec(compile(code,filename,'exec'),ns)

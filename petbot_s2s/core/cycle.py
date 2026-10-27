@@ -77,7 +77,7 @@ class CycleProgress(MovingProgress):
         if self.transition_contract=='linear_heading':
             from .kinematics import wheel_geometry
             gap,rear_skew,geometry=wheel_geometry(s['g'],s['q'][:,3:])
-            ready=s.copy();ready['four']=geometry
+            ready=s.copy();ready['four']=geometry & s.get('admission_ready',torch.ones_like(geometry))
             # The inherited progress features must not leak simulated wheel
             # contact into the deployable stage/observation state.
             ready['rear']=(rear_skew<.025)&(s['g'][:,2]<.2)
@@ -143,7 +143,7 @@ class CycleProgress(MovingProgress):
         lowering=(1-remaining)*s['rear_fraction']
         pitch_return=(( -s['g'][:,2]-.25)/.75).clamp(0,1)
         frame_match=torch.exp(-frame_error.square()/.15**2)
-        potential=lowering+pitch_return+frame_match
+        potential=lowering+pitch_return+(0. if getattr(self,'full_range',False) else frame_match)
         # Reward change, never repeated residence at an already lowered pose.
         self.landing_potential[landing]=potential[landing]
         landing_progress=torch.where((self.phase==3)|handoff,potential-self.landing_potential,0.)
@@ -154,7 +154,7 @@ class CycleProgress(MovingProgress):
         # Safety termination has priority over time limits, including the final handoff step.
         landing_timeout=(self.phase==3)&(self.phase_time>4.)
         if self.transition_contract=='linear_heading':landing_timeout=torch.zeros_like(landing_timeout)
-        failure=m['physical_failure']|m['warmup_failed']|((self.phase==1)&(self.phase_time>3.))|landing_timeout
+        failure=m['physical_failure']|m['warmup_failed']|((self.phase==1)&(self.phase_time>getattr(self,'rise_timeout',3.)))|landing_timeout
         failure |= self.active & ((s['pos'][:,:2]-self.rise_position).norm(dim=-1)>getattr(self,'travel_limit',3.))
         self.max_impact=torch.maximum(self.max_impact,torch.where((self.phase==3),s['front_force_peak'],0.))
         touchdown_speed=torch.maximum((-s['front_vertical_speed']).clamp_min(0),(-self.last_front_speed).clamp_min(0))
@@ -173,7 +173,7 @@ class CycleProgress(MovingProgress):
             track_reward=(self.phase==2)*support*tracking_reward,
             land_reward=landing_progress,
             landing_time=(self.phase==3).float(),
-            ground_quality=(self.phase==3)*s['four_fraction']*frame_match,
+            ground_quality=(self.phase==3)*s['four_fraction']*(1. if getattr(self,'full_range',False) else frame_match),
             descent_cost=(self.phase==3)*descent_cost,
             approach_reward=(self.phase==3)*torch.exp(-s['front_vertical_speed'].square()/.25**2)*(1-remaining),
             handoff_reward=(self.phase==4)*ground*frame_match,

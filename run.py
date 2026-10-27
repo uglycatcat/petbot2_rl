@@ -100,7 +100,7 @@ def main():
         scenario=args.scenario,takeover_yaw=args.takeover_yaw,command_scale=args.command_scale,frame=args.frame,wall_seconds=time.monotonic()-start,
         simulated_seconds=float(sim.data.time),entered_balance=ever_balanced,
         requested_cycles=args.cycles,
-        completed_cycles=c.cycles,failure_code=c.failure_code,events=c.events,
+        completed_cycles=c.cycles,interrupted_calls=c.interruptions,last_exit_code=c.last_exit_code,failure_code=c.failure_code,events=c.events,
         maximum_front_height=max(row['front_z'] for row in rows),
         final=rows[-1],interpretation='MuJoCo diagnostic, not an Isaac success-rate estimate')
     if len(rows)>1:
@@ -108,7 +108,7 @@ def main():
         functional_rows = [dict(t=r['time'],valid=[True],phase=[r['phase']],raw=[r['raw']],
             pos=[r['position']],heading=[r['yaw']],interval_motion=[r['interval_motion']]) for r in rows]
         result['functional'] = score_trajectories(functional_rows,
-            dict(complete=[c.cycles>=args.cycles],failure=[bool(c.failure_code)]))
+            dict(complete=[c.cycles>=args.cycles],failure=[bool(c.failure_code or c.interruptions)]))
     (args.output/'summary.json').write_text(json.dumps(result,indent=2)+'\n')
     (args.output/'trace.jsonl').write_text(''.join(json.dumps(r)+'\n' for r in rows))
     if args.snapshot:

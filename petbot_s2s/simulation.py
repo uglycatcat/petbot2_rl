@@ -158,10 +158,12 @@ class Simulation:
         c,p,s = self.controller,self.controller.progress,self.state()
         return dict(time=float(self.data.time),phase=int(p.phase[0]),phase_time=float(p.phase_time[0]),
             armed=c.armed,failure_code=c.failure_code,cycles=c.cycles,
+            interruptions=c.interruptions,last_exit_code=c.last_exit_code,
             position=s['pos'][0].tolist(),gravity=s['g'][0].tolist(),
             front_z=float(s['front_z'][0]),rear_fraction=float(s['rear_fraction'][0]),
             four_fraction=float(s['four_fraction'][0]),raw=p.raw[0].tolist(),command=p.command[0].tolist(),
+            requested=(p.requested if c.full_range else p.raw)[0].tolist(),
             motion=p.motion[0].tolist(),interval_motion=p.interval_motion[0].tolist(),yaw=float(s['yaw'][0]),
             instant=[float(s['forward'][0]),float(s['heading_rate'][0])],
             frame=s['q'][0,3:].tolist(),frame_target=c.action.target[0,3:].tolist(),
-            wheel_target=c.action.speed[0].tolist(),actuator_force=self.data.actuator_force.tolist())
+            wheel_measured=s['wheel'][0].tolist(),wheel_target=c.action.speed[0].tolist(),actuator_force=self.data.actuator_force.tolist())

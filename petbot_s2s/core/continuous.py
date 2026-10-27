@@ -110,6 +110,10 @@ class ContinuousProgress(CycleProgress):
             result['balance_reward']=(self.phase==2)*result['support'].float()
         instability=self.stability_monitor.update(self.phase,s,self.motion,self.command,
             geometry_mode=self.transition_contract=='linear_heading')
+        if getattr(self,'full_range',False):
+            # A dedicated call-exit detector handles early return in rise/balance.
+            # Tracking error during braking is not itself a physical fall.
+            instability[:,0]=False;instability[:,3]=False
         result['instability']=instability.clone()
         result['instability_dwell']=self.stability_monitor.dwell.clone()
         result['failure'] |= instability.any(-1)
@@ -122,7 +126,7 @@ class ContinuousProgress(CycleProgress):
         finite = torch.isfinite(torch.cat((s['pos'], s['vel'], s['q']), -1)).all(-1)
         reasons = [(~finite), s['pos'][:, 2]<.025, s['g'][:, 2]>.2,
                    s['vel'][:, :3].norm(dim=-1)>5, s['vel'][:, 3:].norm(dim=-1)>30,
-                   result['warmup_failed'], (self.phase==1)&(self.phase_time>3.),
+                   result['warmup_failed'], (self.phase==1)&(self.phase_time>getattr(self,'rise_timeout',3.)),
                    (self.phase==3)&(self.phase_time>4.)&(self.transition_contract=='legacy'),
                    self.active & ((s['pos'][:, :2]-self.rise_position).norm(dim=-1)>self.travel_limit)]
         reasons.extend(instability.unbind(-1))

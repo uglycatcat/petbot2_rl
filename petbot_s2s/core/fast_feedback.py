@@ -14,6 +14,7 @@ class FastYawFeedback:
         self.period=period
         self.kp=kp
         self.half_difference_limit=2.
+        self.anti_windup=False
         self.max_speed=max_speed;self.control_limit=control_dt*wheel_slew
         self.integral=torch.zeros(n,device=device);self.target=torch.zeros_like(self.integral)
 
@@ -24,8 +25,9 @@ class FastYawFeedback:
     def process(self,previous,policy,anchor,command,rate,residual,active):
         error=command[:,1]-rate
         integral=(self.integral+self.period*4.*error).clamp(-1.5,1.5)
-        self.integral[active]=integral[active]
-        desired=(yaw_feedforward(command[:,1])+self.kp*error+self.integral+.25*residual).clamp(-self.half_difference_limit,self.half_difference_limit)
+        if not self.anti_windup:self.integral[active]=integral[active]
+        wanted=yaw_feedforward(command[:,1])+self.kp*error+(integral if self.anti_windup else self.integral)+.25*residual
+        desired=(wanted).clamp(-self.half_difference_limit,self.half_difference_limit)
         old=(previous[:,1]-previous[:,0])*.5
         half=old+(desired-old).clamp(-12.*self.period,12.*self.period)
         common=policy.mean(-1)
@@ -37,6 +39,9 @@ class FastYawFeedback:
         upper=torch.stack((margin,common-anchor[:,0]+self.control_limit,
                            anchor[:,1]-common+self.control_limit),-1).amin(-1)
         half=torch.maximum(torch.minimum(half,upper),lower)
+        if self.anti_windup:
+            integrate=active & (((wanted-half).abs()<1e-5)|((wanted-half)*error<=0.))
+            self.integral[integrate]=integral[integrate]
         output=torch.stack((common-half,common+half),-1)
         self.target[active]=half[active]
         return torch.where(active[:,None],output,policy)

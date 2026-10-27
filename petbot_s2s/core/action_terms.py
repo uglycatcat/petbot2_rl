@@ -125,6 +125,8 @@ class FeedbackAction(ContinuousAction):
         self.inner_speed=self.speed.clone();self.inner_policy=self.speed.clone();self.inner_anchor=self.speed.clone()
         self.continuous_heading=getattr(env.cfg,'transition_contract','legacy')=='linear_heading'
         if self.continuous_heading:self.fast_feedback.half_difference_limit=self.max_speed
+        self.full_range=getattr(env.cfg,'task_profile','legacy')=='full_range'
+        self.fast_feedback.anti_windup=self.full_range
 
     def process_actions(self,actions):
         previous=self.speed.clone()
@@ -154,7 +156,7 @@ class FeedbackAction(ContinuousAction):
                 from .moving import wrap
                 transition=(p.phase==1)|(p.phase==3)
                 command=command.clone()
-                command[transition,1]=(3.*wrap(p.transition_heading-heading))[transition].clamp(-1.5,1.5)
+                command[transition,1]=(3.*wrap(p.transition_heading-heading))[transition].clamp(-15. if self.full_range else -1.5,15. if self.full_range else 1.5)
                 residual=torch.where(transition,0.,residual)
             candidate=self.fast_feedback.process(self.inner_speed,self.inner_policy,self.inner_anchor,
                 command,rate,residual,self.inner_mask)

@@ -1,23 +1,24 @@
 {
   "source_branch": "demoproj/upright_rl_demo",
-  "source_commit": "edce522e673a123eb6ed6416076f604435f63e29",
-  "task_commit": "b269d49aacb50d5bf5d8a3d9cd618696e087734e",
+  "source_commit": "4f3fb9caa302430857bdcb47f5d0e929012f577d",
+  "task_commit": "4f3fb9caa302430857bdcb47f5d0e929012f577d",
   "source_sha256": {
-    "upright/moving.py": "5502826b471b9a7b8208d1568c713a4370a8c21e5d2fdfb85033d5ab8b503152",
-    "upright/cycle.py": "8fafa20b5ce1b921150bb086f2a9e91115a19e3b6eacdbc8edef5b83ab609085",
-    "upright/continuous.py": "8c95d88d2c68e4d9faaf689cce7a3cfc25143ee0fded00b3f9b5060eeab6c6bf",
+    "upright/moving.py": "b57084c1fca9795d7e4e9f8a5ed1f7229f288e536b2503c22a951c5b3d38cbc5",
+    "upright/cycle.py": "136de904aad4080972c1b91694c01d3080bb2d3e31ef6016c6c1389f829d4b8a",
+    "upright/continuous.py": "bf98b4f821caeb9ee96c66650a27c6369d3d96c57edef7b4ca87277b9f3dcb59",
     "upright/stability.py": "e07f5b7587c07d850bd1d63426e376f694574c252c63986e41bd65a46976bd28",
     "upright/feedback.py": "a95baaa71250a98d6ebda7f3cf1aff7134ed2a673bb051a9c79349e2e5291ae0",
-    "upright/fast_feedback.py": "bc7750fc4b0bcbc38ceb5d7b6439a5eb45f307978b797c2efa530f83c54d18b0",
+    "upright/fast_feedback.py": "67db9a653927dcca3161ae0d1dcbb73f47dc4b7be46ac35b5069641f1ec39d7d",
     "upright/ground_motion.py": "0357a4b06ea102d650ff43272cf6c0385343c3e212de790a7084d936ff85c74f",
     "upright/local_frame.py": "b13474f565991322c454384b1c8d8ca27fc0d17252397dcfafd04192788f9122",
     "upright/functional.py": "89371df66f1dfde066b6ae550356941249050eb869d9d333a0acc771bdd7a514",
-    "upright/cycle_task.py": "7979b304fc5fcd26f88604a926e7d213e11a02dfb1f3271240d1e1be4e4d8490",
-    "upright/continuous_task.py": "6e02e6db9d420f88bf66c04e9cb7db3000722aecd18ff5915c6de24d23168ca9",
-    "upright/feedback_task.py": "892a322702156250e33062b990a6e72b92a245bc48bfe3600ea4950b78b7720a",
+    "upright/cycle_task.py": "1b339383a824cf737bf295b94afec900a9e5ca609b83c0453257bc1ea8068a14",
+    "upright/continuous_task.py": "577d3447de8550f4a069438369bbc31bf59c10cddd4de77dba35395076bf5f8e",
+    "upright/feedback_task.py": "6be5d55dae6e6e06f5b976cc85d1a33d4fc112c18cdb1c3844cd052379ff371e",
     "upright/balance_reflex.py": "f92a8f18532d97d669b8e658f0f2a5853b9554b029870ec2031e09b2dbc13f19",
-    "upright/kinematics.py": "bd9283a02dd3f0536047962e7c346841b3eb4dd59e2a1b381328e684296e5313"
+    "upright/kinematics.py": "bd9283a02dd3f0536047962e7c346841b3eb4dd59e2a1b381328e684296e5313",
+    "upright/full_range.py": "029f7112246d368053bb309782159ae259ac974813dac2c31ebcd2c780360193"
   },
-  "notes": "Tensor controller sources match source_commit. Bundled network weights remain original cycle18-long; linear_heading is an explicit development intervention unless the bundle contract specifies it. It is not retraining or full sim2sim acceptance.",
+  "notes": "Tensor controller matches pinned source. Each policy manifest selects its task profile; historical bundles retain their original contract. Export and port checks do not establish full sim2sim acceptance.",
   "baseline_network_task_commit": "001a54e98ff18f1274e2d7e961404325de4e50f7"
 }
