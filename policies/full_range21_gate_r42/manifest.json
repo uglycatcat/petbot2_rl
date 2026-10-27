@@ -1,0 +1,511 @@
+{
+  "format": "petbot_cycle_network_bundle_v1",
+  "task_commit": "4f3fb9caa302430857bdcb47f5d0e929012f577d",
+  "exporter_commit": "c30b2c209d7c212e442c7614b17aeaf69205f19d",
+  "checkpoint_name": "model_7.pt",
+  "checkpoint_sha256": "b1c121b01c92fd7675ef7aae5d8427cf80deab0fd6216d766d96d34f4ef80385",
+  "evaluation_name": "reload_full",
+  "evaluation_sha256": "2d39ea64da8955fba275b04fb7f06372c95c200b8bc220ee7b0639ffd10ad31d",
+  "configuration_sha256": "baf2bf4d1169441ff8f5b7183ed5330881da2a58363c17cd73892c62225696f7",
+  "contract": {
+    "task": "upright_cycle_v21",
+    "balance_reflex": "frozen20",
+    "reflex_contract": {
+      "parent": "cycle15B",
+      "period": 0.02,
+      "gate_after": 1.8,
+      "frozen": true,
+      "clock": "outer60ms",
+      "physical_features_only": true
+    },
+    "tracking_objective": "stability_first",
+    "actor_design": "full_cycle_finetune_v1",
+    "balance_noise_factor": 4.0,
+    "adapter_limits": [
+      0.03,
+      0.08,
+      0.8
+    ],
+    "adapter_gate": [
+      1.2,
+      1.8
+    ],
+    "adapter_observation_stats": "frozen_parent_critic",
+    "actor_normalization": "rebase_recent",
+    "normalization_prior_count": 10000000,
+    "yaw_feedback_design": "fast2",
+    "fast_yaw_controller": {
+      "period": 0.002,
+      "kp": 16.0,
+      "ki": 4.0,
+      "integral_limit": 1.5,
+      "half_difference_limit": 25.0,
+      "difference_rate": 12.0,
+      "residual_scale": 0.25,
+      "active_after": 0.0,
+      "measurement": "instant_wheel_lateral_heading_rate",
+      "active_phases": [
+        1,
+        2,
+        3
+      ],
+      "transition_policy_residual": 0.0,
+      "anti_windup": true,
+      "transition_heading_rate_limit": 15.0
+    },
+    "heading_reference": "wheel_lateral",
+    "contact_sampling": "eager_physics_step_history30_v1",
+    "instant_tracking_weight": 0.3,
+    "yaw_controller": {
+      "kp": 2.0,
+      "ki": 4.0,
+      "integral_limit": 1.5,
+      "half_difference_limit": 2.0,
+      "difference_rate": 4.0,
+      "residual_scale": 0.25,
+      "start_seconds": 0.6,
+      "blend_seconds": 0.6
+    },
+    "steering_design": "feedback",
+    "yaw_filter_tau": 0.0,
+    "tracking_shape": "gaussian",
+    "command_sampling": "feasible_six_sequence_v4",
+    "reward_design": "independent_call_stability_v1",
+    "motion_feedback": "pose_delta_ema_120ms",
+    "concentration_scale": [
+      4.0,
+      16.0,
+      16.0
+    ],
+    "tracking_weight": 4.0,
+    "observation_schema": "cycle_58x5_balance_local_v4",
+    "fingerprint": "d21c60ee11feaac6cad8619abc889e184309d852a1b658bae1f6a6fd8d97388e",
+    "action_dim": 3,
+    "wheel_mode": "common_diff",
+    "wheel_slew": 480.0,
+    "frame_slew": 3.0,
+    "control_dt": 0.06,
+    "source_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+    "rear_duty_threshold": 0.9,
+    "transition_reference": "capture_measured_forward_speed_and_heading_v1",
+    "mode_request": "landing_latched_until_handoff",
+    "landing_force_limit_n": 20.0,
+    "touchdown_speed_limit": 0.35,
+    "transition_contract": "linear_heading",
+    "kinematic_landing": {
+      "version": "body_imu_frame_fk_v1",
+      "front_radius": 0.045,
+      "rear_radius": 0.03,
+      "axle_offsets": [
+        [
+          0.18,
+          0.01204,
+          0.01372
+        ],
+        [
+          0.18,
+          -0.01204,
+          0.01372
+        ]
+      ],
+      "ground_gap_tolerance": 0.008,
+      "rear_height_tolerance": 0.01,
+      "grounded_dwell": 0.12,
+      "support_assumption": "rear_wheels_on_flat_ground"
+    },
+    "refinement_target": "all",
+    "rise_adapter": {
+      "version": "frozen_cycle_rise_adapter_v1",
+      "limits": [
+        0.15,
+        0.25
+      ],
+      "ramp_seconds": 0.12,
+      "fade_balance_seconds": 0.6,
+      "concentration_factor": 0.25,
+      "channels": [
+        "frame_position",
+        "common_wheel_speed"
+      ],
+      "frozen": "all inherited actor, balance/yaw adapters, normalization and inner feedback",
+      "observation_stats": "frozen_parent_critic",
+      "gae_lambda": 0.95
+    },
+    "observation_frame": "balance_local",
+    "local_frame": {
+      "version": "wheel_ground_local_v1",
+      "horizontal_vector_offsets": [
+        3,
+        5,
+        8,
+        27,
+        29
+      ],
+      "reference_yaw_sin_cos": [
+        31,
+        32
+      ],
+      "history": "encode_each_sample_before_history_and_bounds",
+      "unchanged": "body gravity, joints, commands, vertical velocities and task clocks",
+      "balance_local_transition": {
+        "start_phase2_seconds": 1.2,
+        "end_phase2_seconds": 1.8,
+        "retain_through_landing": true,
+        "original_rise": true
+      },
+      "initial_heading": "captured_takeover_heading",
+      "transition_interpolation": "shortest_angle",
+      "original_rise": false
+    },
+    "handoff_alignment": {
+      "mode": "after",
+      "physical_ground_hold_s": null,
+      "completion_aligned_hold_s": 1.0,
+      "frame_tolerance_rad": 0.1,
+      "ordinary_action_slew_preserved": true,
+      "kinematic_ground_hold_s": 0.12
+    },
+    "stability": {
+      "version": "persistent_support_v1",
+      "front_height_m": 0.07,
+      "low_front_seconds": 0.3,
+      "rear_duty": 0.5,
+      "lost_rear_seconds": 0.3,
+      "body_contact_seconds": 0.12,
+      "speed_margin_mps": 0.15,
+      "minimum_runaway_mps": 0.2,
+      "runaway_seconds": 0.6,
+      "tracking_absolute": [
+        0.01,
+        0.03
+      ],
+      "tracking_relative": 0.5,
+      "detector": "imu_frame_geometry_v1",
+      "reasons": [
+        "front_low",
+        "excessive_rear_axle_height_difference",
+        "overturned",
+        "persistent_overspeed"
+      ],
+      "persistent_overspeed_termination": false,
+      "early_return": "armed_lift_then_return_in_rise_or_balance"
+    },
+    "functional": {
+      "version": "basic_remote_v1",
+      "settle_seconds": 0.6,
+      "minimum_segment_seconds": 0.6,
+      "command_deadband": [
+        0.005,
+        0.015
+      ],
+      "minimum_response_ratio": 0.2,
+      "maximum_response_ratio": 2.5,
+      "required_response_fraction": 0.9,
+      "stop_excursion_m": 0.03,
+      "stop_heading_excursion_rad": 0.1
+    },
+    "workspace": "3m_plus_speed_times_hold_and_transition_v1",
+    "task_profile": "full_range",
+    "independent_call": {
+      "version": "independent_full_range_v2",
+      "wheel_radius": 0.03,
+      "axle_width": 0.1,
+      "wheel_target_limit": 25.0,
+      "forward_slew": 0.6,
+      "yaw_slew": 6.0,
+      "command_hold_seconds": [
+        3.0,
+        6.0
+      ],
+      "warmup_timeout": 24.0,
+      "rise_timeout": 5.0,
+      "lifted_gap": 0.025,
+      "returned_gap": 0.012,
+      "return_dwell": 0.12,
+      "low_range_sample_fraction": 0.2,
+      "boundary_sample_fraction": 0.25,
+      "interruption": "release_to_ordinary_no_completion_credit_new_request_required",
+      "admission": "physical_four_wheel_and_actual_motion_training_only",
+      "admission_response_cap": [
+        0.02,
+        0.06
+      ]
+    },
+    "observation_request": "phase_effective_v1"
+  },
+  "tested_range": {
+    "speed_limit": 0.75,
+    "yaw_limit": 15.0,
+    "frame_min": -1.0,
+    "frame_max": 1.2,
+    "hold_min": 8.0,
+    "hold_max": 12.0
+  },
+  "evaluation_outcome": {
+    "count": 64,
+    "complete": 3,
+    "failure": 61,
+    "unfinished": 0
+  },
+  "networks": {
+    "actor.pt": "e3706e90eef3f57e37cd26bf6601c9f96a34a6fb4756b72eb1f4da251b356c40",
+    "balance_reflex.pt": "abe3ef964fb9c274875f0d6cd6c311a9b7e4e7c2a32a0e70b80d7a601fee7039"
+  },
+  "actuation": {
+    "position_joints": [
+      "head",
+      "left_ear",
+      "right_ear",
+      "left_frame",
+      "right_frame"
+    ],
+    "velocity_joints": [
+      "left_rear_wheel",
+      "right_rear_wheel"
+    ],
+    "position_kp": {
+      "head": 3.0,
+      "left_ear": 1.5,
+      "right_ear": 1.5,
+      "left_frame": 4.0,
+      "right_frame": 4.0
+    },
+    "position_kd": {
+      "head": 0.1,
+      "left_ear": 0.035,
+      "right_ear": 0.035,
+      "left_frame": 0.12,
+      "right_frame": 0.12
+    },
+    "joints": {
+      "head": {
+        "axis": [
+          0.45399,
+          0.0,
+          0.89101
+        ],
+        "range": [
+          -1.3,
+          1.3
+        ],
+        "default": 0.0,
+        "damping": 0.048,
+        "armature": 9.6e-05,
+        "friction": 0.025
+      },
+      "left_ear": {
+        "axis": [
+          0.0,
+          0.9563,
+          0.29237
+        ],
+        "range": [
+          -1.0,
+          3.0
+        ],
+        "default": 0.0,
+        "damping": 0.01,
+        "armature": 9.6e-05,
+        "friction": 0.008
+      },
+      "right_ear": {
+        "axis": [
+          0.0,
+          0.9563,
+          -0.29237
+        ],
+        "range": [
+          -1.0,
+          3.0
+        ],
+        "default": 0.0,
+        "damping": 0.01,
+        "armature": 9.6e-05,
+        "friction": 0.008
+      },
+      "left_frame": {
+        "axis": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "range": [
+          -1.0,
+          1.2
+        ],
+        "default": 0.0,
+        "damping": 0.072,
+        "armature": 9.6e-05,
+        "friction": 0.04
+      },
+      "left_front_wheel": {
+        "axis": [
+          0.0,
+          0.99619,
+          0.08716
+        ],
+        "range": null,
+        "default": 0.0,
+        "damping": 0.0005,
+        "armature": 2.4e-05,
+        "friction": 0.004
+      },
+      "left_rear_wheel": {
+        "axis": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "range": null,
+        "default": 0.0,
+        "damping": 0.0005,
+        "armature": 2.4e-05,
+        "friction": 0.012
+      },
+      "right_frame": {
+        "axis": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "range": [
+          -1.0,
+          1.2
+        ],
+        "default": 0.0,
+        "damping": 0.072,
+        "armature": 9.6e-05,
+        "friction": 0.04
+      },
+      "right_front_wheel": {
+        "axis": [
+          0.0,
+          0.99619,
+          -0.08716
+        ],
+        "range": null,
+        "default": 0.0,
+        "damping": 0.0005,
+        "armature": 2.4e-05,
+        "friction": 0.004
+      },
+      "right_rear_wheel": {
+        "axis": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "range": null,
+        "default": 0.0,
+        "damping": 0.0005,
+        "armature": 2.4e-05,
+        "friction": 0.012
+      }
+    },
+    "drives": {
+      "head": {
+        "type": "motor",
+        "effort": 0.72,
+        "control_range": [
+          -0.72,
+          0.72
+        ],
+        "kv": 0.0
+      },
+      "left_ear": {
+        "type": "motor",
+        "effort": 0.1,
+        "control_range": [
+          -0.1,
+          0.1
+        ],
+        "kv": 0.0
+      },
+      "right_ear": {
+        "type": "motor",
+        "effort": 0.1,
+        "control_range": [
+          -0.1,
+          0.1
+        ],
+        "kv": 0.0
+      },
+      "left_frame": {
+        "type": "motor",
+        "effort": 1.2,
+        "control_range": [
+          -1.2,
+          1.2
+        ],
+        "kv": 0.0
+      },
+      "right_frame": {
+        "type": "motor",
+        "effort": 1.2,
+        "control_range": [
+          -1.2,
+          1.2
+        ],
+        "kv": 0.0
+      },
+      "left_rear_wheel": {
+        "type": "velocity",
+        "effort": 0.38,
+        "control_range": [
+          -25.0,
+          25.0
+        ],
+        "kv": 0.14
+      },
+      "right_rear_wheel": {
+        "type": "velocity",
+        "effort": 0.38,
+        "control_range": [
+          -25.0,
+          25.0
+        ],
+        "kv": 0.14
+      }
+    }
+  },
+  "interfaces": {
+    "input": "float32 [N,290], five encoded 58-feature samples, oldest first",
+    "outer": "[N,3]: normalized frame position, common rear-wheel speed, yaw residual",
+    "inner": "[N,2]: bounded frame/common corrections; .base returns base frame/common",
+    "timing": "outer 60ms; frozen feedback at +20/+40ms; yaw feedback 2ms"
+  },
+  "controller_sources": {
+    "upright/rise_adapter.py": "50a667a81f8eb144ae08462e59359d7def4fbd3578fff509aac0f7631c2efa9a",
+    "upright/balance_reflex.py": "f92a8f18532d97d669b8e658f0f2a5853b9554b029870ec2031e09b2dbc13f19",
+    "upright/feedback_task.py": "6be5d55dae6e6e06f5b976cc85d1a33d4fc112c18cdb1c3844cd052379ff371e",
+    "upright/continuous_task.py": "577d3447de8550f4a069438369bbc31bf59c10cddd4de77dba35395076bf5f8e",
+    "upright/continuous.py": "bf98b4f821caeb9ee96c66650a27c6369d3d96c57edef7b4ca87277b9f3dcb59",
+    "upright/cycle.py": "136de904aad4080972c1b91694c01d3080bb2d3e31ef6016c6c1389f829d4b8a",
+    "upright/cycle_task.py": "1b339383a824cf737bf295b94afec900a9e5ca609b83c0453257bc1ea8068a14",
+    "upright/local_frame.py": "b13474f565991322c454384b1c8d8ca27fc0d17252397dcfafd04192788f9122",
+    "upright/fast_feedback.py": "67db9a653927dcca3161ae0d1dcbb73f47dc4b7be46ac35b5069641f1ec39d7d",
+    "upright/feedback.py": "a95baaa71250a98d6ebda7f3cf1aff7134ed2a673bb051a9c79349e2e5291ae0",
+    "upright/ground_motion.py": "0357a4b06ea102d650ff43272cf6c0385343c3e212de790a7084d936ff85c74f",
+    "upright/model.py": "93be07fb0f6b50775743fd9ca447ce078125e04ecf1ebfc8bc8e01d7930f3612",
+    "upright/task.py": "e62a5602a1bcce142903be956f09433bb72869c34ccf8f244abcce782f0c4b38",
+    "upright/asset_cfg.py": "91f0b19a199d718151ba3c36a85711fa4bcb39b237cbc1e6fe59606cdddcfdb3",
+    "upright/moving.py": "b57084c1fca9795d7e4e9f8a5ed1f7229f288e536b2503c22a951c5b3d38cbc5",
+    "upright/kinematics.py": "bd9283a02dd3f0536047962e7c346841b3eb4dd59e2a1b381328e684296e5313",
+    "upright/stability.py": "e07f5b7587c07d850bd1d63426e376f694574c252c63986e41bd65a46976bd28",
+    "upright/full_range.py": "029f7112246d368053bb309782159ae259ac974813dac2c31ebcd2c780360193"
+  },
+  "limitations": [
+    "Graphs do not include observations, history, state machine, ordinary control, coordinate conversion, inner scheduling, action limits or position/velocity servos.",
+    "Use the pinned controller sources and contract together. This is not MuJoCo validation."
+  ],
+  "parity": {
+    "passed": true,
+    "cuda": true,
+    "samples": 1024,
+    "max_abs_error": {
+      "outer": 0.0,
+      "inner": 0.0,
+      "inner_base": 0.0
+    }
+  }
+}

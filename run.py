@@ -86,7 +86,7 @@ def main():
         if int(p.phase[0])==2 and balanced_at is None:
             balanced_at=t
             ever_balanced=True
-        if balanced_at is not None and t-balanced_at>=args.hold_seconds and not landing:
+        if balanced_at is not None and t-balanced_at>=args.hold_seconds and not landing and c.armed and int(p.phase[0]) in (1,2):
             c.toggle();landing=True
         sim.step()
         rows.append(sim.record())
