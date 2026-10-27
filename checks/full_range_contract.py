@@ -47,6 +47,11 @@ p.update(state(True),fixed)
 for _ in range(24):m=p.update(state(),fixed)
 assert m['completed'].all() and not m['interrupted'].any()
 
+p.reset(ids,pos,yaw);p.raw[:]=torch.tensor([0.,15.],device=device);p.motion[:]=torch.tensor([.48,2.1],device=device)
+m=p.update(state(),fixed)
+assert m['actual_admission'].all(), 'A saturated but moving request must not be discarded'
+p.motion[:]=0.;m=p.update(state(),fixed);assert not m['actual_admission'].any()
+
 p.reset(ids,pos,yaw);p.active[:]=True;p.phase[:]=1;p.command[:]=torch.tensor([.12,0.],device=device)
 before=effective_request(p).clone();p.raw[:]=torch.tensor([-.75,15.],device=device)
 assert torch.equal(effective_request(p),before)
@@ -61,4 +66,4 @@ wheel=torch.full((n,2),25.,device=device);cmd=torch.tensor([0.,15.],device=devic
 for _ in range(100):
     target=c.process(wheel,wheel,wheel,cmd,torch.zeros(n,device=device),torch.zeros(n,device=device),torch.ones(n,device=device,dtype=torch.bool))
 assert (target.abs()<=25.).all() and not c.integral.any()
-print(json.dumps(dict(passed=True,cuda=True,checks=['joint_feasible_domain','all_six_categories','full_pure_yaw_target','initial_ground_not_interruption','early_return_in_rise','normal_completion','queued_command_isolation','braking_not_fall','saturation_anti_windup'])))
+print(json.dumps(dict(passed=True,cuda=True,checks=['joint_feasible_domain','all_six_categories','full_pure_yaw_target','initial_ground_not_interruption','early_return_in_rise','normal_completion','queued_command_isolation','braking_not_fall','saturation_anti_windup','moving_admission_under_saturation'])))

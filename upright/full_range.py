@@ -9,13 +9,14 @@ from .moving import slew, wrap
 from .kinematics import wheel_geometry
 
 
-CONTRACT = dict(version='independent_full_range_v1', wheel_radius=.03,
+CONTRACT = dict(version='independent_full_range_v2', wheel_radius=.03,
     axle_width=.10, wheel_target_limit=25., forward_slew=.6, yaw_slew=6.,
     command_hold_seconds=[3.,6.], warmup_timeout=24., rise_timeout=5.,
     lifted_gap=.025, returned_gap=.012, return_dwell=.12,
     low_range_sample_fraction=.20, boundary_sample_fraction=.25,
     interruption='release_to_ordinary_no_completion_credit_new_request_required',
-    admission='physical_four_wheel_and_actual_response_training_only')
+    admission='physical_four_wheel_and_actual_motion_training_only',
+    admission_response_cap=[.02,.06])
 
 
 def project_command(command, wheel_limit=25.):
@@ -105,8 +106,13 @@ class FullRangeProgress(ContinuousProgress):
         # posture and a new request, never exact tracking of an old command.
         deadband=self.raw.new_tensor([.005,.015])
         response=self.motion*self.raw.sign()
-        moving=torch.where(self.raw.abs()>deadband,response>=.25*self.raw.abs(),
-                          self.motion.abs()<self.raw.new_tensor([.05,.15])).all(-1)
+        nonzero=self.raw.abs()>deadband
+        response_floor=torch.minimum(.25*self.raw.abs(),self.raw.new_tensor(CONTRACT['admission_response_cap']))
+        # Saturation or cross-axis drift is not a reason to discard a genuinely
+        # moving takeover. Only a stopped request asks for settled preparation.
+        responding=(nonzero & (response>=response_floor)).any(-1)
+        stopped=(self.motion.abs()<self.raw.new_tensor([.05,.15])).all(-1)
+        moving=torch.where(nonzero.any(-1),responding,stopped)
         ready=s.copy()
         ready['admission_ready']=self.active | self.external_mode | moving
         result=super().update(ready,fixed)
