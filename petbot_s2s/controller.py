@@ -30,11 +30,12 @@ class RobotTargets:
 
 
 class Controller:
-    def __init__(self, bundle: Path, initial_state, frame=0.):
+    def __init__(self, bundle: Path, initial_state, frame=0., transition_contract=None):
         torch.set_num_threads(1)
         self.bundle = bundle
         self.manifest = json.loads((bundle/'manifest.json').read_text())
         c = self.manifest['contract']
+        self.transition_contract=transition_contract or c.get('transition_contract','legacy')
         for name, sha in self.manifest['networks'].items():
             if hashlib.sha256((bundle/name).read_bytes()).hexdigest() != sha:
                 raise ValueError(f'Corrupt policy file: {name}')
@@ -48,6 +49,7 @@ class Controller:
         self.cfg = SimpleNamespace(steering_design='feedback', yaw_filter_tau=c['yaw_filter_tau'],
             frame_slew=c['frame_slew'], wheel_slew=c['wheel_slew'],
             yaw_feedback_design='fast2', yaw_feedback_gain=c['fast_yaw_controller']['kp'])
+        self.cfg.transition_contract=self.transition_contract
         limits = self.manifest['tested_range']
         self.speed_limit, self.yaw_limit = limits['speed_limit'], limits['yaw_limit']
         self.frame_range = (limits['frame_min'], limits['frame_max'])
@@ -56,7 +58,8 @@ class Controller:
         self.frame = frame
         self.progress = ContinuousProgress(1, 'cpu', .06, self.speed_limit, self.yaw_limit,
             self.frame_range, 42, 'pose_feedback_tight', hold_range=(180.,180.),
-            tracking_objective='stability_first', handoff_alignment='after')
+            tracking_objective='stability_first', handoff_alignment='after',
+            transition_contract=self.transition_contract)
         self.robot = RobotTargets(self.spec)
         self.scene = {'robot': self.robot}
         self.action = FeedbackAction(None, self)
@@ -115,7 +118,8 @@ class Controller:
             p.support_run[:,None].clamp(max=1),p.frame[:,None]),-1)
         features = torch.cat((base,torch.nn.functional.one_hot(p.phase,5).float(),
             p.requested_mode[:,None],p.destination[:,None],p.phase_time[:,None]/4),-1)
-        old = bound_cycle_features(ground_frame_features(features,s['yaw'],'balance_local'))
+        initial=p.transition_heading if self.transition_contract=='linear_heading' else None
+        old = bound_cycle_features(ground_frame_features(features,s['yaw'],'balance_local',initial))
         instantaneous = torch.stack((s['forward'],s['heading_rate']),-1)
         feedback = torch.cat((instantaneous,p.motion,p.command-p.motion,p.error_integral),-1)
         feedback = feedback/feedback.new_tensor([.1,.3,.1,.3,.1,.3,.2,.6])

@@ -29,11 +29,12 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--source',type=Path,required=True)
     parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--transition-contract',choices=['legacy','linear_heading'],default='legacy')
     args=parser.parse_args()
     provenance=json.loads((ROOT/'provenance.json').read_text())
     for name,sha in provenance['source_sha256'].items():
         assert hashlib.sha256((args.source/name).read_bytes()).hexdigest()==sha,name
-    for name in ('moving','cycle','continuous','stability','feedback','fast_feedback','ground_motion','local_frame','functional'):
+    for name in ('moving','cycle','continuous','stability','feedback','fast_feedback','ground_motion','local_frame','functional','kinematics'):
         assert (ROOT/'petbot_s2s/core'/f'{name}.py').read_bytes()==(args.source/'upright'/f'{name}.py').read_bytes()
     for filename,name in [('cycle_task.py','MovingAction'),('continuous_task.py','ContinuousAction'),
                           ('feedback_task.py','FeedbackAction'),('balance_reflex.py','attach_balance_reflex')]:
@@ -46,7 +47,7 @@ def main():
         actual=definition(ROOT/'petbot_s2s/core/action_terms.py',name)
         assert ast.dump(ast.parse(expected))==ast.dump(ast.parse(actual)),name
 
-    sim=Simulation(ROOT/'policies/cycle18_long_r43')
+    sim=Simulation(ROOT/'policies/cycle18_long_r43',transition_contract=args.transition_contract)
     c,p=sim.controller,sim.controller.progress
     c.cfg.observation_frame='balance_local'
     base=None
@@ -107,7 +108,7 @@ def main():
     assert keys.command(.05,.15)==(0.,0.)
     keys.event(glfw.KEY_SPACE,glfw.PRESS);assert keys.toggle
     keys.toggle=False;keys.event(glfw.KEY_SPACE,glfw.REPEAT);assert not keys.toggle
-    result=dict(passed=True,source_files=len(provenance['source_sha256']),
+    result=dict(passed=True,transition_contract=args.transition_contract,source_files=len(provenance['source_sha256']),
                 action_definitions_identical=4,observation_cases=35,max_observation_error=maximum,
                 heading_rate_error=abs(measured-rate),mean_contact_support=float(np.mean(forces)),
                 weight=weight,actuator_limits_passed=True,keyboard_press_release_passed=True)

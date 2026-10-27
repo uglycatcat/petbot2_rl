@@ -24,12 +24,15 @@ def main():
     parser.add_argument('--policy',type=Path,default=ROOT/'policies/cycle18_long_r42')
     parser.add_argument('--model-dir',type=Path)
     parser.add_argument('--frame',type=float,default=0.)
+    parser.add_argument('--transition-contract',choices=['legacy','linear_heading'],default=None,
+        help='Explicit development intervention; defaults to exported policy contract')
     parser.add_argument('--headless',action='store_true')
     parser.add_argument('--seconds',type=float,default=36.)
     parser.add_argument('--hold-seconds',type=float,default=18.)
     parser.add_argument('--cycles',type=int,default=1)
     parser.add_argument('--command-scale',type=float,default=1.,help='Scale headless commands; 1.25 reaches the keyboard limits')
     parser.add_argument('--scenario',choices=['stationary','forward','reverse','mixed','ordinary'],default='mixed')
+    parser.add_argument('--takeover-yaw',type=float,default=0.,help='Ordinary-drive turn command before the first balance phase')
     parser.add_argument('--output',type=Path,default=ROOT/'outputs/latest')
     parser.add_argument('--snapshot',action='store_true')
     parser.add_argument('--viewer-smoke-seconds',type=float)
@@ -42,7 +45,9 @@ def main():
     if args.headless and args.snapshot:
         os.environ.setdefault('MUJOCO_GL','egl')
     from petbot_s2s.simulation import Simulation
-    sim = Simulation(args.policy,args.model_dir,args.frame)
+    sim = Simulation(args.policy,args.model_dir,args.frame,args.transition_contract)
+    if not math.isfinite(args.takeover_yaw) or abs(args.takeover_yaw*args.command_scale)>sim.controller.yaw_limit:
+        parser.error('Takeover yaw must fit the exported policy range')
     if not args.headless:
         from petbot_s2s.viewer import run_viewer
         run_viewer(sim,args.viewer_smoke_seconds)
@@ -64,6 +69,8 @@ def main():
         command = (0.,0.) if args.scenario=='stationary' else (.04,0.)
         if args.scenario=='reverse':
             command = (-.04,0.)
+        if balanced_at is None:
+            command = (command[0],args.takeover_yaw)
         if args.scenario=='mixed' and balanced_at is not None:
             commands = [(.04,0.),(0.,.12),(-.04,0.),(0.,-.12),(.03,.10),(0.,0.)]
             command = commands[int((t-balanced_at)//3)%len(commands)]
@@ -88,8 +95,9 @@ def main():
             armed=landing=False
             balanced_at=None
     result = dict(policy=args.policy.name,checkpoint_sha256=c.manifest['checkpoint_sha256'],
+        transition_contract=c.transition_contract,development_intervention=args.transition_contract is not None,
         source_model_sha256=sim.model_sha256,mujoco_version=__import__('mujoco').__version__,
-        scenario=args.scenario,command_scale=args.command_scale,frame=args.frame,wall_seconds=time.monotonic()-start,
+        scenario=args.scenario,takeover_yaw=args.takeover_yaw,command_scale=args.command_scale,frame=args.frame,wall_seconds=time.monotonic()-start,
         simulated_seconds=float(sim.data.time),entered_balance=ever_balanced,
         requested_cycles=args.cycles,
         completed_cycles=c.cycles,failure_code=c.failure_code,events=c.events,

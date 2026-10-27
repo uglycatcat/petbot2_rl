@@ -123,17 +123,23 @@ class FeedbackAction(ContinuousAction):
         self.inner_index=0
         self.inner_mask=torch.zeros(env.num_envs,device=env.device,dtype=torch.bool)
         self.inner_speed=self.speed.clone();self.inner_policy=self.speed.clone();self.inner_anchor=self.speed.clone()
+        self.continuous_heading=getattr(env.cfg,'transition_contract','legacy')=='linear_heading'
+        if self.continuous_heading:self.fast_feedback.half_difference_limit=self.max_speed
 
     def process_actions(self,actions):
         previous=self.speed.clone()
         old_integral=self.yaw_feedback.integral.clone()
         super().process_actions(actions)
         p=ensure(self._env)
-        self.speed.copy_(self.yaw_feedback.process(previous,self.speed,p.phase,p.phase_time,p.command,p.motion,actions[:,2]))
+        if not self.continuous_heading:
+            self.speed.copy_(self.yaw_feedback.process(previous,self.speed,p.phase,p.phase_time,p.command,p.motion,actions[:,2]))
         self.applied[:,1:]=self.speed/self.max_speed
         if self.fast_enabled:
             self.inner_index=0
             self.inner_mask=(p.phase==2)&(p.phase_time>=1.2)
+            if self.continuous_heading:
+                self.inner_mask=(p.phase>=1)&(p.phase<=3)
+                old_integral[~self.inner_mask]=0.
             self.inner_anchor.copy_(previous);self.inner_speed.copy_(previous);self.inner_policy.copy_(self.speed)
             self.fast_feedback.integral.copy_(old_integral)
             self.yaw_feedback.integral[self.inner_mask]=old_integral[self.inner_mask]
@@ -142,9 +148,16 @@ class FeedbackAction(ContinuousAction):
         if self.fast_enabled and self.inner_index%self.fast_stride==0:
             from .ground_motion import wheel_heading
             p=ensure(self._env);d=self.robot.data
-            rate=wheel_heading(tensor(d.root_link_pose_w)[:,3:7],tensor(d.root_com_vel_w))[2]
+            _,heading,rate=wheel_heading(tensor(d.root_link_pose_w)[:,3:7],tensor(d.root_com_vel_w))
+            command=p.command;residual=self.raw_actions[:,2]
+            if self.continuous_heading:
+                from .moving import wrap
+                transition=(p.phase==1)|(p.phase==3)
+                command=command.clone()
+                command[transition,1]=(3.*wrap(p.transition_heading-heading))[transition].clamp(-1.5,1.5)
+                residual=torch.where(transition,0.,residual)
             candidate=self.fast_feedback.process(self.inner_speed,self.inner_policy,self.inner_anchor,
-                p.command,rate,self.raw_actions[:,2],self.inner_mask)
+                command,rate,residual,self.inner_mask)
             self.inner_speed.copy_(candidate);self.speed.copy_(candidate)
             self.applied[:,1:]=self.speed/self.max_speed
             self.yaw_feedback.integral[self.inner_mask]=self.fast_feedback.integral[self.inner_mask]

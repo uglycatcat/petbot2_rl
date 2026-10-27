@@ -108,7 +108,8 @@ class ContinuousProgress(CycleProgress):
             result['track_reward']=(self.phase==2)*result['support']*coarse_tracking_score(self.motion,self.command)
             # Support earns balance credit without requiring negligible instantaneous sway.
             result['balance_reward']=(self.phase==2)*result['support'].float()
-        instability=self.stability_monitor.update(self.phase,s,self.motion,self.command)
+        instability=self.stability_monitor.update(self.phase,s,self.motion,self.command,
+            geometry_mode=self.transition_contract=='linear_heading')
         result['instability']=instability.clone()
         result['instability_dwell']=self.stability_monitor.dwell.clone()
         result['failure'] |= instability.any(-1)
@@ -122,7 +123,7 @@ class ContinuousProgress(CycleProgress):
         reasons = [(~finite), s['pos'][:, 2]<.025, s['g'][:, 2]>.2,
                    s['vel'][:, :3].norm(dim=-1)>5, s['vel'][:, 3:].norm(dim=-1)>30,
                    result['warmup_failed'], (self.phase==1)&(self.phase_time>3.),
-                   (self.phase==3)&(self.phase_time>4.),
+                   (self.phase==3)&(self.phase_time>4.)&(self.transition_contract=='legacy'),
                    self.active & ((s['pos'][:, :2]-self.rise_position).norm(dim=-1)>self.travel_limit)]
         reasons.extend(instability.unbind(-1))
         result['failure_code'] = sum(flag.long()*(1<<i) for i, flag in enumerate(reasons))

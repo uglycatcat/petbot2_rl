@@ -13,6 +13,7 @@ class FastYawFeedback:
         assert kp in (8.,16.)
         self.period=period
         self.kp=kp
+        self.half_difference_limit=2.
         self.max_speed=max_speed;self.control_limit=control_dt*wheel_slew
         self.integral=torch.zeros(n,device=device);self.target=torch.zeros_like(self.integral)
 
@@ -24,7 +25,7 @@ class FastYawFeedback:
         error=command[:,1]-rate
         integral=(self.integral+self.period*4.*error).clamp(-1.5,1.5)
         self.integral[active]=integral[active]
-        desired=(yaw_feedforward(command[:,1])+self.kp*error+self.integral+.25*residual).clamp(-2.,2.)
+        desired=(yaw_feedforward(command[:,1])+self.kp*error+self.integral+.25*residual).clamp(-self.half_difference_limit,self.half_difference_limit)
         old=(previous[:,1]-previous[:,0])*.5
         half=old+(desired-old).clamp(-12.*self.period,12.*self.period)
         common=policy.mean(-1)

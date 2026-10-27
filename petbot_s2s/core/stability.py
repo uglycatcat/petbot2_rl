@@ -25,11 +25,16 @@ class StabilityMonitor:
     def reset(self,ids):
         self.dwell[ids]=0.
 
-    def update(self,phase,state,motion,command):
+    def update(self,phase,state,motion,command,geometry_mode=False):
         eligible=phase==2
         speed_limit=torch.maximum(command[:,0].abs()+.15,command.new_full((len(phase),),.20))
         conditions=torch.stack((state['front_z']<.07,state['rear_fraction']<.5,
             state['body_history'],motion[:,0].abs()>speed_limit),-1)&eligible[:,None]
+        if geometry_mode:
+            from .kinematics import wheel_geometry
+            gap,rear_skew,_=wheel_geometry(state['g'],state['q'][:,3:])
+            conditions=torch.stack((gap.amin(-1)<.025,rear_skew>.06,
+                state['g'][:,2]>.2,motion[:,0].abs()>speed_limit),-1)&eligible[:,None]
         self.dwell=torch.where(conditions,self.dwell+self.dt,0.)
         thresholds=self.dwell.new_tensor([.30,.30,.12,.60])
         return self.dwell+1e-6>=thresholds

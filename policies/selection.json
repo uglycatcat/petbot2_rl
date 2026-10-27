@@ -21,5 +21,16 @@
   "comparison": "cycle18_long_r43 kept for reproducible transfer comparison",
   "mujoco_evidence": "validation/20261027/scenarios.json",
   "limitation": "Fixed MuJoCo scenarios are not random-initial-state success or hardware validation; static landing and repeated takeover failures remain.",
-  "batch_engineering_status": "9/9 training and29/29 evaluation complete; continuation state verified; no remaining processes"
+  "batch_engineering_status": "9/9 training and29/29 evaluation complete; continuation state verified; no remaining processes",
+  "experimental_candidate": {
+    "name": "correction20_gate_r42",
+    "updates_after_transfer": 8,
+    "status": "engineering_candidate_not_full_range_training",
+    "evidence": "validation/20261027_correction/scenarios.json",
+    "known_failures": [
+      "third_rise_timeout",
+      "moving_turn_takeover_front_low"
+    ],
+    "default_unchanged": true
+  }
 }

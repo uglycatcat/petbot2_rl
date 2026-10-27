@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "poses": 200,
+  "max_error_m": 1.1102230246251565e-16,
+  "sensors": [
+    "imu_accel",
+    "imu_gyro"
+  ],
+  "limitation": "Flat-ground rear support is a task assumption; geometry does not measure contact force."
+}

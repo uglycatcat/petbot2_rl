@@ -73,6 +73,7 @@ def run_viewer(sim, smoke_seconds=None):
             glfw.poll_events()
             if keys.reset:
                 sim.reset()
+                next_step = time.monotonic()
                 keys.reset = keys.toggle = False
             c = sim.controller
             c.set_command(*keys.command(c.speed_limit,c.yaw_limit))
@@ -80,9 +81,16 @@ def run_viewer(sim, smoke_seconds=None):
                 c.toggle()
                 keys.toggle = False
             now = time.monotonic()
-            if now >= next_step:
-                sim.step()
-                next_step = max(next_step+.06,time.monotonic())
+            # Render between physics substeps rather than showing a new pose
+            # only after a complete 60 ms policy block. Bound catch-up work so
+            # a slow machine stays responsive; never enlarge the physics dt.
+            for _ in range(30):
+                if next_step > now or c.failure_code:
+                    break
+                sim.physics_step()
+                next_step += .002
+            if next_step < now-.06 or c.failure_code:
+                next_step = now
             camera.lookat[:] = sim.data.xpos[sim.root]
             width,height = glfw.get_framebuffer_size(window)
             viewport = mujoco.MjrRect(0,0,width,height)
@@ -93,7 +101,10 @@ def run_viewer(sim, smoke_seconds=None):
             if r['armed'] and r['phase']==0:
                 status += ' / REQUEST PENDING'
             if r['failure_code']:
-                reason=', '.join(text for bit,text in FAILURES.items() if r['failure_code']&bit)
+                labels = dict(FAILURES)
+                if c.transition_contract == 'linear_heading':
+                    labels.update({1024:'rear axle height mismatch',2048:'overturned'})
+                reason=', '.join(text for bit,text in labels.items() if r['failure_code']&bit)
                 status += f" / PAUSED: {reason} (R to reset)"
             left = 'W/S: forward/reverse | A/D: turn\nSpace: rise / front wheels down | R: reset | Esc: exit\n'
             left += 'Mouse drag: orbit | Wheel: zoom\n\n'+status

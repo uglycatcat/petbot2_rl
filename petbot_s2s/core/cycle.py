@@ -4,11 +4,13 @@ from .moving import MovingProgress, wrap
 
 
 class CycleProgress(MovingProgress):
-    def __init__(self,*args,tracking_shape="gaussian",handoff_alignment="before",**kwargs):
+    def __init__(self,*args,tracking_shape="gaussian",handoff_alignment="before",transition_contract='legacy',**kwargs):
         if tracking_shape not in ("gaussian","cauchy"):raise ValueError("Invalid tracking reward shape")
         if handoff_alignment not in ('before','after'):raise ValueError('Invalid handoff alignment')
         self.tracking_shape=tracking_shape
         self.handoff_alignment=handoff_alignment
+        assert transition_contract in ('legacy','linear_heading')
+        self.transition_contract=transition_contract
         super().__init__(*args,**kwargs)
         z=lambda:torch.zeros(self.n,device=self.device)
         self.phase=z().long();self.requested_mode=z()+1;self.destination=z()
@@ -19,6 +21,29 @@ class CycleProgress(MovingProgress):
         self.balance_ever=z().bool();self.external_mode=z().bool();self.land_height=z()+.18
         self.track_sum=torch.zeros(self.n,2,device=self.device);self.track_count=z()
         self.track_good=z();self.balance_good=z();self.handoff_run=z();self.landing_potential=z()
+        self.transition_speed=z();self.transition_heading=z();self.measured_heading=z()
+
+    def before_step(self):
+        if self.transition_contract=='legacy':
+            return super().before_step()
+        from .moving import slew
+        ids=torch.where(self.active & ~self.external & (self.since>=self.next_command))[0]
+        if ids.numel():self.sample_commands(ids)
+        mask=(self.phase==1)|(self.phase==3)
+        self.command[:,0]=slew(self.command[:,0],self.raw[:,0],.6*self.dt)
+        self.command[mask,0]=self.transition_speed[mask]
+        yaw=self.raw[:,1].clamp(-self.yaw_limit,self.yaw_limit)
+        lateral=.4/self.command[:,0].abs().clamp_min(.05)
+        yaw=torch.maximum(torch.minimum(yaw,lateral),-lateral)
+        self.command[:,1]=slew(self.command[:,1],yaw,2.*self.dt)
+        self.command[mask,1]=(3.*wrap(self.transition_heading-self.measured_heading))[mask].clamp(-1.5,1.5)
+        queued=self.raw.clone();queued[mask]=self.command[mask]
+        for ref,heading,command in ((self.reference,self.yaw,self.command),(self.raw_reference,self.raw_yaw,queued)):
+            heading[mask]=self.transition_heading[mask]
+            rate=torch.where(mask,0.,command[:,1])
+            middle=heading+.5*rate*self.dt
+            ref.add_(command[:,0,None]*torch.stack((middle.cos(),middle.sin()),-1)*self.dt*self.active[:,None])
+            heading.copy_(wrap(heading+rate*self.dt*self.active))
 
     def sample_commands(self, ids):
         super().sample_commands(ids)
@@ -33,6 +58,7 @@ class CycleProgress(MovingProgress):
         self.destination[ids]=self.frame_range[0]+self.uniform(ids,8)*(self.frame_range[1]-self.frame_range[0])
         self.land_at[ids]=5.+3.*self.uniform(ids,9)
         self.rise_position[ids]=pos[ids,:2];self.front_previous[ids]=.045;self.land_height[ids]=.18
+        self.transition_speed[ids]=0.;self.transition_heading[ids]=heading[ids];self.measured_heading[ids]=heading[ids]
 
     def request_mode(self,mode,frame,ids=None):
         if ids is None:ids=torch.arange(self.n,device=self.device)
@@ -46,13 +72,32 @@ class CycleProgress(MovingProgress):
         self.external_mode[ids]=True
 
     def update(self,s,fixed):
+        geometry=None
+        self.measured_heading.copy_(s['yaw'])
+        if self.transition_contract=='linear_heading':
+            from .kinematics import wheel_geometry
+            gap,rear_skew,geometry=wheel_geometry(s['g'],s['q'][:,3:])
+            ready=s.copy();ready['four']=geometry
+            # The inherited progress features must not leak simulated wheel
+            # contact into the deployable stage/observation state.
+            ready['rear']=(rear_skew<.025)&(s['g'][:,2]<.2)
+            ready['other']=gap.amin(-1)<.01
+            ready['body_contact']=s['g'][:,2]>.2
+            ready['front_z']=gap.amin(-1)+.045
+        else:ready=s
         # Base progress supplies warmup admission and command/filter machinery;
         # none of its reward/success definitions are used by this version.
-        previous_support=self.support_run.clone();m=super().update(s,fixed)
+        previous_support=self.support_run.clone();m=super().update(ready,fixed)
         switch=m['switched'];self.phase[switch]=1;self.phase_time[switch]=0
         self.rise_position[switch]=s['pos'][switch,:2]
+        if self.transition_contract=='linear_heading':
+            self.transition_speed[switch]=s['forward'][switch]
+            self.transition_heading[switch]=s['yaw'][switch]
+            self.command[switch,1]=0.
         self.phase_time+=self.active*self.dt
         support=self.active & (s['rear_fraction']>=.9) & ~s['other_history'] & (s['front_z']>.12) & (s['g'][:,2]<-.25)
+        if self.transition_contract=='linear_heading':
+            support=self.active & (gap.amin(-1)>.075) & (rear_skew<.025) & (s['g'][:,2]<-.25)
         self.support_run=torch.where(support,previous_support+self.dt,0.)
         entering=(self.phase==1)&(self.support_run>=.30)
         self.phase[entering]=2;self.phase_time[entering]=0
@@ -66,15 +111,22 @@ class CycleProgress(MovingProgress):
         self.requested_mode[automatic]=0
         landing=(self.phase==2)&(self.requested_mode==0)
         self.phase[landing]=3;self.phase_time[landing]=0;self.land_height[landing]=s['front_z'][landing].clamp_min(.12)
+        if self.transition_contract=='linear_heading':
+            self.transition_speed[landing]=s['forward'][landing]
+            self.transition_heading[landing]=s['yaw'][landing]
+            self.command[landing,0]=self.transition_speed[landing];self.command[landing,1]=0.
         ground=(s['four_fraction']>=.9)&~s['body_history']&(s['g'][:,2]<-.85)&(s['g'][:,1].abs()<.15)
         frame_error=(s['q'][:,3:]-self.destination[:,None]).abs().amax(-1)
         gentle=(s['front_vertical_speed'].abs()<.25)&(s['vel'][:,3:5].norm(dim=-1)<1.)
+        if self.transition_contract=='linear_heading':
+            ground=geometry
+            gentle=m['tilt_rate']<1.2
         # Ordinary drive already slews the frame to its requested destination.
         # Start it only after stable physical landing; final completion still
         # requires aligned frame and one continuous second of stable support.
         aligned=(frame_error<.1) if self.handoff_alignment=='before' else torch.ones_like(ground)
         self.ground_run=torch.where((self.phase==3)&ground&gentle&aligned,self.ground_run+self.dt,0.)
-        handoff=(self.phase==3)&(self.ground_run>=.30)
+        handoff=(self.phase==3)&(self.ground_run>=(.12 if self.transition_contract=='linear_heading' else .30))
         self.phase[handoff]=4;self.phase_time[handoff]=0;self.landed |= handoff
         self.handoff_run=torch.where((self.phase==4)&ground&gentle&(frame_error<.1),self.handoff_run+self.dt,0.)
         self.handoff |= (self.phase==4)&(self.handoff_run>=1.)
@@ -100,7 +152,9 @@ class CycleProgress(MovingProgress):
         allowed_down=(.08+torch.sqrt(2*.6*clearance)).clamp(max=.6)
         descent_cost=torch.relu(-s['front_vertical_speed']-allowed_down).square()/.25**2
         # Safety termination has priority over time limits, including the final handoff step.
-        failure=m['physical_failure']|m['warmup_failed']|((self.phase==1)&(self.phase_time>3.))|((self.phase==3)&(self.phase_time>4.))
+        landing_timeout=(self.phase==3)&(self.phase_time>4.)
+        if self.transition_contract=='linear_heading':landing_timeout=torch.zeros_like(landing_timeout)
+        failure=m['physical_failure']|m['warmup_failed']|((self.phase==1)&(self.phase_time>3.))|landing_timeout
         failure |= self.active & ((s['pos'][:,:2]-self.rise_position).norm(dim=-1)>getattr(self,'travel_limit',3.))
         self.max_impact=torch.maximum(self.max_impact,torch.where((self.phase==3),s['front_force_peak'],0.))
         touchdown_speed=torch.maximum((-s['front_vertical_speed']).clamp_min(0),(-self.last_front_speed).clamp_min(0))
@@ -128,6 +182,18 @@ class CycleProgress(MovingProgress):
             body_cost=self.active*s['body_history'],
             transition_track=((self.phase==1)|(self.phase==3))*.1*tracking_reward,
             smooth_reward=self.active/(1+(m['tilt_rate']/.8).square()))
+        if self.transition_contract=='linear_heading':
+            transition=(self.phase==1)|(self.phase==3)
+            yaw_error=wrap(s['yaw']-self.transition_heading)
+            rate_error=s['heading_rate']-self.command[:,1]
+            speed_tolerance=.15+.5*self.transition_speed.abs()
+            speed_error=(s['forward']-self.transition_speed)/speed_tolerance
+            result['transition_track']=transition*(
+                .3/(1.+(yaw_error/.15).square())+.3/(1.+(rate_error/.5).square())+
+                .4/(1.+speed_error.square()))
+            result['geometry_ground']=geometry
+            result['wheel_gap']=gap
+            result['transition_heading_error']=yaw_error
         self.result=result;return result
 
 

@@ -32,7 +32,7 @@ def batch(value, dtype=torch.float32):
 
 
 class Simulation:
-    def __init__(self, bundle, model_dir=None, frame=0.):
+    def __init__(self, bundle, model_dir=None, frame=0., transition_contract=None):
         self.bundle = Path(bundle)
         self.model_dir = Path(model_dir) if model_dir else find_model()
         self.model = m = mujoco.MjModel.from_xml_path(str(self.model_dir/'mjcf/scene.xml'))
@@ -40,6 +40,7 @@ class Simulation:
             raise ValueError('Source timestep must be 2 ms; model is never modified')
         self.data = mujoco.MjData(m)
         self.frame = frame
+        self.transition_contract=transition_contract
         self.position_names = ['head','left_ear','right_ear','left_frame','right_frame']
         self.rear_names = ['left_rear_wheel','right_rear_wheel']
         self.front_names = ['left_front_wheel','right_front_wheel']
@@ -71,10 +72,11 @@ class Simulation:
     def reset(self):
         mujoco.mj_resetData(self.model,self.data)
         mujoco.mj_forward(self.model,self.data)
+        self.substep = 0
         self.contact_history.clear()
         for _ in range(30):
             self.contact_history.append(np.zeros((self.model.nbody,3)))
-        self.controller = Controller(self.bundle,self.state(),self.frame)
+        self.controller = Controller(self.bundle,self.state(),self.frame,self.transition_contract)
 
     def sample_contact(self):
         m,d = self.model,self.data
@@ -131,16 +133,25 @@ class Simulation:
         d.ctrl[self.actuator_ids[5:]] = speed
 
     def step(self):
+        for _ in range(30):
+            if not self.physics_step():
+                return False
+        return True
+
+    def physics_step(self):
+        """Advance 2 ms; retain the exact 60/20/2 ms controller clocks."""
         c = self.controller
         if c.failure_code:
             return False  # Explicit diagnostic pause; R is the only physical reset.
-        c.begin(self.state())
-        for _ in range(30):
-            position,speed = c.physics_targets(self.state())
-            self.servo(position,speed)
-            mujoco.mj_step(self.model,self.data)
-            self.sample_contact()
-        c.end(self.state(),float(self.data.time))
+        if self.substep == 0:
+            c.begin(self.state())
+        position,speed = c.physics_targets(self.state())
+        self.servo(position,speed)
+        mujoco.mj_step(self.model,self.data)
+        self.sample_contact()
+        self.substep = (self.substep+1)%30
+        if self.substep == 0:
+            c.end(self.state(),float(self.data.time))
         return not bool(c.failure_code)
 
     def record(self):
