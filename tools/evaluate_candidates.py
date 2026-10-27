@@ -33,7 +33,7 @@ def command(root, out, plan, job, gpu):
     assert not any(x.startswith(forbidden) for x in plan['common_args']+extra)
     assert job['mode'] in ('checkpoint', 'untuned_parent')
     entry = job.get('entrypoint', 'train_cycle.py')
-    assert entry in ('train_cycle.py', 'tools/probe_landing_state.py', 'tools/probe_rise_authority.py')
+    assert entry in ('train_cycle.py', 'tools/probe_landing_state.py', 'tools/probe_rise_authority.py', 'tools/probe_balance_refresh.py')
     flags = (['--evaluate', '--checkpoint'] if job['mode'] == 'checkpoint'
              else ['--probe', '--initialize-cycle-from'])
     return ['python3', str(fixed/'tools/run_guarded.py'), '--container', plan['container'],
@@ -51,6 +51,8 @@ def verify_plan(root, plan):
     context = pathlib.PurePosixPath(plan.get('context_doc', 'docs/upright_cycle_batch17_results.md'))
     assert context.parts[0] == 'docs' and '..' not in context.parts and context.suffix == '.md'
     assert len({j['name'] for j in plan['jobs']}) == len(plan['jobs']) > 0
+    assert 1<=plan.get('parallelism',4)<=4
+    assert set(plan.get('excluded_gpus',[]))<=set(range(4))
     assert all(pathlib.Path(j['name']).name == j['name'] and j['name'] not in ('.', '..') for j in plan['jobs'])
     assert subprocess.check_output(['git', '-C', str(fixed), 'rev-parse', 'HEAD'], text=True).strip() == plan['commit']
     assert not subprocess.check_output(['git', '-C', str(fixed), 'status', '--porcelain'], text=True).strip()
@@ -111,13 +113,13 @@ def run(root, plan):
                     item['status'] = 'resource_timeout'
             save(out/'eval_status.json', state)
         for job in plan['jobs']:
-            if state[job['name']]['status'] != 'pending' or len(running) >= 4:
+            if state[job['name']]['status'] != 'pending' or len(running) >= plan.get('parallelism',4):
                 continue
             raw = subprocess.check_output(['nvidia-smi', '--query-gpu=index,memory.total,memory.used',
                                            '--format=csv,noheader,nounits'], text=True)
             memory = {int(i):(int(t),int(u)) for i,t,u in (line.split(',') for line in raw.splitlines())}
             occupied = {x['gpu'] for x in running.values()}
-            gpu = next((i for i in (2,3,1,0) if i not in occupied and memory[i][1]+4000 < .78*memory[i][0]), None)
+            gpu = next((i for i in (2,3,1,0) if i not in occupied and i not in plan.get('excluded_gpus',[]) and memory[i][1]+4000 < .78*memory[i][0]), None)
             if gpu is None:
                 break
             name = job['name']; cmd = command(root, out, plan, job, gpu); started = time.time()
