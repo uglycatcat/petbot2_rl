@@ -36,7 +36,7 @@ def export(evaluation, output):
     assert end['exit_code'] == 0 and not end['guard_stopped'] and not end.get('physics_error')
     assert result['count'] == 64 and result['unfinished'] == 0
     contract = meta['contract']
-    assert contract['task'] in ('upright_cycle_v18', 'upright_cycle_v19')
+    assert contract['task'] in ('upright_cycle_v18', 'upright_cycle_v19', 'upright_cycle_v20')
     assert contract['balance_reflex'] == 'frozen20' and contract['yaw_feedback_design'] == 'fast2'
     assert not meta['working_tree_dirty']
     model = load_model()
@@ -65,7 +65,7 @@ def export(evaluation, output):
     raw[:, -58+48] = torch.linspace(0., 1., len(raw), device=raw.device)
     obs = TensorDict({'policy': raw}, batch_size=[len(raw)])
     cfg = copy.deepcopy(meta['runner']['actor']); cfg.pop('class_name')
-    actor_class = RiseAdapterModel if contract.get('refinement_target')=='rise' else ReflexAdapterModel
+    actor_class = RiseAdapterModel if contract.get('refinement_target') in ('rise', 'all') else ReflexAdapterModel
     actor = actor_class(obs, obs_groups={'actor': ['policy']}, obs_set='actor',
                               output_dim=3, **cfg).to('cuda:0').eval()
     if actor_class is RiseAdapterModel and not any(k.startswith('rise_') for k in saved['actor_state_dict']):
@@ -95,6 +95,8 @@ def export(evaluation, output):
                'upright/cycle_task.py', 'upright/local_frame.py', 'upright/fast_feedback.py',
                'upright/feedback.py', 'upright/ground_motion.py', 'upright/model.py',
                'upright/task.py', 'upright/asset_cfg.py', 'upright/moving.py']
+    if contract.get('transition_contract') == 'linear_heading':
+        sources += ['upright/kinematics.py', 'upright/stability.py']
     manifest = dict(
         format='petbot_cycle_network_bundle_v1', task_commit=meta['commit'],
         exporter_commit=subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip(),

@@ -39,6 +39,7 @@ with log.open('w') as out:
             except subprocess.TimeoutExpired:signal_job(a.container,token,9);child.wait(timeout=15)
             break
         time.sleep(1)
+error=error or physics.check()
 code=81 if error else 80 if guard else child.returncode
 log.with_suffix('.exit.json').write_text(json.dumps(dict(exit_code=code,job_token=token,
     command=command,gpus=gpus,world_size=len(gpus),local_envs=counts[0],total_envs=counts[0]*len(gpus),
