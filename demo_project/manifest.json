@@ -49,13 +49,12 @@
         "demo"
       ],
       "shallow": false,
-      "status": "cycle18 formal rise-only PPO deploying, one fixed57b626e batch",
+      "status": "cycle18 nine fixed57b626e PPO jobs verified running;29 evaluations/event hook active; parent baseline complete61/64",
       "local_validation": "v19 original8 engineering jobs and additional5 resource jobs complete, no memory/physics failures. 2048/4096 short-trained180s complete/basic63/64 and64/64; known rise failure remains in2048. Extra1024x20 smoke and8s physical reload64/64 passed. Triple4096 throughput13.04k steps/s, mean compute89.3% onGPU2 only. Formal batch18 inherits cycle16B43/199, trains only rise head plus critic, new180s heldout20261136. MuJoCo pending. See docs/upright_cycle_v19_training.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_cycle_batch18",
-        "upright_cycle_batch18_parent_baseline"
+        "upright_cycle_batch18"
       ]
     },
     {
