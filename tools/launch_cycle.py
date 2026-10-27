@@ -9,8 +9,21 @@ def save(path,data):
 def usage():
     text=subprocess.check_output(['nvidia-smi','--query-gpu=index,memory.total,memory.used,utilization.gpu','--format=csv,noheader,nounits'],text=True)
     return {int(i):(int(t),int(u),int(v)) for i,t,u,v in (r.split(',') for r in text.splitlines())}
+def validate_checkpoints(plan):
+    """Reject requested snapshots that this run's save cadence cannot produce."""
+    end=plan['iterations']-1;interval=plan['save_interval'];points=plan['checkpoints']
+    if type(interval) is not int or interval<=0 or type(end) is not int or end<0:
+        raise ValueError('Invalid iteration or save interval')
+    if not points or len(set(points))!=len(points):
+        raise ValueError('Checkpoint list must be nonempty and unique')
+    start=max(v.get('initial_iteration',0) for v in plan['variants'])
+    if any(type(i) is not int or not start<=i<=end or (i!=end and i%interval!=0) for i in points):
+        raise ValueError('Requested checkpoint is outside the run or is not saved by its cadence')
+
+
 def main():
     p=argparse.ArgumentParser();p.add_argument('plan',type=pathlib.Path);a=p.parse_args();plan=json.loads(a.plan.read_text())
+    validate_checkpoints(plan)
     lock=(RUNS/'upright_launch.lock').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     out=RUNS/('_'+plan['name']);out.mkdir(exist_ok=True)
     if (out/'launch_status.json').exists():raise RuntimeError('Already launched; inspect and recover existing jobs')
