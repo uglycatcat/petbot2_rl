@@ -41,3 +41,7 @@ Thumbs.db
 
 # PetBot demo checkouts are versioned on demoproj/* and managed by repo.
 /demo_project/*/
+
+# Formal repo projects and local historical run archives.
+/rl_project/*/
+/history/

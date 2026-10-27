@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  参考项目与 PetBot demo 清单（repo manifest）。
+  参考项目、PetBot demo 与正式项目清单（repo manifest）。
 
   用途：统一管理 reference_project/ 的上游仓库和 demo_project/ 的实验项目 —— 一条命令物化 / 更新全部，
   并用 revision 指定上游 commit 或我方专用分支。
@@ -57,6 +57,12 @@
            remote="ours"
            revision="demoproj/recovery_rl_demo"
            groups="demo" />
+
+  <!-- 正式项目：训练占位保持空，sim2sim 独立实现；见 rl_project/manifest.json。 -->
+  <project name="petbot2_rl" path="rl_project/std_train_upright_project"
+           remote="ours" revision="rlproj/std_train_upright_project" groups="rl" />
+  <project name="petbot2_rl" path="rl_project/std_s2s_upright_project"
+           remote="ours" revision="rlproj/std_s2s_upright_project" groups="rl" />
 
   <!-- 训练框架 / 工程参考 -->
   <project name="fan-ziqi/robot_lab"

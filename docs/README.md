@@ -4,6 +4,7 @@
 
 | 问题 | 文档 |
 |---|---|
+| MuJoCo 键盘体验、正式项目与成熟度验证 | [sim2sim 方案](upright_sim2sim_20261027.md)、[正式项目索引](../rl_project/README.md) |
 | 当前正在做什么、状态文件在哪里、下一步怎么接 | [当前交接](current_handoff.md) |
 | 三个功能目标、控制接口与用户已确认的约束 | [需求基线](current_scope.md) |
 | repo、容器与版本管理 | [工程说明](engineering_handoff.md)的管理章节；[demo 索引](../demo_project/README.md)。工程说明其余训练接口主要为历史 recovery 原型。 |
