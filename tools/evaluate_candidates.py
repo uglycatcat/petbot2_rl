@@ -33,7 +33,7 @@ def command(root, out, plan, job, gpu):
     assert not any(x.startswith(forbidden) for x in plan['common_args']+extra)
     assert job['mode'] in ('checkpoint', 'untuned_parent')
     entry = job.get('entrypoint', 'train_cycle.py')
-    assert entry in ('train_cycle.py', 'tools/probe_landing_state.py')
+    assert entry in ('train_cycle.py', 'tools/probe_landing_state.py', 'tools/probe_rise_authority.py')
     flags = (['--evaluate', '--checkpoint'] if job['mode'] == 'checkpoint'
              else ['--probe', '--initialize-cycle-from'])
     return ['python3', str(fixed/'tools/run_guarded.py'), '--container', plan['container'],
@@ -48,11 +48,14 @@ def command(root, out, plan, job, gpu):
 
 def verify_plan(root, plan):
     fixed = root / plan['fixed']
+    context = pathlib.PurePosixPath(plan.get('context_doc', 'docs/upright_cycle_batch17_results.md'))
+    assert context.parts[0] == 'docs' and '..' not in context.parts and context.suffix == '.md'
     assert len({j['name'] for j in plan['jobs']}) == len(plan['jobs']) > 0
     assert all(pathlib.Path(j['name']).name == j['name'] and j['name'] not in ('.', '..') for j in plan['jobs'])
     assert subprocess.check_output(['git', '-C', str(fixed), 'rev-parse', 'HEAD'], text=True).strip() == plan['commit']
     assert not subprocess.check_output(['git', '-C', str(fixed), 'status', '--porcelain'], text=True).strip()
-    # Every evaluation uses exactly the already accepted task, not a changed simulator.
+    # Simulator/task source remains accepted; named diagnostic wrappers declare
+    # any policy intervention explicitly in their evaluation contract.
     assert not subprocess.check_output(['git', '-C', str(fixed), 'diff', plan['accepted_task_commit'],
                                        plan['commit'], '--', 'train_cycle.py', 'upright'], text=True)
     for job in plan['jobs']:
@@ -129,10 +132,13 @@ def run(root, plan):
     complete = sum(x['status'] == 'complete' for x in state.values())
     save(out/'eval_finished.json', dict(expected=len(state), complete=complete,
          failed=len(state)-complete, finished_at=time.strftime('%FT%T%z')))
+    context = pathlib.PurePosixPath(plan.get('context_doc', 'docs/upright_cycle_batch17_results.md'))
+    assert context.parts[0] == 'docs' and '..' not in context.parts and context.suffix == '.md'
     message = (f"upright_rl_demo固定策略验证{plan['name']}队列已结束。先读AGENTS.md、docs/current_handoff.md、"
-               "docs/upright_cycle_batch17_results.md及本验证计划，核查launch_status/eval_status/eval_finished、"
-               "实际进程与缺失/失败。按稳定优先分析新种子与交接诊断；这是验证队列，不是新PPO批次。"
-               "继续今晚已授权迭代，先分析再决定修改/训练或MuJoCo验证；禁止重复启动，不启用周期定时器或goal。")
+               f"{context}及本验证计划，核查launch_status/eval_status/eval_finished、实际进程与缺失/失败。"
+               "按稳定优先分析阶段失败与基本遥控；区分独立验证和开发干预，不能以队列结束认定任务通过。"
+               "这是固定策略队列，不是新PPO批次。继续已授权事件迭代，先分析再决定修改/训练或MuJoCo验证；"
+               "禁止重复启动，不启用周期定时器或goal。")
     try:
         result = subprocess.run([shutil.which('codex'), 'queue', '--thread', thread, '--message', message],
                                 capture_output=True, text=True, timeout=120)

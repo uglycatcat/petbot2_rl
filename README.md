@@ -22,6 +22,7 @@ PetBot2 的前轮抬起、后轮支撑、两轮遥控及前轮落地任务。训
 | `tools/watch_existing_gate.py` | 为已经启动的工程验收进程接入一次性完成/异常续接；核对PID身份，不启动或重试仿真，进程正常退出仍需agent核查结果。 |
 | `tools/evaluate_candidates.py` | 按固定计划只做候选验证；支持原检查点或未经PPO更新的显式父策略迁移，核对源码/检查点哈希并保留完成/异常事件，不启动训练。 |
 | `tools/export_cycle_policy.py` | 从已完成的固定策略评估导出外层actor和冻结内部反馈、哈希及控制契约，并做CUDA重载一致性检查；网络包不包含完整控制器，不能视为MuJoCo闭环验证。 |
+| `tools/probe_rise_authority.py` | 固定起立策略的车架/共同轮速修正幅度干预；仅修改内存中的幅度缓冲，记录裁剪前后动作，1/1对照须复现原轨迹，不作为独立任务验收。 |
 | `tools/probe_landing_state.py` | 在原评估循环中记录复位前的车架关节、落地目标与地面保持计时；新增诊断必须先对照原轨迹，不能以增加记录替代任务验证。 |
 | `tools/probe_cycle_yaw.py` | 固定策略下的受控差速诊断，记录实测轮速和执行器力矩估计；诊断输出不作为任务成功评估。 |
 | `tools/probe_continuous_yaw.py`、`tools/analyze_continuous_response.py` | 第七版固定策略反馈干预及离线响应分析；探针须使用相应固定版本，窗口诊断不替代验收。 |
