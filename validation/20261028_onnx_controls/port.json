@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "transition_contract": null,
+  "source_files": 16,
+  "action_definitions_identical": 4,
+  "observation_cases": 35,
+  "max_observation_error": 0.0,
+  "heading_rate_error": 0.0003097057342529297,
+  "mean_contact_support": 16.211422559635057,
+  "weight": 16.211417400000006,
+  "actuator_limits_passed": true,
+  "keyboard_press_release_passed": true
+}

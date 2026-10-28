@@ -30,9 +30,11 @@ def main():
     parser.add_argument('--seconds',type=float,default=36.)
     parser.add_argument('--hold-seconds',type=float,default=18.)
     parser.add_argument('--cycles',type=int,default=1)
-    parser.add_argument('--command-scale',type=float,default=1.,help='Multiply headless commands within the exported policy range')
-    parser.add_argument('--forward-speed',type=float,default=None,help='W/S or scripted forward/reverse amplitude in m/s; GUI defaults to the policy envelope')
-    parser.add_argument('--turn-rate',type=float,default=None,help='A/D or scripted turn amplitude in rad/s; GUI defaults to the policy envelope')
+    parser.add_argument('--command-scale',type=float,default=1.,help='Scale scripted commands or GUI two-wheel limits; ordinary GUI controls stay independent')
+    parser.add_argument('--forward-speed',type=float,default=None,help='GUI two-wheel W/S limit or headless requested amplitude in m/s')
+    parser.add_argument('--turn-rate',type=float,default=None,help='GUI two-wheel A/D limit or headless requested amplitude in rad/s')
+    parser.add_argument('--ordinary-forward-speed',type=float,default=None,help='Optional GUI four-wheel W/S amplitude; default is source maximum')
+    parser.add_argument('--ordinary-turn-rate',type=float,default=None,help='Optional GUI four-wheel A/D amplitude; default is source maximum')
     parser.add_argument('--scenario',choices=['stationary','forward','reverse','mixed','ordinary'],default='mixed')
     parser.add_argument('--takeover-yaw',type=float,default=0.,help='Ordinary-drive turn command before the first balance phase')
     parser.add_argument('--output',type=Path,default=ROOT/'outputs/latest')
@@ -50,15 +52,21 @@ def main():
     sim = Simulation(args.policy,args.model_dir,args.frame,args.transition_contract)
     if args.forward_speed is None:args.forward_speed=.04 if args.headless else sim.controller.speed_limit
     if args.turn_rate is None:args.turn_rate=.12 if args.headless else sim.controller.yaw_limit
-    for value,limit in ((args.forward_speed,sim.controller.speed_limit),(args.turn_rate,sim.controller.yaw_limit)):
+    limits = sim.controller.ordinary if args.headless else sim.controller
+    for value,limit in ((args.forward_speed,limits.speed_limit),(args.turn_rate,limits.yaw_limit)):
         if not math.isfinite(value) or value<0 or value*args.command_scale>limit:
-            parser.error('Command amplitudes must fit the exported policy range')
-    if not math.isfinite(args.takeover_yaw) or abs(args.takeover_yaw*args.command_scale)>sim.controller.yaw_limit:
-        parser.error('Takeover yaw must fit the exported policy range')
+            parser.error('Command amplitudes must fit the applicable source/policy range')
+    for value,limit in ((args.ordinary_forward_speed,sim.controller.ordinary.speed_limit),
+                        (args.ordinary_turn_rate,sim.controller.ordinary.yaw_limit)):
+        if value is not None and (not math.isfinite(value) or not 0<=value<=limit):
+            parser.error('Ordinary command amplitudes must fit source actuator limits')
+    if not math.isfinite(args.takeover_yaw) or abs(args.takeover_yaw*args.command_scale)>sim.controller.ordinary.yaw_limit:
+        parser.error('Takeover yaw must fit source actuator limits')
     if not args.headless:
         from petbot_s2s.viewer import run_viewer
         run_viewer(sim,args.viewer_smoke_seconds,
-                   args.forward_speed*args.command_scale,args.turn_rate*args.command_scale)
+                   args.forward_speed*args.command_scale,args.turn_rate*args.command_scale,
+                   args.ordinary_forward_speed,args.ordinary_turn_rate)
         return
     args.output.mkdir(parents=True,exist_ok=True)
     if (args.output/'summary.json').exists():
@@ -104,6 +112,8 @@ def main():
             armed=landing=False
             balanced_at=None
     result = dict(policy=args.policy.name,checkpoint_sha256=c.manifest['checkpoint_sha256'],
+        inference_backend='onnxruntime_cpu',network_sha256=c.manifest['networks'],
+        deployment_contract='onnx_independent_ordinary_default_landing_v1',
         transition_contract=c.transition_contract,development_intervention=args.transition_contract is not None,
         source_model_sha256=sim.model_sha256,mujoco_version=__import__('mujoco').__version__,
         scenario=args.scenario,forward_speed=args.forward_speed,turn_rate=args.turn_rate,takeover_yaw=args.takeover_yaw,command_scale=args.command_scale,frame=args.frame,wall_seconds=time.monotonic()-start,

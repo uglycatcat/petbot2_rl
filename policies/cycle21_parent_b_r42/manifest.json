@@ -1,5 +1,5 @@
 {
-  "format": "petbot_cycle_network_bundle_v1",
+  "format": "petbot_cycle_onnx_bundle_v2",
   "task_commit": "cbf1943c35cd6354c9b16c1ade73a91f5719f4cb",
   "exporter_commit": "ffb4d5df46f7154745287e16dbf47a4950244b10",
   "checkpoint_name": "model_299.pt",
@@ -318,9 +318,9 @@
     "unfinished": 0
   },
   "networks": {
-    "actor.pt": "0842ab720af53a8d9713e6aa50101d534560753f4615783d9152cad1e7044085",
-    "balance_reflex.pt": "4e24e422c50e4baae2e4d734ebdc32b91589d75040306c0f93b0e18990ff06bb",
-    "parent_balance.pt": "2ae7e4dd20c81bcffbd792a7246cf35065670ee7dd6f5cd953c7303e655117dc"
+    "actor.onnx": "da2bbc5a25dc3f7ebe4922d29306b56af2057f35f1458a305eb319c92e86fd7d",
+    "balance_reflex.onnx": "cc715452ff2fa0bd2232152e7be752f9ff6a213582845f744f0be17b9e185864",
+    "parent_balance.onnx": "ef389825fa336871d14abeb18cbb8aee228488fdbdf35b479856eee83a4d97de"
   },
   "actuation": {
     "position_joints": [
@@ -581,5 +581,36 @@
       "inner_base": 0.0,
       "full_parent": 0.0
     }
+  },
+  "torchscript_sources": {
+    "actor.pt": "0842ab720af53a8d9713e6aa50101d534560753f4615783d9152cad1e7044085",
+    "balance_reflex.pt": "4e24e422c50e4baae2e4d734ebdc32b91589d75040306c0f93b0e18990ff06bb",
+    "parent_balance.pt": "2ae7e4dd20c81bcffbd792a7246cf35065670ee7dd6f5cd953c7303e655117dc"
+  },
+  "onnx_conversion": {
+    "opset": 17,
+    "torch": "2.10.0+cpu",
+    "onnx": "1.23.2",
+    "onnxruntime": "1.23.2",
+    "provider": "CPUExecutionProvider",
+    "samples_per_network": 2050,
+    "max_abs_error": {
+      "actor.onnx": {
+        "action": 4.112720489501953e-05
+      },
+      "balance_reflex.onnx": {
+        "action": 2.9103830456733704e-07,
+        "base": 3.6835670471191406e-05
+      },
+      "parent_balance.onnx": {
+        "action": 5.1140785217285156e-05
+      }
+    },
+    "tolerance": {
+      "atol": 0.0001,
+      "rtol": 1e-05
+    },
+    "passed": true,
+    "scope": "Numerical conversion only; not a closed-loop or operator acceptance result"
   }
 }

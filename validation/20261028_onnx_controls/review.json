@@ -1,0 +1,36 @@
+{
+  "interface_checks_passed": true,
+  "policy_accepted": false,
+  "sim2sim_accepted": false,
+  "training_launched": false,
+  "inference": "All 14 graphs across six bundles use ONNX Runtime CPU; runtime PT loaders blocked by operator_controls check",
+  "unchanged": "Policy weights and read-only source model",
+  "viewer": {
+    "method": "Xvfb real window, 3 seconds",
+    "exit_code": 0
+  },
+  "process_exit": {
+    "operator_controls": 0,
+    "port": 0,
+    "parent_feedback": 0,
+    "call_exit": 0,
+    "ordinary_forward": 0,
+    "b_low": 0,
+    "b_frame_positive": 0,
+    "b_medium": 0,
+    "legacy_low": 0,
+    "b_full_takeover": 2,
+    "viewer": 0
+  },
+  "failures_retained": [
+    "Conversion first attempt: JIT inference tensor/autograd conflict; frozen requires_grad=False and no_grad reference evaluation fixed it.",
+    "Conversion second attempt: unregistered active trace for reflex wrapper; scripted wrapper fixed it.",
+    "Conversion third attempt: two normalized outputs differed by about4e-5 beyond initial2e-5 tolerance; final declared float32 tolerance atol1e-4/rtol1e-5 bounds common-wheel target error to0.0025rad/s per normalized channel. Max observed5.24521e-5.",
+    "First ordinary smoke was invoked before conversion reached default B; rejected non-ONNX manifest, no simulation began. Retried after all six bundles converted.",
+    "B medium60 completed, but basic remote functional score failed; inspect scenarios.json.",
+    "B full-speed takeover timed out during rise (code64), released to ordinary; no automatic retry. Preparation capability remains unimplemented."
+  ],
+  "limits": "This is fixed-policy interface validation. No new PPO, no acceptance of full-speed/angle robustness, no independent success-rate claim.",
+  "raw_evidence": "outputs/onnx_controls_20261028",
+  "next": "Batch23 remains paused; future training must learn measured-speed/common-frame preparation before rise."
+}

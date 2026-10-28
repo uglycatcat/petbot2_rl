@@ -1,0 +1,49 @@
+{
+  "cases": {
+    "cycle21_parent_b_r42": {
+      "forward_measured": 0.7368562817573547,
+      "reverse_measured": -0.736762285232544,
+      "physical_frame_target": 0.4,
+      "policy_limits": [
+        0.05000000074505806,
+        0.15000000596046448
+      ],
+      "ordinary_independent": true
+    },
+    "correction20_gate_r42": {
+      "forward_measured": 0.7368562817573547,
+      "reverse_measured": -0.736762285232544,
+      "physical_frame_target": 0.4,
+      "policy_limits": [
+        0.05000000074505806,
+        0.15000000596046448
+      ],
+      "ordinary_independent": true
+    },
+    "qe_physical": {
+      "targets": [
+        0.1500000000000001,
+        -0.15000000000000013
+      ],
+      "body_elevation_rad": [
+        0.15197248271394254,
+        -0.1631824070323481
+      ],
+      "four_wheel_duty": [
+        1.0,
+        1.0
+      ],
+      "release_holds": true
+    },
+    "ownership": {
+      "physical_state_preserved": true,
+      "operator_request_preserved": true,
+      "policy_input_separately_limited": true,
+      "qe_blocked_during_call": true,
+      "cancellation_restores_ordinary": true,
+      "default_landing_destination": true
+    }
+  },
+  "method": "MuJoCo physical steps plus explicit input-ownership checks",
+  "passed": true
+}

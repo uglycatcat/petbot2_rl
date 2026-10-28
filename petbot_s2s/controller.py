@@ -1,6 +1,7 @@
 """Portable controller: exact tensor core plus operator-controlled admission."""
 import hashlib
 import json
+import math
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -10,6 +11,8 @@ from .core.action_terms import FeedbackAction, attach_balance_reflex
 from .core.continuous import ContinuousProgress, bound_cycle_features
 from .core.local_frame import ground_frame_features
 from .core.full_range import FullRangeProgress, effective_request
+from .networks import OnnxNetwork
+from .ordinary import OrdinaryDrive
 
 
 class RobotTargets:
@@ -44,17 +47,22 @@ class Controller:
         assert c['yaw_feedback_design'] == 'fast2' and c['balance_reflex'] in ('frozen20', 'parent_full20')
         self.full_parent_feedback = c['balance_reflex'] == 'parent_full20'
         assert c['handoff_alignment']['mode'] == 'after'
-        self.actor = torch.jit.load(str(bundle/'actor.pt')).eval()
-        self.reflex = torch.jit.load(str(bundle/'balance_reflex.pt')).eval()
+        if self.manifest.get('format') != 'petbot_cycle_onnx_bundle_v2':
+            raise ValueError('Convert this policy bundle to ONNX before running sim2sim')
+        self.actor = OnnxNetwork(bundle/'actor.onnx')
+        self.reflex = OnnxNetwork(bundle/'balance_reflex.onnx')
         self.parent = None
         if self.full_parent_feedback:
             assert c['task'] == 'upright_cycle_v23'
-            assert 'parent_balance.pt' in self.manifest['networks']
+            assert 'parent_balance.onnx' in self.manifest['networks']
             feedback = c['reflex_contract']
             assert feedback['version'] == 'frozen_full_parent_offset_v1'
             assert feedback['period'] == .02 and feedback['gate_after'] == 1.8
-            self.parent = torch.jit.load(str(bundle/'parent_balance.pt')).eval()
+            self.parent = OnnxNetwork(bundle/'parent_balance.onnx')
         self.spec = self.manifest['actuation']
+        self.ordinary = OrdinaryDrive(self.spec)
+        self.operator_command = torch.zeros(1, 2)
+        self.frame_input = 0.
         self.num_envs, self.device, self.step_dt, self.physics_dt = 1, 'cpu', .06, .002
         self.cfg = SimpleNamespace(steering_design='feedback', yaw_filter_tau=c['yaw_filter_tau'],
             frame_slew=c['frame_slew'], wheel_slew=c['wheel_slew'],
@@ -64,13 +72,14 @@ class Controller:
         self.cfg.task_profile=c.get('task_profile','legacy')
         limits = self.manifest['tested_range']
         self.speed_limit, self.yaw_limit = limits['speed_limit'], limits['yaw_limit']
+        self.policy_motion_limits = torch.tensor([self.speed_limit, self.yaw_limit])
         self.frame_range = (limits['frame_min'], limits['frame_max'])
-        if not self.frame_range[0] <= frame <= self.frame_range[1]:
-            raise ValueError(f'Frame outside exported envelope {self.frame_range}')
+        if not math.isfinite(frame) or not self.ordinary.frame_range[0] <= frame <= self.ordinary.frame_range[1]:
+            raise ValueError(f'Frame outside source joint limits {self.ordinary.frame_range}')
         self.frame = frame
         progress_type=FullRangeProgress if self.full_range else ContinuousProgress
-        self.progress = progress_type(1, 'cpu', .06, self.speed_limit, self.yaw_limit,
-            self.frame_range, 42, 'pose_feedback_tight', hold_range=(180.,180.),
+        self.progress = progress_type(1, 'cpu', .06, self.ordinary.speed_limit, self.ordinary.yaw_limit,
+            self.ordinary.frame_range, 42, 'pose_feedback_tight', hold_range=(180.,180.),
             tracking_objective='stability_first', handoff_alignment='after',
             transition_contract=self.transition_contract)
         self.robot = RobotTargets(self.spec)
@@ -95,12 +104,12 @@ class Controller:
     def reset_progress(self, s, preserve=True):
         """Re-arm after handoff, preserving physical state, targets and motion."""
         p = self.progress
-        command, raw, motion = p.command.clone(), p.raw.clone(), p.motion.clone()
+        command, motion = p.command.clone(), p.motion.clone()
         p.reset(torch.tensor([0]), s['pos'], s['yaw'])
         p.frame[:] = self.frame
-        p.request_mode(0, self.frame)
+        p.request_mode(0, self.ordinary.default_frame)
         p.switch_at[:] = 1e9
-        p.set_command(raw if preserve else [0., 0.])
+        p.set_command(self.operator_command if preserve else [0., 0.])
         if preserve:
             p.command.copy_(command)
             p.motion.copy_(motion)
@@ -114,7 +123,35 @@ class Controller:
 
     @torch.inference_mode()
     def set_command(self, forward, yaw):
-        self.progress.set_command([forward, yaw])
+        self.ordinary.validate(forward, yaw)
+        self.operator_command[:] = self.operator_command.new_tensor([forward, yaw])
+        self.route_command()
+
+    @property
+    def ordinary_control(self):
+        return int(self.progress.phase[0]) in (0, 4)
+
+    @property
+    def manual_frame_allowed(self):
+        return not self.armed and int(self.progress.phase[0]) == 0
+
+    def set_policy_limits(self, speed, yaw):
+        if not all(math.isfinite(x) and x >= 0 for x in (speed, yaw)):
+            raise ValueError('Invalid two-wheel command limits')
+        if speed > self.speed_limit or yaw > self.yaw_limit:
+            raise ValueError('Two-wheel limits exceed the exported policy envelope')
+        self.policy_motion_limits[:] = torch.tensor([speed, yaw])
+
+    def set_frame_input(self, direction):
+        if not math.isfinite(direction) or abs(direction)>1:
+            raise ValueError('Frame input must be in [-1, 1]')
+        self.frame_input = float(direction) if self.manual_frame_allowed else 0.
+
+    def route_command(self):
+        command = self.operator_command
+        if self.armed and int(self.progress.phase[0]) < 4:
+            command = command.clamp(min=-self.policy_motion_limits, max=self.policy_motion_limits)
+        self.progress.set_command(command)
 
     @torch.inference_mode()
     def toggle(self):
@@ -127,9 +164,12 @@ class Controller:
             self.armed = True
             p.age[:] = 0.
             p.switch_at[:] = 0.
-            p.request_mode(1, self.frame)
+            self.frame_input = 0.
+            p.request_mode(1, self.ordinary.default_frame)
         elif phase < 3:
-            p.request_mode(0, self.frame)
+            p.request_mode(0, self.ordinary.default_frame)
+            if phase > 0:
+                self.frame = self.ordinary.default_frame
             if phase == 0:  # Cancel a still-pending admission.
                 self.armed = False
                 p.switch_at[:] = 1e9
@@ -158,7 +198,11 @@ class Controller:
     @torch.inference_mode()
     def begin(self, s):
         self.set_state(s)
+        self.route_command()
         self.progress.before_step()
+        if self.ordinary_control:
+            # Four-wheel command acceleration is not the policy's training slew.
+            self.progress.command.copy_(self.progress.raw)
         features = self.features()
         if not torch.isfinite(features).all():
             raise ValueError('Nonfinite observation')
@@ -173,7 +217,25 @@ class Controller:
     @torch.inference_mode()
     def physics_targets(self, s):
         self.set_state(s)
-        self.action.apply_actions()
+        if self.ordinary_control:
+            p, a = self.progress, self.action
+            if self.manual_frame_allowed:
+                lo, hi = self.ordinary.frame_range
+                self.frame = min(hi, max(lo, self.frame+self.frame_input*self.ordinary.frame_input_rate*self.physics_dt))
+                p.frame[:] = self.frame
+            desired = self.ordinary.default_frame if int(p.phase[0]) == 4 else self.frame
+            frame = a.target[:, 3]+(desired-a.target[:, 3]).clamp(
+                -self.ordinary.frame_target_slew*self.physics_dt,
+                self.ordinary.frame_target_slew*self.physics_dt)
+            a.target[:, 3:] = frame[:, None]
+            a.speed.copy_(self.ordinary.wheels(p.command, p.motion, self.physics_dt))
+            a.applied[:, 0] = 2*(frame-a.lo)/(a.hi-a.lo)-1
+            a.applied[:, 1:] = a.speed/a.max_speed
+            self.robot.set_joint_position_target(a.target, a.pos_ids)
+            self.robot.set_joint_velocity_target(a.speed, a.wheel_ids)
+        else:
+            self.ordinary.integral.zero_()
+            self.action.apply_actions()
         return self.robot.position[0].numpy().copy(), self.robot.velocity[0].numpy().copy()
 
     @torch.inference_mode()
@@ -189,6 +251,10 @@ class Controller:
         self.last_metrics = m = p.update(s,fixed)
         if int(p.phase[0]) != previous:
             self.events.append(dict(time=time,phase=int(p.phase[0])))
+        if self.manual_frame_allowed and bool(m['failure'][0]) and not (int(m['failure_code'][0])&1):
+            # Ordinary driving is not an upright episode. Policy posture/speed
+            # failure criteria must not pause the ordinary controller.
+            return
         if bool(m['failure'][0]) and self.full_range and not (int(m['failure_code'][0])&1):
             # Physical failure ends the call; ordinary control continues in the
             # actual pose, even when overturned. A new Space request is required.
@@ -198,6 +264,7 @@ class Controller:
                 self.events.append(dict(time=time,interrupted_call=self.interruptions,
                     failure_code=self.last_exit_code,exit_phase=int(m.get('exit_phase',p.phase)[0]),
                     ordinary_pose=bool(m.get('geometry_ground',s['four'])[0])))
+                self.frame = float(self.action.target[0, 3])
                 self.reset_progress(s)
         elif bool(m['failure'][0]):
             self.failure_code = int(m['failure_code'][0])
@@ -205,4 +272,5 @@ class Controller:
         elif bool(m['completed'][0]):
             self.cycles += 1
             self.events.append(dict(time=time,completed_cycle=self.cycles))
+            self.frame = self.ordinary.default_frame
             self.reset_progress(s)

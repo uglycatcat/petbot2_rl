@@ -2,7 +2,10 @@
 name = "petbot-upright-sim2sim"
 version = "0.1.0"
 requires-python = ">=3.10,<3.13"
-dependencies = ["mujoco==3.16.0", "torch==2.10.0", "glfw>=2.9,<3", "numpy>=1.24,<3", "pillow>=10,<13"]
+dependencies = ["mujoco==3.16.0", "torch==2.10.0", "onnxruntime>=1.23,<2", "glfw>=2.9,<3", "numpy>=1.24,<3", "pillow>=10,<13"]
+
+[dependency-groups]
+export = ["onnx>=1.19,<2"]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"

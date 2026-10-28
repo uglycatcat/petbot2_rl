@@ -21,5 +21,13 @@
     "upright/parent_feedback.py": "17d67d72ce8ef04f7e73e32c612c64edcfe964ef7ec5a4aedf000ee96d7ca9fe"
   },
   "notes": "Tensor controller matches batch21 pinned source. Parent-full20 bundles use frozen full-parent mean plus held outer offset at20/40ms after1.8s balance; legacy bundles retain frozen20 behavior. Training mixture is disabled in deployment. Export and port checks are not operator sim2sim acceptance.",
-  "baseline_network_task_commit": "001a54e98ff18f1274e2d7e961404325de4e50f7"
+  "baseline_network_task_commit": "001a54e98ff18f1274e2d7e961404325de4e50f7",
+  "deployment_contract": "onnx_independent_ordinary_default_landing_v1",
+  "deployment_overrides": {
+    "inference": "ONNX Runtime CPU for every neural graph; PT retained only as export/reference sources",
+    "ordinary_control": "source envelope and independent 2ms drive; no policy command/wheel slew",
+    "operator_frame": "Q/E common hip target, source range, ordinary only",
+    "landing_destination": "source default common frame angle, currently zero",
+    "admission_preparation": "not implemented; current frozen policy still attempts rise with existing admission logic"
+  }
 }

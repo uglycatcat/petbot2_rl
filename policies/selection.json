@@ -37,7 +37,8 @@
     ],
     "rear_wheel_target_radps": 25
   },
-  "limitation": "Isaac validation does not prove MuJoCo or hardware success. Preview preserves known failures and independent-call interruption. Batch22 is still training and is not included.",
+  "limitation": "Isaac validation does not prove MuJoCo or hardware success. Batch22 is complete and not included. High-speed/angle preparation remains future training work. Ordinary control uses independent source limits; normal landing now returns default frame angle.",
   "mujoco_evidence": "validation/20261028_cycle21/scenarios.json",
-  "mujoco_status": "Fixed B low180 complete/basic passed; B medium60 complete but parking drift44.46mm fails basic; higher/full/second-call/turning-takeover failures retained. No operator acceptance."
+  "mujoco_status": "Fixed B low180 complete/basic passed; B medium60 complete but parking drift44.46mm fails basic; higher/full/second-call/turning-takeover failures retained. No operator acceptance.",
+  "inference_backend": "onnxruntime_cpu"
 }

@@ -1,0 +1,146 @@
+{
+  "correction20_gate_r42": {
+    "opset": 17,
+    "torch": "2.10.0+cpu",
+    "onnx": "1.23.2",
+    "onnxruntime": "1.23.2",
+    "provider": "CPUExecutionProvider",
+    "samples_per_network": 2050,
+    "max_abs_error": {
+      "actor.onnx": {
+        "action": 2.294778823852539e-05
+      },
+      "balance_reflex.onnx": {
+        "action": 2.9103830456733704e-07,
+        "base": 3.6835670471191406e-05
+      }
+    },
+    "tolerance": {
+      "atol": 0.0001,
+      "rtol": 1e-05
+    },
+    "passed": true,
+    "scope": "Numerical conversion only; not a closed-loop or operator acceptance result"
+  },
+  "cycle18_long_r42": {
+    "opset": 17,
+    "torch": "2.10.0+cpu",
+    "onnx": "1.23.2",
+    "onnxruntime": "1.23.2",
+    "provider": "CPUExecutionProvider",
+    "samples_per_network": 2050,
+    "max_abs_error": {
+      "actor.onnx": {
+        "action": 1.913309097290039e-05
+      },
+      "balance_reflex.onnx": {
+        "action": 2.9103830456733704e-07,
+        "base": 3.6835670471191406e-05
+      }
+    },
+    "tolerance": {
+      "atol": 0.0001,
+      "rtol": 1e-05
+    },
+    "passed": true,
+    "scope": "Numerical conversion only; not a closed-loop or operator acceptance result"
+  },
+  "cycle18_long_r43": {
+    "opset": 17,
+    "torch": "2.10.0+cpu",
+    "onnx": "1.23.2",
+    "onnxruntime": "1.23.2",
+    "provider": "CPUExecutionProvider",
+    "samples_per_network": 2050,
+    "max_abs_error": {
+      "actor.onnx": {
+        "action": 1.913309097290039e-05
+      },
+      "balance_reflex.onnx": {
+        "action": 2.9103830456733704e-07,
+        "base": 3.6835670471191406e-05
+      }
+    },
+    "tolerance": {
+      "atol": 0.0001,
+      "rtol": 1e-05
+    },
+    "passed": true,
+    "scope": "Numerical conversion only; not a closed-loop or operator acceptance result"
+  },
+  "cycle21_parent_a_r43": {
+    "opset": 17,
+    "torch": "2.10.0+cpu",
+    "onnx": "1.23.2",
+    "onnxruntime": "1.23.2",
+    "provider": "CPUExecutionProvider",
+    "samples_per_network": 2050,
+    "max_abs_error": {
+      "actor.onnx": {
+        "action": 2.193450927734375e-05
+      },
+      "balance_reflex.onnx": {
+        "action": 2.9103830456733704e-07,
+        "base": 3.6835670471191406e-05
+      },
+      "parent_balance.onnx": {
+        "action": 3.993511199951172e-05
+      }
+    },
+    "tolerance": {
+      "atol": 0.0001,
+      "rtol": 1e-05
+    },
+    "passed": true,
+    "scope": "Numerical conversion only; not a closed-loop or operator acceptance result"
+  },
+  "cycle21_parent_b_r42": {
+    "opset": 17,
+    "torch": "2.10.0+cpu",
+    "onnx": "1.23.2",
+    "onnxruntime": "1.23.2",
+    "provider": "CPUExecutionProvider",
+    "samples_per_network": 2050,
+    "max_abs_error": {
+      "actor.onnx": {
+        "action": 4.112720489501953e-05
+      },
+      "balance_reflex.onnx": {
+        "action": 2.9103830456733704e-07,
+        "base": 3.6835670471191406e-05
+      },
+      "parent_balance.onnx": {
+        "action": 5.1140785217285156e-05
+      }
+    },
+    "tolerance": {
+      "atol": 0.0001,
+      "rtol": 1e-05
+    },
+    "passed": true,
+    "scope": "Numerical conversion only; not a closed-loop or operator acceptance result"
+  },
+  "full_range21_gate_r42": {
+    "opset": 17,
+    "torch": "2.10.0+cpu",
+    "onnx": "1.23.2",
+    "onnxruntime": "1.23.2",
+    "provider": "CPUExecutionProvider",
+    "samples_per_network": 2050,
+    "max_abs_error": {
+      "actor.onnx": {
+        "action": 5.245208740234375e-05
+      },
+      "balance_reflex.onnx": {
+        "action": 2.9103830456733704e-07,
+        "base": 3.6835670471191406e-05
+      }
+    },
+    "tolerance": {
+      "atol": 0.0001,
+      "rtol": 1e-05
+    },
+    "passed": true,
+    "scope": "Numerical conversion only; not a closed-loop or operator acceptance result"
+  }
+}

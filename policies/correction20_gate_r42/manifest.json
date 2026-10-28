@@ -1,5 +1,5 @@
 {
-  "format": "petbot_cycle_network_bundle_v1",
+  "format": "petbot_cycle_onnx_bundle_v2",
   "task_commit": "b269d49aacb50d5bf5d8a3d9cd618696e087734e",
   "exporter_commit": "edce522e673a123eb6ed6416076f604435f63e29",
   "checkpoint_name": "model_7.pt",
@@ -217,8 +217,8 @@
     "unfinished": 0
   },
   "networks": {
-    "actor.pt": "89bebcbc52d8b1a68d83187c1ed0fb4bed84cf6c53efa4e2abee11ebc0953c42",
-    "balance_reflex.pt": "2070dcfaa74a8be141fab1abf438b4ffa0ad75a98c7d9f64c7d0cae39aac6c50"
+    "actor.onnx": "0df17b785566da444618a8121abbc387105291cdb299678ab15d07f3b6ef9408",
+    "balance_reflex.onnx": "cc715452ff2fa0bd2232152e7be752f9ff6a213582845f744f0be17b9e185864"
   },
   "actuation": {
     "position_joints": [
@@ -475,5 +475,32 @@
       "inner": 0.0,
       "inner_base": 0.0
     }
+  },
+  "torchscript_sources": {
+    "actor.pt": "89bebcbc52d8b1a68d83187c1ed0fb4bed84cf6c53efa4e2abee11ebc0953c42",
+    "balance_reflex.pt": "2070dcfaa74a8be141fab1abf438b4ffa0ad75a98c7d9f64c7d0cae39aac6c50"
+  },
+  "onnx_conversion": {
+    "opset": 17,
+    "torch": "2.10.0+cpu",
+    "onnx": "1.23.2",
+    "onnxruntime": "1.23.2",
+    "provider": "CPUExecutionProvider",
+    "samples_per_network": 2050,
+    "max_abs_error": {
+      "actor.onnx": {
+        "action": 2.294778823852539e-05
+      },
+      "balance_reflex.onnx": {
+        "action": 2.9103830456733704e-07,
+        "base": 3.6835670471191406e-05
+      }
+    },
+    "tolerance": {
+      "atol": 0.0001,
+      "rtol": 1e-05
+    },
+    "passed": true,
+    "scope": "Numerical conversion only; not a closed-loop or operator acceptance result"
   }
 }

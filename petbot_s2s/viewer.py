@@ -32,10 +32,16 @@ class Keyboard:
         return ((int(glfw.KEY_W in self.down)-int(glfw.KEY_S in self.down))*speed,
                 (int(glfw.KEY_A in self.down)-int(glfw.KEY_D in self.down))*yaw)
 
+    def frame_direction(self):
+        return int(glfw.KEY_Q in self.down)-int(glfw.KEY_E in self.down)
 
-def run_viewer(sim, smoke_seconds=None, forward_speed=None, turn_rate=None):
+
+def run_viewer(sim, smoke_seconds=None, forward_speed=None, turn_rate=None,
+               ordinary_speed=None, ordinary_yaw=None):
     forward_speed = sim.controller.speed_limit if forward_speed is None else forward_speed
     turn_rate = sim.controller.yaw_limit if turn_rate is None else turn_rate
+    ordinary_speed = sim.controller.ordinary.speed_limit if ordinary_speed is None else ordinary_speed
+    ordinary_yaw = sim.controller.ordinary.yaw_limit if ordinary_yaw is None else ordinary_yaw
     if not glfw.init():
         raise RuntimeError('GLFW could not open a display. Run on a desktop, or use --headless.')
     window = glfw.create_window(1280,800,'PetBot upright - MuJoCo',None,None)
@@ -78,7 +84,9 @@ def run_viewer(sim, smoke_seconds=None, forward_speed=None, turn_rate=None):
                 next_step = time.monotonic()
                 keys.reset = keys.toggle = False
             c = sim.controller
-            c.set_command(*keys.command(forward_speed,turn_rate))
+            c.set_policy_limits(forward_speed, turn_rate)
+            c.set_command(*keys.command(ordinary_speed, ordinary_yaw))
+            c.set_frame_input(keys.frame_direction())
             if keys.toggle:
                 c.toggle()
                 keys.toggle = False
@@ -110,10 +118,14 @@ def run_viewer(sim, smoke_seconds=None, forward_speed=None, turn_rate=None):
                 status += f" / PAUSED: {reason} (R to reset)"
             if c.full_range and c.interruptions and not c.armed:
                 status += ' / CALL ENDED: Space for a new request'
-            left = 'W/S: forward/reverse | A/D: turn\nSpace: rise / front wheels down | R: reset | Esc: exit\n'
+            left = 'W/S: forward/reverse | A/D: turn\nQ/E: head up/down (four wheels only)\nSpace: rise / front wheels down | R: reset | Esc: exit\n'
             left += 'Mouse drag: orbit | Wheel: zoom\n\n'+status
-            right = (f"Command {r['raw'][0]:+.3f} m/s  {r['raw'][1]:+.3f} rad/s\n"
+            right = (f"Operator {r['operator_request'][0]:+.3f} m/s  {r['operator_request'][1]:+.3f} rad/s\n"
+                     f"Command {r['raw'][0]:+.3f} m/s  {r['raw'][1]:+.3f} rad/s\n"
                      f"Measured {r['motion'][0]:+.3f} m/s  {r['motion'][1]:+.3f} rad/s\n"
+                     f"Frame target {r['ordinary_frame_target']:+.3f} rad | Q/E {'enabled' if c.manual_frame_allowed else 'disabled'}\n"
+                     f"Four-wheel limits {ordinary_speed:.2f} m/s, {ordinary_yaw:.2f} rad/s\n"
+                     f"Two-wheel limits {forward_speed:.2f} m/s, {turn_rate:.2f} rad/s\n"
                      f"Cycles {r['cycles']} | Simulation {r['time']:.1f}s\n"
                      f"Policy: {sim.bundle.name}")
             mujoco.mjr_overlay(mujoco.mjtFont.mjFONT_NORMAL,mujoco.mjtGridPos.mjGRID_TOPLEFT,

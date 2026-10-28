@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "method": "MuJoCo state fault injection, not learned recovery quality",
+  "cases": {
+    "front_return": {
+      "interruptions": 1,
+      "last_exit_code": 8192,
+      "ordinary_continued": true,
+      "new_request_required": true,
+      "physical_state_preserved": true
+    },
+    "overturned": {
+      "interruptions": 1,
+      "last_exit_code": 4,
+      "ordinary_continued": true,
+      "new_request_required": true,
+      "physical_state_preserved": true
+    }
+  }
+}

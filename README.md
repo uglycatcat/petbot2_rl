@@ -1,6 +1,6 @@
 # PetBot upright：MuJoCo 策略体验
 
-加载已训练策略，体验四轮行驶中起立、两轮遥控、前轮落地与普通控制交接。没有用固定动作替代策略。源模型从工作区 `robot_description/` 只读加载；本项目不包含训练代码。
+通过ONNX Runtime加载已训练策略，体验四轮行驶中起立、两轮遥控、前轮落地与普通控制交接。源模型从工作区 `robot_description/` 只读加载；本项目不包含训练代码。
 
 ## 启动
 
@@ -17,15 +17,24 @@ uv run --locked run.py --forward-speed 0.15 --turn-rate 0.5
 
 | 操作 | 效果 |
 |---|---|
-| 按住 W / S | 前进 / 后退；上述启动命令为 ±0.15 m/s |
-| 按住 A / D | 左转 / 右转；上述启动命令为 ±0.5 rad/s，可与 W/S 组合 |
+| 按住 W / S | 前进 / 后退；普通四轮默认请求 ±0.75 m/s，上述命令将策略期间限为 ±0.15 m/s |
+| 按住 A / D | 左转 / 右转；普通四轮默认请求 ±15 rad/s，上述命令将策略期间限为 ±0.5 rad/s，可与 W/S 组合 |
+| 按住 Q / E | 普通四轮下抬头 / 低头，以0.5 rad/s调整两侧共同髋角，松键保持；策略调用期间禁用 |
 | 释放方向键 | 请求零速度，控制器仍维持平衡 |
 | Space | 四轮模式请求起立；起立中或两轮模式请求前轮落地；落地请求锁存到交接完成 |
 | R | 显式恢复初始四轮状态 |
 | 鼠标左键拖动 / 滚轮 | 旋转视角 / 缩放 |
 | Esc | 退出 |
 
-可以先按 W 行驶，再按 Space 起立；保持两轮后继续 WASD，最后按 Space 落地。起立前检查真实四轮接地及行驶状态，不强制停车。头和耳保持原位置目标，车架位置由策略输出，后轮接收左右速度目标。`--frame 0.15` 可更改对称普通行驶车架目标（第21批包的车架范围为[-1,1.2] rad）；这不表示整个范围已通过 MuJoCo 验收。
+可以先按 W 行驶，再按 Space 请求起立；保持两轮后继续 WASD，最后按 Space 落地。头和耳的独立关节保持原位置目标；Q/E驱动的是左右车架/髋关节，改变头身整体俯仰。两轮时共同髋角由策略自主用于平衡。正常落地后回默认0rad，异常退出保持当时车架目标并交还普通控制，不等待回零、不复位实际姿态。
+
+`--frame 0.15`设置初始普通车架目标；所有策略包的普通车架范围均来自源模型[-1,1.2]rad。这个范围是控制器允许范围，不表示各角度均已通过起立验证。窗口显示操作者请求、实际采用的命令、实测速度和普通车架目标。
+
+**当前第21批策略仍可能在高速/较大车架角下起立失败。** 普通控制完整范围已与策略分开；“接管后先减速、调整到可起立角度，再起立”的鲁棒机制是后续训练目标，当前包没有新增这样的准备阶段。不要将输入裁剪当作已完成真实减速或调姿。要复现此前低速体验，可显式降低本次手动输入幅度，物理能力与策略范围不变：
+
+```bash
+uv run --locked run.py --forward-speed 0.15 --turn-rate 0.5 --ordinary-forward-speed 0.15 --ordinary-turn-rate 0.5
+```
 
 ## 第21批终局策略预览（2026-10-28）
 
@@ -33,7 +42,9 @@ uv run --locked run.py --forward-speed 0.15 --turn-rate 0.5
 
 B在Isaac中速60秒原评估/新种子完整60/64、62/64，优于A的49/64、55/64；B全车架范围有退步，因此A也保留。两份终局包都包含完整父反馈网络，按原60/20/2ms控制时序执行，不能只替换旧外层网络。网络CUDA1024样本输出差0，35组观测与240子步目标对齐通过；这些工程检查不等于动作质量通过。
 
-上面的命令以中速幅度体验。`--forward-speed`、`--turn-rate`现在同时控制窗口WASD与无窗口脚本；例如`--forward-speed 0.30 --turn-rate 1.5`体验较高速度。省略这两个参数时，窗口按策略包完整上限±0.75m/s、±15rad/s；无窗口脚本保留默认0.04m/s、0.12rad/s。组合命令仍按左右后轮±25rad/s联合可达域投影，输入幅度设置不改变模型与策略范围。
+窗口中`--forward-speed`、`--turn-rate`仅设置策略调用期间的速度/转向限幅；普通控制的幅度由独立`--ordinary-forward-speed`、`--ordinary-turn-rate`设置，默认使用源模型完整上限±0.75m/s、±15rad/s，与所选策略及其限幅无关。普通驱动不使用策略的命令加速度或轮速变化率；实际加速度仍受源执行器力矩和接触动力学约束。省略策略参数时使用对应包声明范围，该范围不等于已验证的可靠能力。组合命令按左右后轮±25rad/s联合可达域投影，速度和转向不能同时取得各自单轴最大值。
+
+无窗口脚本的`--forward-speed`、`--turn-rate`为场景请求幅度，默认0.04m/s、0.12rad/s；允许在源模型范围内设置，策略阶段再单独按包范围处理。`--ordinary-*`仅影响窗口按键幅度。日志分别保存原始操作者请求、有效命令和实测响应。
 
 ```bash
 # 第21批A候选，同样的中速输入
@@ -63,14 +74,16 @@ uv run --locked run.py --headless --scenario stationary --output outputs/station
 uv run --locked run.py --headless --scenario mixed --cycles 2 --seconds 65 --output outputs/repeated_01
 ```
 
-每次使用新的输出目录，保留 `summary.json` 和逐步 `trace.jsonl`。`--snapshot` 额外生成真实渲染帧，需要 EGL；默认脚本为 ±0.04 m/s、±0.12 rad/s，可用速度参数或`--command-scale`在策略包声明范围内调整。退出 2 表示流程失败或未完成，并不等于程序崩溃。基本遥控未通过但完整动作结束时退出 0，必须同时阅读 `functional`、覆盖和失败字段。
+每次使用新的输出目录，保留 `summary.json` 和逐步 `trace.jsonl`。`--snapshot` 额外生成真实渲染帧，需要 EGL；可用速度参数或`--command-scale`在源模型范围内调整场景请求。退出 2 表示流程失败或未完成，并不等于程序崩溃。基本遥控未通过但完整动作结束时退出 0，必须同时阅读 `functional`、覆盖和失败字段。
 
 ## 代码与控制契约
 
 - `run.py`：GUI / 固定诊断场景入口。
 - `petbot_s2s/controller.py`：58×5 观测、历史、外部模式请求与反复接管；`simulation.py`：MuJoCo 状态/接触力翻译与电机接口；`viewer.py`：按键按下/释放和显示。
-- `petbot_s2s/core/`：固定训练源码的纯张量阶段/控制逻辑。`provenance.json` 记录来源和文件 SHA；不依赖当前 demo checkout 随后如何修改。
-- `policies/`：小型 CPU TorchScript 网络及来源。控制链为 60 ms 策略、20 ms 冻结平衡反馈、2 ms 转向反馈；不是只有一个网络。车架位置/后轮速度目标保留，车架用源模型电机外部 PD 执行，物理限位、力矩限幅和源模型均不改。
+- `petbot_s2s/core/`：固定训练源码的纯张量阶段/控制逻辑。`provenance.json`记录来源和部署扩展；普通控制在`ordinary.py`独立实现，`controller.py`负责输入所有权及默认落地目标。不依赖当前demo checkout随后如何修改。
+- `policies/`：CPU ONNX网络及来源。运行时只加载manifest列出的`.onnx`，不回退到`.pt`；保留TorchScript文件仅供转换与审计。外层、内部反馈及其base输出、完整父网络均已转换。控制链仍为60ms策略、20ms冻结平衡反馈、2ms转向反馈；张量状态/控制计算仍用PyTorch，神经网络推理全部由ONNX Runtime执行。物理限位、力矩限幅和源模型不变。
+- `checks/export_onnx.py`：用`uv run --locked --group export python checks/export_onnx.py`重建ONNX并逐输出检查。manifest保留源文件SHA、ONNX SHA及数值容差；图转换不等于闭环验收。
+- `checks/operator_controls.py`：真实MuJoCo普通满幅、Q/E、输入所有权和禁止PT运行加载检查。
 - `checks/validate_port.py`：开发时对照固定源码、观测、接触力、方向和按键。例：`uv run checks/validate_port.py --source ../../demo_project/upright_rl_demo --output outputs/port_check.json`。源码更新后需使用 provenance 指定的提交；不应为让检查通过而改来源 SHA。
 
 物理引擎、接触求解和显式/隐式伺服仍存在差异。接口一致不等于物理轨迹一致；应依据闭环实测决定后续训练修改。正式训练项目仍为空，训练代码和历史检查点留在原位置。

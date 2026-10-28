@@ -20,7 +20,7 @@ for phase,clock in [(0,0.),(1,.6),(2,0.),(2,1.74),(2,1.8),(2,4.),(3,.6),(4,.6)]:
  attach(reference,SimpleNamespace(parent_balance=reference.parent),True,full_parent=True);reference.action.reset()
  for c in (actual,reference):
   c.progress.phase[:]=phase;c.progress.phase_time[:]=clock;c.progress.active[:]=phase>0;c.progress.since[:]=clock
-  c.progress.set_command([.15,.5]);c.progress.request_mode(1,0.)
+  c.armed=phase>0;c.set_command(.15,.5);c.progress.request_mode(1,0.)
  state={k:v.clone() for k,v in actual.s.items()};actual.begin(state);reference.begin(state)
  old_parent=[x.detach().clone() for x in actual.parent.parameters()]
  for tick in range(30):
