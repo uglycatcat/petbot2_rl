@@ -13,6 +13,7 @@ with tempfile.TemporaryDirectory(dir=pathlib.Path(args.output).parent) as direct
     launcher.ROOT=root;launcher.RUNS=runs;launcher.SOURCE=repo
     (root/'gate.json').write_text(json.dumps(dict(commit='fixed',passed=True,smokes=[],evaluations=[])))
     variants=[dict(run=f'r{i}',gpu=gpu,envs=2048,reserve_mib=3500,seed=i,initial='demo_project/runs/initial.pt',wheel_slew=480,frame_slew=3,observation_frame='local' if i%2 else 'world') for i,gpu in enumerate([0,1,2,3,0,1])]
+    for i,variant in enumerate(variants):variant['rise_speed_reference']='brake' if i%2 else 'capture'
     plan=dict(name='test',commit='fixed',gate='gate.json',variants=variants,container='test',iterations=200,checkpoints=[50],save_interval=50,learning_rate=.0001,envelope=[])
     (root/'plan.json').write_text(json.dumps(plan))
     def output(cmd,**kwargs):
@@ -43,4 +44,5 @@ with tempfile.TemporaryDirectory(dir=pathlib.Path(args.output).parent) as direct
     for variant in variants:
         command=state['train'][variant['run']]['command']
         assert command[command.index('--observation-frame')+1]==variant['observation_frame']
+        assert command[command.index('--rise-speed-reference')+1]==variant['rise_speed_reference']
 pathlib.Path(args.output).write_text(json.dumps(dict(passed=True,max_cross_gpu_initializing=max_pending[0],same_gpu_ppo_barrier=True,all_ppo_before_evaluator=True,launched=6,real_jobs=False),indent=2));print('PASS parallel GPU startup and same-GPU PPO barrier')
