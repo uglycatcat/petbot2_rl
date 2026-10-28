@@ -16,10 +16,12 @@
       "remote": "ours",
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "branch": "rlproj/std_s2s_upright_project",
-      "verified_commit": "33634787ddbb9342ff7a1ffd89f5012ca268c43d",
-      "status": "User-requested batch21 formal model299 preview; default parent B r42, A r43 selectable; complete frozen full-parent20ms feedback ported; batch22 training unchanged.",
+      "verified_commit": "8e016632e981aedf2140152c6a7a5264c05ecdd9",
+      "status": "Batch21 B default, A selectable. ONNX-only neural inference for all six bundles; ordinary Q/E common-hip targets and full source drive envelope independent of policy limits; normal landing defaults to0rad. Batch23 remains paused.",
       "usage": "README.md",
-      "local_validation": "A/B1024CUDA export outputs exact; four bundles35observation cases each, A/B240substep target parity exact; call interruption and Xvfb window passed.11fixed MuJoCo scenarios:6complete,5call failures retained. B low180 complete/basic;medium60complete but parking44.46mm fails basic. Higher/full/second-call/turn-takeover failures;actual wheel peak35.22rad/s while25target cap respected. No operator sim2sim acceptance."
+      "local_validation": "14 ONNX graphs,2050 inputs each,max normalized error5.24521e-5;35observation cases and240feedback substeps match source. PT runtime loading forbidden test,real Q/E four-wheel contact,independent ordinary +/-0.75 requests,Xvfb and interruption checks passed. B low0/+0.15frame and legacy low complete/basic;B medium60 completes but parking44.75mm fails basic;full-speed takeover still rise timeout64. Source targets/torques respected in60ms trace snapshots;actual wheel peak35.04rad/s. No new training or operator sim2sim acceptance;pre-rise speed/frame preparation remains future work.",
+      "validation": "validation/20261028_onnx_controls/review.json",
+      "inference_backend": "onnxruntime_cpu"
     }
   ]
 }
