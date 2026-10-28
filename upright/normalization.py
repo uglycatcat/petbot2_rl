@@ -53,5 +53,5 @@ def rebase_all_branches(actor,recent):
     with torch.no_grad():after=actor(TensorDict({'policy':raw},batch_size=[len(raw)]),stochastic_output=False)
     maximum=float((before-after).abs().max())
     assert torch.allclose(before,after,atol=2e-5,rtol=2e-5),maximum
-    assert all(torch.equal(state[k],v) for k,v in changed.items() if k.startswith('balance_reflex.'))
+    assert all(torch.equal(state[k],v) for k,v in changed.items() if k.startswith(('balance_reflex.','parent_balance.')))
     return dict(passed=True,samples=len(raw),max_abs_error=maximum,frozen_inner_unchanged=True)

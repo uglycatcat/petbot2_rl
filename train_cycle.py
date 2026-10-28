@@ -21,6 +21,7 @@ p.add_argument('--refinement-target',choices=['balance','rise','all'],default='b
 p.add_argument('--transition-contract',choices=['legacy','linear_heading'],default='legacy')
 p.add_argument('--task-profile',choices=['legacy','full_range'],default='legacy')
 p.add_argument('--training-mixture',choices=['off','stratified_v1'],default='off')
+p.add_argument('--rise-speed-reference',choices=['capture','brake'],default='capture')
 p.add_argument('--distributed',action='store_true')
 p.add_argument('--balance-reflex',choices=['off','frozen20','parent_full20'],default='off')
 p.add_argument('--balance-noise-factor',type=float,choices=[1.,4.,16.],default=1.)
@@ -79,6 +80,8 @@ try:
     if args.training_mixture!='off':assert args.task_profile=='full_range'
     if args.balance_reflex=='parent_full20':
         assert args.task_profile=='full_range' and (args.initialize_cycle_from or args.checkpoint)
+    if args.rise_speed_reference!='capture':
+        assert args.task_profile=='full_range' and args.balance_reflex=='parent_full20'
     cfg=CycleEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
     cfg.speed_limit=args.speed_limit;cfg.yaw_limit=args.yaw_limit;cfg.frame_range=(args.frame_min,args.frame_max)
     cfg.wheel_slew=args.wheel_slew;cfg.frame_slew=args.frame_slew;cfg.wheel_mode='common_diff'
@@ -88,6 +91,7 @@ try:
     cfg.handoff_alignment=args.handoff_alignment
     cfg.transition_contract=args.transition_contract;cfg.task_profile=args.task_profile
     cfg.training_mixture='off' if args.evaluate else args.training_mixture
+    cfg.rise_speed_reference_mode=args.rise_speed_reference
     if args.transition_contract=='linear_heading':cfg.rewards.transition.weight=2.
     cfg.instant_tracking_weight=args.instant_tracking_weight;cfg.yaw_feedback_design=args.yaw_feedback_design;cfg.yaw_feedback_gain=args.yaw_feedback_gain
     cfg.active_seconds=args.hold_max+(18. if args.task_profile=='full_range' else 12.)
@@ -139,7 +143,9 @@ try:
         contract['training_distribution']=TRAINING_MIXTURE if args.training_mixture!='off' else dict(version='off')
     if args.balance_reflex=='parent_full20':
         from upright.parent_feedback import PARENT_FEEDBACK_CONTRACT
-        contract.update(task='upright_cycle_v23',reflex_contract=PARENT_FEEDBACK_CONTRACT)
+        from upright.full_range import RISE_SPEED_CONTRACT
+        contract.update(task='upright_cycle_v24',reflex_contract=PARENT_FEEDBACK_CONTRACT,
+            rise_speed_reference=dict(RISE_SPEED_CONTRACT,mode=args.rise_speed_reference))
     if args.checkpoint:
         prior=json.loads((pathlib.Path(args.checkpoint).parent/'config.json').read_text())
         if prior['contract']!=contract:raise ValueError('Checkpoint contract mismatch')
@@ -170,18 +176,25 @@ try:
             allowed_sources['upright_cycle_v20']='b269d49aacb50d5bf5d8a3d9cd618696e087734e'
             allowed_sources['upright_cycle_v21']='c30b2c209d7c212e442c7614b17aeaf69205f19d'
             allowed_sources['upright_cycle_v22']='4c0c813a943dfbbf26ec91da8ce2114faf0ef06a'
-        if prior['working_tree_dirty'] or allowed_sources.get(prior['contract'].get('task'))!=prior['commit']:raise ValueError('Only validated clean cycle-v16/v17 source allowed')
+            allowed_sources['upright_cycle_v23']='cbf1943c35cd6354c9b16c1ade73a91f5719f4cb'
+        if prior['working_tree_dirty'] or allowed_sources.get(prior['contract'].get('task'))!=prior['commit']:raise ValueError('Only explicitly validated clean cycle sources allowed')
         if prior['contract']['observation_schema'] not in ('cycle_58x5_wheel_lateral_v2','cycle_58x5_balance_local_v4') or prior['contract']['steering_design']!='feedback':raise ValueError('Source observation schema mismatch')
         for k in ('action_dim','wheel_mode','wheel_slew','frame_slew','control_dt','source_sha256','concentration_scale','instant_tracking_weight','balance_noise_factor'):
             if k=='balance_noise_factor' and args.task_profile=='full_range':continue
             if prior['contract'][k]!=contract[k]:raise ValueError('Transfer mismatch '+k)
-        if prior['contract']['task'] not in ('upright_cycle_v21','upright_cycle_v22') and prior['contract']['balance_noise_factor']!=16.:raise ValueError('Legacy parents require validated exploration')
+        if prior['contract']['task'] not in ('upright_cycle_v21','upright_cycle_v22','upright_cycle_v23') and prior['contract']['balance_noise_factor']!=16.:raise ValueError('Legacy parents require validated exploration')
         if prior['contract']['tracking_objective']!='stability_first' or prior['contract']['yaw_feedback_design']!='fast2' or prior['contract']['fast_yaw_controller']['kp']!=16.:raise ValueError('Preserve validated stability-first parents')
-        if prior['contract']['balance_reflex']!='frozen20' or args.balance_reflex not in ('frozen20','parent_full20'):raise ValueError('Transfer requires a validated frozen20 parent')
-        if args.balance_reflex=='parent_full20' and prior['contract']['task']!='upright_cycle_v22':raise ValueError('Full parent feedback requires validated v22')
+        preserve_parent=prior['contract']['task']=='upright_cycle_v23'
+        if preserve_parent:
+            if args.balance_reflex!='parent_full20' or prior['contract']['balance_reflex']!='parent_full20':raise ValueError('V23 continuation must preserve complete parent feedback')
+            if prior['contract']['reflex_contract']!=contract['reflex_contract']:raise ValueError('Parent feedback contract mismatch')
+        else:
+            if prior['contract']['balance_reflex']!='frozen20' or args.balance_reflex not in ('frozen20','parent_full20'):raise ValueError('Transfer requires a validated frozen20 parent')
+            if args.balance_reflex=='parent_full20' and prior['contract']['task']!='upright_cycle_v22':raise ValueError('Full parent feedback requires validated v22 or v23')
         loaded=torch.load(initial,map_location='cpu',weights_only=False)
         actor=runner.alg.get_policy()
-        if args.balance_reflex=='parent_full20':actor.initialize_outer(loaded['actor_state_dict'])
+        if preserve_parent:actor.load_state_dict(loaded['actor_state_dict'],strict=True)
+        elif args.balance_reflex=='parent_full20':actor.initialize_outer(loaded['actor_state_dict'])
         elif args.refinement_target=='rise':actor.initialize_rise(loaded['actor_state_dict'],loaded['critic_state_dict'])
         else:actor.load_state_dict(loaded['actor_state_dict'],strict=True)
         runner.alg.critic.load_state_dict(loaded['critic_state_dict'],strict=True)
@@ -189,14 +202,20 @@ try:
         if args.actor_normalization=='rebase_recent':
             from upright.normalization import rebase_all_branches
             normalization_review=rebase_all_branches(actor,loaded['critic_state_dict'])
-        if args.balance_reflex=='parent_full20':actor.snapshot_parent()
+        if args.balance_reflex=='parent_full20' and not preserve_parent:actor.snapshot_parent()
+        if preserve_parent:
+            assert all(torch.equal(value.cpu(),loaded['actor_state_dict'][name])
+                for name,value in actor.state_dict().items()
+                if name.startswith(('balance_reflex.','parent_balance.')))
         assert runner.current_learning_iteration==0 and not runner.alg.optimizer.state
-        metadata['initialization']=dict(source_commit=prior['commit'],checkpoint_sha256=hashlib.sha256(initial.read_bytes()).hexdigest(),actor_base_frozen=True,critic_loaded=True,optimizer_loaded=False,prior_adapter_loaded=True,yaw_adapter_loaded=True,reward_changed=args.tracking_objective!=prior['contract']['tracking_objective'] or args.tracking_weight!=prior['contract']['tracking_weight'],observation_frame_changed=args.observation_frame!=prior['contract'].get('observation_frame','world'),task_changed=True,handoff_alignment_changed=args.handoff_alignment!='before',feedback_period_changed=False,feedback_gain_changed=False,frozen_balance_reflex=args.balance_reflex,observation_width=58)
+        metadata['initialization']=dict(source_commit=prior['commit'],checkpoint_sha256=hashlib.sha256(initial.read_bytes()).hexdigest(),actor_base_frozen=True,critic_loaded=True,optimizer_loaded=False,prior_adapter_loaded=True,yaw_adapter_loaded=True,reward_changed=args.tracking_objective!=prior['contract']['tracking_objective'] or args.tracking_weight!=prior['contract']['tracking_weight'],observation_frame_changed=args.observation_frame!=prior['contract'].get('observation_frame','world'),task_changed=True,handoff_alignment_changed=args.handoff_alignment!=(prior['contract'].get('handoff_alignment') or {}).get('mode','before'),feedback_period_changed=False,feedback_gain_changed=False,frozen_balance_reflex=args.balance_reflex,observation_width=58)
         metadata['initialization']['normalization_review']=normalization_review
         metadata['initialization']['exploration_changed']=prior['contract']['balance_noise_factor']!=args.balance_noise_factor
         metadata['initialization']['trainable_actor_scope']=args.refinement_target
         metadata['initialization']['actor_base_frozen']=args.refinement_target!='all'
-        metadata['initialization']['full_parent_feedback_snapshot']=args.balance_reflex=='parent_full20'
+        metadata['initialization']['full_parent_feedback_snapshot']=args.balance_reflex=='parent_full20' and not preserve_parent
+        metadata['initialization']['full_parent_feedback_preserved']=preserve_parent
+        metadata['initialization']['rise_speed_reference_changed']=args.rise_speed_reference!='capture'
         del loaded
     if args.checkpoint:runner.load(args.checkpoint)
     from upright.balance_reflex import attach_balance_reflex
@@ -280,7 +299,7 @@ try:
                 peak_touch_speed=torch.maximum(peak_touch_speed,torch.where(valid,m['max_touchdown_speed'],0.))
                 delta=(applied-previous).abs();max_frame=max(max_frame,float(delta[valid,0].max())*(hi-lo)/2 if valid.any() else 0.)
                 max_wheel=max(max_wheel,float(delta[valid,1:].max())*a.max_speed if valid.any() else 0.)
-                trace.append(dict(rise_adapter_gate=lift_gate.tolist(),rise_adapter_correction=lift_correction.tolist(),instability=m['instability'].tolist(),instability_dwell=m['instability_dwell'].tolist(),body_contact=s['body_history'].tolist(),adapter_gate=gate.tolist(),adapter_correction=correction.tolist(),legacy_yaw=s['legacy_yaw'].tolist(),legacy_forward=s['legacy_forward'].tolist(),legacy_heading_rate=s['legacy_heading_rate'].tolist(),yaw_feedback_integral=m['yaw_feedback_integral'].tolist(),yaw_feedback_target=m['yaw_feedback_target'].tolist(),gravity=s['g'].tolist(),body_velocity=s['vel'].tolist(),failure_code=m['failure_code'].tolist(),t=(tick+1)*env.step_dt,valid=valid.tolist(),phase=m['phase'].tolist(),phase_time=m['phase_time'].tolist(),since=since.tolist(),raw=raw.tolist(),command=command.tolist(),pos=s['pos'].tolist(),heading=s['yaw'].tolist(),forward=s['forward'].tolist(),heading_rate=s['heading_rate'].tolist(),motion_feedback=m['motion_feedback'].tolist(),interval_motion=m['interval_motion'].tolist(),wheel_measured=s['wheel'].tolist(),front_z=s['front_z'].tolist(),front_vertical_speed=s['front_vertical_speed'].tolist(),rear_fraction=s['rear_fraction'].tolist(),four_fraction=s['four_fraction'].tolist(),applied=applied.tolist(),failure=m['failure'].tolist(),balanced=m['balanced'].tolist()))
+                trace.append(dict(rise_adapter_gate=lift_gate.tolist(),transition_reference_speed=m.get('transition_speed_reference',torch.zeros(n,device=args.device)).tolist(),rise_adapter_correction=lift_correction.tolist(),instability=m['instability'].tolist(),instability_dwell=m['instability_dwell'].tolist(),body_contact=s['body_history'].tolist(),adapter_gate=gate.tolist(),adapter_correction=correction.tolist(),legacy_yaw=s['legacy_yaw'].tolist(),legacy_forward=s['legacy_forward'].tolist(),legacy_heading_rate=s['legacy_heading_rate'].tolist(),yaw_feedback_integral=m['yaw_feedback_integral'].tolist(),yaw_feedback_target=m['yaw_feedback_target'].tolist(),gravity=s['g'].tolist(),body_velocity=s['vel'].tolist(),failure_code=m['failure_code'].tolist(),t=(tick+1)*env.step_dt,valid=valid.tolist(),phase=m['phase'].tolist(),phase_time=m['phase_time'].tolist(),since=since.tolist(),raw=raw.tolist(),command=command.tolist(),pos=s['pos'].tolist(),heading=s['yaw'].tolist(),forward=s['forward'].tolist(),heading_rate=s['heading_rate'].tolist(),motion_feedback=m['motion_feedback'].tolist(),interval_motion=m['interval_motion'].tolist(),wheel_measured=s['wheel'].tolist(),front_z=s['front_z'].tolist(),front_vertical_speed=s['front_vertical_speed'].tolist(),rear_fraction=s['rear_fraction'].tolist(),four_fraction=s['four_fraction'].tolist(),applied=applied.tolist(),failure=m['failure'].tolist(),balanced=m['balanced'].tolist()))
                 trace[-1].update(joint_position=s['q'].tolist(),joint_velocity=s['qd'].tolist(),position_target=m['position_target'].tolist(),wheel_target=m['wheel_target'].tolist(),actuator_effort=m['effort'].tolist(),transition_heading_error=m.get('transition_heading_error',torch.zeros(n,device=args.device)).tolist(),geometry_ground=m.get('geometry_ground',s['four']).tolist(),interrupted=m.get('interrupted',torch.zeros_like(valid)).tolist(),exit_phase=m.get('exit_phase',torch.zeros_like(category)).tolist(),requested=m.get('requested_command',raw).tolist(),switched=m['switched'].tolist())
                 assert torch.isfinite(obs['policy']).all() and torch.isfinite(r).all()
                 alive &= ~done.bool()

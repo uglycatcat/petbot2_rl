@@ -20,6 +20,7 @@ def ensure(env):
             from .full_range import FullRangeProgress
             progress_type=FullRangeProgress
             options['training_mixture']=getattr(env.cfg,'training_mixture','off')
+            options['rise_speed_reference_mode']=getattr(env.cfg,'rise_speed_reference_mode','capture')
         env.moving_progress = progress_type(env.num_envs, env.device, env.step_dt,
             env.cfg.speed_limit, env.cfg.yaw_limit, env.cfg.frame_range, env.cfg.seed,
             env.cfg.feedback_mode, hold_range=env.cfg.hold_range,

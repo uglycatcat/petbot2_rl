@@ -96,3 +96,9 @@ PetBot2 的前轮抬起、后轮支撑、两轮遥控及前轮落地任务。训
 ### 固定策略过渡速度诊断
 
 `tools/probe_transition_speed.py --transition-speed-probe identity|rise_brake|landing_brake`仅接受`--evaluate --checkpoint`及原检查点对应的任务参数。`identity`保留控制；另外两种模式只在起立或落地阶段，以既有0.6m/s²变化率将捕获的速度参考收至零，不改变物理速度、接管条件、两轮指令、航向、动作限制或失败判据。合同明确记录开发干预，轨迹增加过渡参考与轮轴几何；必须核对identity逐帧复现、成功/失败及超时，不能把诊断当训练或部署通过。
+
+### 起立速度参考学习对照
+
+v24的`--balance-reflex parent_full20 --rise-speed-reference capture|brake`将起立参考作为训练和重载合同的一部分。`capture`保留接管实测速度；`brake`只在起立阶段按0.6m/s²把参考移向零。两轮和落地指令、阶段与失败条件、源执行器约束保持，不能把参考变化称为实际速度清零或稳定性通过。原固定策略诊断使用其5d7fe57副本，新任务不能跨合同直接重载。
+
+从验证过的v23检查点显式迁移时，完整恢复外层actor和critic，保留检查点内原有的完整父反馈网络，不重新拍快照；近期统计重参数化仅改变外层等价坐标，optimizer重新建立。合同、源SHA和实际保留状态写入config；`transition_reference_speed`记录每周期真实参考。工程短训、严格重载和后续完整保持评估必须分别核查，起立入口增加不能代替早期两轮稳定。

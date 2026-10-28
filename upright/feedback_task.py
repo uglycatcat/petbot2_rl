@@ -106,6 +106,7 @@ class FeedbackEnvCfg(base.ContinuousEnvCfg):
     yaw_feedback_gain:float=8.
     tracking_objective:str='mixed'
     transition_contract:str='legacy'
+    rise_speed_reference_mode:str='capture'
     def __post_init__(self):
         super().__post_init__()
         # A configured update period alone does not advance a lazy sensor's
