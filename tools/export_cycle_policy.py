@@ -16,34 +16,41 @@ import torch
 from tensordict import TensorDict
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
-from upright.balance_reflex import ReflexAdapterModel
-from upright.rise_adapter import RiseAdapterModel
-from upright.model import load_model, POSITION_JOINTS, POSITION_KP, POSITION_KD, REAR_WHEELS
 
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def export(evaluation, output):
+def export(evaluation, output, source=ROOT):
+    # Historical checkpoints must use their own clean, pinned implementation.
+    source = source.resolve()
+    sys.path.insert(0, str(source))
+    from upright.balance_reflex import ReflexAdapterModel
+    from upright.rise_adapter import RiseAdapterModel
+    from upright.model import load_model, POSITION_JOINTS, POSITION_KP, POSITION_KD, REAR_WHEELS
     assert torch.cuda.is_available(), 'Export parity must be checked on CUDA'
     meta_path = evaluation / 'config.json'
     meta = json.loads(meta_path.read_text())
     result_path = evaluation / 'evaluation.json'
     result = json.loads(result_path.read_text())
     end = json.loads(evaluation.with_name(evaluation.name + '.exit.json').read_text())
-    assert end['exit_code'] == 0 and not end['guard_stopped'] and not end.get('physics_error')
+    assert end['exit_code'] == 0 and not end['guard_stopped'] and not end.get('physics_error') and not end.get('runtime_error')
     assert result['count'] == 64 and result['unfinished'] == 0
     contract = meta['contract']
-    assert contract['task'] in ('upright_cycle_v18', 'upright_cycle_v19', 'upright_cycle_v20', 'upright_cycle_v21')
-    assert contract['balance_reflex'] == 'frozen20' and contract['yaw_feedback_design'] == 'fast2'
+    assert contract['task'] in ('upright_cycle_v18', 'upright_cycle_v19', 'upright_cycle_v20', 'upright_cycle_v21', 'upright_cycle_v22', 'upright_cycle_v23')
+    assert contract['balance_reflex'] in ('frozen20', 'parent_full20') and contract['yaw_feedback_design'] == 'fast2'
+    full_parent = contract['balance_reflex'] == 'parent_full20'
+    if full_parent:
+        from upright.parent_feedback import ParentFeedbackModel, PARENT_FEEDBACK_CONTRACT
+        assert contract['reflex_contract'] == PARENT_FEEDBACK_CONTRACT
     assert not meta['working_tree_dirty']
     model = load_model()
     assert model['source_sha256'] == contract['source_sha256']
     # Exporter-only changes may follow the accepted task; task source must match.
     assert not subprocess.check_output(['git', '-C', str(ROOT), 'status', '--porcelain'], text=True).strip()
-    assert not subprocess.check_output(['git', '-C', str(ROOT), 'diff', meta['commit'], 'HEAD',
+    assert not subprocess.check_output(['git', '-C', str(source), 'status', '--porcelain'], text=True).strip()
+    assert not subprocess.check_output(['git', '-C', str(source), 'diff', meta['commit'], 'HEAD',
                                        '--', 'train_cycle.py', 'upright'], text=True)
     args = meta['args']
     if args['probe'] and args['initialize_cycle_from']:
@@ -66,6 +73,7 @@ def export(evaluation, output):
     obs = TensorDict({'policy': raw}, batch_size=[len(raw)])
     cfg = copy.deepcopy(meta['runner']['actor']); cfg.pop('class_name')
     actor_class = RiseAdapterModel if contract.get('refinement_target') in ('rise', 'all') else ReflexAdapterModel
+    if full_parent:actor_class = ParentFeedbackModel
     actor = actor_class(obs, obs_groups={'actor': ['policy']}, obs_set='actor',
                               output_dim=3, **cfg).to('cuda:0').eval()
     if actor_class is RiseAdapterModel and not any(k.startswith('rise_') for k in saved['actor_state_dict']):
@@ -77,6 +85,12 @@ def export(evaluation, output):
     outer = torch.jit.script(copy.deepcopy(actor.as_jit()).cpu().eval())
     inner = torch.jit.script(copy.deepcopy(actor.balance_reflex).cpu().eval())
     outer.save(str(output / 'actor.pt')); inner.save(str(output / 'balance_reflex.pt'))
+    network_names = ['actor.pt', 'balance_reflex.pt']
+    if full_parent:
+        parent = torch.jit.script(copy.deepcopy(actor.parent_balance).cpu().eval())
+        parent.save(str(output/'parent_balance.pt'))
+        network_names.append('parent_balance.pt')
+        loaded_parent = torch.jit.load(str(output/'parent_balance.pt'), map_location='cuda:0')
     loaded_outer = torch.jit.load(str(output / 'actor.pt'), map_location='cuda:0')
     loaded_inner = torch.jit.load(str(output / 'balance_reflex.pt'), map_location='cuda:0')
     errors = {}
@@ -89,6 +103,10 @@ def export(evaluation, output):
             assert torch.isfinite(actual).all()
             assert torch.allclose(expected, actual, atol=1e-6, rtol=1e-6), name
             errors[name] = float((expected-actual).abs().max())
+        if full_parent:
+            expected, actual = actor.parent_balance(raw), loaded_parent(raw)
+            assert torch.isfinite(actual).all() and torch.allclose(expected, actual, atol=1e-6, rtol=1e-6)
+            errors['full_parent'] = float((expected-actual).abs().max())
         assert loaded_outer(raw).abs().max() <= .99 + 1e-6
     sources = ['upright/rise_adapter.py', 'upright/balance_reflex.py', 'upright/feedback_task.py',
                'upright/continuous_task.py', 'upright/continuous.py', 'upright/cycle.py',
@@ -98,6 +116,7 @@ def export(evaluation, output):
     if contract.get('transition_contract') == 'linear_heading':
         sources += ['upright/kinematics.py', 'upright/stability.py']
     if contract.get('task_profile')=='full_range':sources+=['upright/full_range.py']
+    if full_parent:sources+=['upright/parent_feedback.py']
     manifest = dict(
         format='petbot_cycle_network_bundle_v1', task_commit=meta['commit'],
         exporter_commit=subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip(),
@@ -106,15 +125,17 @@ def export(evaluation, output):
         configuration_sha256=digest(meta_path), contract=contract,
         tested_range={k: args[k] for k in ('speed_limit', 'yaw_limit', 'frame_min', 'frame_max', 'hold_min', 'hold_max')},
         evaluation_outcome={k: result[k] for k in ('count', 'complete', 'failure', 'unfinished')},
-        networks={name: digest(output/name) for name in ('actor.pt', 'balance_reflex.pt')},
+        networks={name: digest(output/name) for name in network_names},
         actuation=dict(position_joints=POSITION_JOINTS, velocity_joints=REAR_WHEELS,
                        position_kp=POSITION_KP, position_kd=POSITION_KD,
                        joints=model['joints'], drives=model['actuators']),
         interfaces=dict(input='float32 [N,290], five encoded 58-feature samples, oldest first',
                         outer='[N,3]: normalized frame position, common rear-wheel speed, yaw residual',
-                        inner='[N,2]: bounded frame/common corrections; .base returns base frame/common',
+                        inner=('[N,3]: frozen full parent mean; refresh first two channels plus held outer offset'
+                               if full_parent else '[N,2]: bounded frame/common corrections; .base returns base frame/common'),
                         timing='outer 60ms; frozen feedback at +20/+40ms; yaw feedback 2ms'),
-        controller_sources={name: digest(ROOT/name) for name in sources},
+        controller_source_commit=subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip(),
+        controller_sources={name: digest(source/name) for name in sources},
         limitations=['Graphs do not include observations, history, state machine, ordinary control, '
                      'coordinate conversion, inner scheduling, action limits or position/velocity servos.',
                      'Use the pinned controller sources and contract together. This is not MuJoCo validation.'],
@@ -127,5 +148,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('evaluation', type=pathlib.Path)
     parser.add_argument('--output', required=True, type=pathlib.Path)
+    parser.add_argument('--source', type=pathlib.Path, default=ROOT,
+                        help='Clean fixed task checkout matching the evaluated checkpoint')
     args = parser.parse_args()
-    export(args.evaluation, args.output)
+    export(args.evaluation, args.output, args.source)
