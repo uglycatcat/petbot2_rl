@@ -81,7 +81,7 @@ while time.time()<deadline or running:
   gpu=next((i for i in (2,3,1,0) if i not in launch.get('excluded_gpus',[]) and i not in [v['gpu'] for v in running.values()] and mem[i][1]+eval_reserve<mem[i][0]*.78),None)
   if gpu is None:continue
   state[key]=dict(status='running',gpu=gpu,envelope=envelope,started_at=time.strftime('%FT%T%z'));path.write_text(json.dumps(state,indent=2))
-  cmd=['python3',str(pathlib.Path(__file__).with_name('run_guarded.py')),'--container',launch['container'],'--gpu',str(gpu),'--reserve-mib',str(eval_reserve),'--entrypoint','train_cycle.py','--workdir',f'/workspace/runs/{name}','--log',str(out/f'eval_{key}.log'),'--headless','--device','cuda:0','--num_envs','64','--evaluate','--seed',str(launch['heldout_seed'] if scope=='heldout' else (20261019 if scope=='native' else 20261020)),*envelope,'--checkpoint','/workspace/runs/'+str(checkpoint.relative_to(root/'demo_project/runs')),'--log_dir',f'/workspace/runs/_{a.name}/eval_{key}']
+  cmd=['python3',str(pathlib.Path(__file__).with_name('run_guarded.py')),'--container',launch['container'],'--gpu',str(gpu),'--reserve-mib',str(eval_reserve),'--entrypoint','train_cycle.py','--workdir',f'/workspace/runs/{name}','--log',str(out/f'eval_{key}.log'),'--headless','--device','cuda:0','--num_envs','64','--evaluate','--seed',str(launch['heldout_seed'] if scope=='heldout' else (launch.get('native_seed',20261019) if scope=='native' else launch.get('range_seed',20261020))),*envelope,'--checkpoint','/workspace/runs/'+str(checkpoint.relative_to(root/'demo_project/runs')),'--log_dir',f'/workspace/runs/_{a.name}/eval_{key}']
   started=time.time();proc=subprocess.Popen(cmd)
   running[key]=dict(process=proc,gpu=gpu,started=started)
   state[key].update(pid=proc.pid,command=cmd)

@@ -81,6 +81,8 @@ def main():
         total,used,util=mem[gpu]
         if used+reserve>=total*.78:raise RuntimeError(f'GPU{gpu} capacity insufficient: {used}+{reserve} >= {total*.78}')
     state=dict(eval_reserve_mib=plan.get('eval_reserve_mib',6000),name=plan['name'],expected_train=len(variants),commit=commit,container=plan['container'],thread=os.environ.get('CODEX_THREAD_ID'),iterations=plan['iterations'],checkpoints=plan['checkpoints'],heldout_seed=plan.get('heldout_seed'),train={},gate=gate,resource_plan=reservations,started_at=time.strftime('%FT%T%z'))
+    state['native_seed']=plan.get('native_seed',20261019)
+    state['range_seed']=plan.get('range_seed',20261020)
     state['heldout_hold_seconds']=plan.get('heldout_hold_seconds')
     state['eval_parallelism']=plan.get('eval_parallelism',1)
     state['excluded_gpus']=plan.get('eval_excluded_gpus',[])
