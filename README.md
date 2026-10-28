@@ -102,3 +102,12 @@ PetBot2 的前轮抬起、后轮支撑、两轮遥控及前轮落地任务。训
 v24的`--balance-reflex parent_full20 --rise-speed-reference capture|brake`将起立参考作为训练和重载合同的一部分。`capture`保留接管实测速度；`brake`只在起立阶段按0.6m/s²把参考移向零。两轮和落地指令、阶段与失败条件、源执行器约束保持，不能把参考变化称为实际速度清零或稳定性通过。原固定策略诊断使用其5d7fe57副本，新任务不能跨合同直接重载。
 
 从验证过的v23检查点显式迁移时，完整恢复外层actor和critic，保留检查点内原有的完整父反馈网络，不重新拍快照；近期统计重参数化仅改变外层等价坐标，optimizer重新建立。合同、源SHA和实际保留状态写入config；`transition_reference_speed`记录每周期真实参考。工程短训、严格重载和后续完整保持评估必须分别核查，起立入口增加不能代替早期两轮稳定。
+
+
+v25能力训练沿用`train_cycle.py`，在完整范围配置上添加`--capability-version v25`。
+`--mirror-training`启用配对命令与镜像均值损失；`--adaptive-curriculum`启用两条表现课程。
+正式默认1000更新；版本、父检查点和课程开关必须显式固定。恢复时使用同契约`--checkpoint`，
+从下一个更新继续并开启新物理回合。独立评估加`--evaluation-pattern paired_speed|paired_arcs|rise_grid`可检查能力边界。
+准备是phase1中尚未离地的连续策略控制段，无强制停车/归零；落地共同髋角回默认0，其余交接语义沿用。
+有限批队列`tools/launch_cycle.py`支持计划项`sequential_gpu_waves: true`，每GPU最多一份PPO，
+失败冻结后续任务供事件恢复；工程门槛及固定提交要求保持。

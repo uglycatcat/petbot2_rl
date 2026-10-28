@@ -75,7 +75,8 @@ def main():
         if not (ROOT/v['initial']).is_file():raise RuntimeError('Missing initialization checkpoint')
         if v.get('initial_iteration',0):
             if plan.get('initialization_flag')!='--checkpoint' or not 0<=v['initial_iteration']<plan['iterations']:raise RuntimeError('Invalid continuation budget')
-        reservations[v['gpu']]+=v['reserve_mib']
+        if plan.get('sequential_gpu_waves'):reservations[v['gpu']]=max(reservations[v['gpu']],v['reserve_mib'])
+        else:reservations[v['gpu']]+=v['reserve_mib']
     for gpu,reserve in reservations.items():
         total,used,util=mem[gpu]
         if used+reserve>=total*.78:raise RuntimeError(f'GPU{gpu} capacity insufficient: {used}+{reserve} >= {total*.78}')
@@ -92,6 +93,7 @@ def main():
         subprocess.run(['git','-C',str(dst),'checkout','--detach',commit],check=True,stdout=subprocess.DEVNULL)
         shutil.copytree(SOURCE/'artifacts/petbot_asset',dst/'artifacts/petbot_asset')
     save(out/'launch_status.json',state)
+    state['sequential_gpu_waves']=plan.get('sequential_gpu_waves',False)
     starting=[]
     for v in variants:
         dst=RUNS/v['run'];envelope=plan['envelope']+(['--yaw-filter-tau',str(v['yaw_filter_tau'])] if 'yaw_filter_tau' in v else [])+(['--tracking-shape',v['tracking_shape']] if 'tracking_shape' in v else [])+['--wheel-slew',str(v['wheel_slew']),'--frame-slew',str(v['frame_slew'])]+(['--tracking-weight',str(v['tracking_weight'])] if 'tracking_weight' in v else [])+(['--exploration-profile',v['exploration_profile']] if 'exploration_profile' in v else [])
@@ -103,11 +105,16 @@ def main():
         if 'balance_reflex' in v:envelope+=['--balance-reflex',v['balance_reflex']]
         if 'balance_noise_factor' in v:envelope+=['--balance-noise-factor',str(v['balance_noise_factor'])]
         if 'training_mixture' in v:envelope+=['--training-mixture',v['training_mixture']]
+        if v.get('mirror_training'):envelope+=['--mirror-training']
+        if v.get('adaptive_curriculum'):envelope+=['--adaptive-curriculum']
         if 'rise_speed_reference' in v:envelope+=['--rise-speed-reference',v['rise_speed_reference']]
         if 'tracking_objective' in v:envelope+=['--tracking-objective',v['tracking_objective']]
         if 'observation_frame' in v:envelope+=['--observation-frame',v['observation_frame']]
         initial=pathlib.Path(v['initial']).relative_to('demo_project/runs')
         cmd=['python3',str(dst/'tools/run_guarded.py'),'--container',plan['container'],'--gpu',str(v['gpu']),'--reserve-mib',str(v.get('start_reserve_mib',v['reserve_mib'])),'--workdir','/workspace/runs/'+v['run'],'--entrypoint','train_cycle.py','--log',str(out/(v['run']+'.log')),'--headless','--device','cuda:0','--num_envs',str(v['envs']),'--iterations',str(plan['iterations']-v.get('initial_iteration',0)),'--save-interval',str(plan['save_interval']),'--learning-rate',str(plan['learning_rate']),'--seed',str(v['seed']),plan.get('initialization_flag','--initialize-from'),'/workspace/runs/'+str(initial),'--log_dir','/workspace/runs/'+v['run']+'/logs/'+v['run'],*envelope]
+        if state['sequential_gpu_waves']:
+            state['train'][v['run']]=dict(pid=0,gpu=v['gpu'],envelope=envelope,command=cmd,status='queued',num_envs=v['envs'],start_reserve_mib=v.get('start_reserve_mib',v['reserve_mib']))
+            continue
         # Never refill capacity freed by a failed earlier job.
         capacity_deadline=time.monotonic()+900
         while True:
@@ -127,6 +134,11 @@ def main():
         with (out/(v['run']+'_guard.log')).open('w') as f:proc=subprocess.Popen(cmd,stdout=f,stderr=subprocess.STDOUT,start_new_session=True)
         state['train'][v['run']]=dict(pid=proc.pid,gpu=v['gpu'],envelope=envelope,command=cmd,status='initializing',num_envs=v['envs']);save(out/'launch_status.json',state)
         starting.append((v['run'],proc,time.monotonic()+900))
+    if state['sequential_gpu_waves']:
+        save(out/'launch_status.json',state)
+        from finite_waves import run_waves
+        run_waves(out,state,ROOT)
+        return
     while starting:
         for run,proc,deadline in list(starting):
             if proc.poll() is not None and proc.returncode!=0:raise RuntimeError(f'{run} exited before PPO verification; inspect partial launch')
