@@ -1,0 +1,212 @@
+{
+  "name": "cycle25_capability_reload",
+  "context_doc": "docs/upright_cycle_v25.md",
+  "fixed": "demo_project/runs/upright_cycle25_gate_07237da",
+  "commit": "07237da0385be3641900ce00385aed147c274b2f",
+  "accepted_task_commit": "07237da0385be3641900ce00385aed147c274b2f",
+  "container": "petbot-upright-night",
+  "parallelism": 2,
+  "excluded_gpus": [
+    0,
+    1
+  ],
+  "common_args": [
+    "--task-profile",
+    "full_range",
+    "--speed-limit",
+    ".75",
+    "--yaw-limit",
+    "15",
+    "--frame-min",
+    "-1",
+    "--frame-max",
+    "1.2",
+    "--tracking-weight",
+    "4",
+    "--instant-tracking-weight",
+    ".3",
+    "--tracking-objective",
+    "stability_first",
+    "--observation-frame",
+    "balance_local",
+    "--handoff-alignment",
+    "after",
+    "--refinement-target",
+    "all",
+    "--transition-contract",
+    "linear_heading",
+    "--actor-normalization",
+    "inherited",
+    "--yaw-feedback-design",
+    "fast2",
+    "--yaw-feedback-gain",
+    "16",
+    "--hold-min",
+    "12",
+    "--hold-max",
+    "30",
+    "--wheel-slew",
+    "480",
+    "--frame-slew",
+    "3",
+    "--balance-reflex",
+    "parent_full20",
+    "--balance-noise-factor",
+    "1",
+    "--training-mixture",
+    "stratified_v1",
+    "--capability-version",
+    "v25"
+  ],
+  "jobs": [
+    {
+      "name": "fixed_low30",
+      "mode": "checkpoint",
+      "seed": 20261161,
+      "checkpoint": "demo_project/runs/_cycle25_capability_gate/fixed/model_7.pt",
+      "checkpoint_sha256": "203a3fcbe9f99c9e6e88f644310a6cf5781579271fc7bc9d06dc77ff270aa1e9",
+      "args": [
+        "--speed-limit",
+        ".05",
+        "--yaw-limit",
+        ".15",
+        "--frame-min",
+        "-.2",
+        "--frame-max",
+        ".2",
+        "--hold-min",
+        "30",
+        "--hold-max",
+        "30"
+      ]
+    },
+    {
+      "name": "fixed_full30",
+      "mode": "checkpoint",
+      "seed": 20261161,
+      "checkpoint": "demo_project/runs/_cycle25_capability_gate/fixed/model_7.pt",
+      "checkpoint_sha256": "203a3fcbe9f99c9e6e88f644310a6cf5781579271fc7bc9d06dc77ff270aa1e9",
+      "args": []
+    },
+    {
+      "name": "mirror_low30",
+      "mode": "checkpoint",
+      "seed": 20261161,
+      "checkpoint": "demo_project/runs/_cycle25_capability_gate/mirror/model_7.pt",
+      "checkpoint_sha256": "41c3aef68fb028e209c550f02d0e9a7cafd681d47389b4a915682e81b6c402e5",
+      "args": [
+        "--mirror-training",
+        "--speed-limit",
+        ".05",
+        "--yaw-limit",
+        ".15",
+        "--frame-min",
+        "-.2",
+        "--frame-max",
+        ".2",
+        "--hold-min",
+        "30",
+        "--hold-max",
+        "30"
+      ]
+    },
+    {
+      "name": "mirror_full30",
+      "mode": "checkpoint",
+      "seed": 20261161,
+      "checkpoint": "demo_project/runs/_cycle25_capability_gate/mirror/model_7.pt",
+      "checkpoint_sha256": "41c3aef68fb028e209c550f02d0e9a7cafd681d47389b4a915682e81b6c402e5",
+      "args": [
+        "--mirror-training"
+      ]
+    },
+    {
+      "name": "course_low30",
+      "mode": "checkpoint",
+      "seed": 20261161,
+      "checkpoint": "demo_project/runs/_cycle25_capability_gate/course/model_7.pt",
+      "checkpoint_sha256": "dc4423f71ac2dd158ebb5963c11d62ff6c2acac162e87ea77cef2786bcbbd76c",
+      "args": [
+        "--mirror-training",
+        "--adaptive-curriculum",
+        "--speed-limit",
+        ".05",
+        "--yaw-limit",
+        ".15",
+        "--frame-min",
+        "-.2",
+        "--frame-max",
+        ".2",
+        "--hold-min",
+        "30",
+        "--hold-max",
+        "30"
+      ]
+    },
+    {
+      "name": "course_full30",
+      "mode": "checkpoint",
+      "seed": 20261161,
+      "checkpoint": "demo_project/runs/_cycle25_capability_gate/course/model_7.pt",
+      "checkpoint_sha256": "dc4423f71ac2dd158ebb5963c11d62ff6c2acac162e87ea77cef2786bcbbd76c",
+      "args": [
+        "--mirror-training",
+        "--adaptive-curriculum"
+      ]
+    },
+    {
+      "name": "mirror_low180",
+      "mode": "checkpoint",
+      "seed": 20261161,
+      "checkpoint": "demo_project/runs/_cycle25_capability_gate/mirror/model_7.pt",
+      "checkpoint_sha256": "41c3aef68fb028e209c550f02d0e9a7cafd681d47389b4a915682e81b6c402e5",
+      "args": [
+        "--mirror-training",
+        "--speed-limit",
+        ".05",
+        "--yaw-limit",
+        ".15",
+        "--frame-min",
+        "-.2",
+        "--frame-max",
+        ".2",
+        "--hold-min",
+        "180",
+        "--hold-max",
+        "180"
+      ]
+    },
+    {
+      "name": "mirror_paired_speed",
+      "mode": "checkpoint",
+      "seed": 20261161,
+      "checkpoint": "demo_project/runs/_cycle25_capability_gate/mirror/model_7.pt",
+      "checkpoint_sha256": "41c3aef68fb028e209c550f02d0e9a7cafd681d47389b4a915682e81b6c402e5",
+      "args": [
+        "--mirror-training",
+        "--evaluation-pattern",
+        "paired_speed",
+        "--hold-min",
+        "35",
+        "--hold-max",
+        "35"
+      ]
+    },
+    {
+      "name": "mirror_paired_arcs",
+      "mode": "checkpoint",
+      "seed": 20261161,
+      "checkpoint": "demo_project/runs/_cycle25_capability_gate/mirror/model_7.pt",
+      "checkpoint_sha256": "41c3aef68fb028e209c550f02d0e9a7cafd681d47389b4a915682e81b6c402e5",
+      "args": [
+        "--mirror-training",
+        "--evaluation-pattern",
+        "paired_arcs",
+        "--hold-min",
+        "45",
+        "--hold-max",
+        "45"
+      ]
+    }
+  ]
+}

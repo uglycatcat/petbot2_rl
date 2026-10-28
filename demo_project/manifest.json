@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-27",
+  "updated_at": "2026-10-28",
   "purpose": "PetBot experimental training projects. Code is versioned on dedicated demoproj branches; checkouts are managed by default.xml.",
   "repositories": [
     {
@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "edce522e673a123eb6ed6416076f604435f63e29",
+      "verified_commit": "d7e35cbb8e5e6eadbba149ee86bb348699f08217",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "transition correction engineering complete; formal deployment paused by user for full-MJCF-range alignment",
-      "local_validation": "Fixed b269d49: 4096env8updates, new-seed64/64 short-cycle reload, no guard or PhysX error. Three-GPU synchronized PPO resource gate passed at4096env per card. Full physical command range is not yet implemented/accepted; see docs/upright_cycle_correction_20261027.md.",
+      "status": "v25 engineering accepted; batch23 six4096x1000 fixed copies verified; first wave three PPOs reached5/1000 at20:33, second wave three queued;66 evaluations and failure/completion event flow configured; no policy acceptance.",
+      "local_validation": "Task07237da unchanged in released7e35cb. Three4096x8 PPOs, true optimizer/curriculum resume7->8/9, nine reloads valid; no VRAM/Python/PhysX interruption. Frozen54 tensors preserved; B low180 full/basic64/64. Full range/speed/arcs fail; actual wheel peak103.4317rad/s remains. Targets/efforts/actual hip limits and captured landing references/default0 pass. See docs/upright_cycle_v25.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
@@ -67,7 +67,7 @@
       ],
       "shallow": false,
       "status": "registered_placeholder_readme_only",
-      "local_validation": "Task goal only: lift the front wheels onto a 0\u20133cm step below rear-wheel radius, then accelerate to climb. No implementation or training. See README.md.",
+      "local_validation": "Task goal only: lift the front wheels onto a 0–3cm step below rear-wheel radius, then accelerate to climb. No implementation or training. See README.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []

@@ -1,0 +1,13 @@
+{
+  "name": "cycle25_capability_short_training",
+  "commit": "07237da0385be3641900ce00385aed147c274b2f",
+  "formal_ppo_batch": false,
+  "iterations": 8,
+  "num_envs": 4096,
+  "groups": [
+    "fixed",
+    "mirror",
+    "course"
+  ],
+  "parent": "upright_cycle_batch21_parent_b_r42/logs/upright_cycle_batch21_parent_b_r42/model_299.pt"
+}
