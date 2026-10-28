@@ -92,3 +92,7 @@ PetBot2 的前轮抬起、后轮支撑、两轮遥控及前轮落地任务。训
 ### 全范围训练分层采样
 
 `train_cycle.py --task-profile full_range --training-mixture stratified_v1`将训练环境等分为低范围保留、中等运动、较高运动、低运动全车架、全范围五组。分组在环境生命周期固定，避免困难回合较短而丢失物理步覆盖；一次调用内幅度分组不变。该参数只影响训练抽样，`--evaluate`强制关闭分层并使用显式评估范围，外部遥控和源电机限制保持不变。`off`为相同任务的原全范围抽样对照。日志`Stratum0`–`Stratum4`记录各层起立/完成比例，配置记录实际启用状态；正式批次必须先过容器短训及关闭分层后的重载检查。
+
+### 固定策略过渡速度诊断
+
+`tools/probe_transition_speed.py --transition-speed-probe identity|rise_brake|landing_brake`仅接受`--evaluate --checkpoint`及原检查点对应的任务参数。`identity`保留控制；另外两种模式只在起立或落地阶段，以既有0.6m/s²变化率将捕获的速度参考收至零，不改变物理速度、接管条件、两轮指令、航向、动作限制或失败判据。合同明确记录开发干预，轨迹增加过渡参考与轮轴几何；必须核对identity逐帧复现、成功/失败及超时，不能把诊断当训练或部署通过。

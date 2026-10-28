@@ -33,7 +33,7 @@ def command(root, out, plan, job, gpu):
     assert not any(x.startswith(forbidden) for x in plan['common_args']+extra)
     assert job['mode'] in ('checkpoint', 'untuned_parent')
     entry = job.get('entrypoint', 'train_cycle.py')
-    assert entry in ('train_cycle.py', 'tools/probe_landing_state.py', 'tools/probe_rise_authority.py', 'tools/probe_balance_refresh.py')
+    assert entry in ('train_cycle.py', 'tools/probe_landing_state.py', 'tools/probe_rise_authority.py', 'tools/probe_balance_refresh.py', 'tools/probe_transition_speed.py')
     flags = (['--evaluate', '--checkpoint'] if job['mode'] == 'checkpoint'
              else ['--probe', '--initialize-cycle-from'])
     return ['python3', str(fixed/'tools/run_guarded.py'), '--container', plan['container'],
