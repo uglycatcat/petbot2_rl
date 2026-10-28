@@ -10,26 +10,43 @@
 repo sync rl_project/std_s2s_upright_project rl_project/std_train_upright_project
 cd rl_project/std_s2s_upright_project
 uv sync --locked --python 3.10
-uv run --locked run.py
+uv run --locked run.py --forward-speed 0.15 --turn-rate 0.5
 ```
 
 需要桌面显示和 OpenGL。策略在 CPU 推理，不需要 Isaac Lab 或 CUDA；MuJoCo 渲染使用本地图形环境。没有显示的服务器使用下方 `--headless`。环境和运行产物不入库。单独检出本分支时可用 `--model-dir <robot_description目录>`，模型指纹必须与策略一致。
 
 | 操作 | 效果 |
 |---|---|
-| 按住 W / S | 前进 / 后退，最高 ±0.05 m/s |
-| 按住 A / D | 左转 / 右转，最高 ±0.15 rad/s；可与 W/S 组合 |
+| 按住 W / S | 前进 / 后退；上述启动命令为 ±0.15 m/s |
+| 按住 A / D | 左转 / 右转；上述启动命令为 ±0.5 rad/s，可与 W/S 组合 |
 | 释放方向键 | 请求零速度，控制器仍维持平衡 |
 | Space | 四轮模式请求起立；起立中或两轮模式请求前轮落地；落地请求锁存到交接完成 |
 | R | 显式恢复初始四轮状态 |
 | 鼠标左键拖动 / 滚轮 | 旋转视角 / 缩放 |
 | Esc | 退出 |
 
-可以先按 W 行驶，再按 Space 起立；保持两轮后继续 WASD，最后按 Space 落地。起立前检查真实四轮接地及行驶状态，不强制停车。头和耳保持原位置目标，车架位置由策略输出，后轮接收左右速度目标。`--frame 0.15` 可更改对称普通行驶车架目标（导出范围 ±0.20 rad）；这不表示整个范围已通过 MuJoCo 验收。
+可以先按 W 行驶，再按 Space 起立；保持两轮后继续 WASD，最后按 Space 落地。起立前检查真实四轮接地及行驶状态，不强制停车。头和耳保持原位置目标，车架位置由策略输出，后轮接收左右速度目标。`--frame 0.15` 可更改对称普通行驶车架目标（第21批包的车架范围为[-1,1.2] rad）；这不表示整个范围已通过 MuJoCo 验收。
 
-## 当前效果与限制
+## 第21批终局策略预览（2026-10-28）
 
-默认权重 `cycle18_long_r42/model_598` 来自第十八批完整状态续训，实际累计 600 次 PPO 更新。选择依据与来源在 [selection.json](policies/selection.json)，网络/检查点 SHA、训练合同和 CUDA 导出校验在各策略 `manifest.json`。另保留 `cycle18_long_r43` 作同任务对照，可通过 `--policy policies/cycle18_long_r43` 选择。
+当前默认`cycle21_parent_b_r42/model_299`来自完整循环第21批正式PPO终局，另有`cycle21_parent_a_r43`可选。它们不是`full_range21_gate_r42`工程8更新模型，也不包含正在训练的第22批。按用户要求提供MuJoCo体验，**尚未通过完整范围或用户sim2sim验收**。来源、选择依据和Isaac结果见[selection.json](policies/selection.json)。
+
+B在Isaac中速60秒原评估/新种子完整60/64、62/64，优于A的49/64、55/64；B全车架范围有退步，因此A也保留。两份终局包都包含完整父反馈网络，按原60/20/2ms控制时序执行，不能只替换旧外层网络。网络CUDA1024样本输出差0，35组观测与240子步目标对齐通过；这些工程检查不等于动作质量通过。
+
+上面的命令以中速幅度体验。`--forward-speed`、`--turn-rate`现在同时控制窗口WASD与无窗口脚本；例如`--forward-speed 0.30 --turn-rate 1.5`体验较高速度。省略这两个参数时，窗口按策略包完整上限±0.75m/s、±15rad/s；无窗口脚本保留默认0.04m/s、0.12rad/s。组合命令仍按左右后轮±25rad/s联合可达域投影，输入幅度设置不改变模型与策略范围。
+
+```bash
+# 第21批A候选，同样的中速输入
+uv run --locked run.py --policy policies/cycle21_parent_a_r43 --forward-speed 0.15 --turn-rate 0.5
+# 显式选择历史第18批策略
+uv run --locked run.py --policy policies/cycle18_long_r42
+```
+
+实际MuJoCo中，B完成低速180秒完整/基本遥控；中速60秒完成但停车漂移44.46mm，基本评分未通过。较高速度、全速、第二次起立与转弯接管仍失败。真实MuJoCo场景及保留的失败见[第21批验证](validation/README.md#第21批终局预览2026-10-28)。意外前轮回落/翻倒会结束本次调用并交还普通控制；再次起立须重新按Space，不自动重起。
+
+## 历史第18批效果与限制
+
+此前默认权重 `cycle18_long_r42/model_598` 来自第十八批完整状态续训，实际累计 600 次 PPO 更新。当时的选择依据与来源在 [selection_cycle18.json](policies/selection_cycle18.json)，网络/检查点 SHA、训练合同和 CUDA 导出校验在各策略 `manifest.json`。另保留 `cycle18_long_r43` 作同任务对照，可通过 `--policy policies/cycle18_long_r43` 选择。
 
 默认车架下，已在 MuJoCo 完成一条 **180 秒两轮混合遥控→前轮落地→普通控制交接**：包含前后、左右、曲线及停车，基本遥控指标通过。该结果是固定场景诊断，不是随机初态成功率，也不是实机证明。
 
@@ -46,7 +63,7 @@ uv run --locked run.py --headless --scenario stationary --output outputs/station
 uv run --locked run.py --headless --scenario mixed --cycles 2 --seconds 65 --output outputs/repeated_01
 ```
 
-每次使用新的输出目录，保留 `summary.json` 和逐步 `trace.jsonl`。`--snapshot` 额外生成真实渲染帧，需要 EGL；`--command-scale 1.25` 将脚本指令提升到键盘上限，默认脚本为 ±0.04 m/s、±0.12 rad/s。退出 2 表示流程失败或未完成，并不等于程序崩溃。基本遥控未通过但完整动作结束时退出 0，必须同时阅读 `functional`、覆盖和失败字段。
+每次使用新的输出目录，保留 `summary.json` 和逐步 `trace.jsonl`。`--snapshot` 额外生成真实渲染帧，需要 EGL；默认脚本为 ±0.04 m/s、±0.12 rad/s，可用速度参数或`--command-scale`在策略包声明范围内调整。退出 2 表示流程失败或未完成，并不等于程序崩溃。基本遥控未通过但完整动作结束时退出 0，必须同时阅读 `functional`、覆盖和失败字段。
 
 ## 代码与控制契约
 
@@ -60,7 +77,7 @@ uv run --locked run.py --headless --scenario mixed --cycles 2 --seconds 65 --out
 
 ## 过渡修正版体验（2026-10-27）
 
-保留原默认包。体验本次已通过GPU短训/重载和MuJoCo180秒检查的工程候选：
+历史工程包仍可显式选择。体验此前已通过GPU短训/重载和MuJoCo180秒检查的工程候选：
 
 ```bash
 uv run python run.py --policy policies/correction20_gate_r42
@@ -78,4 +95,4 @@ uv run python run.py --policy policies/correction20_gate_r42
 
 历史策略包保持其原合同。新版控制端已完成MuJoCo前轮回落/翻倒的状态故障注入与源码对齐检查，接口通过不等于学习策略已能在全范围稳定工作；训练候选和实际闭环证据见主仓库`docs/upright_cycle_v21.md`。
 
-工程候选通过`--policy policies/full_range21_gate_r42`显式选择，默认仍为原策略。无窗口诊断可用`--forward-speed`和`--turn-rate`设置幅度；取值须在该包声明范围内，控制器仍施加联合轮速限幅。`summary.json`分别记录正常完成与`interrupted_calls`，脚本不会在中断后把原定落地请求变成新起立。该候选全范围稳定性尚未通过。
+历史工程候选通过`--policy policies/full_range21_gate_r42`显式选择；当前默认已改为上方第21批正式终局B策略。无窗口诊断可用`--forward-speed`和`--turn-rate`设置幅度；取值须在该包声明范围内，控制器仍施加联合轮速限幅。`summary.json`分别记录正常完成与`interrupted_calls`，脚本不会在中断后把原定落地请求变成新起立。该候选全范围稳定性尚未通过。

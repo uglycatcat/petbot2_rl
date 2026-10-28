@@ -41,10 +41,19 @@ class Controller:
             if hashlib.sha256((bundle/name).read_bytes()).hexdigest() != sha:
                 raise ValueError(f'Corrupt policy file: {name}')
         assert c['control_dt'] == .06 and c['observation_schema'] == 'cycle_58x5_balance_local_v4'
-        assert c['yaw_feedback_design'] == 'fast2' and c['balance_reflex'] == 'frozen20'
+        assert c['yaw_feedback_design'] == 'fast2' and c['balance_reflex'] in ('frozen20', 'parent_full20')
+        self.full_parent_feedback = c['balance_reflex'] == 'parent_full20'
         assert c['handoff_alignment']['mode'] == 'after'
         self.actor = torch.jit.load(str(bundle/'actor.pt')).eval()
         self.reflex = torch.jit.load(str(bundle/'balance_reflex.pt')).eval()
+        self.parent = None
+        if self.full_parent_feedback:
+            assert c['task'] == 'upright_cycle_v23'
+            assert 'parent_balance.pt' in self.manifest['networks']
+            feedback = c['reflex_contract']
+            assert feedback['version'] == 'frozen_full_parent_offset_v1'
+            assert feedback['period'] == .02 and feedback['gate_after'] == 1.8
+            self.parent = torch.jit.load(str(bundle/'parent_balance.pt')).eval()
         self.spec = self.manifest['actuation']
         self.num_envs, self.device, self.step_dt, self.physics_dt = 1, 'cpu', .06, .002
         self.cfg = SimpleNamespace(steering_design='feedback', yaw_filter_tau=c['yaw_filter_tau'],
@@ -68,7 +77,8 @@ class Controller:
         self.scene = {'robot': self.robot}
         self.action = FeedbackAction(None, self)
         self.action_manager = SimpleNamespace(get_term=lambda name: self.action)
-        attach_balance_reflex(self, SimpleNamespace(balance_reflex=self.reflex), True)
+        attach_balance_reflex(self, SimpleNamespace(balance_reflex=self.reflex, parent_balance=self.parent),
+                             True, full_parent=self.full_parent_feedback)
         self.action.reset()
         self.s = initial_state
         self.history = None

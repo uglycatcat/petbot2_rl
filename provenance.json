@@ -1,7 +1,7 @@
 {
   "source_branch": "demoproj/upright_rl_demo",
-  "source_commit": "4f3fb9caa302430857bdcb47f5d0e929012f577d",
-  "task_commit": "4f3fb9caa302430857bdcb47f5d0e929012f577d",
+  "source_commit": "cbf1943c35cd6354c9b16c1ade73a91f5719f4cb",
+  "task_commit": "cbf1943c35cd6354c9b16c1ade73a91f5719f4cb",
   "source_sha256": {
     "upright/moving.py": "b57084c1fca9795d7e4e9f8a5ed1f7229f288e536b2503c22a951c5b3d38cbc5",
     "upright/cycle.py": "136de904aad4080972c1b91694c01d3080bb2d3e31ef6016c6c1389f829d4b8a",
@@ -12,13 +12,14 @@
     "upright/ground_motion.py": "0357a4b06ea102d650ff43272cf6c0385343c3e212de790a7084d936ff85c74f",
     "upright/local_frame.py": "b13474f565991322c454384b1c8d8ca27fc0d17252397dcfafd04192788f9122",
     "upright/functional.py": "89371df66f1dfde066b6ae550356941249050eb869d9d333a0acc771bdd7a514",
-    "upright/cycle_task.py": "1b339383a824cf737bf295b94afec900a9e5ca609b83c0453257bc1ea8068a14",
-    "upright/continuous_task.py": "577d3447de8550f4a069438369bbc31bf59c10cddd4de77dba35395076bf5f8e",
+    "upright/cycle_task.py": "de2c054aec5e8b89ca2558be99348fb6db03a849e0a4e79c9fe100f54aeeb6c6",
+    "upright/continuous_task.py": "65c31f4588a18090aded15d8bf635725bb36359772dfd5e5668888eb756012d8",
     "upright/feedback_task.py": "6be5d55dae6e6e06f5b976cc85d1a33d4fc112c18cdb1c3844cd052379ff371e",
-    "upright/balance_reflex.py": "f92a8f18532d97d669b8e658f0f2a5853b9554b029870ec2031e09b2dbc13f19",
+    "upright/balance_reflex.py": "52bb83fa9bd0c699632127379363ab12b55cbb30525eb3943ee2d1d2c9c048eb",
     "upright/kinematics.py": "bd9283a02dd3f0536047962e7c346841b3eb4dd59e2a1b381328e684296e5313",
-    "upright/full_range.py": "029f7112246d368053bb309782159ae259ac974813dac2c31ebcd2c780360193"
+    "upright/full_range.py": "6b99e5826d6df43f57801f5432d2a313be53d8c02068d332f442237bc35dd00d",
+    "upright/parent_feedback.py": "17d67d72ce8ef04f7e73e32c612c64edcfe964ef7ec5a4aedf000ee96d7ca9fe"
   },
-  "notes": "Tensor controller matches pinned source. Each policy manifest selects its task profile; historical bundles retain their original contract. Export and port checks do not establish full sim2sim acceptance.",
+  "notes": "Tensor controller matches batch21 pinned source. Parent-full20 bundles use frozen full-parent mean plus held outer offset at20/40ms after1.8s balance; legacy bundles retain frozen20 behavior. Training mixture is disabled in deployment. Export and port checks are not operator sim2sim acceptance.",
   "baseline_network_task_commit": "001a54e98ff18f1274e2d7e961404325de4e50f7"
 }

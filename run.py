@@ -21,7 +21,7 @@ def snapshot(sim, path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--policy',type=Path,default=ROOT/'policies/cycle18_long_r42')
+    parser.add_argument('--policy',type=Path,default=ROOT/'policies/cycle21_parent_b_r42')
     parser.add_argument('--model-dir',type=Path)
     parser.add_argument('--frame',type=float,default=0.)
     parser.add_argument('--transition-contract',choices=['legacy','linear_heading'],default=None,
@@ -31,8 +31,8 @@ def main():
     parser.add_argument('--hold-seconds',type=float,default=18.)
     parser.add_argument('--cycles',type=int,default=1)
     parser.add_argument('--command-scale',type=float,default=1.,help='Multiply headless commands within the exported policy range')
-    parser.add_argument('--forward-speed',type=float,default=.04,help='Headless forward/reverse amplitude in m/s')
-    parser.add_argument('--turn-rate',type=float,default=.12,help='Headless mixed turn amplitude in rad/s')
+    parser.add_argument('--forward-speed',type=float,default=None,help='W/S or scripted forward/reverse amplitude in m/s; GUI defaults to the policy envelope')
+    parser.add_argument('--turn-rate',type=float,default=None,help='A/D or scripted turn amplitude in rad/s; GUI defaults to the policy envelope')
     parser.add_argument('--scenario',choices=['stationary','forward','reverse','mixed','ordinary'],default='mixed')
     parser.add_argument('--takeover-yaw',type=float,default=0.,help='Ordinary-drive turn command before the first balance phase')
     parser.add_argument('--output',type=Path,default=ROOT/'outputs/latest')
@@ -48,14 +48,17 @@ def main():
         os.environ.setdefault('MUJOCO_GL','egl')
     from petbot_s2s.simulation import Simulation
     sim = Simulation(args.policy,args.model_dir,args.frame,args.transition_contract)
+    if args.forward_speed is None:args.forward_speed=.04 if args.headless else sim.controller.speed_limit
+    if args.turn_rate is None:args.turn_rate=.12 if args.headless else sim.controller.yaw_limit
     for value,limit in ((args.forward_speed,sim.controller.speed_limit),(args.turn_rate,sim.controller.yaw_limit)):
         if not math.isfinite(value) or value<0 or value*args.command_scale>limit:
-            parser.error('Headless amplitudes must fit the exported policy range')
+            parser.error('Command amplitudes must fit the exported policy range')
     if not math.isfinite(args.takeover_yaw) or abs(args.takeover_yaw*args.command_scale)>sim.controller.yaw_limit:
         parser.error('Takeover yaw must fit the exported policy range')
     if not args.headless:
         from petbot_s2s.viewer import run_viewer
-        run_viewer(sim,args.viewer_smoke_seconds)
+        run_viewer(sim,args.viewer_smoke_seconds,
+                   args.forward_speed*args.command_scale,args.turn_rate*args.command_scale)
         return
     args.output.mkdir(parents=True,exist_ok=True)
     if (args.output/'summary.json').exists():

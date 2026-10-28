@@ -1,0 +1,1758 @@
+{
+  "b_stationary": {
+    "summary": {
+      "policy": "cycle21_parent_b_r42",
+      "checkpoint_sha256": "8078f430e3389c52ddca1a900ef565bff9068a40858038c1335091feb473d9e4",
+      "transition_contract": "linear_heading",
+      "development_intervention": false,
+      "source_model_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+      "mujoco_version": "3.16.0",
+      "scenario": "stationary",
+      "forward_speed": 0.04,
+      "turn_rate": 0.12,
+      "takeover_yaw": 0.0,
+      "command_scale": 1.0,
+      "frame": 0.0,
+      "wall_seconds": 21.14305754750967,
+      "simulated_seconds": 23.57999999999781,
+      "entered_balance": true,
+      "requested_cycles": 1,
+      "completed_cycles": 1,
+      "interrupted_calls": 0,
+      "last_exit_code": 0,
+      "failure_code": 0,
+      "events": [
+        {
+          "time": 3.1799999999998714,
+          "phase": 1
+        },
+        {
+          "time": 4.019999999999779,
+          "phase": 2
+        },
+        {
+          "time": 22.139999999998608,
+          "phase": 3
+        },
+        {
+          "time": 22.619999999998342,
+          "phase": 4
+        },
+        {
+          "time": 23.57999999999781,
+          "completed_cycle": 1
+        }
+      ],
+      "maximum_front_height": 0.18247851729393005,
+      "final": {
+        "time": 23.57999999999781,
+        "phase": 0,
+        "phase_time": 0.0,
+        "armed": false,
+        "failure_code": 0,
+        "cycles": 1,
+        "interruptions": 0,
+        "last_exit_code": 0,
+        "position": [
+          0.06829489022493362,
+          -0.00031998628401197493,
+          0.08387038856744766
+        ],
+        "gravity": [
+          0.005277204792946577,
+          1.2738004443235695e-05,
+          -0.9999860525131226
+        ],
+        "front_z": 0.0450560636818409,
+        "rear_fraction": 1.0,
+        "four_fraction": 1.0,
+        "raw": [
+          0.0,
+          0.0
+        ],
+        "command": [
+          0.0,
+          0.0
+        ],
+        "requested": [
+          0.0,
+          0.0
+        ],
+        "motion": [
+          -0.004609046969562769,
+          -0.0006457280251197517
+        ],
+        "interval_motion": [
+          0.0,
+          0.0
+        ],
+        "yaw": 0.0028900366742163897,
+        "instant": [
+          -0.0045743524096906185,
+          -0.0005863925325684249
+        ],
+        "frame": [
+          -0.014953194186091423,
+          -0.01492313016206026
+        ],
+        "frame_target": [
+          0.0,
+          0.0
+        ],
+        "wheel_measured": [
+          -0.15372970700263977,
+          -0.16767895221710205
+        ],
+        "wheel_target": [
+          -0.19798806309700012,
+          -0.25538647174835205
+        ],
+        "actuator_force": [
+          -3.556388142185895e-05,
+          0.007879696281411308,
+          0.008066951946212592,
+          0.060078853528193116,
+          0.059990199327567675,
+          -0.006242952446932248,
+          -0.01232654050838106
+        ]
+      },
+      "interpretation": "MuJoCo diagnostic, not an Isaac success-rate estimate",
+      "functional": {
+        "definition": {
+          "version": "basic_remote_v1",
+          "settle_seconds": 0.6,
+          "minimum_segment_seconds": 0.6,
+          "command_deadband": [
+            0.005,
+            0.015
+          ],
+          "minimum_response_ratio": 0.2,
+          "maximum_response_ratio": 2.5,
+          "required_response_fraction": 0.9,
+          "stop_excursion_m": 0.03,
+          "stop_heading_excursion_rad": 0.1
+        },
+        "count": 1,
+        "stable_completed": 1,
+        "coverage_complete": 0,
+        "functional_pass": 0,
+        "episodes": [
+          {
+            "complete": true,
+            "coverage_complete": false,
+            "response_checks": 0,
+            "response_fraction": null,
+            "response_ratio_min": null,
+            "response_ratio_max": null,
+            "stop_segments": 1,
+            "stop_segments_passed": 0,
+            "max_stop_excursion_m": 0.051305784333118234,
+            "max_stop_heading_excursion_rad": 0.004583329777233303,
+            "functional_pass": false
+          }
+        ]
+      }
+    },
+    "exit_code": 0,
+    "trace_sha256": "c694059ac35c454298d4c71016b2afe9fd88b0cbb5abdbb8e4b6e25c2951688f",
+    "raw_directory": "outputs/cycle21_mujoco/b_stationary"
+  },
+  "b_low": {
+    "summary": {
+      "policy": "cycle21_parent_b_r42",
+      "checkpoint_sha256": "8078f430e3389c52ddca1a900ef565bff9068a40858038c1335091feb473d9e4",
+      "transition_contract": "linear_heading",
+      "development_intervention": false,
+      "source_model_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+      "mujoco_version": "3.16.0",
+      "scenario": "mixed",
+      "forward_speed": 0.05,
+      "turn_rate": 0.15,
+      "takeover_yaw": 0.0,
+      "command_scale": 1.0,
+      "frame": 0.0,
+      "wall_seconds": 21.63709337078035,
+      "simulated_seconds": 23.519999999997843,
+      "entered_balance": true,
+      "requested_cycles": 1,
+      "completed_cycles": 1,
+      "interrupted_calls": 0,
+      "last_exit_code": 0,
+      "failure_code": 0,
+      "events": [
+        {
+          "time": 3.1799999999998714,
+          "phase": 1
+        },
+        {
+          "time": 3.9599999999997855,
+          "phase": 2
+        },
+        {
+          "time": 22.07999999999864,
+          "phase": 3
+        },
+        {
+          "time": 22.559999999998375,
+          "phase": 4
+        },
+        {
+          "time": 23.519999999997843,
+          "completed_cycle": 1
+        }
+      ],
+      "maximum_front_height": 0.2038777768611908,
+      "final": {
+        "time": 23.519999999997843,
+        "phase": 0,
+        "phase_time": 0.0,
+        "armed": false,
+        "failure_code": 0,
+        "cycles": 1,
+        "interruptions": 0,
+        "last_exit_code": 0,
+        "position": [
+          0.5618780255317688,
+          0.02945825830101967,
+          0.08384191244840622
+        ],
+        "gravity": [
+          0.003540958743542433,
+          8.74957004270982e-06,
+          -0.9999937415122986
+        ],
+        "front_z": 0.045034900307655334,
+        "rear_fraction": 1.0,
+        "four_fraction": 1.0,
+        "raw": [
+          0.05000000074505806,
+          0.0
+        ],
+        "command": [
+          0.05000000074505806,
+          0.0
+        ],
+        "requested": [
+          0.05000000074505806,
+          0.0
+        ],
+        "motion": [
+          0.03882645070552826,
+          -0.0011071122717112303
+        ],
+        "interval_motion": [
+          0.0,
+          0.0
+        ],
+        "yaw": 0.4103778302669525,
+        "instant": [
+          0.03943067044019699,
+          -0.0006345569854602218
+        ],
+        "frame": [
+          -0.013136058114469051,
+          -0.013099228963255882
+        ],
+        "frame_target": [
+          0.0,
+          0.0
+        ],
+        "wheel_measured": [
+          1.3544338941574097,
+          1.3361181020736694
+        ],
+        "wheel_target": [
+          1.4872933626174927,
+          1.4287229776382446
+        ],
+        "actuator_force": [
+          0.00013705210401602846,
+          0.007890610193994186,
+          0.008074234499717253,
+          0.05350344618938081,
+          0.05323672776992901,
+          0.019147031307256923,
+          0.013440605089223706
+        ]
+      },
+      "interpretation": "MuJoCo diagnostic, not an Isaac success-rate estimate",
+      "functional": {
+        "definition": {
+          "version": "basic_remote_v1",
+          "settle_seconds": 0.6,
+          "minimum_segment_seconds": 0.6,
+          "command_deadband": [
+            0.005,
+            0.015
+          ],
+          "minimum_response_ratio": 0.2,
+          "maximum_response_ratio": 2.5,
+          "required_response_fraction": 0.9,
+          "stop_excursion_m": 0.03,
+          "stop_heading_excursion_rad": 0.1
+        },
+        "count": 1,
+        "stable_completed": 1,
+        "coverage_complete": 1,
+        "functional_pass": 1,
+        "episodes": [
+          {
+            "complete": true,
+            "coverage_complete": true,
+            "response_checks": 6,
+            "response_fraction": 1.0,
+            "response_ratio_min": 0.9779401015052185,
+            "response_ratio_max": 1.2736485213041306,
+            "stop_segments": 1,
+            "stop_segments_passed": 1,
+            "max_stop_excursion_m": 0.00521420145485184,
+            "max_stop_heading_excursion_rad": 0.014197498559951782,
+            "functional_pass": true
+          }
+        ]
+      }
+    },
+    "exit_code": 0,
+    "trace_sha256": "e89eb593c30b03df69d601b391d4c8d2b344549bc5931cbad3e9e24f2fb0c444",
+    "raw_directory": "outputs/cycle21_mujoco/b_low"
+  },
+  "b_medium": {
+    "summary": {
+      "policy": "cycle21_parent_b_r42",
+      "checkpoint_sha256": "8078f430e3389c52ddca1a900ef565bff9068a40858038c1335091feb473d9e4",
+      "transition_contract": "linear_heading",
+      "development_intervention": false,
+      "source_model_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+      "mujoco_version": "3.16.0",
+      "scenario": "mixed",
+      "forward_speed": 0.15,
+      "turn_rate": 0.5,
+      "takeover_yaw": 0.0,
+      "command_scale": 1.0,
+      "frame": 0.0,
+      "wall_seconds": 59.10192778613418,
+      "simulated_seconds": 65.5200000000287,
+      "entered_balance": true,
+      "requested_cycles": 1,
+      "completed_cycles": 1,
+      "interrupted_calls": 0,
+      "last_exit_code": 0,
+      "failure_code": 0,
+      "events": [
+        {
+          "time": 3.1799999999998714,
+          "phase": 1
+        },
+        {
+          "time": 4.079999999999773,
+          "phase": 2
+        },
+        {
+          "time": 64.14000000003192,
+          "phase": 3
+        },
+        {
+          "time": 64.56000000003094,
+          "phase": 4
+        },
+        {
+          "time": 65.5200000000287,
+          "completed_cycle": 1
+        }
+      ],
+      "maximum_front_height": 0.19421803951263428,
+      "final": {
+        "time": 65.5200000000287,
+        "phase": 0,
+        "phase_time": 0.0,
+        "armed": false,
+        "failure_code": 0,
+        "cycles": 1,
+        "interruptions": 0,
+        "last_exit_code": 0,
+        "position": [
+          0.600703775882721,
+          1.1183359622955322,
+          0.08380702883005142
+        ],
+        "gravity": [
+          0.0017151274951174855,
+          7.958238711580634e-05,
+          -0.9999985098838806
+        ],
+        "front_z": 0.04496240243315697,
+        "rear_fraction": 1.0,
+        "four_fraction": 0.9333333373069763,
+        "raw": [
+          -0.15000000596046448,
+          0.0
+        ],
+        "command": [
+          -0.15000000596046448,
+          0.0
+        ],
+        "requested": [
+          -0.15000000596046448,
+          0.0
+        ],
+        "motion": [
+          -0.16426703333854675,
+          0.008385125547647476
+        ],
+        "interval_motion": [
+          0.0,
+          0.0
+        ],
+        "yaw": -1.2617459297180176,
+        "instant": [
+          -0.16420942544937134,
+          0.0018085106275975704
+        ],
+        "frame": [
+          -0.01078494731336832,
+          -0.011324699968099594
+        ],
+        "frame_target": [
+          0.0,
+          0.0
+        ],
+        "wheel_measured": [
+          -5.522864818572998,
+          -5.453716278076172
+        ],
+        "wheel_target": [
+          -5.802600383758545,
+          -5.490797519683838
+        ],
+        "actuator_force": [
+          0.00042575306350679896,
+          0.007898906942178974,
+          0.008068832526573623,
+          0.04426916277990829,
+          0.047153565121099084,
+          -0.039416950457692335,
+          -0.00632369778221642
+        ]
+      },
+      "interpretation": "MuJoCo diagnostic, not an Isaac success-rate estimate",
+      "functional": {
+        "definition": {
+          "version": "basic_remote_v1",
+          "settle_seconds": 0.6,
+          "minimum_segment_seconds": 0.6,
+          "command_deadband": [
+            0.005,
+            0.015
+          ],
+          "minimum_response_ratio": 0.2,
+          "maximum_response_ratio": 2.5,
+          "required_response_fraction": 0.9,
+          "stop_excursion_m": 0.03,
+          "stop_heading_excursion_rad": 0.1
+        },
+        "count": 1,
+        "stable_completed": 1,
+        "coverage_complete": 1,
+        "functional_pass": 0,
+        "episodes": [
+          {
+            "complete": true,
+            "coverage_complete": true,
+            "response_checks": 20,
+            "response_fraction": 0.95,
+            "response_ratio_min": 0.6542904568757337,
+            "response_ratio_max": 2.9984710911504715,
+            "stop_segments": 3,
+            "stop_segments_passed": 2,
+            "max_stop_excursion_m": 0.04445645207785619,
+            "max_stop_heading_excursion_rad": 0.01815807819366455,
+            "functional_pass": false
+          }
+        ]
+      }
+    },
+    "exit_code": 0,
+    "trace_sha256": "7892dc6ad9f19baa70cb1de09260943864086b73888ed0d47d007ad8f6e19ba8",
+    "raw_directory": "outputs/cycle21_mujoco/b_medium"
+  },
+  "b_higher": {
+    "summary": {
+      "policy": "cycle21_parent_b_r42",
+      "checkpoint_sha256": "8078f430e3389c52ddca1a900ef565bff9068a40858038c1335091feb473d9e4",
+      "transition_contract": "linear_heading",
+      "development_intervention": false,
+      "source_model_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+      "mujoco_version": "3.16.0",
+      "scenario": "mixed",
+      "forward_speed": 0.3,
+      "turn_rate": 1.5,
+      "takeover_yaw": 0.0,
+      "command_scale": 1.0,
+      "frame": 0.0,
+      "wall_seconds": 73.49540738202631,
+      "simulated_seconds": 82.01999999999025,
+      "entered_balance": true,
+      "requested_cycles": 1,
+      "completed_cycles": 0,
+      "interrupted_calls": 1,
+      "last_exit_code": 8192,
+      "failure_code": 0,
+      "events": [
+        {
+          "time": 3.1799999999998714,
+          "phase": 1
+        },
+        {
+          "time": 4.139999999999766,
+          "phase": 2
+        },
+        {
+          "time": 7.73999999999937,
+          "phase": 4
+        },
+        {
+          "time": 7.73999999999937,
+          "interrupted_call": 1,
+          "failure_code": 8192,
+          "exit_phase": 2,
+          "ordinary_pose": true
+        }
+      ],
+      "maximum_front_height": 0.18801331520080566,
+      "final": {
+        "time": 82.01999999999025,
+        "phase": 0,
+        "phase_time": 0.0,
+        "armed": false,
+        "failure_code": 0,
+        "cycles": 0,
+        "interruptions": 1,
+        "last_exit_code": 8192,
+        "position": [
+          1.883973240852356,
+          0.9607867002487183,
+          0.08386190235614777
+        ],
+        "gravity": [
+          0.006534596439450979,
+          0.0007153786136768758,
+          -0.9999784231185913
+        ],
+        "front_z": 0.04481830447912216,
+        "rear_fraction": 0.46666666865348816,
+        "four_fraction": 0.2666666805744171,
+        "raw": [
+          0.0,
+          1.5
+        ],
+        "command": [
+          0.0,
+          1.5
+        ],
+        "requested": [
+          0.0,
+          1.5
+        ],
+        "motion": [
+          0.02681531384587288,
+          0.9962630271911621
+        ],
+        "interval_motion": [
+          0.028521444648504257,
+          0.9366258978843689
+        ],
+        "yaw": -0.21277526021003723,
+        "instant": [
+          0.0013037407770752907,
+          1.2013401985168457
+        ],
+        "frame": [
+          -0.01466643251478672,
+          -0.016582505777478218
+        ],
+        "frame_target": [
+          0.0,
+          0.0
+        ],
+        "wheel_measured": [
+          -6.731488227844238,
+          2.451788902282715
+        ],
+        "wheel_target": [
+          -8.76791000366211,
+          3.4922869205474854
+        ],
+        "actuator_force": [
+          0.02712089067382749,
+          0.008960066096081673,
+          0.008041252996515995,
+          0.07750960434311932,
+          0.09121132810911176,
+          -0.38,
+          0.12361469096362349
+        ]
+      },
+      "interpretation": "MuJoCo diagnostic, not an Isaac success-rate estimate",
+      "functional": {
+        "definition": {
+          "version": "basic_remote_v1",
+          "settle_seconds": 0.6,
+          "minimum_segment_seconds": 0.6,
+          "command_deadband": [
+            0.005,
+            0.015
+          ],
+          "minimum_response_ratio": 0.2,
+          "maximum_response_ratio": 2.5,
+          "required_response_fraction": 0.9,
+          "stop_excursion_m": 0.03,
+          "stop_heading_excursion_rad": 0.1
+        },
+        "count": 1,
+        "stable_completed": 0,
+        "coverage_complete": 0,
+        "functional_pass": 0,
+        "episodes": [
+          {
+            "complete": false,
+            "coverage_complete": false,
+            "response_checks": 1,
+            "response_fraction": 1.0,
+            "response_ratio_min": 0.6245879852746258,
+            "response_ratio_max": 0.6245879852746258,
+            "stop_segments": 0,
+            "stop_segments_passed": 0,
+            "max_stop_excursion_m": null,
+            "max_stop_heading_excursion_rad": null,
+            "functional_pass": false
+          }
+        ]
+      }
+    },
+    "exit_code": 2,
+    "trace_sha256": "22b579bf2dda7213d54c434eaef3e98f3264ed15e62ac31c6932c5fa401600c1",
+    "raw_directory": "outputs/cycle21_mujoco/b_higher"
+  },
+  "b_full": {
+    "summary": {
+      "policy": "cycle21_parent_b_r42",
+      "checkpoint_sha256": "8078f430e3389c52ddca1a900ef565bff9068a40858038c1335091feb473d9e4",
+      "transition_contract": "linear_heading",
+      "development_intervention": false,
+      "source_model_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+      "mujoco_version": "3.16.0",
+      "scenario": "mixed",
+      "forward_speed": 0.75,
+      "turn_rate": 15.0,
+      "takeover_yaw": 0.0,
+      "command_scale": 1.0,
+      "frame": 0.0,
+      "wall_seconds": 36.8818744039163,
+      "simulated_seconds": 40.020000000002945,
+      "entered_balance": false,
+      "requested_cycles": 1,
+      "completed_cycles": 0,
+      "interrupted_calls": 1,
+      "last_exit_code": 64,
+      "failure_code": 0,
+      "events": [
+        {
+          "time": 3.1799999999998714,
+          "phase": 1
+        },
+        {
+          "time": 8.159999999999394,
+          "phase": 4
+        },
+        {
+          "time": 8.159999999999394,
+          "interrupted_call": 1,
+          "failure_code": 64,
+          "exit_phase": 1,
+          "ordinary_pose": true
+        }
+      ],
+      "maximum_front_height": 0.05099071189761162,
+      "final": {
+        "time": 40.020000000002945,
+        "phase": 0,
+        "phase_time": 0.0,
+        "armed": false,
+        "failure_code": 0,
+        "cycles": 0,
+        "interruptions": 1,
+        "last_exit_code": 64,
+        "position": [
+          26.374826431274414,
+          -0.06389810144901276,
+          0.08384706825017929
+        ],
+        "gravity": [
+          6.844214658485726e-05,
+          -7.079754141159356e-05,
+          -1.0
+        ],
+        "front_z": 0.04500292241573334,
+        "rear_fraction": 1.0,
+        "four_fraction": 0.8333333134651184,
+        "raw": [
+          0.75,
+          0.0
+        ],
+        "command": [
+          0.75,
+          0.0
+        ],
+        "requested": [
+          0.75,
+          0.0
+        ],
+        "motion": [
+          0.7369595766067505,
+          0.0012900674482807517
+        ],
+        "interval_motion": [
+          0.7367604970932007,
+          0.004225441720336676
+        ],
+        "yaw": -0.006259024143218994,
+        "instant": [
+          0.7366751432418823,
+          0.027995677664875984
+        ],
+        "frame": [
+          -0.009268461726605892,
+          -0.008908047340810299
+        ],
+        "frame_target": [
+          0.0,
+          0.0
+        ],
+        "wheel_measured": [
+          24.732952117919922,
+          24.710460662841797
+        ],
+        "wheel_target": [
+          25.0,
+          25.0
+        ],
+        "actuator_force": [
+          0.0012323460240756955,
+          0.007973979412016741,
+          0.008039980235847023,
+          0.040842455443187785,
+          0.029500398403876076,
+          0.029517848488494813,
+          0.04867981214075412
+        ]
+      },
+      "interpretation": "MuJoCo diagnostic, not an Isaac success-rate estimate",
+      "functional": {
+        "definition": {
+          "version": "basic_remote_v1",
+          "settle_seconds": 0.6,
+          "minimum_segment_seconds": 0.6,
+          "command_deadband": [
+            0.005,
+            0.015
+          ],
+          "minimum_response_ratio": 0.2,
+          "maximum_response_ratio": 2.5,
+          "required_response_fraction": 0.9,
+          "stop_excursion_m": 0.03,
+          "stop_heading_excursion_rad": 0.1
+        },
+        "count": 1,
+        "stable_completed": 0,
+        "coverage_complete": 0,
+        "functional_pass": 0,
+        "episodes": [
+          {
+            "complete": false,
+            "coverage_complete": false,
+            "response_checks": 0,
+            "response_fraction": null,
+            "response_ratio_min": null,
+            "response_ratio_max": null,
+            "stop_segments": 0,
+            "stop_segments_passed": 0,
+            "max_stop_excursion_m": null,
+            "max_stop_heading_excursion_rad": null,
+            "functional_pass": false
+          }
+        ]
+      }
+    },
+    "exit_code": 2,
+    "trace_sha256": "7292f85f8fd127973fb5dc89f44cd819084e1592a465231111d41816fa415e4c",
+    "raw_directory": "outputs/cycle21_mujoco/b_full"
+  },
+  "a_low": {
+    "summary": {
+      "policy": "cycle21_parent_a_r43",
+      "checkpoint_sha256": "c3fb08e27ad42090a71e49fe764329b8cb499402c27ce0edde4ad2b39ff4750e",
+      "transition_contract": "linear_heading",
+      "development_intervention": false,
+      "source_model_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+      "mujoco_version": "3.16.0",
+      "scenario": "mixed",
+      "forward_speed": 0.05,
+      "turn_rate": 0.15,
+      "takeover_yaw": 0.0,
+      "command_scale": 1.0,
+      "frame": 0.0,
+      "wall_seconds": 20.873982394114137,
+      "simulated_seconds": 23.57999999999781,
+      "entered_balance": true,
+      "requested_cycles": 1,
+      "completed_cycles": 1,
+      "interrupted_calls": 0,
+      "last_exit_code": 0,
+      "failure_code": 0,
+      "events": [
+        {
+          "time": 3.1799999999998714,
+          "phase": 1
+        },
+        {
+          "time": 4.019999999999779,
+          "phase": 2
+        },
+        {
+          "time": 22.139999999998608,
+          "phase": 3
+        },
+        {
+          "time": 22.619999999998342,
+          "phase": 4
+        },
+        {
+          "time": 23.57999999999781,
+          "completed_cycle": 1
+        }
+      ],
+      "maximum_front_height": 0.18236128985881805,
+      "final": {
+        "time": 23.57999999999781,
+        "phase": 0,
+        "phase_time": 0.0,
+        "armed": false,
+        "failure_code": 0,
+        "cycles": 1,
+        "interruptions": 0,
+        "last_exit_code": 0,
+        "position": [
+          0.4140070378780365,
+          0.007066153921186924,
+          0.08381989598274231
+        ],
+        "gravity": [
+          0.003530886024236679,
+          5.492442596732872e-06,
+          -0.9999937415122986
+        ],
+        "front_z": 0.04497971013188362,
+        "rear_fraction": 1.0,
+        "four_fraction": 0.9666666388511658,
+        "raw": [
+          0.05000000074505806,
+          0.0
+        ],
+        "command": [
+          0.05000000074505806,
+          0.0
+        ],
+        "requested": [
+          0.05000000074505806,
+          0.0
+        ],
+        "motion": [
+          0.042998723685741425,
+          0.000968264474067837
+        ],
+        "interval_motion": [
+          0.0,
+          0.0
+        ],
+        "yaw": 0.373399943113327,
+        "instant": [
+          0.042475488036870956,
+          0.0008483363781124353
+        ],
+        "frame": [
+          -0.012770422734320164,
+          -0.012830345891416073
+        ],
+        "frame_target": [
+          0.0,
+          0.0
+        ],
+        "wheel_measured": [
+          1.4564741849899292,
+          1.478358507156372
+        ],
+        "wheel_target": [
+          1.546665906906128,
+          1.6215896606445312
+        ],
+        "actuator_force": [
+          -0.0001462315455263411,
+          0.007885326968780863,
+          0.008070425199671306,
+          0.05206398416146203,
+          0.05244728901095984,
+          0.012945348289294695,
+          0.02017585424885182
+        ]
+      },
+      "interpretation": "MuJoCo diagnostic, not an Isaac success-rate estimate",
+      "functional": {
+        "definition": {
+          "version": "basic_remote_v1",
+          "settle_seconds": 0.6,
+          "minimum_segment_seconds": 0.6,
+          "command_deadband": [
+            0.005,
+            0.015
+          ],
+          "minimum_response_ratio": 0.2,
+          "maximum_response_ratio": 2.5,
+          "required_response_fraction": 0.9,
+          "stop_excursion_m": 0.03,
+          "stop_heading_excursion_rad": 0.1
+        },
+        "count": 1,
+        "stable_completed": 1,
+        "coverage_complete": 1,
+        "functional_pass": 1,
+        "episodes": [
+          {
+            "complete": true,
+            "coverage_complete": true,
+            "response_checks": 6,
+            "response_fraction": 1.0,
+            "response_ratio_min": 0.94201054696723,
+            "response_ratio_max": 1.2778006970882416,
+            "stop_segments": 1,
+            "stop_segments_passed": 1,
+            "max_stop_excursion_m": 0.005788143254617793,
+            "max_stop_heading_excursion_rad": 0.020644307136535645,
+            "functional_pass": true
+          }
+        ]
+      }
+    },
+    "exit_code": 0,
+    "trace_sha256": "89b2de9ea70dbb7e8ddeaee3b1c90eb91b746ab15212e35b4c043cc04a72413c",
+    "raw_directory": "outputs/cycle21_mujoco/a_low"
+  },
+  "a_medium": {
+    "summary": {
+      "policy": "cycle21_parent_a_r43",
+      "checkpoint_sha256": "c3fb08e27ad42090a71e49fe764329b8cb499402c27ce0edde4ad2b39ff4750e",
+      "transition_contract": "linear_heading",
+      "development_intervention": false,
+      "source_model_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+      "mujoco_version": "3.16.0",
+      "scenario": "mixed",
+      "forward_speed": 0.15,
+      "turn_rate": 0.5,
+      "takeover_yaw": 0.0,
+      "command_scale": 1.0,
+      "frame": 0.0,
+      "wall_seconds": 76.33238732255995,
+      "simulated_seconds": 82.01999999999025,
+      "entered_balance": true,
+      "requested_cycles": 1,
+      "completed_cycles": 0,
+      "interrupted_calls": 1,
+      "last_exit_code": 8192,
+      "failure_code": 0,
+      "events": [
+        {
+          "time": 3.1799999999998714,
+          "phase": 1
+        },
+        {
+          "time": 4.139999999999766,
+          "phase": 2
+        },
+        {
+          "time": 18.840000000000437,
+          "phase": 4
+        },
+        {
+          "time": 18.840000000000437,
+          "interrupted_call": 1,
+          "failure_code": 8192,
+          "exit_phase": 2,
+          "ordinary_pose": true
+        }
+      ],
+      "maximum_front_height": 0.19571039080619812,
+      "final": {
+        "time": 82.01999999999025,
+        "phase": 0,
+        "phase_time": 0.0,
+        "armed": false,
+        "failure_code": 0,
+        "cycles": 0,
+        "interruptions": 1,
+        "last_exit_code": 8192,
+        "position": [
+          2.164736747741699,
+          1.7616102695465088,
+          0.08385253697633743
+        ],
+        "gravity": [
+          -0.0007951391162350774,
+          -0.001438296283595264,
+          -0.9999986290931702
+        ],
+        "front_z": 0.044997382909059525,
+        "rear_fraction": 1.0,
+        "four_fraction": 0.8333333134651184,
+        "raw": [
+          0.0,
+          0.5
+        ],
+        "command": [
+          0.0,
+          0.5
+        ],
+        "requested": [
+          0.0,
+          0.5
+        ],
+        "motion": [
+          -0.003134297439828515,
+          0.4995667338371277
+        ],
+        "interval_motion": [
+          -0.0032057962380349636,
+          0.5035187005996704
+        ],
+        "yaw": -0.32226240634918213,
+        "instant": [
+          -0.005493066739290953,
+          0.5215111374855042
+        ],
+        "frame": [
+          -0.007278249599039555,
+          -0.008765905164182186
+        ],
+        "frame_target": [
+          0.0,
+          0.0
+        ],
+        "wheel_measured": [
+          -2.07798433303833,
+          0.8550648093223572
+        ],
+        "wheel_target": [
+          -1.7963404655456543,
+          1.4065582752227783
+        ],
+        "actuator_force": [
+          -0.0006149964442403868,
+          0.007882870292199542,
+          0.008071917587677791,
+          0.03664193013799023,
+          0.03499318416659309,
+          -0.0872571657104518,
+          0.0709092675372548
+        ]
+      },
+      "interpretation": "MuJoCo diagnostic, not an Isaac success-rate estimate",
+      "functional": {
+        "definition": {
+          "version": "basic_remote_v1",
+          "settle_seconds": 0.6,
+          "minimum_segment_seconds": 0.6,
+          "command_deadband": [
+            0.005,
+            0.015
+          ],
+          "minimum_response_ratio": 0.2,
+          "maximum_response_ratio": 2.5,
+          "required_response_fraction": 0.9,
+          "stop_excursion_m": 0.03,
+          "stop_heading_excursion_rad": 0.1
+        },
+        "count": 1,
+        "stable_completed": 0,
+        "coverage_complete": 0,
+        "functional_pass": 0,
+        "episodes": [
+          {
+            "complete": false,
+            "coverage_complete": false,
+            "response_checks": 6,
+            "response_fraction": 0.8333333333333334,
+            "response_ratio_min": 0.706486368773071,
+            "response_ratio_max": 4.591015776851237,
+            "stop_segments": 0,
+            "stop_segments_passed": 0,
+            "max_stop_excursion_m": null,
+            "max_stop_heading_excursion_rad": null,
+            "functional_pass": false
+          }
+        ]
+      }
+    },
+    "exit_code": 2,
+    "trace_sha256": "384f6ef301fd1920dbdaed40423eed78c8057d6b04913907fa437044168fd7ec",
+    "raw_directory": "outputs/cycle21_mujoco/a_medium"
+  },
+  "b_low180": {
+    "summary": {
+      "policy": "cycle21_parent_b_r42",
+      "checkpoint_sha256": "8078f430e3389c52ddca1a900ef565bff9068a40858038c1335091feb473d9e4",
+      "transition_contract": "linear_heading",
+      "development_intervention": false,
+      "source_model_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+      "mujoco_version": "3.16.0",
+      "scenario": "mixed",
+      "forward_speed": 0.05,
+      "turn_rate": 0.15,
+      "takeover_yaw": 0.0,
+      "command_scale": 1.0,
+      "frame": 0.0,
+      "wall_seconds": 166.7513634590432,
+      "simulated_seconds": 185.52000000015772,
+      "entered_balance": true,
+      "requested_cycles": 1,
+      "completed_cycles": 1,
+      "interrupted_calls": 0,
+      "last_exit_code": 0,
+      "failure_code": 0,
+      "events": [
+        {
+          "time": 3.1799999999998714,
+          "phase": 1
+        },
+        {
+          "time": 3.9599999999997855,
+          "phase": 2
+        },
+        {
+          "time": 184.02000000015056,
+          "phase": 3
+        },
+        {
+          "time": 184.56000000015314,
+          "phase": 4
+        },
+        {
+          "time": 185.52000000015772,
+          "completed_cycle": 1
+        }
+      ],
+      "maximum_front_height": 0.2038777768611908,
+      "final": {
+        "time": 185.52000000015772,
+        "phase": 0,
+        "phase_time": 0.0,
+        "armed": false,
+        "failure_code": 0,
+        "cycles": 1,
+        "interruptions": 0,
+        "last_exit_code": 0,
+        "position": [
+          0.025399431586265564,
+          0.6961665153503418,
+          0.08383611589670181
+        ],
+        "gravity": [
+          0.005001792684197426,
+          -0.00010801878670463338,
+          -0.9999874830245972
+        ],
+        "front_z": 0.04498417675495148,
+        "rear_fraction": 1.0,
+        "four_fraction": 0.9666666388511658,
+        "raw": [
+          0.05000000074505806,
+          0.0
+        ],
+        "command": [
+          0.05000000074505806,
+          0.0
+        ],
+        "requested": [
+          0.05000000074505806,
+          0.0
+        ],
+        "motion": [
+          0.025769762694835663,
+          0.002294890582561493
+        ],
+        "interval_motion": [
+          0.0,
+          0.0
+        ],
+        "yaw": -2.5907623767852783,
+        "instant": [
+          0.02593657374382019,
+          0.0016268208855763078
+        ],
+        "frame": [
+          -0.014264155179262161,
+          -0.014323732815682888
+        ],
+        "frame_target": [
+          0.0,
+          0.0
+        ],
+        "wheel_measured": [
+          0.8841480016708374,
+          0.9207244515419006
+        ],
+        "wheel_target": [
+          0.9497826099395752,
+          1.1029314994812012
+        ],
+        "actuator_force": [
+          0.0001489320476566944,
+          0.007875280667603372,
+          0.008070060232556516,
+          0.05763137982327345,
+          0.057686337513230164,
+          0.007787992902826141,
+          0.02475649632658028
+        ]
+      },
+      "interpretation": "MuJoCo diagnostic, not an Isaac success-rate estimate",
+      "functional": {
+        "definition": {
+          "version": "basic_remote_v1",
+          "settle_seconds": 0.6,
+          "minimum_segment_seconds": 0.6,
+          "command_deadband": [
+            0.005,
+            0.015
+          ],
+          "minimum_response_ratio": 0.2,
+          "maximum_response_ratio": 2.5,
+          "required_response_fraction": 0.9,
+          "stop_excursion_m": 0.03,
+          "stop_heading_excursion_rad": 0.1
+        },
+        "count": 1,
+        "stable_completed": 1,
+        "coverage_complete": 1,
+        "functional_pass": 1,
+        "episodes": [
+          {
+            "complete": true,
+            "coverage_complete": true,
+            "response_checks": 60,
+            "response_fraction": 1.0,
+            "response_ratio_min": 0.5762089852063509,
+            "response_ratio_max": 1.2740711629390717,
+            "stop_segments": 10,
+            "stop_segments_passed": 10,
+            "max_stop_excursion_m": 0.0071016542852757976,
+            "max_stop_heading_excursion_rad": 0.01891613006591797,
+            "functional_pass": true
+          }
+        ]
+      }
+    },
+    "exit_code": 0,
+    "trace_sha256": "6935ca56dd25c793f29cacf7a3734f79bb499faeda38ad20aa0ed17dbbe558e5",
+    "raw_directory": "outputs/cycle21_mujoco/b_low180"
+  },
+  "b_two_calls": {
+    "summary": {
+      "policy": "cycle21_parent_b_r42",
+      "checkpoint_sha256": "8078f430e3389c52ddca1a900ef565bff9068a40858038c1335091feb473d9e4",
+      "transition_contract": "linear_heading",
+      "development_intervention": false,
+      "source_model_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+      "mujoco_version": "3.16.0",
+      "scenario": "mixed",
+      "forward_speed": 0.05,
+      "turn_rate": 0.15,
+      "takeover_yaw": 0.0,
+      "command_scale": 1.0,
+      "frame": 0.0,
+      "wall_seconds": 59.14312086906284,
+      "simulated_seconds": 65.04000000002982,
+      "entered_balance": true,
+      "requested_cycles": 2,
+      "completed_cycles": 1,
+      "interrupted_calls": 1,
+      "last_exit_code": 8192,
+      "failure_code": 0,
+      "events": [
+        {
+          "time": 3.1799999999998714,
+          "phase": 1
+        },
+        {
+          "time": 3.9599999999997855,
+          "phase": 2
+        },
+        {
+          "time": 22.07999999999864,
+          "phase": 3
+        },
+        {
+          "time": 22.559999999998375,
+          "phase": 4
+        },
+        {
+          "time": 23.519999999997843,
+          "completed_cycle": 1
+        },
+        {
+          "time": 26.69999999999608,
+          "phase": 1
+        },
+        {
+          "time": 27.359999999995715,
+          "phase": 2
+        },
+        {
+          "time": 27.65999999999555,
+          "phase": 4
+        },
+        {
+          "time": 27.65999999999555,
+          "interrupted_call": 1,
+          "failure_code": 8192,
+          "exit_phase": 2,
+          "ordinary_pose": true
+        }
+      ],
+      "maximum_front_height": 0.2038777768611908,
+      "final": {
+        "time": 65.04000000002982,
+        "phase": 0,
+        "phase_time": 0.0,
+        "armed": false,
+        "failure_code": 0,
+        "cycles": 1,
+        "interruptions": 1,
+        "last_exit_code": 8192,
+        "position": [
+          1.2383358478546143,
+          0.4213842451572418,
+          0.08384417742490768
+        ],
+        "gravity": [
+          0.0036637927405536175,
+          0.00022295994858723134,
+          -0.9999932646751404
+        ],
+        "front_z": 0.04502807930111885,
+        "rear_fraction": 1.0,
+        "four_fraction": 1.0,
+        "raw": [
+          0.05000000074505806,
+          0.0
+        ],
+        "command": [
+          0.05000000074505806,
+          0.0
+        ],
+        "requested": [
+          0.05000000074505806,
+          0.0
+        ],
+        "motion": [
+          0.0496310256421566,
+          -0.00425963057205081
+        ],
+        "interval_motion": [
+          0.0489283986389637,
+          -0.0034491221886128187
+        ],
+        "yaw": 1.179494857788086,
+        "instant": [
+          0.04920784384012222,
+          -0.003495252225548029
+        ],
+        "frame": [
+          -0.013286244124174118,
+          -0.01321417186409235
+        ],
+        "frame_target": [
+          0.0,
+          0.0
+        ],
+        "wheel_measured": [
+          1.7121769189834595,
+          1.6413323879241943
+        ],
+        "wheel_target": [
+          1.9490227699279785,
+          1.6601145267486572
+        ],
+        "actuator_force": [
+          0.0002378102150066146,
+          0.007888080144660324,
+          0.008072617024155892,
+          0.05398177845692921,
+          0.05371498080721112,
+          0.03320981911630874,
+          0.0030995298939766047
+        ]
+      },
+      "interpretation": "MuJoCo diagnostic, not an Isaac success-rate estimate",
+      "functional": {
+        "definition": {
+          "version": "basic_remote_v1",
+          "settle_seconds": 0.6,
+          "minimum_segment_seconds": 0.6,
+          "command_deadband": [
+            0.005,
+            0.015
+          ],
+          "minimum_response_ratio": 0.2,
+          "maximum_response_ratio": 2.5,
+          "required_response_fraction": 0.9,
+          "stop_excursion_m": 0.03,
+          "stop_heading_excursion_rad": 0.1
+        },
+        "count": 1,
+        "stable_completed": 0,
+        "coverage_complete": 1,
+        "functional_pass": 0,
+        "episodes": [
+          {
+            "complete": false,
+            "coverage_complete": true,
+            "response_checks": 6,
+            "response_fraction": 1.0,
+            "response_ratio_min": 0.9779401015052185,
+            "response_ratio_max": 1.2736485213041306,
+            "stop_segments": 1,
+            "stop_segments_passed": 1,
+            "max_stop_excursion_m": 0.00521420145485184,
+            "max_stop_heading_excursion_rad": 0.014197498559951782,
+            "functional_pass": false
+          }
+        ]
+      }
+    },
+    "exit_code": 2,
+    "trace_sha256": "3b0df4b6d56260559e5a7a154c697c6a9b5141d55f24bfe1f505bf18556c6b46",
+    "raw_directory": "outputs/cycle21_mujoco/b_two_calls"
+  },
+  "b_turn_takeover": {
+    "summary": {
+      "policy": "cycle21_parent_b_r42",
+      "checkpoint_sha256": "8078f430e3389c52ddca1a900ef565bff9068a40858038c1335091feb473d9e4",
+      "transition_contract": "linear_heading",
+      "development_intervention": false,
+      "source_model_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+      "mujoco_version": "3.16.0",
+      "scenario": "mixed",
+      "forward_speed": 0.15,
+      "turn_rate": 0.5,
+      "takeover_yaw": 0.5,
+      "command_scale": 1.0,
+      "frame": 0.0,
+      "wall_seconds": 36.585706061683595,
+      "simulated_seconds": 40.020000000002945,
+      "entered_balance": false,
+      "requested_cycles": 1,
+      "completed_cycles": 0,
+      "interrupted_calls": 1,
+      "last_exit_code": 8192,
+      "failure_code": 0,
+      "events": [
+        {
+          "time": 3.1799999999998714,
+          "phase": 1
+        },
+        {
+          "time": 3.719999999999812,
+          "phase": 4
+        },
+        {
+          "time": 3.719999999999812,
+          "interrupted_call": 1,
+          "failure_code": 8192,
+          "exit_phase": 1,
+          "ordinary_pose": true
+        }
+      ],
+      "maximum_front_height": 0.08331657946109772,
+      "final": {
+        "time": 40.020000000002945,
+        "phase": 0,
+        "phase_time": 0.0,
+        "armed": false,
+        "failure_code": 0,
+        "cycles": 0,
+        "interruptions": 1,
+        "last_exit_code": 8192,
+        "position": [
+          0.27917391061782837,
+          0.36823543906211853,
+          0.08382707834243774
+        ],
+        "gravity": [
+          -0.0011325570521876216,
+          -0.0006698209326714277,
+          -0.9999991059303284
+        ],
+        "front_z": 0.04493756964802742,
+        "rear_fraction": 1.0,
+        "four_fraction": 0.8333333134651184,
+        "raw": [
+          0.15000000596046448,
+          0.5
+        ],
+        "command": [
+          0.15000000596046448,
+          0.5
+        ],
+        "requested": [
+          0.15000000596046448,
+          0.5
+        ],
+        "motion": [
+          0.15001316368579865,
+          0.5071913599967957
+        ],
+        "interval_motion": [
+          0.15006528794765472,
+          0.5078494548797607
+        ],
+        "yaw": 1.0602046251296997,
+        "instant": [
+          0.15004344284534454,
+          0.49824458360671997
+        ],
+        "frame": [
+          -0.006783223245292902,
+          -0.008634812198579311
+        ],
+        "frame_target": [
+          0.0,
+          0.0
+        ],
+        "wheel_measured": [
+          4.019733428955078,
+          6.063760757446289
+        ],
+        "wheel_target": [
+          3.6621737480163574,
+          6.575769901275635
+        ],
+        "actuator_force": [
+          -0.0009185014806623655,
+          0.007874957764317393,
+          0.008106664548291034,
+          0.03014292722218055,
+          0.03738461354541991,
+          -0.04949676687752114,
+          0.07138172222041994
+        ]
+      },
+      "interpretation": "MuJoCo diagnostic, not an Isaac success-rate estimate",
+      "functional": {
+        "definition": {
+          "version": "basic_remote_v1",
+          "settle_seconds": 0.6,
+          "minimum_segment_seconds": 0.6,
+          "command_deadband": [
+            0.005,
+            0.015
+          ],
+          "minimum_response_ratio": 0.2,
+          "maximum_response_ratio": 2.5,
+          "required_response_fraction": 0.9,
+          "stop_excursion_m": 0.03,
+          "stop_heading_excursion_rad": 0.1
+        },
+        "count": 1,
+        "stable_completed": 0,
+        "coverage_complete": 0,
+        "functional_pass": 0,
+        "episodes": [
+          {
+            "complete": false,
+            "coverage_complete": false,
+            "response_checks": 0,
+            "response_fraction": null,
+            "response_ratio_min": null,
+            "response_ratio_max": null,
+            "stop_segments": 0,
+            "stop_segments_passed": 0,
+            "max_stop_excursion_m": null,
+            "max_stop_heading_excursion_rad": null,
+            "functional_pass": false
+          }
+        ]
+      }
+    },
+    "exit_code": 2,
+    "trace_sha256": "fca1f220fee2e549150d6131be184e04584759ebd4f55412ac92f6eaec54efa4",
+    "raw_directory": "outputs/cycle21_mujoco/b_turn_takeover"
+  },
+  "b_frame_positive": {
+    "summary": {
+      "policy": "cycle21_parent_b_r42",
+      "checkpoint_sha256": "8078f430e3389c52ddca1a900ef565bff9068a40858038c1335091feb473d9e4",
+      "transition_contract": "linear_heading",
+      "development_intervention": false,
+      "source_model_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+      "mujoco_version": "3.16.0",
+      "scenario": "mixed",
+      "forward_speed": 0.05,
+      "turn_rate": 0.15,
+      "takeover_yaw": 0.0,
+      "command_scale": 1.0,
+      "frame": 0.15,
+      "wall_seconds": 21.1119705690071,
+      "simulated_seconds": 23.639999999997777,
+      "entered_balance": true,
+      "requested_cycles": 1,
+      "completed_cycles": 1,
+      "interrupted_calls": 0,
+      "last_exit_code": 0,
+      "failure_code": 0,
+      "events": [
+        {
+          "time": 3.1799999999998714,
+          "phase": 1
+        },
+        {
+          "time": 4.079999999999773,
+          "phase": 2
+        },
+        {
+          "time": 22.199999999998575,
+          "phase": 3
+        },
+        {
+          "time": 22.67999999999831,
+          "phase": 4
+        },
+        {
+          "time": 23.639999999997777,
+          "completed_cycle": 1
+        }
+      ],
+      "maximum_front_height": 0.18605244159698486,
+      "final": {
+        "time": 23.639999999997777,
+        "phase": 0,
+        "phase_time": 0.0,
+        "armed": false,
+        "failure_code": 0,
+        "cycles": 1,
+        "interruptions": 0,
+        "last_exit_code": 0,
+        "position": [
+          0.46721991896629333,
+          0.011693195439875126,
+          0.08217969536781311
+        ],
+        "gravity": [
+          -0.15248790383338928,
+          -2.7562582545215264e-05,
+          -0.9883053302764893
+        ],
+        "front_z": 0.04502774775028229,
+        "rear_fraction": 1.0,
+        "four_fraction": 1.0,
+        "raw": [
+          0.05000000074505806,
+          0.0
+        ],
+        "command": [
+          0.05000000074505806,
+          0.0
+        ],
+        "requested": [
+          0.05000000074505806,
+          0.0
+        ],
+        "motion": [
+          0.04085511341691017,
+          0.0006894778343848884
+        ],
+        "interval_motion": [
+          0.0,
+          0.0
+        ],
+        "yaw": 0.36563900113105774,
+        "instant": [
+          0.04125446081161499,
+          0.0007835819269530475
+        ],
+        "frame": [
+          0.1435362547636032,
+          0.14350618422031403
+        ],
+        "frame_target": [
+          0.15000000596046448,
+          0.15000000596046448
+        ],
+        "wheel_measured": [
+          1.3960967063903809,
+          1.415585994720459
+        ],
+        "wheel_target": [
+          1.4825026988983154,
+          1.561323642730713
+        ],
+        "actuator_force": [
+          -1.6169935122698413e-05,
+          0.008331097375996228,
+          0.008550232034342107,
+          0.0261901058600157,
+          0.02647525188479265,
+          0.012578208454736783,
+          0.02055056345199821
+        ]
+      },
+      "interpretation": "MuJoCo diagnostic, not an Isaac success-rate estimate",
+      "functional": {
+        "definition": {
+          "version": "basic_remote_v1",
+          "settle_seconds": 0.6,
+          "minimum_segment_seconds": 0.6,
+          "command_deadband": [
+            0.005,
+            0.015
+          ],
+          "minimum_response_ratio": 0.2,
+          "maximum_response_ratio": 2.5,
+          "required_response_fraction": 0.9,
+          "stop_excursion_m": 0.03,
+          "stop_heading_excursion_rad": 0.1
+        },
+        "count": 1,
+        "stable_completed": 1,
+        "coverage_complete": 1,
+        "functional_pass": 1,
+        "episodes": [
+          {
+            "complete": true,
+            "coverage_complete": true,
+            "response_checks": 6,
+            "response_fraction": 1.0,
+            "response_ratio_min": 0.9686670822458546,
+            "response_ratio_max": 1.2717833191156387,
+            "stop_segments": 1,
+            "stop_segments_passed": 1,
+            "max_stop_excursion_m": 0.006442605972571713,
+            "max_stop_heading_excursion_rad": 0.01533806324005127,
+            "functional_pass": true
+          }
+        ]
+      }
+    },
+    "exit_code": 0,
+    "trace_sha256": "966d5cb346313592839a03e2872378020cd13806c346ba06efd68b03fe9a9786",
+    "raw_directory": "outputs/cycle21_mujoco/b_frame_positive"
+  }
+}

@@ -18,6 +18,16 @@ CONTRACT = dict(version='independent_full_range_v2', wheel_radius=.03,
     admission='physical_four_wheel_and_actual_motion_training_only',
     admission_response_cap=[.02,.06])
 
+# A training data distribution, never a deployment or evaluation envelope.
+# Fixed environment strata preserve step coverage even when hard calls end early.
+TRAINING_MIXTURE = dict(version='stratified_v1', assignment='contiguous_equal_environment_strata',
+    evaluation='disabled', levels=[
+        dict(name='retention', motion=[.05,.15], frame=[-.2,.2]),
+        dict(name='motion_medium', motion=[.15,.5], frame=[-.2,.2]),
+        dict(name='motion_higher', motion=[.3,1.5], frame=[-.2,.2]),
+        dict(name='frame_full', motion=[.05,.15], frame=[-1.,1.2]),
+        dict(name='full', motion=[.75,15.], frame=[-1.,1.2])])
+
 
 def project_command(command, wheel_limit=25.):
     """Radial projection onto |v|/r + |yaw|*b/(2r) <= wheel_limit."""
@@ -36,8 +46,12 @@ class FullRangeProgress(ContinuousProgress):
     warmup_timeout=24.
     rise_timeout=5.
 
-    def __init__(self,*args,**kwargs):
+    def __init__(self,*args,training_mixture='off',**kwargs):
         super().__init__(*args,**kwargs)
+        assert training_mixture in ('off','stratified_v1')
+        self.training_mixture=training_mixture
+        self.training_level=torch.arange(self.n,device=self.device)*5//self.n
+        if training_mixture=='off':self.training_level[:]=-1
         z=lambda:torch.zeros(self.n,device=self.device)
         self.lift_seen=z().bool()
         self.return_dwell=z()
@@ -46,16 +60,25 @@ class FullRangeProgress(ContinuousProgress):
         self.exit_phase=z().long()
         self.requested=torch.zeros(self.n,2,device=self.device)
 
+    def sampling_limits(self,ids):
+        limits=self.raw.new_tensor([self.speed_limit,self.yaw_limit]).expand(len(ids),2)
+        if self.training_mixture!='off':
+            tier=self.raw.new_tensor([x['motion'] for x in TRAINING_MIXTURE['levels']])[self.training_level[ids]]
+            limits=torch.minimum(limits,tier)
+        return limits
+
     def sample_commands(self,ids):
         # Keep the six-class sequence; sample interior, boundary, and regression
         # amplitudes explicitly instead of a rectangular unreachable envelope.
         super().sample_commands(ids)
+        limits=self.sampling_limits(ids)
+        if self.training_mixture!='off':
+            self.raw[ids]*=limits/self.raw.new_tensor([self.speed_limit,self.yaw_limit])
         command=project_command(self.raw[ids])
         choice=self.uniform(ids,15)
         low=choice<CONTRACT['low_range_sample_fraction']
-        limits=command.new_tensor([self.speed_limit,self.yaw_limit])
         small=torch.minimum(limits,command.new_tensor([.05,.15]))
-        command[low]=self.raw[ids][low]*small/limits
+        command[low]=self.raw[ids][low]*small[low]/limits[low]
         boundary=(choice>=.20)&(choice<.45)&(self.mode[ids]!=5)
         demand=command[:,0].abs()/.75+command[:,1].abs()/15.
         # Do not expand diagnostic evaluation beyond its declared envelope.
@@ -74,6 +97,13 @@ class FullRangeProgress(ContinuousProgress):
 
     def reset(self,ids,pos,heading):
         super().reset(ids,pos,heading)
+        if self.training_mixture!='off':
+            bounds=self.raw.new_tensor([x['frame'] for x in TRAINING_MIXTURE['levels']])[self.training_level[ids]]
+            lo=bounds[:,0].clamp_min(self.frame_range[0]);hi=bounds[:,1].clamp_max(self.frame_range[1])
+            assert (hi>=lo).all(), 'Training stratum outside frame envelope'
+            span=max(self.frame_range[1]-self.frame_range[0],1e-8)
+            for value in (self.frame,self.destination):
+                value[ids]=lo+(value[ids]-self.frame_range[0])/span*(hi-lo)
         for value in (self.lift_seen,self.return_dwell,self.interrupted,self.interrupt_reason,self.exit_phase):
             value[ids]=0
         self.requested[ids]=self.raw[ids]
@@ -139,6 +169,7 @@ class FullRangeProgress(ContinuousProgress):
         result['failure_code'] |= accidental.long()*(1<<13)
         result.update(interrupted=self.interrupted.clone(),interrupt_reason=self.interrupt_reason.clone(),
             exit_phase=self.exit_phase.clone(),lift_seen=self.lift_seen.clone(),
+            training_level=self.training_level.clone(),
             requested_command=self.requested.clone(),effective_request=effective_request(self),
             actual_admission=moving.clone(),geometry_ground=ground,wheel_gap=gap)
         self.result=result

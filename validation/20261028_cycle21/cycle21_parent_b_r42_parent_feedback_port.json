@@ -1,0 +1,50 @@
+{
+  "passed": true,
+  "source": "pinned training attach_balance_reflex with full_parent=True",
+  "cases": [
+    {
+      "phase": 0,
+      "phase_time": 0.0,
+      "substeps": 30
+    },
+    {
+      "phase": 1,
+      "phase_time": 0.6,
+      "substeps": 30
+    },
+    {
+      "phase": 2,
+      "phase_time": 0.0,
+      "substeps": 30
+    },
+    {
+      "phase": 2,
+      "phase_time": 1.74,
+      "substeps": 30
+    },
+    {
+      "phase": 2,
+      "phase_time": 1.8,
+      "substeps": 30
+    },
+    {
+      "phase": 2,
+      "phase_time": 4.0,
+      "substeps": 30
+    },
+    {
+      "phase": 3,
+      "phase_time": 0.6,
+      "substeps": 30
+    },
+    {
+      "phase": 4,
+      "phase_time": 0.6,
+      "substeps": 30
+    }
+  ],
+  "physics_substeps": 240,
+  "max_target_error": 0.0,
+  "parent_unchanged": true,
+  "note": "Synthetic physical observations validate controller wiring and clocks; separate real MuJoCo scenarios validate closed-loop behavior."
+}

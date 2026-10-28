@@ -33,7 +33,9 @@ class Keyboard:
                 (int(glfw.KEY_A in self.down)-int(glfw.KEY_D in self.down))*yaw)
 
 
-def run_viewer(sim, smoke_seconds=None):
+def run_viewer(sim, smoke_seconds=None, forward_speed=None, turn_rate=None):
+    forward_speed = sim.controller.speed_limit if forward_speed is None else forward_speed
+    turn_rate = sim.controller.yaw_limit if turn_rate is None else turn_rate
     if not glfw.init():
         raise RuntimeError('GLFW could not open a display. Run on a desktop, or use --headless.')
     window = glfw.create_window(1280,800,'PetBot upright - MuJoCo',None,None)
@@ -76,7 +78,7 @@ def run_viewer(sim, smoke_seconds=None):
                 next_step = time.monotonic()
                 keys.reset = keys.toggle = False
             c = sim.controller
-            c.set_command(*keys.command(c.speed_limit,c.yaw_limit))
+            c.set_command(*keys.command(forward_speed,turn_rate))
             if keys.toggle:
                 c.toggle()
                 keys.toggle = False

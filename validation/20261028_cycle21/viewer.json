@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "exit_code": 0,
+  "method": "Xvfb software OpenGL window startup, not desktop human acceptance",
+  "policy": "cycle21_parent_b_r42",
+  "forward_speed": 0.15,
+  "turn_rate": 0.5
+}

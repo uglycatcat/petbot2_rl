@@ -1,0 +1,855 @@
+{
+  "passed": true,
+  "cases": {
+    "b_stationary": {
+      "passed": true,
+      "source_model_unchanged": true,
+      "wheel_target_max": 24.728164672851562,
+      "actual_wheel_max": 29.18831443786621,
+      "rear_effort_max": 0.38,
+      "position_effort_max": [
+        0.009744326953402906,
+        0.016482832424943257,
+        0.016469453438579244,
+        0.2906897506530093,
+        0.2981833922009525
+      ],
+      "frame_target_range": [
+        0.0,
+        0.9000000357627869
+      ],
+      "actual_frame_range": [
+        -0.015598722733557224,
+        0.864346981048584
+      ],
+      "max_target_step": {
+        "frame_target": 0.18000000715255737,
+        "wheel_target": 28.799999237060547
+      },
+      "stages": [
+        {
+          "phase": 0,
+          "start": 0.06000000000000004,
+          "end": 3.119999999999878,
+          "heading_anchor": 1.5874436209983855e-09,
+          "maximum_heading_deg": 5.42687479495468e-07,
+          "max_forward": 0.0016875944565981627,
+          "max_yaw_rate": 1.1319700732315141e-08
+        },
+        {
+          "phase": 1,
+          "start": 3.1799999999998714,
+          "end": 3.9599999999997855,
+          "heading_anchor": 1.0035261510665805e-08,
+          "maximum_heading_deg": 0.03319681910088224,
+          "max_forward": 0.29604917764663696,
+          "max_yaw_rate": 0.0036778494250029325
+        },
+        {
+          "phase": 2,
+          "start": 4.019999999999779,
+          "end": 22.07999999999864,
+          "heading_anchor": 0.00012549635721370578,
+          "maximum_heading_deg": 0.2032121050162834,
+          "max_forward": 0.018208395689725876,
+          "max_yaw_rate": 0.004740019328892231
+        },
+        {
+          "phase": 3,
+          "start": 22.139999999998608,
+          "end": 22.559999999998375,
+          "heading_anchor": -0.00014211193774826825,
+          "maximum_heading_deg": 0.3110204028477264,
+          "max_forward": 0.2567521333694458,
+          "max_yaw_rate": 0.03281223028898239
+        },
+        {
+          "phase": 4,
+          "start": 22.619999999998342,
+          "end": 23.519999999997843,
+          "heading_anchor": 0.0037352179642766714,
+          "maximum_heading_deg": 0.046212086088741014,
+          "max_forward": 0.14583411812782288,
+          "max_yaw_rate": 0.029483046382665634
+        },
+        {
+          "phase": 0,
+          "start": 23.57999999999781,
+          "end": 23.57999999999781,
+          "heading_anchor": 0.0028900366742163897,
+          "maximum_heading_deg": 0.0,
+          "max_forward": 0.004609046969562769,
+          "max_yaw_rate": 0.0006457280251197517
+        }
+      ]
+    },
+    "b_low": {
+      "passed": true,
+      "source_model_unchanged": true,
+      "wheel_target_max": 25.0,
+      "actual_wheel_max": 29.24683380126953,
+      "rear_effort_max": 0.38,
+      "position_effort_max": [
+        0.01699049217675315,
+        0.010877641753008602,
+        0.010299872196896742,
+        0.2804265820135825,
+        0.2969111976466433
+      ],
+      "frame_target_range": [
+        0.0,
+        0.9000000357627869
+      ],
+      "actual_frame_range": [
+        -0.013264873996376991,
+        0.8711625933647156
+      ],
+      "max_target_step": {
+        "frame_target": 0.18000000715255737,
+        "wheel_target": 28.799999237060547
+      },
+      "stages": [
+        {
+          "phase": 0,
+          "start": 0.06000000000000004,
+          "end": 3.119999999999878,
+          "heading_anchor": 1.8663735090740374e-07,
+          "maximum_heading_deg": 0.01007963864335123,
+          "max_forward": 0.05081326141953468,
+          "max_yaw_rate": 0.0007239638362079859
+        },
+        {
+          "phase": 1,
+          "start": 3.1799999999998714,
+          "end": 3.899999999999792,
+          "heading_anchor": 3.342195486766286e-05,
+          "maximum_heading_deg": 2.5069488683116203,
+          "max_forward": 0.3515666425228119,
+          "max_yaw_rate": 0.2264355719089508
+        },
+        {
+          "phase": 2,
+          "start": 3.9599999999997855,
+          "end": 22.019999999998674,
+          "heading_anchor": 0.006366937421262264,
+          "maximum_heading_deg": 29.997468595552125,
+          "max_forward": 0.16727671027183533,
+          "max_yaw_rate": 0.18468590080738068
+        },
+        {
+          "phase": 3,
+          "start": 22.07999999999864,
+          "end": 22.49999999999841,
+          "heading_anchor": 0.4123134911060333,
+          "maximum_heading_deg": 0.5575073608131208,
+          "max_forward": 0.32390332221984863,
+          "max_yaw_rate": 0.04507716745138168
+        },
+        {
+          "phase": 4,
+          "start": 22.559999999998375,
+          "end": 23.459999999997876,
+          "heading_anchor": 0.3991198241710663,
+          "maximum_heading_deg": 0.7146017117234141,
+          "max_forward": 0.26158037781715393,
+          "max_yaw_rate": 0.048653535544872284
+        },
+        {
+          "phase": 0,
+          "start": 23.519999999997843,
+          "end": 23.519999999997843,
+          "heading_anchor": 0.4103778302669525,
+          "maximum_heading_deg": 0.0,
+          "max_forward": 0.03882645070552826,
+          "max_yaw_rate": 0.0011071122717112303
+        }
+      ]
+    },
+    "b_medium": {
+      "passed": true,
+      "source_model_unchanged": true,
+      "wheel_target_max": 25.0,
+      "actual_wheel_max": 30.325069427490234,
+      "rear_effort_max": 0.38,
+      "position_effort_max": [
+        0.016620237812538456,
+        0.01199253787938695,
+        0.011391500284712528,
+        0.457663749033824,
+        0.45511798506454076
+      ],
+      "frame_target_range": [
+        0.0,
+        1.025017499923706
+      ],
+      "actual_frame_range": [
+        -0.013859758153557777,
+        0.996488094329834
+      ],
+      "max_target_step": {
+        "frame_target": 0.18000000715255737,
+        "wheel_target": 28.799999237060547
+      },
+      "stages": [
+        {
+          "phase": 0,
+          "start": 0.06000000000000004,
+          "end": 3.119999999999878,
+          "heading_anchor": 1.8663735090740374e-07,
+          "maximum_heading_deg": 0.004620289784101194,
+          "max_forward": 0.15437830984592438,
+          "max_yaw_rate": 0.0004092420276720077
+        },
+        {
+          "phase": 1,
+          "start": 3.1799999999998714,
+          "end": 4.019999999999779,
+          "heading_anchor": 7.000584446359426e-05,
+          "maximum_heading_deg": 1.8221102797341464,
+          "max_forward": 0.32973888516426086,
+          "max_yaw_rate": 0.13477391004562378
+        },
+        {
+          "phase": 2,
+          "start": 4.079999999999773,
+          "end": 64.08000000003206,
+          "heading_anchor": -0.001086253090761602,
+          "maximum_heading_deg": 179.70656538796771,
+          "max_forward": 0.42222216725349426,
+          "max_yaw_rate": 0.5547484755516052
+        },
+        {
+          "phase": 3,
+          "start": 64.14000000003192,
+          "end": 64.50000000003108,
+          "heading_anchor": -1.259162425994873,
+          "maximum_heading_deg": 3.1520366793125043,
+          "max_forward": 0.28021132946014404,
+          "max_yaw_rate": 0.5337576866149902
+        },
+        {
+          "phase": 4,
+          "start": 64.56000000003094,
+          "end": 65.46000000002884,
+          "heading_anchor": -1.2661595344543457,
+          "maximum_heading_deg": 0.9841346367504572,
+          "max_forward": 0.24521462619304657,
+          "max_yaw_rate": 0.19912011921405792
+        },
+        {
+          "phase": 0,
+          "start": 65.5200000000287,
+          "end": 65.5200000000287,
+          "heading_anchor": -1.2617459297180176,
+          "maximum_heading_deg": 0.0,
+          "max_forward": 0.16426703333854675,
+          "max_yaw_rate": 0.008385125547647476
+        }
+      ]
+    },
+    "b_higher": {
+      "passed": true,
+      "source_model_unchanged": true,
+      "wheel_target_max": 25.0,
+      "actual_wheel_max": 29.866697311401367,
+      "rear_effort_max": 0.38,
+      "position_effort_max": [
+        0.035039828081034216,
+        0.012395001328348285,
+        0.01160922238146554,
+        0.37246773241571574,
+        0.43952012087393283
+      ],
+      "frame_target_range": [
+        0.0,
+        0.8472923040390015
+      ],
+      "actual_frame_range": [
+        -0.023724811151623726,
+        0.8183518648147583
+      ],
+      "max_target_step": {
+        "frame_target": 0.18000000715255737,
+        "wheel_target": 28.799999237060547
+      },
+      "stages": [
+        {
+          "phase": 0,
+          "start": 0.06000000000000004,
+          "end": 3.119999999999878,
+          "heading_anchor": 1.8663735090740374e-07,
+          "maximum_heading_deg": 0.016242224548431897,
+          "max_forward": 0.309396892786026,
+          "max_yaw_rate": 0.0013427070807665586
+        },
+        {
+          "phase": 1,
+          "start": 3.1799999999998714,
+          "end": 4.079999999999773,
+          "heading_anchor": -0.0001744628680171445,
+          "maximum_heading_deg": 3.0685903414005713,
+          "max_forward": 0.29689452052116394,
+          "max_yaw_rate": 0.29482683539390564
+        },
+        {
+          "phase": 2,
+          "start": 4.139999999999766,
+          "end": 7.679999999999376,
+          "heading_anchor": 0.002393066417425871,
+          "maximum_heading_deg": 23.989308033395616,
+          "max_forward": 0.44660016894340515,
+          "max_yaw_rate": 1.368272304534912
+        },
+        {
+          "phase": 0,
+          "start": 7.73999999999937,
+          "end": 82.01999999999025,
+          "heading_anchor": 0.4362609088420868,
+          "maximum_heading_deg": 179.7031156961272,
+          "max_forward": 0.44902005791664124,
+          "max_yaw_rate": 1.8193670511245728
+        }
+      ],
+      "ordinary_after_interruption_seconds": 74.27999999999088,
+      "no_automatic_reentry": true
+    },
+    "b_full": {
+      "passed": true,
+      "source_model_unchanged": true,
+      "wheel_target_max": 25.0,
+      "actual_wheel_max": 25.34636116027832,
+      "rear_effort_max": 0.38,
+      "position_effort_max": [
+        0.019537895346755978,
+        0.009817166426997665,
+        0.010901046497144113,
+        0.18161987819267048,
+        0.21335151474519842
+      ],
+      "frame_target_range": [
+        -0.01326066255569458,
+        0.07866835594177246
+      ],
+      "actual_frame_range": [
+        -0.024233613163232803,
+        0.024145737290382385
+      ],
+      "max_target_step": {
+        "frame_target": 0.07866835594177246,
+        "wheel_target": 23.156148672103882
+      },
+      "stages": [
+        {
+          "phase": 0,
+          "start": 0.06000000000000004,
+          "end": 3.119999999999878,
+          "heading_anchor": 1.8663735090740374e-07,
+          "maximum_heading_deg": 0.09686138858111215,
+          "max_forward": 0.7372688055038452,
+          "max_yaw_rate": 0.0031486498191952705
+        },
+        {
+          "phase": 1,
+          "start": 3.1799999999998714,
+          "end": 8.099999999999374,
+          "heading_anchor": -0.0008892535115592182,
+          "maximum_heading_deg": 1.2619952332374522,
+          "max_forward": 0.7370705008506775,
+          "max_yaw_rate": 0.11411377042531967
+        },
+        {
+          "phase": 0,
+          "start": 8.159999999999394,
+          "end": 40.020000000002945,
+          "heading_anchor": -0.0008881826652213931,
+          "maximum_heading_deg": 0.3222525472186865,
+          "max_forward": 0.7374566197395325,
+          "max_yaw_rate": 0.0033217950258404016
+        }
+      ],
+      "ordinary_after_interruption_seconds": 31.860000000003552,
+      "no_automatic_reentry": true
+    },
+    "a_low": {
+      "passed": true,
+      "source_model_unchanged": true,
+      "wheel_target_max": 25.0,
+      "actual_wheel_max": 29.246917724609375,
+      "rear_effort_max": 0.38,
+      "position_effort_max": [
+        0.0109818510036242,
+        0.011867812128077856,
+        0.012454332693283216,
+        0.29090095702219354,
+        0.2980079373175798
+      ],
+      "frame_target_range": [
+        0.0,
+        0.9000000357627869
+      ],
+      "actual_frame_range": [
+        -0.013264873996376991,
+        0.8651631474494934
+      ],
+      "max_target_step": {
+        "frame_target": 0.18000000715255737,
+        "wheel_target": 28.799999237060547
+      },
+      "stages": [
+        {
+          "phase": 0,
+          "start": 0.06000000000000004,
+          "end": 3.119999999999878,
+          "heading_anchor": 1.8663735090740374e-07,
+          "maximum_heading_deg": 0.01007963864335123,
+          "max_forward": 0.05081326141953468,
+          "max_yaw_rate": 0.0007239638362079859
+        },
+        {
+          "phase": 1,
+          "start": 3.1799999999998714,
+          "end": 3.9599999999997855,
+          "heading_anchor": 3.342195486766286e-05,
+          "maximum_heading_deg": 0.7938771854889706,
+          "max_forward": 0.2831723093986511,
+          "max_yaw_rate": 0.07017426192760468
+        },
+        {
+          "phase": 2,
+          "start": 4.019999999999779,
+          "end": 22.07999999999864,
+          "heading_anchor": 0.0031270284671336412,
+          "maximum_heading_deg": 29.551886357389026,
+          "max_forward": 0.05993666499853134,
+          "max_yaw_rate": 0.18811951577663422
+        },
+        {
+          "phase": 3,
+          "start": 22.139999999998608,
+          "end": 22.559999999998375,
+          "heading_anchor": 0.382572740316391,
+          "maximum_heading_deg": 0.5125527632433894,
+          "max_forward": 0.2737850546836853,
+          "max_yaw_rate": 0.04838328808546066
+        },
+        {
+          "phase": 4,
+          "start": 22.619999999998342,
+          "end": 23.519999999997843,
+          "heading_anchor": 0.37162062525749207,
+          "maximum_heading_deg": 0.09702625225461613,
+          "max_forward": 0.17261376976966858,
+          "max_yaw_rate": 0.042503442615270615
+        },
+        {
+          "phase": 0,
+          "start": 23.57999999999781,
+          "end": 23.57999999999781,
+          "heading_anchor": 0.373399943113327,
+          "maximum_heading_deg": 0.0,
+          "max_forward": 0.042998723685741425,
+          "max_yaw_rate": 0.000968264474067837
+        }
+      ]
+    },
+    "a_medium": {
+      "passed": true,
+      "source_model_unchanged": true,
+      "wheel_target_max": 25.0,
+      "actual_wheel_max": 33.585506439208984,
+      "rear_effort_max": 0.38,
+      "position_effort_max": [
+        0.027548157802623752,
+        0.025752934530026715,
+        0.024994239851246897,
+        0.5953600441198429,
+        0.5864076188085158
+      ],
+      "frame_target_range": [
+        0.0,
+        1.0202157497406006
+      ],
+      "actual_frame_range": [
+        -0.029084479436278343,
+        0.9983277916908264
+      ],
+      "max_target_step": {
+        "frame_target": 0.18000000715255737,
+        "wheel_target": 28.799999237060547
+      },
+      "stages": [
+        {
+          "phase": 0,
+          "start": 0.06000000000000004,
+          "end": 3.119999999999878,
+          "heading_anchor": 1.8663735090740374e-07,
+          "maximum_heading_deg": 0.004620289784101194,
+          "max_forward": 0.15437830984592438,
+          "max_yaw_rate": 0.0004092420276720077
+        },
+        {
+          "phase": 1,
+          "start": 3.1799999999998714,
+          "end": 4.079999999999773,
+          "heading_anchor": 7.000584446359426e-05,
+          "maximum_heading_deg": 0.999808330908973,
+          "max_forward": 0.24376201629638672,
+          "max_yaw_rate": 0.10235995799303055
+        },
+        {
+          "phase": 2,
+          "start": 4.139999999999766,
+          "end": 18.78000000000047,
+          "heading_anchor": 0.0003153890429530293,
+          "maximum_heading_deg": 83.23492774730113,
+          "max_forward": 0.9151881337165833,
+          "max_yaw_rate": 0.5937522649765015
+        },
+        {
+          "phase": 0,
+          "start": 18.840000000000437,
+          "end": 82.01999999999025,
+          "heading_anchor": 0.724936306476593,
+          "maximum_heading_deg": 179.59873481031266,
+          "max_forward": 0.8689359426498413,
+          "max_yaw_rate": 0.7061773538589478
+        }
+      ],
+      "ordinary_after_interruption_seconds": 63.17999999998981,
+      "no_automatic_reentry": true
+    },
+    "b_low180": {
+      "passed": true,
+      "source_model_unchanged": true,
+      "wheel_target_max": 25.0,
+      "actual_wheel_max": 29.24683380126953,
+      "rear_effort_max": 0.38,
+      "position_effort_max": [
+        0.01125126617898007,
+        0.011387329589560374,
+        0.010462474205717253,
+        0.4790250121154146,
+        0.4978816100980765
+      ],
+      "frame_target_range": [
+        0.0,
+        0.9000000357627869
+      ],
+      "actual_frame_range": [
+        -0.01769384555518627,
+        0.8711625933647156
+      ],
+      "max_target_step": {
+        "frame_target": 0.18000000715255737,
+        "wheel_target": 28.799999237060547
+      },
+      "stages": [
+        {
+          "phase": 0,
+          "start": 0.06000000000000004,
+          "end": 3.119999999999878,
+          "heading_anchor": 1.8663735090740374e-07,
+          "maximum_heading_deg": 0.01007963864335123,
+          "max_forward": 0.05081326141953468,
+          "max_yaw_rate": 0.0007239638362079859
+        },
+        {
+          "phase": 1,
+          "start": 3.1799999999998714,
+          "end": 3.899999999999792,
+          "heading_anchor": 3.342195486766286e-05,
+          "maximum_heading_deg": 2.5069488683116203,
+          "max_forward": 0.3515666425228119,
+          "max_yaw_rate": 0.2264355719089508
+        },
+        {
+          "phase": 2,
+          "start": 3.9599999999997855,
+          "end": 183.96000000015027,
+          "heading_anchor": 0.006366937421262264,
+          "maximum_heading_deg": 179.9126113117107,
+          "max_forward": 0.16727671027183533,
+          "max_yaw_rate": 0.18862242996692657
+        },
+        {
+          "phase": 3,
+          "start": 184.02000000015056,
+          "end": 184.50000000015285,
+          "heading_anchor": -2.574913263320923,
+          "maximum_heading_deg": 0.5768504565425969,
+          "max_forward": 0.5263466835021973,
+          "max_yaw_rate": 0.05985037237405777
+        },
+        {
+          "phase": 4,
+          "start": 184.56000000015314,
+          "end": 185.46000000015744,
+          "heading_anchor": -2.5906755924224854,
+          "maximum_heading_deg": 0.5876694761878971,
+          "max_forward": 0.47368448972702026,
+          "max_yaw_rate": 0.10453718155622482
+        },
+        {
+          "phase": 0,
+          "start": 185.52000000015772,
+          "end": 185.52000000015772,
+          "heading_anchor": -2.5907623767852783,
+          "maximum_heading_deg": 0.0,
+          "max_forward": 0.025769762694835663,
+          "max_yaw_rate": 0.002294890582561493
+        }
+      ]
+    },
+    "b_two_calls": {
+      "passed": true,
+      "source_model_unchanged": true,
+      "wheel_target_max": 25.0,
+      "actual_wheel_max": 34.792724609375,
+      "rear_effort_max": 0.38,
+      "position_effort_max": [
+        0.029713665431256968,
+        0.015374305573499626,
+        0.012688439127673642,
+        0.2804265820135825,
+        0.2969111976466433
+      ],
+      "frame_target_range": [
+        -0.05821126699447632,
+        0.9000000357627869
+      ],
+      "actual_frame_range": [
+        -0.08945206552743912,
+        0.8711625933647156
+      ],
+      "max_target_step": {
+        "frame_target": 0.18000000715255737,
+        "wheel_target": 28.799999237060547
+      },
+      "stages": [
+        {
+          "phase": 0,
+          "start": 0.06000000000000004,
+          "end": 3.119999999999878,
+          "heading_anchor": 1.8663735090740374e-07,
+          "maximum_heading_deg": 0.01007963864335123,
+          "max_forward": 0.05081326141953468,
+          "max_yaw_rate": 0.0007239638362079859
+        },
+        {
+          "phase": 1,
+          "start": 3.1799999999998714,
+          "end": 3.899999999999792,
+          "heading_anchor": 3.342195486766286e-05,
+          "maximum_heading_deg": 2.5069488683116203,
+          "max_forward": 0.3515666425228119,
+          "max_yaw_rate": 0.2264355719089508
+        },
+        {
+          "phase": 2,
+          "start": 3.9599999999997855,
+          "end": 22.019999999998674,
+          "heading_anchor": 0.006366937421262264,
+          "maximum_heading_deg": 29.997468595552125,
+          "max_forward": 0.16727671027183533,
+          "max_yaw_rate": 0.18468590080738068
+        },
+        {
+          "phase": 3,
+          "start": 22.07999999999864,
+          "end": 22.49999999999841,
+          "heading_anchor": 0.4123134911060333,
+          "maximum_heading_deg": 0.5575073608131208,
+          "max_forward": 0.32390332221984863,
+          "max_yaw_rate": 0.04507716745138168
+        },
+        {
+          "phase": 4,
+          "start": 22.559999999998375,
+          "end": 23.459999999997876,
+          "heading_anchor": 0.3991198241710663,
+          "maximum_heading_deg": 0.7146017117234141,
+          "max_forward": 0.26158037781715393,
+          "max_yaw_rate": 0.048653535544872284
+        },
+        {
+          "phase": 0,
+          "start": 23.519999999997843,
+          "end": 26.639999999996114,
+          "heading_anchor": 0.4103778302669525,
+          "maximum_heading_deg": 0.02187709591155084,
+          "max_forward": 0.049617964774370193,
+          "max_yaw_rate": 0.0012974183773621917
+        },
+        {
+          "phase": 1,
+          "start": 26.69999999999608,
+          "end": 27.299999999995748,
+          "heading_anchor": 0.4101560711860657,
+          "maximum_heading_deg": 2.195910940800977,
+          "max_forward": 0.5672226548194885,
+          "max_yaw_rate": 0.1993192583322525
+        },
+        {
+          "phase": 2,
+          "start": 27.359999999995715,
+          "end": 27.599999999995582,
+          "heading_anchor": 0.410734623670578,
+          "maximum_heading_deg": 0.015120331275115728,
+          "max_forward": 1.0269443988800049,
+          "max_yaw_rate": 0.0016607404686510563
+        },
+        {
+          "phase": 0,
+          "start": 27.65999999999555,
+          "end": 65.04000000002982,
+          "heading_anchor": 0.3976949453353882,
+          "maximum_heading_deg": 50.73693326822667,
+          "max_forward": 1.0312727689743042,
+          "max_yaw_rate": 0.30450955033302307
+        }
+      ],
+      "ordinary_after_interruption_seconds": 37.38000000003427,
+      "no_automatic_reentry": true
+    },
+    "b_turn_takeover": {
+      "passed": true,
+      "source_model_unchanged": true,
+      "wheel_target_max": 24.92995262145996,
+      "actual_wheel_max": 35.220706939697266,
+      "rear_effort_max": 0.38,
+      "position_effort_max": [
+        0.02274167501913312,
+        0.011017031123530575,
+        0.01152601303346774,
+        0.22289908762962116,
+        0.2556190649964051
+      ],
+      "frame_target_range": [
+        -0.06776851415634155,
+        0.44180119037628174
+      ],
+      "actual_frame_range": [
+        -0.11163601279258728,
+        0.41024404764175415
+      ],
+      "max_target_step": {
+        "frame_target": 0.18000000715255737,
+        "wheel_target": 28.515846252441406
+      },
+      "stages": [
+        {
+          "phase": 0,
+          "start": 0.06000000000000004,
+          "end": 3.119999999999878,
+          "heading_anchor": 0.003847757587209344,
+          "maximum_heading_deg": 93.97687789422206,
+          "max_forward": 0.15498793125152588,
+          "max_yaw_rate": 0.6358245611190796
+        },
+        {
+          "phase": 1,
+          "start": 3.1799999999998714,
+          "end": 3.6599999999998185,
+          "heading_anchor": 1.6753727197647095,
+          "maximum_heading_deg": 1.4049767424607928,
+          "max_forward": 0.6305073499679565,
+          "max_yaw_rate": 0.5127038359642029
+        },
+        {
+          "phase": 0,
+          "start": 3.719999999999812,
+          "end": 40.020000000002945,
+          "heading_anchor": 1.6758384704589844,
+          "maximum_heading_deg": 179.69458991249573,
+          "max_forward": 0.7473872900009155,
+          "max_yaw_rate": 0.8225885629653931
+        }
+      ],
+      "ordinary_after_interruption_seconds": 36.30000000000313,
+      "no_automatic_reentry": true
+    },
+    "b_frame_positive": {
+      "passed": true,
+      "source_model_unchanged": true,
+      "wheel_target_max": 24.48736572265625,
+      "actual_wheel_max": 26.766111373901367,
+      "rear_effort_max": 0.38,
+      "position_effort_max": [
+        0.020390801011004232,
+        0.013566879438870501,
+        0.013881968749654108,
+        0.28283961374776373,
+        0.27718799138263295
+      ],
+      "frame_target_range": [
+        0.08067286014556885,
+        1.0499999523162842
+      ],
+      "actual_frame_range": [
+        0.057490672916173935,
+        1.0236420631408691
+      ],
+      "max_target_step": {
+        "frame_target": 0.18000000715255737,
+        "wheel_target": 28.799999237060547
+      },
+      "stages": [
+        {
+          "phase": 0,
+          "start": 0.06000000000000004,
+          "end": 3.119999999999878,
+          "heading_anchor": -6.6024554712385e-08,
+          "maximum_heading_deg": 0.008208695790444582,
+          "max_forward": 0.050752073526382446,
+          "max_yaw_rate": 0.0005783224478363991
+        },
+        {
+          "phase": 1,
+          "start": 3.1799999999998714,
+          "end": 4.019999999999779,
+          "heading_anchor": -8.440715464530513e-05,
+          "maximum_heading_deg": 0.2633210284763569,
+          "max_forward": 0.22177846729755402,
+          "max_yaw_rate": 0.02721799910068512
+        },
+        {
+          "phase": 2,
+          "start": 4.079999999999773,
+          "end": 22.139999999998608,
+          "heading_anchor": -0.00015452553634531796,
+          "maximum_heading_deg": 29.42022196302477,
+          "max_forward": 0.060669705271720886,
+          "max_yaw_rate": 0.18539100885391235
+        },
+        {
+          "phase": 3,
+          "start": 22.199999999998575,
+          "end": 22.619999999998342,
+          "heading_anchor": 0.38224175572395325,
+          "maximum_heading_deg": 1.3456394740463071,
+          "max_forward": 0.3019816279411316,
+          "max_yaw_rate": 0.12782073020935059
+        },
+        {
+          "phase": 4,
+          "start": 22.67999999999831,
+          "end": 23.57999999999781,
+          "heading_anchor": 0.3578106462955475,
+          "maximum_heading_deg": 0.4450056074465483,
+          "max_forward": 0.21968746185302734,
+          "max_yaw_rate": 0.08372610807418823
+        },
+        {
+          "phase": 0,
+          "start": 23.639999999997777,
+          "end": 23.639999999997777,
+          "heading_anchor": 0.36563900113105774,
+          "maximum_heading_deg": 0.0,
+          "max_forward": 0.04085511341691017,
+          "max_yaw_rate": 0.0006894778343848884
+        }
+      ]
+    }
+  },
+  "scope": "Target/effort/slew validity, not actual-speed or policy-quality acceptance"
+}
