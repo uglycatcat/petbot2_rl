@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-27",
+  "updated_at": "2026-10-28",
   "repositories": [
     {
       "name": "std_train_upright_project",
@@ -16,10 +16,10 @@
       "remote": "ours",
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "branch": "rlproj/std_s2s_upright_project",
-      "verified_commit": "af02fc44058ec30c6cc9fc70b1edbfc50507215b",
-      "status": "legacy default retained; corrected transition candidate available with known repeated/turning takeover failures",
+      "verified_commit": "33634787ddbb9342ff7a1ffd89f5012ca268c43d",
+      "status": "User-requested batch21 formal model299 preview; default parent B r42, A r43 selectable; complete frozen full-parent20ms feedback ported; batch22 training unchanged.",
       "usage": "README.md",
-      "local_validation": "correction20_gate_r42: GPU64/64 short-cycle reload; MuJoCo stationary, mixed180s and2cycles complete; third rise timeout and turning takeover failure retained. New/legacy35-case parity zero; FK200poses <=1.11e-16m; render substep refactor395frames exact, Xvfb smoke passed. Full-range training not deployed. User desktop camera fix preserved."
+      "local_validation": "A/B1024CUDA export outputs exact; four bundles35observation cases each, A/B240substep target parity exact; call interruption and Xvfb window passed.11fixed MuJoCo scenarios:6complete,5call failures retained. B low180 complete/basic;medium60complete but parking44.46mm fails basic. Higher/full/second-call/turn-takeover failures;actual wheel peak35.22rad/s while25target cap respected. No operator sim2sim acceptance."
     }
   ]
 }
