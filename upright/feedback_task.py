@@ -24,6 +24,10 @@ class FeedbackAction(base.ContinuousAction):
         if self.continuous_heading:self.fast_feedback.half_difference_limit=self.max_speed
         self.full_range=getattr(env.cfg,'task_profile','legacy')=='full_range'
         self.fast_feedback.anti_windup=self.full_range
+        self.source_ordinary=getattr(env.cfg,'capability_version','legacy')=='v25'
+        if self.source_ordinary:
+            from .ordinary import OrdinaryDrive
+            self.ordinary_drive=OrdinaryDrive(env.num_envs,env.device,self.max_speed)
 
     def process_actions(self,actions):
         previous=self.speed.clone()
@@ -62,6 +66,15 @@ class FeedbackAction(base.ContinuousAction):
             self.applied[:,1:]=self.speed/self.max_speed
             self.yaw_feedback.integral[self.inner_mask]=self.fast_feedback.integral[self.inner_mask]
             self.yaw_feedback.target[self.inner_mask]=self.fast_feedback.target[self.inner_mask]
+        if self.source_ordinary:
+            from .cycle_task import tensor
+            from .ground_motion import wheel_heading
+            p=ensure(self._env);ordinary=~p.active;d=self.robot.data
+            velocity=tensor(d.root_com_vel_w)
+            ground,_,rate=wheel_heading(tensor(d.root_link_pose_w)[:,3:7],velocity)
+            measured=torch.stack(((velocity[:,:2]*ground).sum(-1),rate),-1)
+            wheel=self.ordinary_drive.wheels(p.command,measured,self._env.physics_dt,ordinary)
+            self.speed[ordinary]=wheel[ordinary];self.applied[ordinary,1:]=wheel[ordinary]/self.max_speed
         super().apply_actions()
         self.inner_index+=1
 
@@ -70,6 +83,7 @@ class FeedbackAction(base.ContinuousAction):
         self.yaw_feedback.reset(env_ids)
         self.fast_feedback.reset(env_ids)
         ids=slice(None) if env_ids is None else env_ids
+        if self.source_ordinary:self.ordinary_drive.reset(ids)
         self.inner_mask[ids]=False
         self.inner_speed[ids]=0.;self.inner_policy[ids]=0.;self.inner_anchor[ids]=0.
 

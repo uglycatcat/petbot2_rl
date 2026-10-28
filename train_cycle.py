@@ -22,6 +22,10 @@ p.add_argument('--transition-contract',choices=['legacy','linear_heading'],defau
 p.add_argument('--task-profile',choices=['legacy','full_range'],default='legacy')
 p.add_argument('--training-mixture',choices=['off','stratified_v1'],default='off')
 p.add_argument('--rise-speed-reference',choices=['capture','brake'],default='capture')
+p.add_argument('--evaluation-pattern',choices=['mixed','paired_speed','paired_arcs','rise_grid'],default='mixed')
+p.add_argument('--capability-version',choices=['legacy','v25'],default='legacy')
+p.add_argument('--mirror-training',action='store_true')
+p.add_argument('--adaptive-curriculum',action='store_true')
 p.add_argument('--distributed',action='store_true')
 p.add_argument('--balance-reflex',choices=['off','frozen20','parent_full20'],default='off')
 p.add_argument('--balance-noise-factor',type=float,choices=[1.,4.,16.],default=1.)
@@ -82,6 +86,9 @@ try:
         assert args.task_profile=='full_range' and (args.initialize_cycle_from or args.checkpoint)
     if args.rise_speed_reference!='capture':
         assert args.task_profile=='full_range' and args.balance_reflex=='parent_full20'
+    if args.capability_version=='v25':
+        assert args.task_profile=='full_range' and args.balance_reflex=='parent_full20' and args.rise_speed_reference=='capture'
+    else:assert not args.mirror_training and not args.adaptive_curriculum
     cfg=CycleEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
     cfg.speed_limit=args.speed_limit;cfg.yaw_limit=args.yaw_limit;cfg.frame_range=(args.frame_min,args.frame_max)
     cfg.wheel_slew=args.wheel_slew;cfg.frame_slew=args.frame_slew;cfg.wheel_mode='common_diff'
@@ -92,6 +99,16 @@ try:
     cfg.transition_contract=args.transition_contract;cfg.task_profile=args.task_profile
     cfg.training_mixture='off' if args.evaluate else args.training_mixture
     cfg.rise_speed_reference_mode=args.rise_speed_reference
+    cfg.capability_version=args.capability_version;cfg.mirror_training=args.mirror_training or (args.evaluate and args.capability_version=='v25')
+    cfg.adaptive_curriculum=args.adaptive_curriculum;cfg.evaluating=args.evaluate
+    cfg.evaluation_pattern=args.evaluation_pattern
+    assert args.evaluation_pattern=='mixed' or (args.evaluate and args.capability_version=='v25')
+    if args.capability_version=='v25':
+        from isaaclab.managers import RewardTermCfg
+        from upright.continuous_task import reward
+        cfg.rewards.enter_balance.weight=0.
+        cfg.rewards.settled_rise=RewardTermCfg(func=reward,weight=5.,params={'kind':'settled_rise_reward'})
+        cfg.rewards.preparation=RewardTermCfg(func=reward,weight=-1.,params={'kind':'preparation_cost'})
     if args.transition_contract=='linear_heading':cfg.rewards.transition.weight=2.
     cfg.instant_tracking_weight=args.instant_tracking_weight;cfg.yaw_feedback_design=args.yaw_feedback_design;cfg.yaw_feedback_gain=args.yaw_feedback_gain
     cfg.active_seconds=args.hold_max+(18. if args.task_profile=='full_range' else 12.)
@@ -102,6 +119,7 @@ try:
     if dirty and not args.allow_dirty:raise RuntimeError('Commit source before formal execution')
     names=['train_cycle.py','upright/rise_adapter.py','upright/balance_adapter.py','upright/balance_reflex.py','upright/stability.py','upright/functional.py','upright/local_frame.py']+['upright/'+n+'.py' for n in ['normalization','fast_feedback','ground_motion','feedback','feedback_task','continuous','continuous_task','cycle','cycle_task','moving','task','distribution','model','asset_cfg','prepare','transfer']]
     names+=['upright/kinematics.py','upright/full_range.py','upright/behavior.py','upright/parent_feedback.py']
+    names+=['upright/capability.py','upright/symmetry.py','upright/curriculum_runner.py','upright/ordinary.py','upright/capability_review.py']
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(n).read_bytes()).hexdigest() for n in names).encode()).hexdigest()
     scales={'moderate':[1.,4.,4.],'fine':[4.,16.,16.],'precision':[16.,64.,64.]}[args.exploration_profile]
     contract=dict(task='upright_cycle_v19',balance_reflex=args.balance_reflex,reflex_contract=dict(parent='cycle15B',period=.02,gate_after=1.8,frozen=True,clock='outer60ms',physical_features_only=True),tracking_objective=args.tracking_objective,actor_design='frozen_base_balance_yaw_adapter_v1',balance_noise_factor=args.balance_noise_factor,adapter_limits=[.03,.08,.8],adapter_gate=[1.2,1.8],adapter_observation_stats='frozen_parent_critic',actor_normalization=args.actor_normalization,normalization_prior_count=10000000 if args.actor_normalization=='rebase_recent' else None,yaw_feedback_design=args.yaw_feedback_design,fast_yaw_controller=dict(FAST_CONTROLLER,period=.002 if args.yaw_feedback_design=='fast2' else .02,kp=args.yaw_feedback_gain),heading_reference='wheel_lateral',contact_sampling='eager_physics_step_history30_v1',instant_tracking_weight=args.instant_tracking_weight,yaw_controller=CONTROLLER,steering_design=args.steering_design,yaw_filter_tau=args.yaw_filter_tau,tracking_shape=args.tracking_shape,command_sampling='all_directed_six_sequence_v3',reward_design=('stability_first_coarse_motion_v1' if args.tracking_objective=='stability_first' else 'instant_tolerance_soft_landing_v1' if args.tracking_objective=='instant_tolerance' else 'joint_ground_motion_soft_landing_v2'),motion_feedback='pose_delta_ema_120ms',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_58x5_wheel_lateral_v2',fingerprint=fingerprint,
@@ -146,6 +164,12 @@ try:
         from upright.full_range import RISE_SPEED_CONTRACT
         contract.update(task='upright_cycle_v24',reflex_contract=PARENT_FEEDBACK_CONTRACT,
             rise_speed_reference=dict(RISE_SPEED_CONTRACT,mode=args.rise_speed_reference))
+    if args.capability_version=='v25':
+        from upright.capability import CONTRACT as CAPABILITY_CONTRACT
+        from upright.symmetry import CONTRACT as SYMMETRY_CONTRACT
+        contract.update(task='upright_cycle_v25',capability=CAPABILITY_CONTRACT,
+            symmetry=dict(SYMMETRY_CONTRACT,enabled=args.mirror_training),adaptive_curriculum=args.adaptive_curriculum,
+            command_sampling='mirrored_eight_sequence_v5',reward_design='continuous_velocity_and_settled_rise_v1')
     if args.checkpoint:
         prior=json.loads((pathlib.Path(args.checkpoint).parent/'config.json').read_text())
         if prior['contract']!=contract:raise ValueError('Checkpoint contract mismatch')
@@ -160,7 +184,13 @@ try:
         config['actor']['class_name']='upright.rise_adapter:RiseAdapterModel'
         config['algorithm']['lam']=RISE_CONTRACT['gae_lambda']
     if args.balance_reflex=='parent_full20':config['actor']['class_name']='upright.parent_feedback:ParentFeedbackModel'
-    runner=OnPolicyRunner(wrapped,copy.deepcopy(config),log_dir=str(folder),device=args.device)
+    runner_type=OnPolicyRunner
+    if args.capability_version=='v25':
+        from upright.curriculum_runner import CurriculumRunner
+        runner_type=CurriculumRunner
+        if args.mirror_training:
+            config['algorithm']['symmetry_cfg']=dict(data_augmentation_func='upright.symmetry:augment',use_data_augmentation=False,use_mirror_loss=True,mirror_loss_coeff=.2)
+    runner=runner_type(wrapped,copy.deepcopy(config),log_dir=str(folder),device=args.device)
     if args.refinement_target=='all':
         actor=runner.alg.get_policy()
         for name,parameter in actor.named_parameters():parameter.requires_grad_(not name.startswith(('balance_reflex.','parent_balance.')))
@@ -248,7 +278,7 @@ try:
                 decision_raw=ensure(env).raw.clone()
                 action=policy(obs)
                 actor=runner.alg.get_policy();gate=balance_gate(obs['policy'])
-                progress=ensure(env)
+                progress=ensure(env);decision_ordinary=(~progress.active).clone()
                 expected_gate=(progress.phase==2)*((progress.phase_time-1.2)/.6).clamp(0.,1.)
                 assert torch.allclose(gate[alive],expected_gate[alive],atol=1e-6), 'Adapter phase/history mismatch'
                 base_action=BoundedBetaMean(127.)(actor.mlp(actor.obs_normalizer(obs['policy'])))
@@ -297,10 +327,14 @@ try:
                 balance_good+=b&m['balanced'];balance_count+=b
                 peak_force=torch.maximum(peak_force,torch.where(valid&(m['phase']==3),s['front_force_peak'],0.))
                 peak_touch_speed=torch.maximum(peak_touch_speed,torch.where(valid,m['max_touchdown_speed'],0.))
-                delta=(applied-previous).abs();max_frame=max(max_frame,float(delta[valid,0].max())*(hi-lo)/2 if valid.any() else 0.)
+                delta=(applied-previous).abs()
+                if args.capability_version=='v25':delta[decision_ordinary]=0. # ordinary controller has independent slew
+                max_frame=max(max_frame,float(delta[valid,0].max())*(hi-lo)/2 if valid.any() else 0.)
                 max_wheel=max(max_wheel,float(delta[valid,1:].max())*a.max_speed if valid.any() else 0.)
                 trace.append(dict(rise_adapter_gate=lift_gate.tolist(),transition_reference_speed=m.get('transition_speed_reference',torch.zeros(n,device=args.device)).tolist(),rise_adapter_correction=lift_correction.tolist(),instability=m['instability'].tolist(),instability_dwell=m['instability_dwell'].tolist(),body_contact=s['body_history'].tolist(),adapter_gate=gate.tolist(),adapter_correction=correction.tolist(),legacy_yaw=s['legacy_yaw'].tolist(),legacy_forward=s['legacy_forward'].tolist(),legacy_heading_rate=s['legacy_heading_rate'].tolist(),yaw_feedback_integral=m['yaw_feedback_integral'].tolist(),yaw_feedback_target=m['yaw_feedback_target'].tolist(),gravity=s['g'].tolist(),body_velocity=s['vel'].tolist(),failure_code=m['failure_code'].tolist(),t=(tick+1)*env.step_dt,valid=valid.tolist(),phase=m['phase'].tolist(),phase_time=m['phase_time'].tolist(),since=since.tolist(),raw=raw.tolist(),command=command.tolist(),pos=s['pos'].tolist(),heading=s['yaw'].tolist(),forward=s['forward'].tolist(),heading_rate=s['heading_rate'].tolist(),motion_feedback=m['motion_feedback'].tolist(),interval_motion=m['interval_motion'].tolist(),wheel_measured=s['wheel'].tolist(),front_z=s['front_z'].tolist(),front_vertical_speed=s['front_vertical_speed'].tolist(),rear_fraction=s['rear_fraction'].tolist(),four_fraction=s['four_fraction'].tolist(),applied=applied.tolist(),failure=m['failure'].tolist(),balanced=m['balanced'].tolist()))
                 trace[-1].update(joint_position=s['q'].tolist(),joint_velocity=s['qd'].tolist(),position_target=m['position_target'].tolist(),wheel_target=m['wheel_target'].tolist(),actuator_effort=m['effort'].tolist(),transition_heading_error=m.get('transition_heading_error',torch.zeros(n,device=args.device)).tolist(),geometry_ground=m.get('geometry_ground',s['four']).tolist(),interrupted=m.get('interrupted',torch.zeros_like(valid)).tolist(),exit_phase=m.get('exit_phase',torch.zeros_like(category)).tolist(),requested=m.get('requested_command',raw).tolist(),switched=m['switched'].tolist())
+                if args.capability_version=='v25':
+                    trace[-1].update({k:m[k].tolist() for k in ('preparing','preparation_elapsed','preparation_speed_change','preparation_hip_change','initial_motion_frame','rise_settled','curriculum_levels')})
                 assert torch.isfinite(obs['policy']).all() and torch.isfinite(r).all()
                 alive &= ~done.bool()
                 if not alive.any():break
@@ -314,6 +348,10 @@ try:
         result['functional']=score_trajectories(trace,result['outcomes'])
         from upright.behavior import review_trajectories
         result['behavior']=review_trajectories(trace,result['outcomes'])
+        if args.capability_version=='v25':
+            from upright.capability_review import review_capability
+            result['capability']=review_capability(trace,result['outcomes'])
+            result['evaluation_pattern']=args.evaluation_pattern
         (folder/'evaluation.json').write_text(json.dumps(result,indent=2));(folder/'trace.json').write_text(json.dumps(trace))
         assert max_frame<=args.frame_slew*env.step_dt+1e-5 and max_wheel<=args.wheel_slew*env.step_dt+1e-4
         assert not alive.any()

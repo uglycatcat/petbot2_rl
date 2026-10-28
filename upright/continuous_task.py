@@ -21,6 +21,10 @@ def ensure(env):
             progress_type=FullRangeProgress
             options['training_mixture']=getattr(env.cfg,'training_mixture','off')
             options['rise_speed_reference_mode']=getattr(env.cfg,'rise_speed_reference_mode','capture')
+        if getattr(env.cfg,'capability_version','legacy')=='v25':
+            from .capability import CapabilityProgress
+            progress_type=CapabilityProgress
+            options.update(mirror_training=env.cfg.mirror_training,adaptive_curriculum=env.cfg.adaptive_curriculum,evaluating=env.cfg.evaluating,evaluation_pattern=env.cfg.evaluation_pattern)
         env.moving_progress = progress_type(env.num_envs, env.device, env.step_dt,
             env.cfg.speed_limit, env.cfg.yaw_limit, env.cfg.frame_range, env.cfg.seed,
             env.cfg.feedback_mode, hold_range=env.cfg.hold_range,
@@ -59,6 +63,11 @@ class ContinuousAction(base.MovingAction):
             difference = (1.-blend)*actions[:, 2]*5.+blend*(yaw_feedforward(p.command[:, 1])+actions[:, 2]*1.5)
             common = actions[:, 1]*self.max_speed
             desired_speed = torch.stack((common-difference, common+difference), -1).clamp(-self.max_speed, self.max_speed)
+        if getattr(self._env.cfg,'capability_version','legacy')=='v25':
+            from .capability import balance_common
+            common=balance_common(actions[:,1]);difference=actions[:,2]*5.
+            expanded=torch.stack((common-difference,common+difference),-1).clamp(-self.max_speed,self.max_speed)
+            desired_speed=torch.where((p.phase==2)[:,None],expanded,desired_speed)
         ordinary = ~p.active | (p.phase>=4)
         error = p.command-p.motion
         gains = error.new_tensor([20., 8.])
@@ -105,6 +114,9 @@ def metrics(env):
         env.extras.setdefault('log', {}).update({'Cycle/active':p.active.float().mean(),
             'Cycle/balance':(p.phase==2).float().mean(), 'Cycle/complete':m['completed'].float().mean(),
             'Cycle/qualified':m['qualified'].float().mean(), 'Cycle/actual_admission':m['motion_attained'].float().mean()})
+        if hasattr(p,'levels'):
+            env.extras['log'].update({'Course/entry':float(p.levels[0]),'Course/motion':float(p.levels[1]),
+                'Cycle/preparing':m['preparing'].float().mean(),'Cycle/settled_rise':p.rise_settled.float().mean()})
     return env.moving_metrics
 
 
@@ -121,6 +133,7 @@ def observations(env):
 
 def reward(env, kind):
     metrics(env)
+    if kind in ('settled_rise_reward','preparation_cost'):return metrics(env)[1][kind]
     return base.reward(env, kind)
 
 

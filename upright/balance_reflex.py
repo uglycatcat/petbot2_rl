@@ -74,6 +74,9 @@ def attach_balance_reflex(env,actor,enabled,*,full_parent=False):
                 mean=fixed(raw)[:,:2] if full_parent else cache['base']+fixed(raw)
                 action=(mean+cache['offset']).clamp(-.99,.99)
             previous=a.inner_policy.mean(-1);desired=action[:,1]*a.max_speed
+            if getattr(env.cfg,'capability_version','legacy')=='v25':
+                from .capability import balance_common
+                desired=balance_common(action[:,1])
             common=previous+(desired-previous).clamp(-env.cfg.wheel_slew*.02,env.cfg.wheel_slew*.02)
             bound=env.cfg.wheel_slew*env.step_dt;anchor=a.inner_anchor
             lower=(anchor-bound).clamp_min(-a.max_speed).mean(-1)
