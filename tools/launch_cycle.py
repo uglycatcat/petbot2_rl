@@ -73,6 +73,8 @@ def main():
     for v in variants:
         if (RUNS/v['run']).exists():raise RuntimeError('Run exists: '+v['run'])
         if not (ROOT/v['initial']).is_file():raise RuntimeError('Missing initialization checkpoint')
+        if v.get('initial_sha256') and hashlib.sha256((ROOT/v['initial']).read_bytes()).hexdigest()!=v['initial_sha256']:
+            raise RuntimeError('Initialization checkpoint identity changed: '+v['run'])
         if v.get('initial_iteration',0):
             if plan.get('initialization_flag')!='--checkpoint' or not 0<=v['initial_iteration']<plan['iterations']:raise RuntimeError('Invalid continuation budget')
         if plan.get('sequential_gpu_waves'):reservations[v['gpu']]=max(reservations[v['gpu']],v['reserve_mib'])
