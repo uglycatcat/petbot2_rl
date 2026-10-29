@@ -1,0 +1,44 @@
+{
+  "name": "scratch_v26_gate1",
+  "mode": "engineering",
+  "commit": "e73ca8b47a59e9cf01c9fed6f08d61a1c068c84f",
+  "container": "petbot-upright-night",
+  "pretrained_models": [],
+  "reserve_mib": 8000,
+  "variants": [
+    {
+      "name": "upright_scratch_v26_gate1_s60",
+      "seed": 60,
+      "gpu": 2,
+      "num_envs": 4096,
+      "iterations": 10,
+      "stop_after": 8,
+      "save_interval": 4
+    },
+    {
+      "name": "upright_scratch_v26_gate1_s61",
+      "seed": 61,
+      "gpu": 3,
+      "num_envs": 4096,
+      "iterations": 10,
+      "save_interval": 4
+    }
+  ],
+  "evaluations": [
+    {
+      "name": "low",
+      "args": [
+        "--speed-limit",
+        ".05",
+        "--yaw-limit",
+        ".15",
+        "--frame-min",
+        "-.1",
+        "--frame-max",
+        ".1",
+        "--hold-seconds",
+        "4"
+      ]
+    }
+  ]
+}

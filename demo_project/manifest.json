@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "f53af111457d62c08e372bf5c75ce3d74cfe5bf4",
+      "verified_commit": "33cb96954bdc170f06531b9dafa6f497f8fde450",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "Batch23 six4096x1000 and native66 evaluations completed; policy full capability not passed. Historical retention reduced on user request;15 unstarted jobs cancelled. C58 exported for MuJoCo preview; batch24 waits for discussion.",
-      "local_validation": "Task07237da and fixed batch23 d7e35cb unchanged. Exporter f53af11 supports v25 contracts and source provenance;C58 model999 outer/inner/base/full-parent CUDA1024 parity exact. Earlier retention engineering failures retained. Source model read-only.",
+      "status": "From-scratch training required; legacy C58 retained only as desktop behavior benchmark. Independent scratch engineering gate in progress before formal1000-update trials.",
+      "local_validation": "CUDA sampler/mirror/curriculum checks passed; fresh MJCF-to-PhysX builds completed. Two4096-env random-start short runs, same-run recovery and ONNX reload acceptance pending; no policy pass claimed.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []

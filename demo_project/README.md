@@ -4,7 +4,7 @@
 
 | 项目 | 职责 | 当前开发状态 |
 |---|---|---|
-| [upright_rl_demo](upright_rl_demo/README.md) | 前轮抬起、后轮支撑、持续两轮遥控、前轮落地；包含静止、旧移动和完整循环三种训练入口。 | 活跃开发；第23批6×1000更新及66项原生评估有效结束、能力未通过；[第22批能力保留对照](../docs/upright_cycle23_retention_comparison.md)仍运行，完成前不推下一批。实际状态见[当前交接](../docs/current_handoff.md)。 |
+| [upright_rl_demo](upright_rl_demo/README.md) | 从随机初始化训练完整起立、两轮遥控、前轮落地与交接；保留历史评估入口。 | C58桌面基本流程获认可；新训练移除历史父模型依赖，1000更新正式训练前正在工程验收，见[当前交接](../docs/current_handoff.md)。 |
 | [step_rl_demo](step_rl_demo/README.md) | 前轮登上0–3 cm低台阶后加速爬升。 | 仅登记与需求说明，尚无训练代码。 |
 | [recovery_rl_demo](recovery_rl_demo/README.md) | 重新设计分阶段跌倒恢复。 | 仅登记与需求说明，尚无训练代码。 |
 | [recovery_agile_01](recovery_agile_01/PETBOT.md) | 基于AGILE的早期恢复原型。 | 历史实验，不能直接作为新恢复任务的设计或成功基线。 |
@@ -14,7 +14,7 @@
 
 `runs/` 保存所有 demo 各批次的**固定提交副本**、模型检查点、TensorBoard 日志、评估轨迹、状态 JSON 和诊断产物。它累积了多轮、多种子及多次评估，所以目录和体积远大于 `upright_rl_demo/`。正式实验从固定副本运行，防止后续源代码修改改变在途实验；这些副本与产物不在 main 跟踪。不要凭目录数量推断当前并发数，也不要为了整理目录而移动或删除运行中的产物。当前批次只从[交接页](../docs/current_handoff.md)给出的状态文件定位。
 
-`upright_rl_demo/` 是**可维护源码**，同时保留三个训练入口及其历史任务实现；它不只保存最新代码，但分支 HEAD 只表示目前可维护版本。upright继续在此迭代，直到用户亲自确认sim2sim可以通过后才讨论正式训练迁移；演示与验证入口在`rl_project/std_s2s_upright_project/`。旧检查点仍须配套其固定提交、任务契约和运行配置使用。生成的 `artifacts/` 不等于源模型，`robot_description/` 只读。
+`upright_rl_demo/` 是**可维护源码**，当前入口为`train_scratch.py`，并保留历史任务评估实现；它不只保存最新代码，但分支 HEAD 只表示目前可维护版本。upright继续在此迭代，直到用户亲自确认sim2sim可以通过后才讨论正式训练迁移；演示与验证入口在`rl_project/std_s2s_upright_project/`。旧检查点仍须配套其固定提交、任务契约和运行配置使用。生成的 `artifacts/` 不等于源模型，`robot_description/` 只读。
 
 ## 同步与开发
 
