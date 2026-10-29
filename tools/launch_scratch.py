@@ -98,10 +98,19 @@ def main():
             if not (work/checkpoint).is_file():raise RuntimeError('Final checkpoint missing')
             with mutex:
                 state['train'][v['name']]['status']='trained';save(out/'launch_status.json',state)
+            no_balance=False
             for scenario in plan['evaluations']:
+                if no_balance:
+                    with mutex:
+                        status[v['name']+'_eval_'+scenario['name']]=dict(status='skipped',
+                            reason='Basic evaluation reached no two-wheel state; analyze core learning before extending evaluation')
+                        save(out/'eval_status.json',status)
+                    continue
                 args=['--run-dir','logs/scratch','--evaluate',checkpoint,'--output','logs/eval_'+scenario['name'],
                     '--num_envs','64','--headless','--device','cuda:0',*scenario['args']]
                 step(v,work,'eval_'+scenario['name'],'train_scratch.py',args)
+                result=json.loads((work/('logs/eval_'+scenario['name']+'/evaluation.json')).read_text())
+                no_balance=plan.get('skip_remaining_on_no_balance',False) and result['balance']==0
             return dict(name=v['name'],execution_complete=True,acceptance_pending=True)
         except Exception as error:
             with mutex:
