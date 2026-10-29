@@ -55,6 +55,9 @@ def main():
     with (out/'eval_watch.log').open('x') as log:
         subprocess.Popen(['python3',str(SOURCE/'tools/watch_cycle_evaluation.py'),str(out)],
             stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+    with (out/'failure_watch.log').open('x') as log:
+        subprocess.Popen(['python3',str(SOURCE/'tools/watch_scratch_failures.py'),str(out)],
+            stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
 
     def step(v,work,name,entry,args):
         key=v['name']+'_'+name;log=out/(key+'.log')
