@@ -36,6 +36,22 @@ class Keyboard:
         return int(glfw.KEY_Q in self.down)-int(glfw.KEY_E in self.down)
 
 
+def adjust_policy_limits(key, action, mods, speed, yaw, max_speed, max_yaw):
+    """Arrow keys change policy command amplitudes, independently of WASD."""
+    if action not in (glfw.PRESS, glfw.REPEAT):
+        return speed, yaw
+    fine = bool(mods & glfw.MOD_SHIFT)
+    if key in (glfw.KEY_UP, glfw.KEY_DOWN):
+        step = .01 if fine else .05
+        speed += step if key == glfw.KEY_UP else -step
+        speed = min(max_speed, max(0., round(speed, 6)))
+    elif key in (glfw.KEY_RIGHT, glfw.KEY_LEFT):
+        step = .02 if fine else .1
+        yaw += step if key == glfw.KEY_RIGHT else -step
+        yaw = min(max_yaw, max(0., round(yaw, 6)))
+    return speed, yaw
+
+
 def run_viewer(sim, smoke_seconds=None, forward_speed=None, turn_rate=None,
                ordinary_speed=None, ordinary_yaw=None):
     forward_speed = sim.controller.speed_limit if forward_speed is None else forward_speed
@@ -59,7 +75,11 @@ def run_viewer(sim, smoke_seconds=None, forward_speed=None, turn_rate=None,
     mouse = [None,None]
 
     def key_callback(_window,key,scancode,action,mods):
+        nonlocal forward_speed, turn_rate
         keys.event(key,action)
+        forward_speed, turn_rate = adjust_policy_limits(
+            key, action, mods, forward_speed, turn_rate,
+            sim.controller.speed_limit, sim.controller.yaw_limit)
         if key == glfw.KEY_ESCAPE and action == glfw.PRESS:
             glfw.set_window_should_close(window,True)
 
@@ -118,10 +138,16 @@ def run_viewer(sim, smoke_seconds=None, forward_speed=None, turn_rate=None,
                 status += f" / PAUSED: {reason} (R to reset)"
             if c.full_range and c.interruptions and not c.armed:
                 status += ' / CALL ENDED: Space for a new request'
-            left = 'W/S: forward/reverse | A/D: turn\nQ/E: head up/down (four wheels only)\nSpace: rise / front wheels down | R: reset | Esc: exit\n'
+            left = ('W/S: forward/reverse | A/D: turn\n'
+                    'Up/Down: two-wheel speed +/-0.05 m/s\n'
+                    'Right/Left: two-wheel turn +/-0.10 rad/s\n'
+                    'Shift + arrows: fine steps 0.01 m/s / 0.02 rad/s\n'
+                    'Q/E: head up/down (four wheels only)\n'
+                    'Space: rise / front wheels down | R: reset | Esc: exit\n')
             left += 'Mouse drag: orbit | Wheel: zoom\n\n'+status
             right = (f"Operator {r['operator_request'][0]:+.3f} m/s  {r['operator_request'][1]:+.3f} rad/s\n"
-                     f"Command {r['raw'][0]:+.3f} m/s  {r['raw'][1]:+.3f} rad/s\n"
+                     f"Target {r['raw'][0]:+.3f} m/s  {r['raw'][1]:+.3f} rad/s\n"
+                     f"Command {r['command'][0]:+.3f} m/s  {r['command'][1]:+.3f} rad/s\n"
                      f"Measured {r['motion'][0]:+.3f} m/s  {r['motion'][1]:+.3f} rad/s\n"
                      f"Frame target {r['ordinary_frame_target']:+.3f} rad | Q/E {'enabled' if c.manual_frame_allowed else 'disabled'}\n"
                      f"Four-wheel limits {ordinary_speed:.2f} m/s, {ordinary_yaw:.2f} rad/s\n"

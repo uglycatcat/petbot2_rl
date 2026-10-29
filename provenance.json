@@ -22,7 +22,7 @@
     "upright/capability.py": "2cfde7bbdeb9c3fbe5bffa65aa9eea384405c4853080ebaec3c4aea8ef4642c2",
     "upright/ordinary.py": "4596b488253f62224b4d73cb0b1376649a5804963fed9f3c439fb1624d2a7c6a"
   },
-  "notes": "Tensor core matches pinned batch23 source. v25 capability progress and phase2 common-wheel endpoint mapping apply only to v25 bundles. Legacy bundles retain prior controller paths; ordinary Q/E and full source envelope remain available. No operator sim2sim acceptance.",
+  "notes": "Tensor core matches pinned batch23 source. v25 capability progress and phase2 common-wheel endpoint mapping apply only to v25 bundles. Legacy bundles retain prior controller paths; ordinary Q/E and full source envelope remain available. User desktop feedback on 2026-10-29 accepts the basic cycle; expanded pose/motion capability remains to improve.",
   "baseline_network_task_commit": "001a54e98ff18f1274e2d7e961404325de4e50f7",
   "deployment_contract": "onnx_capability25_preview_v1",
   "deployment_overrides": {
@@ -31,7 +31,8 @@
     "operator_frame": "Q/E common hip target, source range, ordinary only",
     "landing_destination": "source default common frame angle, currently zero",
     "admission_preparation": "v25 uses original continuous policy-controlled pre-liftoff phase with8s rise timeout; no mandatory stop or fixed hip reset",
-    "v25_ordinary_and_handoff": "phase0 uses independent source PI with instantaneous physical motion; phase4 retains original training action/command timing until completion"
+    "v25_ordinary_and_handoff": "phase0 uses independent source PI with instantaneous physical motion; phase4 retains original training action/command timing until completion",
+    "operator_motion_limits": "GUI arrow keys adjust policy-only speed/yaw amplitudes, Shift fine steps; ordinary full range independent; Target and effective Command displayed separately"
   },
   "previous_source_commit": "cbf1943c35cd6354c9b16c1ade73a91f5719f4cb"
 }

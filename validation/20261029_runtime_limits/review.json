@@ -1,0 +1,231 @@
+{
+  "passed": true,
+  "method": "Real Xvfb GLFW callbacks and live MuJoCo C58 ONNX cycle; no injected robot state",
+  "render_sampling": "Scene rendering every 15 viewer frames to avoid software-GL timeout; callbacks, overlays and physics unchanged",
+  "wall_seconds": 14.28,
+  "boundary_fine_repeat_release_checks": true,
+  "overlay_fields_checked": true,
+  "events": [
+    {
+      "case": "coarse_and_fine_gui_keys",
+      "time": 0.002,
+      "phase": 0,
+      "limits": [
+        0.1899999976158142,
+        0.5799999833106995
+      ],
+      "target": [
+        0.0,
+        0.0
+      ],
+      "command": [
+        0.0,
+        0.0
+      ],
+      "motion": [
+        0.0,
+        0.0
+      ],
+      "cycles": 0,
+      "interruptions": 0
+    },
+    {
+      "case": "reset_preserves_limits",
+      "time": 0.3180000000000002,
+      "phase": 0,
+      "limits": [
+        0.1899999976158142,
+        0.5799999833106995
+      ],
+      "target": [
+        0.0,
+        0.0
+      ],
+      "command": [
+        0.0,
+        0.0
+      ],
+      "motion": [
+        0.00038196530658751726,
+        1.4192479191876828e-08
+      ],
+      "cycles": 0,
+      "interruptions": 0
+    },
+    {
+      "case": "ordinary_full_range_with_restricted_policy",
+      "time": 0.5480000000000004,
+      "phase": 0,
+      "limits": [
+        0.1899999976158142,
+        0.5799999833106995
+      ],
+      "target": [
+        0.75,
+        0.0
+      ],
+      "command": [
+        0.75,
+        0.0
+      ],
+      "motion": [
+        0.5481522083282471,
+        -2.36530513575417e-06
+      ],
+      "cycles": 0,
+      "interruptions": 0
+    },
+    {
+      "case": "two_wheel_forward_005",
+      "time": 3.7319999999998106,
+      "phase": 2,
+      "limits": [
+        0.05000000074505806,
+        0.10000000149011612
+      ],
+      "target": [
+        0.05000000074505806,
+        0.0
+      ],
+      "command": [
+        0.05000000074505806,
+        0.0
+      ],
+      "motion": [
+        0.0580013133585453,
+        -0.0024289824068546295
+      ],
+      "cycles": 0,
+      "interruptions": 0
+    },
+    {
+      "case": "held_w_updates_to_010",
+      "time": 4.331999999999745,
+      "phase": 2,
+      "limits": [
+        0.10000000149011612,
+        0.10000000149011612
+      ],
+      "target": [
+        0.10000000149011612,
+        0.0
+      ],
+      "command": [
+        0.10000000149011612,
+        0.0
+      ],
+      "motion": [
+        0.09468045830726624,
+        -0.002819003304466605
+      ],
+      "cycles": 0,
+      "interruptions": 0
+    },
+    {
+      "case": "reverse_and_turn_use_same_limits",
+      "time": 4.931999999999679,
+      "phase": 2,
+      "limits": [
+        0.10000000149011612,
+        0.10000000149011612
+      ],
+      "target": [
+        -0.10000000149011612,
+        0.10000000149011612
+      ],
+      "command": [
+        -0.10000000149011612,
+        0.10000000149011612
+      ],
+      "motion": [
+        -0.06039952486753464,
+        0.1323726326227188
+      ],
+      "cycles": 0,
+      "interruptions": 0
+    },
+    {
+      "case": "zero_limits_while_wasd_held",
+      "time": 5.531999999999613,
+      "phase": 2,
+      "limits": [
+        0.0,
+        0.0
+      ],
+      "target": [
+        -0.0,
+        0.0
+      ],
+      "command": [
+        0.0,
+        0.0
+      ],
+      "motion": [
+        -0.0052766697481274605,
+        -0.00026740023167803884
+      ],
+      "cycles": 0,
+      "interruptions": 0
+    },
+    {
+      "case": "normal_landing_handoff",
+      "time": 6.971999999999454,
+      "phase": 0,
+      "limits": [
+        0.0,
+        0.0
+      ],
+      "target": [
+        0.0,
+        0.0
+      ],
+      "command": [
+        0.0,
+        0.0
+      ],
+      "motion": [
+        -0.00537624629214406,
+        0.0009108518715947866
+      ],
+      "cycles": 1,
+      "interruptions": 0
+    },
+    {
+      "case": "ordinary_full_range_after_landing_with_zero_limits",
+      "time": 7.151999999999434,
+      "phase": 0,
+      "limits": [
+        0.0,
+        0.0
+      ],
+      "target": [
+        0.75,
+        0.0
+      ],
+      "command": [
+        0.75,
+        0.0
+      ],
+      "motion": [
+        0.36893579363822937,
+        -0.0007744854083284736
+      ],
+      "cycles": 1,
+      "interruptions": 0
+    }
+  ],
+  "scope": "Input/UI regression only; no full-range policy acceptance",
+  "prior_checks": [
+    {
+      "log": "outputs/runtime_limits_20261029/check.log",
+      "status": "incomplete",
+      "reason": "25s software-GL window deadline before two-wheel checks; no policy failure observed"
+    },
+    {
+      "log": "outputs/runtime_limits_20261029/check_small_window.log",
+      "status": "incomplete",
+      "reason": "40s software-GL deadline at simulation3.902s; forward0.05 and new0.10 target observed, no interruption; later cases not reached"
+    }
+  ],
+  "source_script": "outputs/runtime_limits_20261029/check_viewer.py"
+}
