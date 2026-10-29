@@ -16,12 +16,13 @@
       "remote": "ours",
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "branch": "rlproj/std_s2s_upright_project",
-      "verified_commit": "248e9f910fed8a5f5581a1604001bf6952c80376",
-      "status": "Batch23 C58/model999 default, batch21 B retained for comparison. ONNX-only inference; v25 continuous preparation,8s rise timeout and wheel mapping aligned. User desktop preview requested; batch24 waits for discussion.",
+      "verified_commit": "3c0c304aae72c50dda35b2c12077c2e64a643bbd",
+      "status": "Batch23 C58/model999 default; user desktop feedback accepts the basic cycle. Runtime arrows adjust two-wheel speed/yaw limits, Shift fine adjustment; ordinary full performance independent. Pose and motion capability remain to improve; batch24 awaits discussion.",
       "usage": "README.md",
-      "local_validation": "3 ONNX graphs/2050 inputs each,max abs error5.11408e-5;CUDA1024 inputs exact;18 source files,35 observations and240feedback substeps aligned. MuJoCo mixed0.15/0.5 hold18s completes/basic passes;stationary+0.15rad hold12s completes. Q/E,ordinary full range,no PT runtime,interruption and4sGUI checks pass. Actual wheel peak26.57rad/s remains. No operator acceptance or new training.",
+      "local_validation": "3 ONNX graphs/2050 inputs each,max abs error5.11408e-5;CUDA1024 inputs exact;18 source files,35 observations and240feedback substeps aligned. MuJoCo mixed0.15/0.5 hold18s completes/basic passes;stationary+0.15rad hold12s completes. Q/E,ordinary full range,no PT runtime,interruption and4sGUI checks pass. Actual wheel peak26.57rad/s remains. User accepts the basic desktop cycle, not expanded/full-range capability; no new training. Runtime GLFW/MuJoCo input check passes 9 checkpoints and one completed cycle, including online0.05->0.10m/s, reverse/turn/zero and ordinary0.75 after handoff. Two earlier software-GL deadline checks remained incomplete; final validation samples rendering only.",
       "validation": "validation/20261029_cycle23/review.json",
-      "inference_backend": "onnxruntime_cpu"
+      "inference_backend": "onnxruntime_cpu",
+      "runtime_controls_validation": "validation/20261029_runtime_limits/review.json"
     }
   ]
 }
