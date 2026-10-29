@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-28",
+  "updated_at": "2026-10-29",
   "repositories": [
     {
       "name": "std_train_upright_project",
@@ -16,11 +16,11 @@
       "remote": "ours",
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "branch": "rlproj/std_s2s_upright_project",
-      "verified_commit": "8e016632e981aedf2140152c6a7a5264c05ecdd9",
-      "status": "Batch21 B default, A selectable. ONNX-only neural inference for all six bundles; ordinary Q/E common-hip targets and full source drive envelope independent of policy limits; normal landing defaults to0rad. Batch23 remains paused.",
+      "verified_commit": "248e9f910fed8a5f5581a1604001bf6952c80376",
+      "status": "Batch23 C58/model999 default, batch21 B retained for comparison. ONNX-only inference; v25 continuous preparation,8s rise timeout and wheel mapping aligned. User desktop preview requested; batch24 waits for discussion.",
       "usage": "README.md",
-      "local_validation": "14 ONNX graphs,2050 inputs each,max normalized error5.24521e-5;35observation cases and240feedback substeps match source. PT runtime loading forbidden test,real Q/E four-wheel contact,independent ordinary +/-0.75 requests,Xvfb and interruption checks passed. B low0/+0.15frame and legacy low complete/basic;B medium60 completes but parking44.75mm fails basic;full-speed takeover still rise timeout64. Source targets/torques respected in60ms trace snapshots;actual wheel peak35.04rad/s. No new training or operator sim2sim acceptance;pre-rise speed/frame preparation remains future work.",
-      "validation": "validation/20261028_onnx_controls/review.json",
+      "local_validation": "3 ONNX graphs/2050 inputs each,max abs error5.11408e-5;CUDA1024 inputs exact;18 source files,35 observations and240feedback substeps aligned. MuJoCo mixed0.15/0.5 hold18s completes/basic passes;stationary+0.15rad hold12s completes. Q/E,ordinary full range,no PT runtime,interruption and4sGUI checks pass. Actual wheel peak26.57rad/s remains. No operator acceptance or new training.",
+      "validation": "validation/20261029_cycle23/review.json",
       "inference_backend": "onnxruntime_cpu"
     }
   ]

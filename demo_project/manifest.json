@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "423de5a8f5b2214903fe32c59c577ff4f8c32fe3",
+      "verified_commit": "f53af111457d62c08e372bf5c75ce3d74cfe5bf4",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "Batch23 six4096x1000 and native66 evaluations validly completed; policy capability failed. Additional24 historical batch22 scenario regressions remain active; no new batch or deployment before comparison.",
-      "local_validation": "Task07237da unchanged; evaluation-only423de5a published. CUDA old-sampler equivalence passed; native C58 trace byte-exact, old-protocol C58 reload valid. Deployment failures and old-checkpoint contract rejection retained. Original batch23 copies remain d7e35cb; source model readonly. See docs/upright_cycle23_retention_comparison.md.",
+      "status": "Batch23 six4096x1000 and native66 evaluations completed; policy full capability not passed. Historical retention reduced on user request;15 unstarted jobs cancelled. C58 exported for MuJoCo preview; batch24 waits for discussion.",
+      "local_validation": "Task07237da and fixed batch23 d7e35cb unchanged. Exporter f53af11 supports v25 contracts and source provenance;C58 model999 outer/inner/base/full-parent CUDA1024 parity exact. Earlier retention engineering failures retained. Source model read-only.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []

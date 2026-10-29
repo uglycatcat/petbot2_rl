@@ -4,6 +4,8 @@
 
 ## 当前目标与边界
 
+**2026-10-29最新用户任务：先将sim2sim更新为第23批C58供桌面体验，再讨论第24批如何优化；第24批不自动启动。** 已发布`rlproj/std_s2s_upright_project` 248e9f910fed8a5f5581a1604001bf6952c80376，默认`cycle23_course_r58/model_999`（SHA bb3bbb53…），三张ONNX图、selection与包manifest同步；第21批B保留可选。导出工具f53af11已发布，训练与固定副本未改。v25状态机、8秒起立时限、60/20/2ms轮速映射及phase4交接已对齐；普通Q/E与完整源范围保留。CUDA/ONNX及控制接口检查通过，MuJoCo混合0.15/0.5保持18秒完成且基本遥控通过，+0.15rad静止保持12秒完成；只做这两项短测和接口检查，不展开补测矩阵。实测轮速峰值26.57rad/s仍在，不声称用户sim2sim验收通过。桌面同步与命令见[sim2sim README](../rl_project/std_s2s_upright_project/README.md)，旧15项取消补测不恢复。 收缩后的历史回归已于14:06结算：9项完成、15项取消、0项运行失败，不恢复取消项。
+
 用户要求用最新已验证策略的WASD/Space MuJoCo演示判断upright是否成熟，然后再决定正式训练迁移。程序位于`rl_project/std_s2s_upright_project`，`std_train_upright_project`保持空，均已登记repo及独立`rlproj/`远程分支。训练源码仍在`demo_project/upright_rl_demo`，runs未移动；history已忽略，仅作后续归档位置。
 
 **用户最新确认：upright继续在`demo_project/upright_rl_demo`迭代，直到用户亲自体验sim2sim并确认可以通过，再讨论正式训练迁移。** 正式训练目录此前保持空；独立评估与agent判断不能替代该确认。

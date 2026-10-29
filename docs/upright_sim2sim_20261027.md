@@ -1,5 +1,19 @@
 # upright MuJoCo 交互验证与正式项目准备
 
+
+## 第23批C58桌面体验更新（2026-10-29）
+
+用户要求将最新候选更新到sim2sim，本机体验后再讨论第24批；本次未启动训练或新评估矩阵。发布`248e9f910fed8a5f5581a1604001bf6952c80376`，默认`cycle23_course_r58/model_999`，原始SHA `bb3bbb538fb6118ce379604b3d987458126a2a55ec76a26617b7497aa1930e87`；第21批B保留，通过`--policy policies/cycle21_parent_b_r42`对照。主线manifest、包manifest、默认selection均同步。
+
+三张网络用ONNX Runtime CPU推理；CUDA1024输入外层/内部/base/完整父差0，ONNX每图2050输入最大差5.11408e-5。同步固定d7e35cb的v25状态机、8秒起立时限、两轮轮速端点映射及20ms父反馈，phase4保留训练交接时序；普通Q/E和独立完整源能力保留。18文件来源、35观测、240反馈子步、意外回落/翻倒退出和4秒GUI检查通过。
+
+两项发布短测：混合0.15m/s、0.5rad/s保持18秒，23.70秒完成起落及基本遥控；+0.15rad静止初态保持12秒，17.52秒完成并回默认髋位，未覆盖混合指令不计基本遥控通过。目标/力矩合规，实测轮速最大26.57rad/s，保留物理质量限制。这是短场景预览检查，不是长时、全范围或用户sim2sim通过。
+
+桌面先更新main，再`repo sync rl_project/std_s2s_upright_project`，在项目目录执行`uv run --locked run.py --forward-speed 0.15 --turn-rate 0.5`。此命令只限制策略期间的WASD幅度，普通仍保有完整性能。若要与此前低速四轮输入对照，可额外显式传`--ordinary-forward-speed 0.15 --ordinary-turn-rate 0.5`。
+
+证据：[项目验证](../rl_project/std_s2s_upright_project/validation/20261029_cycle23/review.json)、[两项闭环](../rl_project/std_s2s_upright_project/validation/20261029_cycle23/scenarios.json)。下方第21批及更早的默认策略/暂停状态均为历史记录，当前默认和训练边界以本节为准。
+
+
 2026-10-27 用户确认：先用当前最佳已评估策略制作 WASD/Space 可体验的 MuJoCo 仿真，作为判断训练框架成熟度的依据。程序位于 `rl_project/std_s2s_upright_project`；`std_train_upright_project` 保持空。两者由 repo 和独立 `rlproj/` 分支管理。尚未迁移训练，也不移动或删除 runs；history 加入忽略规则，后续按依赖清单归档。
 
 ## 实施与验收
