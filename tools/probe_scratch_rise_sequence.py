@@ -17,6 +17,7 @@ from isaaclab.app import AppLauncher
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output', required=True)
+parser.add_argument('--case-ids', help='Comma-separated entries of the fixed action catalog; diagnostic selection only')
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
 app = AppLauncher(args).app
@@ -26,6 +27,7 @@ try:
     from isaaclab.managers import RewardTermCfg
     from upright.feedback_task import FeedbackEnvCfg, ensure
     from upright.continuous_task import reward
+    from upright.cycle_task import tensor
 
     cases = [dict(first_hip=h1, next_hip=h2, change_at=t,
                   first_wheel=w[0], next_wheel=w[1])
@@ -33,6 +35,13 @@ try:
                  [.3, .8, 1.2], [-1., 0., .6, 1.2], [.4, .8, 1.2],
                  [(0., 25.), (0., -25.), (-25., 25.),
                   (25., -25.), (25., 25.), (-25., -25.)])]
+    for index, case in enumerate(cases):
+        case['catalog_id'] = index
+    if args.case_ids:
+        selected = [int(x) for x in args.case_ids.split(',')]
+        assert selected and len(selected) == len(set(selected))
+        assert all(0 <= x < len(cases) for x in selected)
+        cases = [cases[x] for x in selected]
     cfg = FeedbackEnvCfg()
     cfg.scene.num_envs = len(cases)
     cfg.sim.device = args.device
@@ -59,6 +68,7 @@ try:
     progress = ensure(env)
     progress.set_command([0., 0.])
     progress.request_mode(1)
+    rear_ids = env.scene['robot'].find_bodies(['left_rear_wheel', 'right_rear_wheel'], preserve_order=True)[0]
     params = {k: torch.tensor([c[k] for c in cases], device=env.device) for k in cases[0]}
     alive = torch.ones(len(cases), device=env.device, dtype=torch.bool)
     zero = torch.zeros(len(cases), device=env.device)
@@ -100,6 +110,9 @@ try:
                     wheel_actual=s['wheel'], joint_position=s['q'], position_target=m['position_target'],
                     gravity=s['g'], front_z=s['front_z'], gap=m['wheel_gap'],
                     rear_fraction=s['rear_fraction'], motion=torch.stack((s['forward'], s['heading_rate']), -1),
+                    rear_z=tensor(env.scene['robot'].data.body_pos_w)[:, rear_ids, 2],
+                    rear_force=tensor(env.scene['contact_forces'].data.net_forces_w)[:, env.upright_ids[3]],
+                    support_duration=progress.support_run, angular_velocity=s['vel'][:, 3:],
                     failure_code=m['failure_code'], progress=m['rise_progress_reward'])
                 trace.append({k: v.tolist() if isinstance(v, torch.Tensor) else v for k, v in values.items()})
             # Explicit failure mask prevents reset buffer aliasing from recording a second call.
