@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-28",
+  "updated_at": "2026-10-29",
   "purpose": "PetBot experimental training projects. Code is versioned on dedicated demoproj branches; checkouts are managed by default.xml.",
   "repositories": [
     {
@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "d7e35cbb8e5e6eadbba149ee86bb348699f08217",
+      "verified_commit": "423de5a8f5b2214903fe32c59c577ff4f8c32fe3",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "v25 engineering accepted; batch23 six4096x1000 fixed copies verified; first wave three PPOs reached5/1000 at20:33, second wave three queued;66 evaluations and failure/completion event flow configured; no policy acceptance.",
-      "local_validation": "Task07237da unchanged in released7e35cb. Three4096x8 PPOs, true optimizer/curriculum resume7->8/9, nine reloads valid; no VRAM/Python/PhysX interruption. Frozen54 tensors preserved; B low180 full/basic64/64. Full range/speed/arcs fail; actual wheel peak103.4317rad/s remains. Targets/efforts/actual hip limits and captured landing references/default0 pass. See docs/upright_cycle_v25.md.",
+      "status": "Batch23 six4096x1000 trained; native66 evaluation queue active. Additional24 historical batch22 scenario regressions launched after engineering acceptance; no policy acceptance.",
+      "local_validation": "Task07237da unchanged; evaluation-only423de5a published. CUDA old-sampler equivalence passed; native C58 trace byte-exact, old-protocol C58 reload valid. Deployment failures and old-checkpoint contract rejection retained. Original batch23 copies remain d7e35cb; source model readonly. See docs/upright_cycle23_retention_comparison.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
