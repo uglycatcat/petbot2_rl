@@ -1,0 +1,148 @@
+{
+  "cycle23_preview_medium": {
+    "scenario": "mixed",
+    "frame": 0.0,
+    "forward_speed": 0.15,
+    "turn_rate": 0.5,
+    "completed": 1,
+    "interrupted": 0,
+    "failure_code": 0,
+    "simulated_seconds": 23.699999999997743,
+    "wall_seconds": 24.44683098141104,
+    "events": [
+      {
+        "time": 3.1799999999998714,
+        "phase": 1
+      },
+      {
+        "time": 4.139999999999766,
+        "phase": 2
+      },
+      {
+        "time": 22.25999999999854,
+        "phase": 3
+      },
+      {
+        "time": 22.739999999998275,
+        "phase": 4
+      },
+      {
+        "time": 23.699999999997743,
+        "completed_cycle": 1
+      }
+    ],
+    "functional": {
+      "definition": {
+        "version": "basic_remote_v1",
+        "settle_seconds": 0.6,
+        "minimum_segment_seconds": 0.6,
+        "command_deadband": [
+          0.005,
+          0.015
+        ],
+        "minimum_response_ratio": 0.2,
+        "maximum_response_ratio": 2.5,
+        "required_response_fraction": 0.9,
+        "stop_excursion_m": 0.03,
+        "stop_heading_excursion_rad": 0.1
+      },
+      "count": 1,
+      "stable_completed": 1,
+      "coverage_complete": 1,
+      "functional_pass": 1
+    },
+    "physical": {
+      "target_wheel_peak": 25.0,
+      "measured_wheel_peak": 24.149829864501953,
+      "effort_peaks": [
+        0.02618219647883264,
+        0.010381299997231468,
+        0.011784139198717227,
+        0.3743248591166678,
+        0.3565475443163422,
+        0.38,
+        0.38
+      ],
+      "target_and_effort_limits_passed": true,
+      "common_hip_targets_equal": true,
+      "final_hip_target": [
+        0.0,
+        0.0
+      ]
+    },
+    "source_trace_sha256": "b2fabc538414f491a036d1e1ad0e5de43f3907d0214470df5c2f6f385ddddf3a"
+  },
+  "cycle23_preview_frame": {
+    "scenario": "stationary",
+    "frame": 0.15,
+    "forward_speed": 0.04,
+    "turn_rate": 0.12,
+    "completed": 1,
+    "interrupted": 0,
+    "failure_code": 0,
+    "simulated_seconds": 17.52000000000117,
+    "wall_seconds": 17.77103739976883,
+    "events": [
+      {
+        "time": 3.1799999999998714,
+        "phase": 1
+      },
+      {
+        "time": 4.079999999999773,
+        "phase": 2
+      },
+      {
+        "time": 16.140000000001933,
+        "phase": 3
+      },
+      {
+        "time": 16.5600000000017,
+        "phase": 4
+      },
+      {
+        "time": 17.52000000000117,
+        "completed_cycle": 1
+      }
+    ],
+    "functional": {
+      "definition": {
+        "version": "basic_remote_v1",
+        "settle_seconds": 0.6,
+        "minimum_segment_seconds": 0.6,
+        "command_deadband": [
+          0.005,
+          0.015
+        ],
+        "minimum_response_ratio": 0.2,
+        "maximum_response_ratio": 2.5,
+        "required_response_fraction": 0.9,
+        "stop_excursion_m": 0.03,
+        "stop_heading_excursion_rad": 0.1
+      },
+      "count": 1,
+      "stable_completed": 1,
+      "coverage_complete": 0,
+      "functional_pass": 0
+    },
+    "physical": {
+      "target_wheel_peak": 24.386898040771484,
+      "measured_wheel_peak": 26.565793991088867,
+      "effort_peaks": [
+        0.011364014568366835,
+        0.02038141618680965,
+        0.02129594605725281,
+        0.28509982753560154,
+        0.2575825596143032,
+        0.38,
+        0.38
+      ],
+      "target_and_effort_limits_passed": true,
+      "common_hip_targets_equal": true,
+      "final_hip_target": [
+        0.0,
+        0.0
+      ]
+    },
+    "source_trace_sha256": "a6ddd7e529128a99a3cd49607b68a700e80903dd0b024c6273f1ec4ecc034ab1"
+  }
+}

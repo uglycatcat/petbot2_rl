@@ -1,7 +1,7 @@
 {
   "source_branch": "demoproj/upright_rl_demo",
-  "source_commit": "cbf1943c35cd6354c9b16c1ade73a91f5719f4cb",
-  "task_commit": "cbf1943c35cd6354c9b16c1ade73a91f5719f4cb",
+  "source_commit": "d7e35cbb8e5e6eadbba149ee86bb348699f08217",
+  "task_commit": "d7e35cbb8e5e6eadbba149ee86bb348699f08217",
   "source_sha256": {
     "upright/moving.py": "b57084c1fca9795d7e4e9f8a5ed1f7229f288e536b2503c22a951c5b3d38cbc5",
     "upright/cycle.py": "136de904aad4080972c1b91694c01d3080bb2d3e31ef6016c6c1389f829d4b8a",
@@ -13,21 +13,25 @@
     "upright/local_frame.py": "b13474f565991322c454384b1c8d8ca27fc0d17252397dcfafd04192788f9122",
     "upright/functional.py": "89371df66f1dfde066b6ae550356941249050eb869d9d333a0acc771bdd7a514",
     "upright/cycle_task.py": "de2c054aec5e8b89ca2558be99348fb6db03a849e0a4e79c9fe100f54aeeb6c6",
-    "upright/continuous_task.py": "65c31f4588a18090aded15d8bf635725bb36359772dfd5e5668888eb756012d8",
-    "upright/feedback_task.py": "6be5d55dae6e6e06f5b976cc85d1a33d4fc112c18cdb1c3844cd052379ff371e",
-    "upright/balance_reflex.py": "52bb83fa9bd0c699632127379363ab12b55cbb30525eb3943ee2d1d2c9c048eb",
+    "upright/continuous_task.py": "22f212ae9b7b4770aedd6c3136e7090d8491102408a5156c85045fb884875d67",
+    "upright/feedback_task.py": "713504c16fe502d832c11c92c343cdc10293d41fbcdbf5c75ee778da1f228629",
+    "upright/balance_reflex.py": "53fed1bfb3b50cd780c03b0ba9f3ee6829a34353ba935fd6e17eae7e0198492c",
     "upright/kinematics.py": "bd9283a02dd3f0536047962e7c346841b3eb4dd59e2a1b381328e684296e5313",
-    "upright/full_range.py": "6b99e5826d6df43f57801f5432d2a313be53d8c02068d332f442237bc35dd00d",
-    "upright/parent_feedback.py": "17d67d72ce8ef04f7e73e32c612c64edcfe964ef7ec5a4aedf000ee96d7ca9fe"
+    "upright/full_range.py": "de13a222f33b9bfadda4f3bab19478e13a5aee53317c836c24851d558cf6f353",
+    "upright/parent_feedback.py": "17d67d72ce8ef04f7e73e32c612c64edcfe964ef7ec5a4aedf000ee96d7ca9fe",
+    "upright/capability.py": "2cfde7bbdeb9c3fbe5bffa65aa9eea384405c4853080ebaec3c4aea8ef4642c2",
+    "upright/ordinary.py": "4596b488253f62224b4d73cb0b1376649a5804963fed9f3c439fb1624d2a7c6a"
   },
-  "notes": "Tensor controller matches batch21 pinned source. Parent-full20 bundles use frozen full-parent mean plus held outer offset at20/40ms after1.8s balance; legacy bundles retain frozen20 behavior. Training mixture is disabled in deployment. Export and port checks are not operator sim2sim acceptance.",
+  "notes": "Tensor core matches pinned batch23 source. v25 capability progress and phase2 common-wheel endpoint mapping apply only to v25 bundles. Legacy bundles retain prior controller paths; ordinary Q/E and full source envelope remain available. No operator sim2sim acceptance.",
   "baseline_network_task_commit": "001a54e98ff18f1274e2d7e961404325de4e50f7",
-  "deployment_contract": "onnx_independent_ordinary_default_landing_v1",
+  "deployment_contract": "onnx_capability25_preview_v1",
   "deployment_overrides": {
     "inference": "ONNX Runtime CPU for every neural graph; PT retained only as export/reference sources",
     "ordinary_control": "source envelope and independent 2ms drive; no policy command/wheel slew",
     "operator_frame": "Q/E common hip target, source range, ordinary only",
     "landing_destination": "source default common frame angle, currently zero",
-    "admission_preparation": "not implemented; current frozen policy still attempts rise with existing admission logic"
-  }
+    "admission_preparation": "v25 uses original continuous policy-controlled pre-liftoff phase with8s rise timeout; no mandatory stop or fixed hip reset",
+    "v25_ordinary_and_handoff": "phase0 uses independent source PI with instantaneous physical motion; phase4 retains original training action/command timing until completion"
+  },
+  "previous_source_commit": "cbf1943c35cd6354c9b16c1ade73a91f5719f4cb"
 }

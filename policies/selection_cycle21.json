@@ -1,0 +1,44 @@
+{
+  "selected": "cycle21_parent_b_r42",
+  "checkpoint": "model_299.pt",
+  "batch": "upright_cycle_batch21",
+  "training_updates_this_batch": 300,
+  "task_commit": "cbf1943c35cd6354c9b16c1ade73a91f5719f4cb",
+  "checkpoint_sha256": "8078f430e3389c52ddca1a900ef565bff9068a40858038c1335091feb473d9e4",
+  "status": "user_requested_preview_not_sim2sim_acceptance",
+  "criterion": "B has stronger medium60s completion in batch21 and new-seed validation. A remains selectable because B regresses in full frame range and is not a universal winner.",
+  "comparison": "cycle21_parent_a_r43",
+  "previous_default": "cycle18_long_r42",
+  "previous_selection": "selection_cycle18.json",
+  "source_results": "docs/upright_cycle_batch21_results.md",
+  "native_medium": {
+    "count": 64,
+    "complete": 60,
+    "basic": 40
+  },
+  "new_seed_medium": {
+    "seed": 20261156,
+    "count": 64,
+    "complete": 62,
+    "basic": 43
+  },
+  "full_range_180": {
+    "seed": 20261155,
+    "count": 64,
+    "complete": 0,
+    "basic": 0
+  },
+  "limits": {
+    "forward_mps": 0.75,
+    "yaw_radps": 15,
+    "frame_rad": [
+      -1,
+      1.2
+    ],
+    "rear_wheel_target_radps": 25
+  },
+  "limitation": "Isaac validation does not prove MuJoCo or hardware success. Batch22 is complete and not included. High-speed/angle preparation remains future training work. Ordinary control uses independent source limits; normal landing now returns default frame angle.",
+  "mujoco_evidence": "validation/20261028_cycle21/scenarios.json",
+  "mujoco_status": "Fixed B low180 complete/basic passed; B medium60 complete but parking drift44.46mm fails basic; higher/full/second-call/turning-takeover failures retained. No operator acceptance.",
+  "inference_backend": "onnxruntime_cpu"
+}

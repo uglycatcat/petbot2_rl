@@ -1,0 +1,45 @@
+{
+  "policy": "cycle23_course_r58",
+  "checkpoint_sha256": "bb3bbb538fb6118ce379604b3d987458126a2a55ec76a26617b7497aa1930e87",
+  "training_commit": "d7e35cbb8e5e6eadbba149ee86bb348699f08217",
+  "exporter_commit": "f53af111457d62c08e372bf5c75ce3d74cfe5bf4",
+  "source_model_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+  "onnx_only": true,
+  "network_graphs": 3,
+  "network_outputs": 4,
+  "cuda_parity": {
+    "passed": true,
+    "cuda": true,
+    "samples": 1024,
+    "max_abs_error": {
+      "outer": 0.0,
+      "inner": 0.0,
+      "inner_base": 0.0,
+      "full_parent": 0.0
+    }
+  },
+  "onnx_max_abs_error": 5.1140785217285156e-05,
+  "control_port_passed": true,
+  "viewer_smoke": {
+    "seconds": 4,
+    "exit_code": 0
+  },
+  "scenario_checks": [
+    "cycle23_preview_medium",
+    "cycle23_preview_frame"
+  ],
+  "closed_loop_scope": "Two short fixed previews only; mixed0.15/0.5 hold18s and stationary+0.15rad hold12s. No new training or wide evaluation matrix.",
+  "legacy_policy_retained": "cycle21_parent_b_r42",
+  "operator_sim2sim_accepted": false,
+  "formal_training_started": false,
+  "physical_quality_passed": false,
+  "limitations": [
+    "High speed, symmetry, extreme angles and robustness remain unproven.",
+    "Measured wheel overshoot persists despite target/effort bounds.",
+    "Stationary trial has no mixed-command coverage and cannot pass general teleoperation score."
+  ],
+  "development_notes": [
+    "First bundle-copy command used a root-relative path from project cwd and failed before copying; corrected path, no duplicate export.",
+    "The two original run summaries retained the generic deployment label; v25 contract and mapped controller were active and verified. Subsequent run summaries use the v25 label; original traces remain unchanged."
+  ]
+}

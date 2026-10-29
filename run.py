@@ -21,7 +21,8 @@ def snapshot(sim, path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--policy',type=Path,default=ROOT/'policies/cycle21_parent_b_r42')
+    selected=json.loads((ROOT/'policies/selection.json').read_text())['selected']
+    parser.add_argument('--policy',type=Path,default=ROOT/'policies'/selected)
     parser.add_argument('--model-dir',type=Path)
     parser.add_argument('--frame',type=float,default=0.)
     parser.add_argument('--transition-contract',choices=['legacy','linear_heading'],default=None,
@@ -113,7 +114,7 @@ def main():
             balanced_at=None
     result = dict(policy=args.policy.name,checkpoint_sha256=c.manifest['checkpoint_sha256'],
         inference_backend='onnxruntime_cpu',network_sha256=c.manifest['networks'],
-        deployment_contract='onnx_independent_ordinary_default_landing_v1',
+        deployment_contract=('onnx_capability25_preview_v1' if c.capability_v25 else 'onnx_independent_ordinary_default_landing_v1'),
         transition_contract=c.transition_contract,development_intervention=args.transition_contract is not None,
         source_model_sha256=sim.model_sha256,mujoco_version=__import__('mujoco').__version__,
         scenario=args.scenario,forward_speed=args.forward_speed,turn_rate=args.turn_rate,takeover_yaw=args.takeover_yaw,command_scale=args.command_scale,frame=args.frame,wall_seconds=time.monotonic()-start,

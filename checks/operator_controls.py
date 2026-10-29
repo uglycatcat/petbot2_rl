@@ -20,7 +20,7 @@ def run(output):
     # A runtime that attempts to load any PyTorch network must fail this check.
     with patch('torch.jit.load', side_effect=AssertionError('Runtime PT loading forbidden')), \
          patch('torch.load', side_effect=AssertionError('Runtime checkpoint loading forbidden')):
-        for name in ('cycle21_parent_b_r42', 'correction20_gate_r42'):
+        for name in ('cycle23_course_r58', 'cycle21_parent_b_r42', 'correction20_gate_r42'):
             sim = Simulation(ROOT/'policies'/name, frame=.4)
             c, p = sim.controller, sim.controller.progress
             c.set_policy_limits(.05, .15)
@@ -46,7 +46,7 @@ def run(output):
                 reverse_measured=reverse['motion'][0], physical_frame_target=c.frame,
                 policy_limits=c.policy_motion_limits.tolist(), ordinary_independent=True)
 
-        sim = Simulation(ROOT/'policies/cycle21_parent_b_r42')
+        sim = Simulation(ROOT/'policies/cycle23_course_r58')
         c = sim.controller
         for _ in range(30):
             sim.step()

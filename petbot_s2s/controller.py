@@ -11,6 +11,7 @@ from .core.action_terms import FeedbackAction, attach_balance_reflex
 from .core.continuous import ContinuousProgress, bound_cycle_features
 from .core.local_frame import ground_frame_features
 from .core.full_range import FullRangeProgress, effective_request
+from .core.capability import CapabilityProgress, CONTRACT as CAPABILITY_CONTRACT
 from .networks import OnnxNetwork
 from .ordinary import OrdinaryDrive
 
@@ -39,6 +40,9 @@ class Controller:
         self.bundle = bundle
         self.manifest = json.loads((bundle/'manifest.json').read_text())
         c = self.manifest['contract']
+        self.capability_v25 = c['task'] == 'upright_cycle_v25'
+        if self.capability_v25:
+            assert c['capability'] == CAPABILITY_CONTRACT
         self.transition_contract=transition_contract or c.get('transition_contract','legacy')
         for name, sha in self.manifest['networks'].items():
             if hashlib.sha256((bundle/name).read_bytes()).hexdigest() != sha:
@@ -53,7 +57,7 @@ class Controller:
         self.reflex = OnnxNetwork(bundle/'balance_reflex.onnx')
         self.parent = None
         if self.full_parent_feedback:
-            assert c['task'] == 'upright_cycle_v23'
+            assert c['task'] in ('upright_cycle_v23', 'upright_cycle_v25')
             assert 'parent_balance.onnx' in self.manifest['networks']
             feedback = c['reflex_contract']
             assert feedback['version'] == 'frozen_full_parent_offset_v1'
@@ -68,6 +72,7 @@ class Controller:
             frame_slew=c['frame_slew'], wheel_slew=c['wheel_slew'],
             yaw_feedback_design='fast2', yaw_feedback_gain=c['fast_yaw_controller']['kp'])
         self.cfg.transition_contract=self.transition_contract
+        self.cfg.capability_version='v25' if self.capability_v25 else 'legacy'
         self.full_range=c.get('task_profile')=='full_range'
         self.cfg.task_profile=c.get('task_profile','legacy')
         limits = self.manifest['tested_range']
@@ -78,10 +83,16 @@ class Controller:
             raise ValueError(f'Frame outside source joint limits {self.ordinary.frame_range}')
         self.frame = frame
         progress_type=FullRangeProgress if self.full_range else ContinuousProgress
+        progress_kwargs={}
+        if self.full_range:
+            progress_kwargs['rise_speed_reference_mode']=c.get('rise_speed_reference',{}).get('mode','capture')
+        if self.capability_v25:
+            progress_type=CapabilityProgress
+            progress_kwargs.update(evaluating=True,adaptive_curriculum=False,mirror_training=False)
         self.progress = progress_type(1, 'cpu', .06, self.ordinary.speed_limit, self.ordinary.yaw_limit,
             self.ordinary.frame_range, 42, 'pose_feedback_tight', hold_range=(180.,180.),
             tracking_objective='stability_first', handoff_alignment='after',
-            transition_contract=self.transition_contract)
+            transition_contract=self.transition_contract,**progress_kwargs)
         self.robot = RobotTargets(self.spec)
         self.scene = {'robot': self.robot}
         self.action = FeedbackAction(None, self)
@@ -129,6 +140,9 @@ class Controller:
 
     @property
     def ordinary_control(self):
+        if self.capability_v25:
+            # v25 preserves training's original phase4 handoff action timing.
+            return int(self.progress.phase[0]) == 0
         return int(self.progress.phase[0]) in (0, 4)
 
     @property
@@ -228,7 +242,8 @@ class Controller:
                 -self.ordinary.frame_target_slew*self.physics_dt,
                 self.ordinary.frame_target_slew*self.physics_dt)
             a.target[:, 3:] = frame[:, None]
-            a.speed.copy_(self.ordinary.wheels(p.command, p.motion, self.physics_dt))
+            motion=torch.stack((s['forward'],s['heading_rate']),-1) if self.capability_v25 else p.motion
+            a.speed.copy_(self.ordinary.wheels(p.command, motion, self.physics_dt))
             a.applied[:, 0] = 2*(frame-a.lo)/(a.hi-a.lo)-1
             a.applied[:, 1:] = a.speed/a.max_speed
             self.robot.set_joint_position_target(a.target, a.pos_ids)

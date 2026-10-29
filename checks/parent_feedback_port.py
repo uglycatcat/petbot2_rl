@@ -9,7 +9,7 @@ from petbot_s2s.core.action_terms import FeedbackAction
 p=argparse.ArgumentParser();p.add_argument('--source',type=pathlib.Path,required=True);p.add_argument('--policy',type=pathlib.Path,required=True);p.add_argument('--output',type=pathlib.Path,required=True);args=p.parse_args()
 text=(args.source/'upright/balance_reflex.py').read_text();node=next(n for n in ast.parse(text).body if getattr(n,'name',None)=='attach_balance_reflex')
 code=ast.get_source_segment(text,node).replace('    from .feedback_task import observations,ensure\n','')
-namespace=dict(torch=torch,observations=lambda env:env.features(),ensure=lambda env:env.progress);exec(compile(code,'pinned_balance_reflex.py','exec'),namespace);attach=namespace['attach_balance_reflex']
+namespace=dict(__package__='petbot_s2s.core',torch=torch,observations=lambda env:env.features(),ensure=lambda env:env.progress);exec(compile(code,'pinned_balance_reflex.py','exec'),namespace);attach=namespace['attach_balance_reflex']
 torch.manual_seed(20261028);maximum=0.;cases=[]
 for phase,clock in [(0,0.),(1,.6),(2,0.),(2,1.74),(2,1.8),(2,4.),(3,.6),(4,.6)]:
  actual=Simulation(args.policy).controller;reference=Simulation(args.policy).controller

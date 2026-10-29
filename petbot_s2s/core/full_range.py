@@ -28,6 +28,18 @@ TRAINING_MIXTURE = dict(version='stratified_v1', assignment='contiguous_equal_en
         dict(name='frame_full', motion=[.05,.15], frame=[-1.,1.2]),
         dict(name='full', motion=[.75,15.], frame=[-1.,1.2])])
 
+RISE_SPEED_CONTRACT = dict(version='rise_reference_learning_v1',
+    active_phase=1, brake_slew_mps2=.6, brake_target_mps=0.,
+    capture='actual_forward_speed_at_takeover', physical_state_assignment=False,
+    unchanged=['admission','heading','balance_commands',
+               'landing_reference','phase_and_failure_conditions','actuator_limits'])
+
+
+def rise_speed_reference(speed, phase, dt, mode):
+    if mode=='capture':return speed
+    if mode!='brake':raise ValueError('Invalid rise speed reference')
+    return torch.where(phase==1,slew(speed,torch.zeros_like(speed),.6*dt),speed)
+
 
 def project_command(command, wheel_limit=25.):
     """Radial projection onto |v|/r + |yaw|*b/(2r) <= wheel_limit."""
@@ -46,8 +58,10 @@ class FullRangeProgress(ContinuousProgress):
     warmup_timeout=24.
     rise_timeout=5.
 
-    def __init__(self,*args,training_mixture='off',**kwargs):
+    def __init__(self,*args,training_mixture='off',rise_speed_reference_mode='capture',**kwargs):
         super().__init__(*args,**kwargs)
+        assert rise_speed_reference_mode in ('capture','brake')
+        self.rise_speed_reference_mode=rise_speed_reference_mode
         assert training_mixture in ('off','stratified_v1')
         self.training_mixture=training_mixture
         self.training_level=torch.arange(self.n,device=self.device)*5//self.n
@@ -111,6 +125,9 @@ class FullRangeProgress(ContinuousProgress):
         self.switch_at[ids]=ramp+2.+2.*self.uniform(ids,4)
 
     def before_step(self):
+        if self.rise_speed_reference_mode=='brake':
+            self.transition_speed.copy_(rise_speed_reference(
+                self.transition_speed,self.phase,self.dt,'brake'))
         ids=torch.where(self.active & ~self.external & (self.since>=self.next_command))[0]
         if ids.numel():self.sample_commands(ids)
         self.requested[~self.external]=self.raw[~self.external]
@@ -170,6 +187,7 @@ class FullRangeProgress(ContinuousProgress):
         result.update(interrupted=self.interrupted.clone(),interrupt_reason=self.interrupt_reason.clone(),
             exit_phase=self.exit_phase.clone(),lift_seen=self.lift_seen.clone(),
             training_level=self.training_level.clone(),
+            transition_speed_reference=self.transition_speed.clone(),
             requested_command=self.requested.clone(),effective_request=effective_request(self),
             actual_admission=moving.clone(),geometry_ground=ground,wheel_gap=gap)
         self.result=result

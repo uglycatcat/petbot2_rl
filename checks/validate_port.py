@@ -36,7 +36,7 @@ def main():
     provenance=json.loads((ROOT/'provenance.json').read_text())
     for name,sha in provenance['source_sha256'].items():
         assert hashlib.sha256((args.source/name).read_bytes()).hexdigest()==sha,name
-    for name in ('moving','cycle','continuous','stability','feedback','fast_feedback','ground_motion','local_frame','functional','kinematics','full_range'):
+    for name in ('moving','cycle','continuous','stability','feedback','fast_feedback','ground_motion','local_frame','functional','kinematics','full_range','capability','ordinary'):
         assert (ROOT/'petbot_s2s/core'/f'{name}.py').read_bytes()==(args.source/'upright'/f'{name}.py').read_bytes()
     for filename,name in [('cycle_task.py','MovingAction'),('continuous_task.py','ContinuousAction'),
                           ('feedback_task.py','FeedbackAction'),('balance_reflex.py','attach_balance_reflex')]:

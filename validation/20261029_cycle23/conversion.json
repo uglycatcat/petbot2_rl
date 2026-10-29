@@ -1,0 +1,26 @@
+{
+  "opset": 17,
+  "torch": "2.10.0+cpu",
+  "onnx": "1.23.2",
+  "onnxruntime": "1.23.2",
+  "provider": "CPUExecutionProvider",
+  "samples_per_network": 2050,
+  "max_abs_error": {
+    "actor.onnx": {
+      "action": 1.2636184692382812e-05
+    },
+    "balance_reflex.onnx": {
+      "action": 2.9103830456733704e-07,
+      "base": 3.6835670471191406e-05
+    },
+    "parent_balance.onnx": {
+      "action": 5.1140785217285156e-05
+    }
+  },
+  "tolerance": {
+    "atol": 0.0001,
+    "rtol": 1e-05
+  },
+  "passed": true,
+  "scope": "Numerical conversion only; not a closed-loop or operator acceptance result"
+}

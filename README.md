@@ -30,15 +30,29 @@ uv run --locked run.py --forward-speed 0.15 --turn-rate 0.5
 
 `--frame 0.15`设置初始普通车架目标；所有策略包的普通车架范围均来自源模型[-1,1.2]rad。这个范围是控制器允许范围，不表示各角度均已通过起立验证。窗口显示操作者请求、实际采用的命令、实测速度和普通车架目标。
 
-**当前第21批策略仍可能在高速/较大车架角下起立失败。** 普通控制完整范围已与策略分开；“接管后先减速、调整到可起立角度，再起立”的鲁棒机制是后续训练目标，当前包没有新增这样的准备阶段。不要将输入裁剪当作已完成真实减速或调姿。要复现此前低速体验，可显式降低本次手动输入幅度，物理能力与策略范围不变：
+**当前默认第23批C58仍可能在高速/较大车架角下起立失败。** 新包保留训练中的连续准备控制和8秒起立时限，允许策略在离地前减速、调整共同髋角；没有强制停车或回零脚本，宽范围鲁棒性尚未通过。普通控制完整范围与策略分开。要用与此前体验一致的手动输入幅度，可显式设置普通与两轮参数，物理能力与策略范围不变：
 
 ```bash
 uv run --locked run.py --forward-speed 0.15 --turn-rate 0.5 --ordinary-forward-speed 0.15 --ordinary-turn-rate 0.5
 ```
 
-## 第21批终局策略预览（2026-10-28）
+## 第23批C58终局策略预览（2026-10-29）
 
-当前默认`cycle21_parent_b_r42/model_299`来自完整循环第21批正式PPO终局，另有`cycle21_parent_a_r43`可选。它们不是`full_range21_gate_r42`工程8更新模型，也不包含正在训练的第22批。按用户要求提供MuJoCo体验，**尚未通过完整范围或用户sim2sim验收**。来源、选择依据和Isaac结果见[selection.json](policies/selection.json)。
+默认`cycle23_course_r58/model_999`来自第23批课程组seed58的1000更新终局，原始检查点SHA以`bb3bbb53`开头。使用外层、完整父反馈和内部反馈三张ONNX图，保留60/20/2ms时序，并同步v25两轮轮速端点映射、连续准备与默认髋位落地。默认选择从[selection.json](policies/selection.json)读取；模型包[manifest.json](policies/cycle23_course_r58/manifest.json)记录检查点与每张网络的SHA及导出校验。
+
+同历史协议的Isaac低速180秒完整64/64、基本63/64；0.15m/s、0.5rad/s中速60秒完整62/64、基本48/64。高速、AW/DW高段差异、极端初态角仍有失败，不将包声明范围当作可靠能力范围。
+
+发布前只做必要短测：MuJoCo混合0.15m/s、0.5rad/s保持18秒完成起落及基本遥控；+0.15rad静止起立保持12秒完成并回默认髋位。ONNX一致性、观测/反馈时序、Q/E、普通完整范围、意外倒下退出和窗口加载检查通过。它们不是长时或全范围验收，桌面实际体验仍由用户确认，详见[验证记录](validation/README.md#第23批c58预览2026-10-29)。
+
+原第21批B保留，可在同样参数下切换比较：
+
+```bash
+uv run --locked run.py --policy policies/cycle21_parent_b_r42 --forward-speed 0.15 --turn-rate 0.5
+```
+
+## 历史第21批终局策略预览（2026-10-28）
+
+此前默认`cycle21_parent_b_r42/model_299`来自完整循环第21批正式PPO终局，另有`cycle21_parent_a_r43`可选。它们不是`full_range21_gate_r42`工程8更新模型，也不包含第22/23批。**尚未通过完整范围或用户sim2sim验收**。历史来源、选择依据和Isaac结果见[selection_cycle21.json](policies/selection_cycle21.json)。
 
 B在Isaac中速60秒原评估/新种子完整60/64、62/64，优于A的49/64、55/64；B全车架范围有退步，因此A也保留。两份终局包都包含完整父反馈网络，按原60/20/2ms控制时序执行，不能只替换旧外层网络。网络CUDA1024样本输出差0，35组观测与240子步目标对齐通过；这些工程检查不等于动作质量通过。
 
@@ -108,4 +122,4 @@ uv run python run.py --policy policies/correction20_gate_r42
 
 历史策略包保持其原合同。新版控制端已完成MuJoCo前轮回落/翻倒的状态故障注入与源码对齐检查，接口通过不等于学习策略已能在全范围稳定工作；训练候选和实际闭环证据见主仓库`docs/upright_cycle_v21.md`。
 
-历史工程候选通过`--policy policies/full_range21_gate_r42`显式选择；当前默认已改为上方第21批正式终局B策略。无窗口诊断可用`--forward-speed`和`--turn-rate`设置幅度；取值须在该包声明范围内，控制器仍施加联合轮速限幅。`summary.json`分别记录正常完成与`interrupted_calls`，脚本不会在中断后把原定落地请求变成新起立。该候选全范围稳定性尚未通过。
+历史工程候选通过`--policy policies/full_range21_gate_r42`显式选择；当前默认已改为上方第23批正式终局C58策略。无窗口诊断可用`--forward-speed`和`--turn-rate`设置幅度；取值须在该包声明范围内，控制器仍施加联合轮速限幅。`summary.json`分别记录正常完成与`interrupted_calls`，脚本不会在中断后把原定落地请求变成新起立。该候选全范围稳定性尚未通过。

@@ -92,3 +92,14 @@ RTX 2080 Ti 桌面机按 `uv.lock` 安装 Python 3.10.20 / MuJoCo 3.16.0 / PyTor
 证据：[场景摘要与trace SHA](20261028_cycle21/scenarios.json)、[实际物理与阶段审查](20261028_cycle21/physical_review.json)、[阶段边界样本](20261028_cycle21/selected_samples.json)、[B观测/执行器对齐](20261028_cycle21/cycle21_parent_b_r42.json)、[B反馈时序](20261028_cycle21/cycle21_parent_b_r42_parent_feedback_port.json)、[B中断契约](20261028_cycle21/cycle21_parent_b_r42_call_exit.json)、[窗口检查](20261028_cycle21/viewer.json)。A及旧包证据在同目录。原始日志和逐帧轨迹位于项目`outputs/cycle21_mujoco/`，未作为大文件提交。
 
 `run.py`默认B包。窗口中`--forward-speed`和`--turn-rate`指定WASD幅度；推荐先用`0.15/0.5`体验中速，需要时改成`0.30/1.5`。省略时窗口使用完整包上限0.75/15，无窗口默认仍0.04/0.12。源模型未修改，正式训练目录保持空；用户体验请求不等于用户已经确认sim2sim通过。
+
+
+## 第23批C58预览（2026-10-29）
+
+用户要求更新到第23批课程C58/model_999供桌面体验，第24批等待体验后讨论。默认选择、三张ONNX图、模型包manifest与来源均同步，旧第21批B可显式选择。v25增加8秒起立时限、连续准备状态、两轮端点映射；保留原落地捕获速度和phase4交接时序。普通Q/E与完整驱动范围保持独立。
+
+[验收记录](20261029_cycle23/review.json)：CUDA1024输入外层/内部/base/完整父输出差0；ONNX每图2050输入、最大差5.11408e-5；18文件来源、35观测、240反馈子步均对齐。普通控制、Q/E、禁止PT运行加载、故障退出和4秒窗口检查通过。
+
+[两项真实闭环](20261029_cycle23/scenarios.json)：混合0.15m/s、0.5rad/s保持18秒，23.70秒完成起立、落地、默认髋位与交接，基本遥控通过；+0.15rad静止初态保持12秒，17.52秒完成，因未覆盖全部命令不计混合遥控通过。两项无中断、失败码0。目标轮速≤25rad/s、力矩约束通过；静止初态场景实测轮速仍有26.57rad/s峰值。
+
+这只是发布前的短场景接口检查，不扩展为批量验证，也不声称全范围、长时稳定或用户sim2sim通过。原始轨迹保留在outputs/cycle23_preview_medium与outputs/cycle23_preview_frame；两个原始summary保留通用旧部署标签，实际v25合同/控制路径已校验，后续run输出标签已修正。源模型只读，训练未启动。

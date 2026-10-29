@@ -87,6 +87,11 @@ class ContinuousAction(MovingAction):
             difference = (1.-blend)*actions[:, 2]*5.+blend*(yaw_feedforward(p.command[:, 1])+actions[:, 2]*1.5)
             common = actions[:, 1]*self.max_speed
             desired_speed = torch.stack((common-difference, common+difference), -1).clamp(-self.max_speed, self.max_speed)
+        if getattr(self._env.cfg,'capability_version','legacy')=='v25':
+            from .capability import balance_common
+            common=balance_common(actions[:,1]);difference=actions[:,2]*5.
+            expanded=torch.stack((common-difference,common+difference),-1).clamp(-self.max_speed,self.max_speed)
+            desired_speed=torch.where((p.phase==2)[:,None],expanded,desired_speed)
         ordinary = ~p.active | (p.phase>=4)
         error = p.command-p.motion
         gains = error.new_tensor([20., 8.])
@@ -127,6 +132,10 @@ class FeedbackAction(ContinuousAction):
         if self.continuous_heading:self.fast_feedback.half_difference_limit=self.max_speed
         self.full_range=getattr(env.cfg,'task_profile','legacy')=='full_range'
         self.fast_feedback.anti_windup=self.full_range
+        self.source_ordinary=getattr(env.cfg,'capability_version','legacy')=='v25'
+        if self.source_ordinary:
+            from .ordinary import OrdinaryDrive
+            self.ordinary_drive=OrdinaryDrive(env.num_envs,env.device,self.max_speed)
 
     def process_actions(self,actions):
         previous=self.speed.clone()
@@ -164,6 +173,14 @@ class FeedbackAction(ContinuousAction):
             self.applied[:,1:]=self.speed/self.max_speed
             self.yaw_feedback.integral[self.inner_mask]=self.fast_feedback.integral[self.inner_mask]
             self.yaw_feedback.target[self.inner_mask]=self.fast_feedback.target[self.inner_mask]
+        if self.source_ordinary:
+            from .ground_motion import wheel_heading
+            p=ensure(self._env);ordinary=~p.active;d=self.robot.data
+            velocity=tensor(d.root_com_vel_w)
+            ground,_,rate=wheel_heading(tensor(d.root_link_pose_w)[:,3:7],velocity)
+            measured=torch.stack(((velocity[:,:2]*ground).sum(-1),rate),-1)
+            wheel=self.ordinary_drive.wheels(p.command,measured,self._env.physics_dt,ordinary)
+            self.speed[ordinary]=wheel[ordinary];self.applied[ordinary,1:]=wheel[ordinary]/self.max_speed
         super().apply_actions()
         self.inner_index+=1
 
@@ -172,6 +189,7 @@ class FeedbackAction(ContinuousAction):
         self.yaw_feedback.reset(env_ids)
         self.fast_feedback.reset(env_ids)
         ids=slice(None) if env_ids is None else env_ids
+        if self.source_ordinary:self.ordinary_drive.reset(ids)
         self.inner_mask[ids]=False
         self.inner_speed[ids]=0.;self.inner_policy[ids]=0.;self.inner_anchor[ids]=0.
 
@@ -205,6 +223,9 @@ def attach_balance_reflex(env,actor,enabled,*,full_parent=False):
                 mean=fixed(raw)[:,:2] if full_parent else cache['base']+fixed(raw)
                 action=(mean+cache['offset']).clamp(-.99,.99)
             previous=a.inner_policy.mean(-1);desired=action[:,1]*a.max_speed
+            if getattr(env.cfg,'capability_version','legacy')=='v25':
+                from .capability import balance_common
+                desired=balance_common(action[:,1])
             common=previous+(desired-previous).clamp(-env.cfg.wheel_slew*.02,env.cfg.wheel_slew*.02)
             bound=env.cfg.wheel_slew*env.step_dt;anchor=a.inner_anchor
             lower=(anchor-bound).clamp_min(-a.max_speed).mean(-1)
