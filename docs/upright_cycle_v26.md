@@ -16,7 +16,7 @@
 
 CUDA辅助检查：连续直行采样667种值，含零、双向端点及接近零；镜像配对、课程升降级和状态重载有效。CLI已实测拒绝历史初始化参数、跨运行检查点和改变种子的伪恢复。证据在`runs/_scratch_v26_gate1/{engineering_review,acceptance_review,entrypoint_rejection_checks,completion_event_reconciliation}.json`。首次向容器所有的审查文件追加元数据被权限拒绝，原文件保留，验收说明改存独立文件；该次没有启动训练，非训练中断。依赖首次下载缓慢后切换镜像成功，未更换版本。
 
-第24批已按[固定计划](experiments/upright_cycle_batch24_scratch.json)启动，控制目录`runs/_upright_cycle_batch24`，两份独立随机种子60/61，各4096×1000，GPU2/3；固定运行提交`21ce93d`，与工程任务代码逐字一致，未使用工程短训权重。后续工具发布增加单份异常立即续接观察器，已为本批接入；固定副本不修改。
+第24批按[固定计划](experiments/upright_cycle_batch24_scratch.json)于10月29日启动、10月30日01:33结束。两份独立从零4096×1000有效完成，但均未学会起立，8项后续范围评估明确跳过；见[第24批终局](upright_cycle_batch24_results.md)。新修正转[v27](upright_cycle_v27.md)，不继承本批权重。原控制目录`runs/_upright_cycle_batch24`及固定`21ce93d`副本保留，不重复启动。
 
 终局每份只安排5项：低速30s、中速60s、双向满速35s、镜像弧线45s、宽髋初态低速30s，均64环境、新评估种子20261030。若低速连两轮都未进入，其余4项明确跳过并先分析起立学习；跳过不是通过。能力改善后再补持续180s和MuJoCo闭环，不将网络导出当sim2sim通过。每份1000更新，整卡78%守护，GPU0排除；中断先恢复同一运行，新任务修改后重新从零训练。周期定时器与goal禁用。
 

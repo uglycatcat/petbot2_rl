@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "e12381e7707136e8fa110ecea386f55fe9f1debd",
+      "verified_commit": "78b9252e7c6ae212764eaf5415413808b630f0f2",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "Scratch engineering accepted; batch24 launched with two independent4096x1000 random initializations on fixed21ce93d. Historical C58 retained only as desktop effect benchmark. Performance pending.",
-      "local_validation": "e73ca8b task: two10-update runs, one8+2 same-run recovery, two64-episode reloads and ONNX parity under5e-7; no OOM or runtime/PhysX error. All reloads rise-timeout64; no two-wheel/landing acceptance. Wheel targets/effort bounds valid. Formal initialization uses no checkpoint.",
+      "status": "Batch24 two scratch1000-update runs completed; both low-range evaluations had0/64 balance entries. Eight harder evaluations deliberately skipped. V27 bounded-rise reward correction in engineering gate; no batch25 formal run yet; C58 desktop baseline retained.",
+      "local_validation": "Batch24 checkpoints and losses finite, no inherited weights/restarts/OOM, all original processes exited. Targets and torque limits valid; actual wheel overshoot48.57/39.91rad/s remains. V27 CUDA reward/curriculum regression passed; PhysX probe and two32-update scratch/recovery/reload checks in progress.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []

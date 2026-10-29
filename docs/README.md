@@ -1,6 +1,6 @@
 # 项目文档索引
 
-- 当前从零训练工程：[v26与第24批](upright_cycle_v26.md)，不依赖历史策略；状态以当前交接及实际进程为准。
+- 当前从零训练：[v27起立奖励纠正](upright_cycle_v27.md)，前批结论见[第24批终局](upright_cycle_batch24_results.md)；不依赖历史策略，状态以交接和实际进程为准。
 
 
 先读根目录 [AGENTS.md](../AGENTS.md) 的硬规则和里程碑，再读[当前交接](current_handoff.md)。只按手头问题打开下面相应文档；历史实验与 `runs/` 不需要全读。根目录 README 用于部署和使用，不承载进度。

@@ -1,0 +1,58 @@
+{
+  "name": "scratch_v27_rise_gate1",
+  "mode": "engineering",
+  "commit": "78b9252e7c6ae212764eaf5415413808b630f0f2",
+  "context_doc": "docs/upright_cycle_v27.md",
+  "container": "petbot-upright-night",
+  "pretrained_models": [],
+  "reserve_mib": 8000,
+  "variants": [
+    {
+      "name": "upright_scratch_v27_gate1_s62",
+      "seed": 62,
+      "gpu": 2,
+      "num_envs": 4096,
+      "iterations": 32,
+      "stop_after": 30,
+      "save_interval": 10,
+      "preflight": [
+        {
+          "name": "lift_probe",
+          "entrypoint": "tools/probe_scratch_lift.py",
+          "args": [
+            "--output",
+            "logs/lift_probe.json",
+            "--headless",
+            "--device",
+            "cuda:0"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "upright_scratch_v27_gate1_s63",
+      "seed": 63,
+      "gpu": 3,
+      "num_envs": 4096,
+      "iterations": 32,
+      "save_interval": 10
+    }
+  ],
+  "evaluations": [
+    {
+      "name": "low",
+      "args": [
+        "--speed-limit",
+        ".05",
+        "--yaw-limit",
+        ".15",
+        "--frame-min",
+        "-.1",
+        "--frame-max",
+        ".1",
+        "--hold-seconds",
+        "4"
+      ]
+    }
+  ]
+}
