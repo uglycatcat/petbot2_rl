@@ -37,7 +37,7 @@ def main():
         except FileNotFoundError:
             command = b''
         entrypoint = state.get('evaluator_entrypoint', 'evaluate_cycle.py')
-        if entrypoint not in ('evaluate_cycle.py', 'evaluate_candidates.py', 'watch_existing_gate.py'):
+        if entrypoint not in ('evaluate_cycle.py', 'evaluate_candidates.py', 'watch_existing_gate.py', 'launch_scratch.py'):
             os.close(fd)
             raise RuntimeError('Unknown evaluator entrypoint')
         if command and (entrypoint.encode() not in command or state['name'].encode() not in command):

@@ -2,15 +2,36 @@
 
 PetBot2 的前轮抬起、后轮支撑、两轮遥控及前轮落地任务。训练控制目标为车架关节位置和左右后轮速度，头耳保持默认位置；不使用示范动作轨迹。模型来自主仓库只读的 `robot_description/`。
 
-## 代码导览
+## 从零训练（当前入口）
+
+`train_scratch.py`从随机权重学习完整循环，不需要历史runs、检查点、冻结父网络或示范数据。配置为`configs/scratch_v1.json`：每份1000更新、单个20ms策略、全部参数可训练。课程从静止起落到低速，再独立扩展共同髋初态、接管速度、双向直行、转向与弧线。旧入口仅保留历史评估/分析；旧继承式发批已禁用。
+
+容器环境由`environment/Dockerfile`和固定依赖构建，基础镜像为`nvcr.io/nvidia/isaac-lab:3.0.0-beta2`；需按NVIDIA许可自行取得。当前镜像没有registry digest，版本及Isaac Lab源码摘要由`tools/environment_report.py`记录；新环境必须重过工程门槛，不能承诺跨GPU/驱动逐位一致。
+
+在专用容器内、源码已提交后运行（模型目录只读挂载，源码路径保持相对）：
+
+```bash
+/isaac-sim/python.sh tools/environment_report.py
+/isaac-sim/python.sh tools/prepare_asset.py --headless --device cuda:0
+/isaac-sim/python.sh train_scratch.py --run-dir logs/my_run --seed 60 --headless
+/isaac-sim/python.sh train_scratch.py --run-dir logs/my_run --evaluate logs/my_run/model_999.pt --output logs/my_run_eval --num_envs 64 --headless
+```
+
+最后一步同时输出物理轨迹、能力评估和单网络ONNX包，校验ONNX Runtime与PyTorch数值；网络导出不等于MuJoCo闭环通过。当前桌面默认C58保持独立。新网络部署必须使用相同20ms历史/决策与明确的状态机、2ms控制器。
+
+同次中断恢复：`train_scratch.py --run-dir logs/my_run --resume logs/my_run/model_500.pt --headless`，读取原配置并继续到原1000更新，不另加1000；恢复网络、优化器、课程和随机状态，物理回合重新开始。跨运行初始化被拒绝，改配置的新实验重新随机初始化。`initial_state.pt`仅为审计初值，不能作为恢复检查点。
+
+宿主机自动编排使用`python3 tools/launch_scratch.py PLAN.json`：固定干净提交、每份独立源码副本和源模型资源重建、GPU显存守护、训练/同次恢复、少量独立评估、完成或异常事件续接。计划只含种子/预算/场景，不接收父模型；正式计划必须引用同任务版本工程通过证据。队列结束仍须审查失败和物理轨迹。
+
+## 历史代码导览
 
 | 入口 | 对应任务 | 用途 |
 |---|---|---|
 | [`train.py`](train.py) | [`upright/task.py`](upright/task.py) | 历史静止初态起立任务；保留已完成的静止基线及其检查点接口。 |
 | [`train_moving.py`](train_moving.py) | [`upright/moving_task.py`](upright/moving_task.py) | 历史四轮行驶中接管和两轮遥控任务；保留旧实验复现入口。 |
-| [`train_cycle.py`](train_cycle.py) | [`upright/feedback_task.py`](upright/feedback_task.py) | 当前完整运动循环：实际行驶中接管、前轮抬起、以轮轴地面航向反馈的持续遥控、前轮落地、普通控制交接。 |
+| [`train_cycle.py`](train_cycle.py) | [`upright/feedback_task.py`](upright/feedback_task.py) | 历史继承式完整运动循环：实际行驶中接管、前轮抬起、以轮轴地面航向反馈的持续遥控、前轮落地、普通控制交接。 |
 
-三种入口的观测、模式和检查点契约不同；检查点只按其所属任务代码和固定版本加载。`upright/{moving,cycle,continuous}.py`提供各代任务状态机，`feedback_task.py`复用持续循环并添加转向反馈，`fast_feedback.py`提供20 ms或2 ms的有界转向内环，外层策略仍每60 ms更新，`balance_reflex.py`可在稳定两轮段增加20 ms的冻结车架/共同轮速反馈；`ground_motion.py`定义轮轴地面航向，`local_frame.py`可将观测中的世界水平向量与参考航向转换到机器人当前行驶方向坐标；机身前向投影另作历史诊断，不与新坐标口径混用。`balance_adapter.py`提供冻结完整循环actor上的有界车架/共同轮速及独立转向修正，只在稳定两轮阶段启用；含独立JIT导出，ONNX尚未实现。`continuous.py`可显式选择混合运动或瞬时容差跟踪奖励，独立验收口径不随奖励选择改变。旧完整循环检查点及对应checks须在其固定提交运行；新入口仅支持显式父actor/critic迁移或同契约重载。正式实验在 `demo_project/runs/` 中建立固定提交的独立副本；**本目录是可维护源码，不只存最新一版，也不直接存正式训练检查点**。
+三种入口的观测、模式和检查点契约不同；检查点只按其所属任务代码和固定版本加载。`upright/{moving,cycle,continuous}.py`提供各代任务状态机，`feedback_task.py`复用持续循环并添加转向反馈，`fast_feedback.py`提供20 ms或2 ms的有界转向内环，历史外层策略每60 ms更新，`balance_reflex.py`可在稳定两轮段增加20 ms的冻结车架/共同轮速反馈；`ground_motion.py`定义轮轴地面航向，`local_frame.py`可将观测中的世界水平向量与参考航向转换到机器人当前行驶方向坐标；机身前向投影另作历史诊断，不与新坐标口径混用。`balance_adapter.py`提供冻结完整循环actor上的有界车架/共同轮速及独立转向修正，只在稳定两轮阶段启用；含独立JIT导出，ONNX尚未实现。`continuous.py`可显式选择混合运动或瞬时容差跟踪奖励，独立验收口径不随奖励选择改变。旧完整循环检查点及对应checks须在其固定提交运行；历史入口仅用于其固定版本评估；当前训练使用无父依赖的train_scratch.py。正式实验在 `demo_project/runs/` 中建立固定提交的独立副本；**本目录是可维护源码，不只存最新一版，也不直接存正式训练检查点**。
 
 ## 工具与产物
 

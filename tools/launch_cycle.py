@@ -22,6 +22,7 @@ def validate_checkpoints(plan):
 
 
 def main():
+    raise SystemExit('Inherited cycle batches are retired. Use tools/launch_scratch.py with no parent checkpoint.')
     p=argparse.ArgumentParser();p.add_argument('plan',type=pathlib.Path);a=p.parse_args();plan=json.loads(a.plan.read_text())
     validate_checkpoints(plan)
     lock=(RUNS/'upright_launch.lock').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)

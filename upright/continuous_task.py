@@ -25,6 +25,9 @@ def ensure(env):
             from .capability import CapabilityProgress
             progress_type=CapabilityProgress
             options.update(mirror_training=env.cfg.mirror_training,adaptive_curriculum=env.cfg.adaptive_curriculum,evaluating=env.cfg.evaluating,evaluation_pattern=env.cfg.evaluation_pattern)
+        if getattr(env.cfg,'from_scratch',False):
+            from .scratch import ScratchProgress
+            progress_type=ScratchProgress
         env.moving_progress = progress_type(env.num_envs, env.device, env.step_dt,
             env.cfg.speed_limit, env.cfg.yaw_limit, env.cfg.frame_range, env.cfg.seed,
             env.cfg.feedback_mode, hold_range=env.cfg.hold_range,
@@ -114,6 +117,9 @@ def metrics(env):
         env.extras.setdefault('log', {}).update({'Cycle/active':p.active.float().mean(),
             'Cycle/balance':(p.phase==2).float().mean(), 'Cycle/complete':m['completed'].float().mean(),
             'Cycle/qualified':m['qualified'].float().mean(), 'Cycle/actual_admission':m['motion_attained'].float().mean()})
+        if hasattr(p,'bootstrap_stage'):
+            env.extras['log']['Course/bootstrap']=float(p.bootstrap_stage)
+            env.extras['log'].update({f'Course/{k}':float(v) for k,v in zip(('frame','takeover','straight','turn','arc'),p.split_levels)})
         if hasattr(p,'levels'):
             env.extras['log'].update({'Course/entry':float(p.levels[0]),'Course/motion':float(p.levels[1]),
                 'Cycle/preparing':m['preparing'].float().mean(),'Cycle/settled_rise':p.rise_settled.float().mean()})

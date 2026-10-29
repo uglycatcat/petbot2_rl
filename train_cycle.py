@@ -17,7 +17,7 @@ p.add_argument('--instant-tracking-weight',type=float,choices=[.3,.7],default=.3
 p.add_argument('--tracking-objective',choices=['mixed','instant_tolerance','stability_first'],default='mixed')
 p.add_argument('--observation-frame',choices=['world','local','balance_local'],default='world')
 p.add_argument('--handoff-alignment',choices=['before','after'],default='before')
-p.add_argument('--refinement-target',choices=['balance','rise','all'],default='balance')
+p.add_argument('--refinement-target',choices=['balance','rise','all','scratch'],default='balance')
 p.add_argument('--transition-contract',choices=['legacy','linear_heading'],default='legacy')
 p.add_argument('--task-profile',choices=['legacy','full_range'],default='legacy')
 p.add_argument('--training-mixture',choices=['off','stratified_v1'],default='off')
@@ -36,7 +36,20 @@ p.add_argument('--steering-design',choices=['feedback'],default='feedback')
 p.add_argument('--hold-min',type=float,default=8.);p.add_argument('--hold-max',type=float,default=12.)
 p.add_argument('--initialize-cycle-from');p.add_argument('--initialize-from');p.add_argument('--checkpoint');p.add_argument('--evaluate',action='store_true')
 p.add_argument('--allow-dirty',action='store_true');p.add_argument('--probe',action='store_true')
+p.add_argument('--from-scratch',action='store_true');p.add_argument('--scratch-run')
 AppLauncher.add_app_launcher_args(p);args=p.parse_args()
+if not args.evaluate and not args.probe and not args.from_scratch:
+    p.error('Historical warm-start training is retired. Use train_scratch.py; only same-run recovery is allowed.')
+scratch_origin=scratch_config=None
+if args.from_scratch:
+    if not args.scratch_run or args.initialize_from or args.initialize_cycle_from or args.probe:
+        p.error('Scratch training cannot initialize from another policy')
+    if args.refinement_target!='scratch' or args.balance_reflex!='off':p.error('No learned parent is permitted')
+    scratch_origin=json.loads((pathlib.Path(args.scratch_run)/'scratch_origin.json').read_text())
+    scratch_config=scratch_origin['configuration']
+    if scratch_origin['initialization']!='random' or scratch_origin['pretrained_models']:p.error('Invalid origin')
+    if args.checkpoint and pathlib.Path(args.checkpoint).resolve().parent!=pathlib.Path(args.scratch_run).resolve():
+        p.error('Only checkpoints belonging to this run may be recovered')
 rank=int(os.getenv('RANK','0'));world_size=int(os.getenv('WORLD_SIZE','1'))
 if world_size>1:
     if not args.distributed:raise ValueError('Multi-GPU launch requires --distributed')
@@ -79,7 +92,7 @@ try:
         assert args.observation_frame=='balance_local' and args.handoff_alignment=='after'
     assert args.exploration_profile=='fine' and args.yaw_feedback_design=='fast2' and args.yaw_feedback_gain==16.
     if args.task_profile=='full_range':
-        assert args.refinement_target=='all' and args.transition_contract=='linear_heading'
+        assert args.refinement_target in ('all','scratch') and args.transition_contract=='linear_heading'
     else:assert args.actor_normalization=='inherited'
     if args.training_mixture!='off':assert args.task_profile=='full_range'
     if args.balance_reflex=='parent_full20':
@@ -87,9 +100,14 @@ try:
     if args.rise_speed_reference!='capture':
         assert args.task_profile=='full_range' and args.balance_reflex=='parent_full20'
     if args.capability_version=='v25':
-        assert args.task_profile=='full_range' and args.balance_reflex=='parent_full20' and args.rise_speed_reference=='capture'
+        assert args.task_profile=='full_range' and (args.balance_reflex=='parent_full20' or args.from_scratch) and args.rise_speed_reference=='capture'
     else:assert not args.mirror_training and not args.adaptive_curriculum
     cfg=CycleEnvCfg();cfg.scene.num_envs=args.num_envs;cfg.sim.device=args.device;cfg.seed=args.seed
+    cfg.from_scratch=args.from_scratch
+    if args.from_scratch:
+        cfg.decimation=round(scratch_config['control_dt']/cfg.sim.dt)
+        assert abs(cfg.decimation*cfg.sim.dt-.02)<1e-9
+        cfg.sim.render_interval=cfg.decimation
     cfg.speed_limit=args.speed_limit;cfg.yaw_limit=args.yaw_limit;cfg.frame_range=(args.frame_min,args.frame_max)
     cfg.wheel_slew=args.wheel_slew;cfg.frame_slew=args.frame_slew;cfg.wheel_mode='common_diff'
     cfg.feedback_mode='pose_feedback_tight';cfg.rewards.tracking.weight=args.tracking_weight;cfg.tracking_shape=args.tracking_shape;cfg.yaw_filter_tau=args.yaw_filter_tau
@@ -120,6 +138,7 @@ try:
     names=['train_cycle.py','upright/rise_adapter.py','upright/balance_adapter.py','upright/balance_reflex.py','upright/stability.py','upright/functional.py','upright/local_frame.py']+['upright/'+n+'.py' for n in ['normalization','fast_feedback','ground_motion','feedback','feedback_task','continuous','continuous_task','cycle','cycle_task','moving','task','distribution','model','asset_cfg','prepare','transfer']]
     names+=['upright/kinematics.py','upright/full_range.py','upright/behavior.py','upright/parent_feedback.py']
     names+=['upright/capability.py','upright/symmetry.py','upright/curriculum_runner.py','upright/ordinary.py','upright/capability_review.py']
+    if args.from_scratch:names+=['train_scratch.py','upright/scratch.py','upright/scratch_runner.py','upright/split_curriculum.py']
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(n).read_bytes()).hexdigest() for n in names).encode()).hexdigest()
     scales={'moderate':[1.,4.,4.],'fine':[4.,16.,16.],'precision':[16.,64.,64.]}[args.exploration_profile]
     contract=dict(task='upright_cycle_v19',balance_reflex=args.balance_reflex,reflex_contract=dict(parent='cycle15B',period=.02,gate_after=1.8,frozen=True,clock='outer60ms',physical_features_only=True),tracking_objective=args.tracking_objective,actor_design='frozen_base_balance_yaw_adapter_v1',balance_noise_factor=args.balance_noise_factor,adapter_limits=[.03,.08,.8],adapter_gate=[1.2,1.8],adapter_observation_stats='frozen_parent_critic',actor_normalization=args.actor_normalization,normalization_prior_count=10000000 if args.actor_normalization=='rebase_recent' else None,yaw_feedback_design=args.yaw_feedback_design,fast_yaw_controller=dict(FAST_CONTROLLER,period=.002 if args.yaw_feedback_design=='fast2' else .02,kp=args.yaw_feedback_gain),heading_reference='wheel_lateral',contact_sampling='eager_physics_step_history30_v1',instant_tracking_weight=args.instant_tracking_weight,yaw_controller=CONTROLLER,steering_design=args.steering_design,yaw_filter_tau=args.yaw_filter_tau,tracking_shape=args.tracking_shape,command_sampling='all_directed_six_sequence_v3',reward_design=('stability_first_coarse_motion_v1' if args.tracking_objective=='stability_first' else 'instant_tolerance_soft_landing_v1' if args.tracking_objective=='instant_tolerance' else 'joint_ground_motion_soft_landing_v2'),motion_feedback='pose_delta_ema_120ms',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_58x5_wheel_lateral_v2',fingerprint=fingerprint,
@@ -170,6 +189,15 @@ try:
         contract.update(task='upright_cycle_v25',capability=CAPABILITY_CONTRACT,
             symmetry=dict(SYMMETRY_CONTRACT,enabled=args.mirror_training),adaptive_curriculum=args.adaptive_curriculum,
             command_sampling='mirrored_eight_sequence_v5',reward_design='continuous_velocity_and_settled_rise_v1')
+    if args.from_scratch:
+        from upright.scratch import CONTRACT as SCRATCH_CONTRACT
+        from upright.split_curriculum import CONTRACT as SPLIT_CONTRACT
+        contract.update(task='upright_scratch_v1',actor_design='single_trainable_mlp_20ms',
+            reflex_contract=None,adapter_limits=None,adapter_gate=None,adapter_observation_stats=None,
+            actor_normalization='fresh',concentration_scale=[1.,1.,1.],scratch=SCRATCH_CONTRACT,
+            split_curriculum=dict(SPLIT_CONTRACT,initial_levels=[0,0,0,0,0]),
+            command_sampling='scratch_then_split_continuous_v1')
+        contract['symmetry']=dict(contract['symmetry'],frozen_feedback=None)
     if args.checkpoint:
         prior=json.loads((pathlib.Path(args.checkpoint).parent/'config.json').read_text())
         if prior['contract']!=contract:raise ValueError('Checkpoint contract mismatch')
@@ -190,7 +218,35 @@ try:
         runner_type=CurriculumRunner
         if args.mirror_training:
             config['algorithm']['symmetry_cfg']=dict(data_augmentation_func='upright.symmetry:augment',use_data_augmentation=False,use_mirror_loss=True,mirror_loss_coeff=.2)
+    if args.from_scratch:
+        from upright.scratch_runner import ScratchRunner
+        runner_type=ScratchRunner
+        config['num_steps_per_env']=scratch_config['num_steps_per_env']
+        config['actor']=dict(class_name='MLPModel',hidden_dims=scratch_config['actor_hidden_dims'],
+            activation='elu',obs_normalization=True,
+            distribution_cfg=dict(class_name='upright.distribution:UprightBetaDistribution',
+                initial_mean=[home,0.,0.],initial_std=scratch_config['initial_action_std'],
+                shape_cap=128.,concentration_scale=[1.,1.,1.]))
+        config['critic']['hidden_dims']=scratch_config['critic_hidden_dims']
+        config['algorithm'].update(gamma=.997,lam=.95)
+        config['algorithm']['symmetry_cfg']['mirror_loss_coeff']=scratch_config['mirror_loss_coefficient']
+        if not args.checkpoint:
+            def reject_weight_load(*a,**kw):raise RuntimeError('Fresh training must not read serialized weights')
+            torch.load=reject_weight_load;torch.jit.load=reject_weight_load
     runner=runner_type(wrapped,copy.deepcopy(config),log_dir=str(folder),device=args.device)
+    if args.from_scratch:
+        runner.scratch_origin=scratch_origin
+        actor=runner.alg.get_policy()
+        assert all(p.requires_grad for p in actor.parameters())
+        assert all(p.requires_grad for p in runner.alg.critic.parameters())
+        assert not any(k.startswith(('parent_balance.','balance_reflex.','adapter.','rise_adapter.','yaw_adapter.')) for k in actor.state_dict())
+        if not args.checkpoint:
+            state=runner.alg.save()
+            torch.save(state,folder/'initial_state.pt')
+            initial=dict(origin=scratch_origin,all_actor_parameters_trainable=True,
+                initial_optimizer_empty=not bool(runner.alg.optimizer.state),serialized_weight_reads_forbidden=True,
+                initial_actor_sha256=hashlib.sha256(b''.join(t.detach().cpu().numpy().tobytes() for t in actor.state_dict().values())).hexdigest())
+            (folder/'initialization.json').write_text(json.dumps(initial,indent=2))
     if args.refinement_target=='all':
         actor=runner.alg.get_policy()
         for name,parameter in actor.named_parameters():parameter.requires_grad_(not name.startswith(('balance_reflex.','parent_balance.')))
@@ -247,17 +303,24 @@ try:
         metadata['initialization']['full_parent_feedback_preserved']=preserve_parent
         metadata['initialization']['rise_speed_reference_changed']=args.rise_speed_reference!='capture'
         del loaded
-    if args.checkpoint:runner.load(args.checkpoint)
+    if args.checkpoint:runner.load(args.checkpoint,map_location=args.device)
     from upright.balance_reflex import attach_balance_reflex
     attach_balance_reflex(env,runner.alg.get_policy(),args.balance_reflex in ('frozen20','parent_full20'),full_parent=args.balance_reflex=='parent_full20')
+    if args.from_scratch:metadata['scratch_origin']=scratch_origin
     metadata['distributed']=dict(world_size=world_size,rank=rank,local_envs=args.num_envs,total_envs=world_size*args.num_envs)
     metadata['effective_training_mixture']=cfg.training_mixture
     if rank==0:(folder/'config.json').write_text(json.dumps(metadata,indent=2))
-    if not args.evaluate and not args.probe:runner.learn(num_learning_iterations=args.iterations,init_at_random_ep_len=False)
+    if not args.evaluate and not args.probe:
+        remaining=args.iterations-runner.current_learning_iteration if args.from_scratch else args.iterations
+        if remaining<=0:raise RuntimeError('Requested updates already completed; refusing duplicate training')
+        runner.learn(num_learning_iterations=remaining,init_at_random_ep_len=False)
     else:
         from upright.balance_adapter import balance_gate
         from upright.distribution import BoundedBetaMean
         policy=runner.get_inference_policy(device=args.device);obs=wrapped.get_observations();n=args.num_envs
+        if args.from_scratch:
+            from upright.scratch_export import export
+            export(runner.alg.get_policy(),obs['policy'],folder/'onnx',metadata,args.checkpoint)
         alive=torch.ones(n,device=args.device,dtype=torch.bool)
         flags={k:torch.zeros_like(alive) for k in ['takeover','balance','landing','handoff','complete','qualified','failure','interrupted']}
         coverage={stage:{name:torch.zeros(n,device=args.device,dtype=torch.bool) for name in ['forward','reverse','left','right','curve','stop']} for stage in ['active','balance']}
@@ -277,24 +340,29 @@ try:
                 a=env.action_manager.get_term('moving');previous=a.applied.clone()
                 decision_raw=ensure(env).raw.clone()
                 action=policy(obs)
-                actor=runner.alg.get_policy();gate=balance_gate(obs['policy'])
                 progress=ensure(env);decision_ordinary=(~progress.active).clone()
-                expected_gate=(progress.phase==2)*((progress.phase_time-1.2)/.6).clamp(0.,1.)
-                assert torch.allclose(gate[alive],expected_gate[alive],atol=1e-6), 'Adapter phase/history mismatch'
-                base_action=BoundedBetaMean(127.)(actor.mlp(actor.obs_normalizer(obs['policy'])))
-                if args.refinement_target in ('rise','all'):
-                    from upright.balance_reflex import ReflexAdapterModel
-                    parent_action=ReflexAdapterModel.forward(actor,obs,stochastic_output=False)
-                    lift_gate=rise_gate(obs['policy']);lift_correction=action-parent_action
-                    expected_lift=(progress.phase==1)*(progress.phase_time/.12).clamp(0.,1.)+(progress.phase==2)*(1.-progress.phase_time/.6).clamp(0.,1.)
-                    assert torch.allclose(lift_gate[alive],expected_lift[alive],atol=1e-6), 'Rise phase/history mismatch'
-                    assert (lift_correction.abs()<=lift_correction.new_tensor([.15,.25,0.])+1e-6).all()
-                    assert not lift_correction[lift_gate==0].any()
+                if args.from_scratch:
+                    gate=torch.zeros(n,device=args.device);lift_gate=gate.clone()
+                    correction=torch.zeros_like(action);lift_correction=torch.zeros_like(action)
                 else:
-                    parent_action=action;lift_gate=torch.zeros_like(gate);lift_correction=torch.zeros_like(action)
-                correction=parent_action-base_action
-                assert (correction.abs()<=correction.new_tensor([.03,.08,.8])+1e-6).all()
-                assert not correction[gate==0].any()
+                    actor=runner.alg.get_policy();gate=balance_gate(obs['policy'])
+                    progress=ensure(env);decision_ordinary=(~progress.active).clone()
+                    expected_gate=(progress.phase==2)*((progress.phase_time-1.2)/.6).clamp(0.,1.)
+                    assert torch.allclose(gate[alive],expected_gate[alive],atol=1e-6), 'Adapter phase/history mismatch'
+                    base_action=BoundedBetaMean(127.)(actor.mlp(actor.obs_normalizer(obs['policy'])))
+                    if args.refinement_target in ('rise','all'):
+                        from upright.balance_reflex import ReflexAdapterModel
+                        parent_action=ReflexAdapterModel.forward(actor,obs,stochastic_output=False)
+                        lift_gate=rise_gate(obs['policy']);lift_correction=action-parent_action
+                        expected_lift=(progress.phase==1)*(progress.phase_time/.12).clamp(0.,1.)+(progress.phase==2)*(1.-progress.phase_time/.6).clamp(0.,1.)
+                        assert torch.allclose(lift_gate[alive],expected_lift[alive],atol=1e-6), 'Rise phase/history mismatch'
+                        assert (lift_correction.abs()<=lift_correction.new_tensor([.15,.25,0.])+1e-6).all()
+                        assert not lift_correction[lift_gate==0].any()
+                    else:
+                        parent_action=action;lift_gate=torch.zeros_like(gate);lift_correction=torch.zeros_like(action)
+                    correction=parent_action-base_action
+                    assert (correction.abs()<=correction.new_tensor([.03,.08,.8])+1e-6).all()
+                    assert not correction[gate==0].any()
                 obs,r,done,extra=wrapped.step(action)
                 s,m,raw,command,applied,since=env.moving_snapshot;valid=alive.clone()
                 assert torch.equal(raw[valid],decision_raw[valid]), 'Command changed after policy decision'

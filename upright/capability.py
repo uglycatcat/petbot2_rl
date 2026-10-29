@@ -139,6 +139,7 @@ class CapabilityProgress(FullRangeProgress):
                 v=self.raw.new_tensor([.15,.3,.45,.6])[level];w=self.raw.new_tensor([.5,1.5,3.,3.])[level]
                 direction=torch.where(ids%2==0,1.,-1.);reverse=torch.where((ids//2)%2==0,1.,-1.)
                 self.raw[:]=project_command(torch.stack((v*reverse,w*direction),-1))*((seconds>=3.)&balancing)[:,None]
+        self.requested[self.external]=self.raw[self.external]
         super().before_step()
         # Ordinary drive's requested acceleration is not a policy capability.
         self.command[~self.active]=project_command(self.raw[~self.active])
