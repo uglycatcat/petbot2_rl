@@ -26,7 +26,7 @@ while True:
         if item['status']!='failed' or notice.exists():continue
         notice.write_text(json.dumps(dict(submission_unknown='attempt_started')))
         message=(f"upright_rl_demo从零批次{launch['name']}的{name}失败。"
-            "先读AGENTS.md、docs/current_handoff.md、docs/upright_cycle_v26.md并核查该批实际进程和状态。"
+            f"先读AGENTS.md、docs/current_handoff.md、{launch.get('context_doc','docs/upright_cycle_v26.md')}并核查该批实际进程和状态。"
             "其他运行可能仍在进行，不能重复启动或覆盖固定副本。检查显存/日志/检查点；受迫中断先恢复同一运行，"
             "仅修正工具问题不能变成加载旧父策略的新实验。保留1000更新及所有最新需求；继续事件驱动纠正，禁止周期定时器和goal。")
         try:

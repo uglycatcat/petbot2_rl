@@ -18,7 +18,7 @@ ROOT=Path(__file__).resolve().parent
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--config',type=Path,default=ROOT/'configs/scratch_v1.json')
+    p.add_argument('--config',type=Path,default=ROOT/'configs/scratch_v2.json')
     p.add_argument('--run-dir',type=Path,required=True)
     p.add_argument('--seed',type=int)
     p.add_argument('--num_envs',type=int)
@@ -39,7 +39,7 @@ def main():
     p.add_argument('--headless',action='store_true')
     a=p.parse_args()
     cfg=json.loads(((a.run_dir/'scratch_config.json') if a.resume else a.config).read_text())
-    if cfg['schema']!='petbot_scratch_v1' or cfg['pretrained_models']!=[]:p.error('Scratch configuration required')
+    if cfg['schema']!='petbot_scratch_v1' or cfg['pretrained_models']!=[] or cfg.get('reward_design')!='rise_progress_v2':p.error('Scratch configuration required')
     for key in ('seed','num_envs','iterations','save_interval'):
         if getattr(a,key) is not None:cfg[key]=getattr(a,key)
     if not 1<=cfg['num_envs']<=4096 or cfg['iterations']<1:p.error('Invalid training budget')

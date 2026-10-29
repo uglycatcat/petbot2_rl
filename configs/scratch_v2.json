@@ -1,0 +1,30 @@
+{
+  "schema": "petbot_scratch_v1",
+  "seed": 60,
+  "num_envs": 4096,
+  "iterations": 1000,
+  "save_interval": 100,
+  "learning_rate": 0.0003,
+  "num_steps_per_env": 64,
+  "control_dt": 0.02,
+  "actor_hidden_dims": [
+    256,
+    128
+  ],
+  "critic_hidden_dims": [
+    256,
+    128
+  ],
+  "initial_action_std": [
+    0.35,
+    0.35,
+    0.25
+  ],
+  "hold_seconds": [
+    12.0,
+    30.0
+  ],
+  "mirror_loss_coefficient": 0.2,
+  "pretrained_models": [],
+  "reward_design": "rise_progress_v2"
+}

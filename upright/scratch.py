@@ -1,8 +1,9 @@
 """Bootstrap a complete upright policy without pretrained networks or datasets."""
 import torch
 from .split_curriculum import SplitCurriculumProgress
+from .scratch_learning import CONTRACT as LEARNING_CONTRACT, rise_rewards
 
-CONTRACT=dict(version='scratch_curriculum_v1',pretrained_models=[],
+CONTRACT=dict(version='scratch_curriculum_v2',pretrained_models=[],rise_learning=LEARNING_CONTRACT,
     policy='single_trainable_mlp_20ms',history='five_58_feature_frames_20ms',
     ordinary_and_yaw='explicit_source_control_no_learned_parent',
     bootstrap=[dict(frame=[0.,0.],motion=[0.,0.],hold=4.),
@@ -24,6 +25,8 @@ class ScratchProgress(SplitCurriculumProgress):
         self.bootstrap_at_reset=torch.zeros(self.n,device=self.device,dtype=torch.long)
         self.bootstrap_seen=torch.zeros(self.n,device=self.device,dtype=torch.bool)
         self.split_levels=[0,0,0,0,0]
+        self.rise_potential_peak=torch.zeros(self.n,device=self.device)
+        self.learning_stats=torch.zeros(3,device=self.device) # max geometric gap, lifted calls, balance entries
 
     def _limits(self,ids):
         limits=super()._limits(ids)
@@ -39,6 +42,7 @@ class ScratchProgress(SplitCurriculumProgress):
     def reset(self,ids,pos,heading):
         self.bootstrap_at_reset[ids]=self.bootstrap_stage
         self.bootstrap_seen[ids]=False
+        self.rise_potential_peak[ids]=0.
         super().reset(ids,pos,heading)
         if not self.evaluating:
             if self.bootstrap_stage==0:self.frame[ids]=0.;self.hold_duration[ids]=4.
@@ -50,7 +54,15 @@ class ScratchProgress(SplitCurriculumProgress):
         if self.bootstrap_stage>=2:super()._record(*args)
 
     def update(self,s,fixed):
+        previously_lifted=self.lift_seen.clone()
         m=super().update(s,fixed)
+        peak,rewards=rise_rewards(s,m,self.rise_potential_peak,self.dt)
+        self.rise_potential_peak.copy_(peak);m.update(rewards)
+        gap=m['wheel_gap'].amin(-1)
+        self.learning_stats[0]=torch.maximum(self.learning_stats[0],torch.where(m['phase']>=1,gap,0.).max())
+        self.learning_stats[1]+=(self.lift_seen&~previously_lifted).sum()
+        self.learning_stats[2]+=m['entered_balance'].sum()
+        m['rise_front_gap']=gap
         if not self.evaluating and self.bootstrap_stage<2:
             terminal=m['failure']|m['completed']|(self.active&(self.since>=self.hold_range[1]+18.))
             new=terminal&~self.bootstrap_seen
@@ -70,13 +82,15 @@ class ScratchProgress(SplitCurriculumProgress):
         return m
 
     def curriculum_state_dict(self):
-        return dict(version=3,design='scratch_curriculum_v1',split=super().curriculum_state_dict(),
+        return dict(version=4,design='scratch_curriculum_v2',split=super().curriculum_state_dict(),
+            learning_stats=self.learning_stats.cpu(),
             bootstrap_stage=self.bootstrap_stage,bootstrap_trials=self.bootstrap_trials,
             bootstrap_success=self.bootstrap_success,bootstrap_streak=self.bootstrap_streak,
             bootstrap_history=self.bootstrap_history)
 
     def load_curriculum_state_dict(self,data,restore_streams=True):
-        assert data['version']==3 and data['design']=='scratch_curriculum_v1'
+        assert data['version']==4 and data['design']=='scratch_curriculum_v2'
         super().load_curriculum_state_dict(data['split'],restore_streams)
+        self.learning_stats.copy_(data['learning_stats'])
         for key in ('bootstrap_stage','bootstrap_trials','bootstrap_success','bootstrap_streak','bootstrap_history'):
             setattr(self,key,data[key])

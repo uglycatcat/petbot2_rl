@@ -127,6 +127,9 @@ try:
         cfg.rewards.enter_balance.weight=0.
         cfg.rewards.settled_rise=RewardTermCfg(func=reward,weight=5.,params={'kind':'settled_rise_reward'})
         cfg.rewards.preparation=RewardTermCfg(func=reward,weight=-1.,params={'kind':'preparation_cost'})
+    if args.from_scratch:
+        cfg.rewards.enter_balance.weight=5.
+        cfg.rewards.rise_progress=RewardTermCfg(func=reward,weight=4.,params={'kind':'rise_progress_reward'})
     if args.transition_contract=='linear_heading':cfg.rewards.transition.weight=2.
     cfg.instant_tracking_weight=args.instant_tracking_weight;cfg.yaw_feedback_design=args.yaw_feedback_design;cfg.yaw_feedback_gain=args.yaw_feedback_gain
     cfg.active_seconds=args.hold_max+(18. if args.task_profile=='full_range' else 12.)
@@ -138,7 +141,7 @@ try:
     names=['train_cycle.py','upright/rise_adapter.py','upright/balance_adapter.py','upright/balance_reflex.py','upright/stability.py','upright/functional.py','upright/local_frame.py']+['upright/'+n+'.py' for n in ['normalization','fast_feedback','ground_motion','feedback','feedback_task','continuous','continuous_task','cycle','cycle_task','moving','task','distribution','model','asset_cfg','prepare','transfer']]
     names+=['upright/kinematics.py','upright/full_range.py','upright/behavior.py','upright/parent_feedback.py']
     names+=['upright/capability.py','upright/symmetry.py','upright/curriculum_runner.py','upright/ordinary.py','upright/capability_review.py']
-    if args.from_scratch:names+=['train_scratch.py','upright/scratch.py','upright/scratch_runner.py','upright/split_curriculum.py']
+    if args.from_scratch:names+=['train_scratch.py','upright/scratch.py','upright/scratch_runner.py','upright/split_curriculum.py','upright/scratch_learning.py']
     fingerprint=hashlib.sha256(''.join(hashlib.sha256(pathlib.Path(n).read_bytes()).hexdigest() for n in names).encode()).hexdigest()
     scales={'moderate':[1.,4.,4.],'fine':[4.,16.,16.],'precision':[16.,64.,64.]}[args.exploration_profile]
     contract=dict(task='upright_cycle_v19',balance_reflex=args.balance_reflex,reflex_contract=dict(parent='cycle15B',period=.02,gate_after=1.8,frozen=True,clock='outer60ms',physical_features_only=True),tracking_objective=args.tracking_objective,actor_design='frozen_base_balance_yaw_adapter_v1',balance_noise_factor=args.balance_noise_factor,adapter_limits=[.03,.08,.8],adapter_gate=[1.2,1.8],adapter_observation_stats='frozen_parent_critic',actor_normalization=args.actor_normalization,normalization_prior_count=10000000 if args.actor_normalization=='rebase_recent' else None,yaw_feedback_design=args.yaw_feedback_design,fast_yaw_controller=dict(FAST_CONTROLLER,period=.002 if args.yaw_feedback_design=='fast2' else .02,kp=args.yaw_feedback_gain),heading_reference='wheel_lateral',contact_sampling='eager_physics_step_history30_v1',instant_tracking_weight=args.instant_tracking_weight,yaw_controller=CONTROLLER,steering_design=args.steering_design,yaw_filter_tau=args.yaw_filter_tau,tracking_shape=args.tracking_shape,command_sampling='all_directed_six_sequence_v3',reward_design=('stability_first_coarse_motion_v1' if args.tracking_objective=='stability_first' else 'instant_tolerance_soft_landing_v1' if args.tracking_objective=='instant_tolerance' else 'joint_ground_motion_soft_landing_v2'),motion_feedback='pose_delta_ema_120ms',concentration_scale=scales,tracking_weight=args.tracking_weight,observation_schema='cycle_58x5_wheel_lateral_v2',fingerprint=fingerprint,
@@ -196,7 +199,7 @@ try:
             reflex_contract=None,adapter_limits=None,adapter_gate=None,adapter_observation_stats=None,
             actor_normalization='fresh',concentration_scale=[1.,1.,1.],scratch=SCRATCH_CONTRACT,
             split_curriculum=dict(SPLIT_CONTRACT,initial_levels=[0,0,0,0,0]),
-            command_sampling='scratch_then_split_continuous_v1')
+            command_sampling='scratch_then_split_continuous_v1',reward_design='rise_progress_v2')
         contract['symmetry']=dict(contract['symmetry'],frozen_feedback=None)
     if args.checkpoint:
         prior=json.loads((pathlib.Path(args.checkpoint).parent/'config.json').read_text())
@@ -403,6 +406,8 @@ try:
                 trace[-1].update(joint_position=s['q'].tolist(),joint_velocity=s['qd'].tolist(),position_target=m['position_target'].tolist(),wheel_target=m['wheel_target'].tolist(),actuator_effort=m['effort'].tolist(),transition_heading_error=m.get('transition_heading_error',torch.zeros(n,device=args.device)).tolist(),geometry_ground=m.get('geometry_ground',s['four']).tolist(),interrupted=m.get('interrupted',torch.zeros_like(valid)).tolist(),exit_phase=m.get('exit_phase',torch.zeros_like(category)).tolist(),requested=m.get('requested_command',raw).tolist(),switched=m['switched'].tolist())
                 if args.capability_version=='v25':
                     trace[-1].update({k:m[k].tolist() for k in ('preparing','preparation_elapsed','preparation_speed_change','preparation_hip_change','initial_motion_frame','rise_settled','curriculum_levels')})
+                if args.from_scratch:
+                    trace[-1].update({k:m[k].tolist() for k in ('rise_progress_reward','rise_lift_fraction','rise_front_gap','transition_track','smooth_reward')})
                 assert torch.isfinite(obs['policy']).all() and torch.isfinite(r).all()
                 alive &= ~done.bool()
                 if not alive.any():break

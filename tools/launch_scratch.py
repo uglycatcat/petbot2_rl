@@ -47,7 +47,7 @@ def main():
             raise RuntimeError('Training implementation changed since engineering acceptance')
     out=RUNS/('_'+plan['name']);out.mkdir(exist_ok=False)
     save(out/'plan.json',plan)
-    state=dict(name=plan['name'],mode=plan['mode'],commit=commit,pretrained_models=[],
+    state=dict(name=plan['name'],mode=plan['mode'],commit=commit,pretrained_models=[],context_doc=plan.get('context_doc','docs/upright_cycle_v26.md'),
         eval_pid=os.getpid(),evaluator_entrypoint='launch_scratch.py',
         thread=os.environ.get('CODEX_THREAD_ID'),started_at=time.strftime('%FT%T%z'),train={})
     status={}
@@ -89,6 +89,8 @@ def main():
                 save(out/'launch_status.json',state)
             # Deliberately rebuild from read-only MJCF, without an old asset cache.
             step(v,work,'asset','tools/prepare_asset.py',['--headless','--device','cuda:0'])
+            for preflight in v.get('preflight',[]):
+                step(v,work,preflight['name'],preflight['entrypoint'],preflight['args'])
             args=['--run-dir','logs/scratch','--seed',str(v['seed']),'--iterations',str(v['iterations']),
                 '--num_envs',str(v['num_envs']),'--save-interval',str(v.get('save_interval',100)),
                 '--headless','--device','cuda:0']
@@ -124,7 +126,7 @@ def main():
     with ThreadPoolExecutor(max_workers=len(variants)) as pool:results=list(pool.map(run,variants))
     save(out/'eval_finished.json',dict(results=results,finished_at=time.strftime('%FT%T%z'),acceptance_pending=True))
     message=(f"upright_rl_demo从零训练队列{plan['name']}已结束。读取AGENTS.md、docs/current_handoff.md、"
-        "docs/upright_cycle_v26.md和该批状态、实际进程、失败/显存中断、随机初始化及同次恢复证据、"
+        f"{state['context_doc']}和该批状态、实际进程、失败/显存中断、随机初始化及同次恢复证据、"
         "请求/执行/实测轨迹。先验收分析再继续已授权事件迭代；禁止加载历史父模型，工程退出0不代表策略通过。"
         "保留C58体验基准、双向连续0–0.75m/s、起立少调整、落地只增默认髋位、每份1000更新要求。"
         "不重复启动，不恢复周期定时器或goal。")

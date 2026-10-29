@@ -119,6 +119,9 @@ def metrics(env):
             'Cycle/qualified':m['qualified'].float().mean(), 'Cycle/actual_admission':m['motion_attained'].float().mean()})
         if hasattr(p,'bootstrap_stage'):
             env.extras['log']['Course/bootstrap']=float(p.bootstrap_stage)
+            if 'rise_front_gap' in m:
+                env.extras['log'].update({'Cycle/rise_front_gap':m['rise_front_gap'].mean(),
+                    'Cycle/lifted_calls':p.learning_stats[1],'Cycle/balance_entries':p.learning_stats[2]})
             env.extras['log'].update({f'Course/{k}':float(v) for k,v in zip(('frame','takeover','straight','turn','arc'),p.split_levels)})
         if hasattr(p,'levels'):
             env.extras['log'].update({'Course/entry':float(p.levels[0]),'Course/motion':float(p.levels[1]),
