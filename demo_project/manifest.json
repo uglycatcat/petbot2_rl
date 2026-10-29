@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "33cb96954bdc170f06531b9dafa6f497f8fde450",
+      "verified_commit": "e12381e7707136e8fa110ecea386f55fe9f1debd",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "From-scratch training required; legacy C58 retained only as desktop behavior benchmark. Independent scratch engineering gate in progress before formal1000-update trials.",
-      "local_validation": "CUDA sampler/mirror/curriculum checks passed; fresh MJCF-to-PhysX builds completed. Two4096-env random-start short runs, same-run recovery and ONNX reload acceptance pending; no policy pass claimed.",
+      "status": "Scratch engineering accepted; batch24 launched with two independent4096x1000 random initializations on fixed21ce93d. Historical C58 retained only as desktop effect benchmark. Performance pending.",
+      "local_validation": "e73ca8b task: two10-update runs, one8+2 same-run recovery, two64-episode reloads and ONNX parity under5e-7; no OOM or runtime/PhysX error. All reloads rise-timeout64; no two-wheel/landing acceptance. Wheel targets/effort bounds valid. Formal initialization uses no checkpoint.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
