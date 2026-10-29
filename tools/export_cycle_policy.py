@@ -38,7 +38,11 @@ def export(evaluation, output, source=ROOT):
     assert end['exit_code'] == 0 and not end['guard_stopped'] and not end.get('physics_error') and not end.get('runtime_error')
     assert result['count'] == 64 and result['unfinished'] == 0
     contract = meta['contract']
-    assert contract['task'] in ('upright_cycle_v18', 'upright_cycle_v19', 'upright_cycle_v20', 'upright_cycle_v21', 'upright_cycle_v22', 'upright_cycle_v23')
+    assert contract['task'] in ('upright_cycle_v18', 'upright_cycle_v19', 'upright_cycle_v20', 'upright_cycle_v21', 'upright_cycle_v22', 'upright_cycle_v23', 'upright_cycle_v25')
+    if contract['task'] == 'upright_cycle_v25':
+        from upright.capability import CONTRACT as CAPABILITY_CONTRACT
+        assert contract['capability'] == CAPABILITY_CONTRACT
+        assert meta['args']['capability_version'] == 'v25'
     assert contract['balance_reflex'] in ('frozen20', 'parent_full20') and contract['yaw_feedback_design'] == 'fast2'
     full_parent = contract['balance_reflex'] == 'parent_full20'
     if full_parent:
@@ -117,6 +121,7 @@ def export(evaluation, output, source=ROOT):
         sources += ['upright/kinematics.py', 'upright/stability.py']
     if contract.get('task_profile')=='full_range':sources+=['upright/full_range.py']
     if full_parent:sources+=['upright/parent_feedback.py']
+    if contract['task']=='upright_cycle_v25':sources+=['upright/capability.py','upright/ordinary.py']
     manifest = dict(
         format='petbot_cycle_network_bundle_v1', task_commit=meta['commit'],
         exporter_commit=subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip(),
