@@ -1,0 +1,94 @@
+{
+  "name": "upright_cycle_batch25",
+  "mode": "formal",
+  "commit": "78b9252e7c6ae212764eaf5415413808b630f0f2",
+  "container": "petbot-upright-night",
+  "pretrained_models": [],
+  "reserve_mib": 8000,
+  "gate": "demo_project/runs/_scratch_v27_rise_gate1/acceptance_review.json",
+  "skip_remaining_on_no_balance": true,
+  "variants": [
+    {
+      "name": "upright_cycle_batch25_scratch_r60",
+      "seed": 60,
+      "gpu": 2,
+      "num_envs": 4096,
+      "iterations": 1000,
+      "save_interval": 100
+    },
+    {
+      "name": "upright_cycle_batch25_scratch_r61",
+      "seed": 61,
+      "gpu": 3,
+      "num_envs": 4096,
+      "iterations": 1000,
+      "save_interval": 100
+    }
+  ],
+  "evaluations": [
+    {
+      "name": "low",
+      "args": [
+        "--speed-limit",
+        ".05",
+        "--yaw-limit",
+        ".15",
+        "--frame-min",
+        "-.2",
+        "--frame-max",
+        ".2",
+        "--hold-seconds",
+        "30"
+      ]
+    },
+    {
+      "name": "medium",
+      "args": [
+        "--speed-limit",
+        ".15",
+        "--yaw-limit",
+        ".5",
+        "--frame-min",
+        "-.2",
+        "--frame-max",
+        ".2",
+        "--hold-seconds",
+        "60"
+      ]
+    },
+    {
+      "name": "straight",
+      "args": [
+        "--evaluation-pattern",
+        "paired_speed",
+        "--hold-seconds",
+        "35"
+      ]
+    },
+    {
+      "name": "arcs",
+      "args": [
+        "--evaluation-pattern",
+        "paired_arcs",
+        "--hold-seconds",
+        "45"
+      ]
+    },
+    {
+      "name": "hips",
+      "args": [
+        "--speed-limit",
+        ".05",
+        "--yaw-limit",
+        ".15",
+        "--frame-min",
+        "-1",
+        "--frame-max",
+        "1.2",
+        "--hold-seconds",
+        "30"
+      ]
+    }
+  ],
+  "context_doc": "docs/upright_cycle_v27.md"
+}

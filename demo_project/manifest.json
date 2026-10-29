@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-29",
+  "updated_at": "2026-10-30",
   "purpose": "PetBot experimental training projects. Code is versioned on dedicated demoproj branches; checkouts are managed by default.xml.",
   "repositories": [
     {
@@ -49,8 +49,8 @@
         "demo"
       ],
       "shallow": false,
-      "status": "Batch24 two scratch1000-update runs completed; both low-range evaluations had0/64 balance entries. Eight harder evaluations deliberately skipped. V27 bounded-rise reward correction in engineering gate; no batch25 formal run yet; C58 desktop baseline retained.",
-      "local_validation": "Batch24 checkpoints and losses finite, no inherited weights/restarts/OOM, all original processes exited. Targets and torque limits valid; actual wheel overshoot48.57/39.91rad/s remains. V27 CUDA reward/curriculum regression passed; PhysX probe and two32-update scratch/recovery/reload checks in progress.",
+      "status": "V27 scratch engineering accepted, policy failed: two32-update runs and same-run30+2 recovery complete; both reloads0/64 balance. Batch25 two fresh4096x1000 runs launched at78b9252, seeds60/61. C58 remains desktop benchmark.",
+      "local_validation": "Eight engineering steps complete, all11 original PIDs exited, no OOM/runtime/PhysX interruption. Grounded transition/smooth rewards zero; training recorded8/57 geometric liftoffs, no balance entry. Target/effort bounds valid; actual wheel peaks39.56/43.21rad/s remain. ONNX parity<=7.2e-7 is not sim2sim acceptance.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
