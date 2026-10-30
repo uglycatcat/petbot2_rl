@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "b357dd720ae5cc42e0c630476a0df007fe7dbc3e",
+      "verified_commit": "85e7c94018fa1ad68b809f7a51e79bf5337b13e2",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "V28 engineering accepted; both random32-update policies still0/64 balance. Batch26 started: two fresh random1000-update runs, seeds60/61, fixedb357dd7, no historical weights. C58 retained.",
-      "local_validation": "Eight steps complete; no OOM/runtime/PhysX failures. Random initialization and30+2 same-run recovery verified;306 physical probe frames unchanged. Targets<=25rad/s and rear effort<=0.38Nm; actual wheel peaks18.29/61.91rad/s remain unresolved. Policy/sim2sim not accepted.",
+      "status": "Clean rebuild requested by user; training and automatic iteration paused. Prior implementation archived, requirements retained; no new training implementation or policy capability.",
+      "local_validation": "180 archived source files verified unchanged; batch26 cancelled, processes exited. New read-only specification/XML checks pass and training entry refuses execution. No new PhysX/PPO/sim2sim validation.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []

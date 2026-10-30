@@ -1,6 +1,6 @@
 # 项目文档索引
 
-- 当前从零训练：[v28起立奖励纠正](upright_cycle_v28.md)，前批结论见[第25批终局](upright_cycle_batch25_results.md)；不依赖历史策略，状态以交接和实际进程为准。
+- 当前：**停训并独立重建upright**。先看[当前交接](current_handoff.md)、[纯需求基线](current_scope.md)和[重整记录](upright_reorganization_20261030.md)。旧实现与实验只封存追溯，不作新版复用或优化来源。下表中的历史方案和授权不覆盖当前暂停。
 
 
 先读根目录 [AGENTS.md](../AGENTS.md) 的硬规则和里程碑，再读[当前交接](current_handoff.md)。只按手头问题打开下面相应文档；历史实验与 `runs/` 不需要全读。根目录 README 用于部署和使用，不承载进度。
@@ -8,6 +8,7 @@
 | 问题 | 文档 |
 |---|---|
 | MuJoCo 键盘体验、正式项目与成熟度验证 | [sim2sim 方案](upright_sim2sim_20261027.md)、[正式项目索引](../rl_project/README.md) |
+| 历史完整循环训练与反馈来源追溯 | [第23批原生终局](upright_cycle_batch23_results.md)、[第22批能力保留验证](upright_cycle23_retention_comparison.md)、[第22批终局](upright_cycle_batch22_results.md)、[v24工程与学习设计](upright_cycle_v24.md)、[过渡速度参考诊断及验证终局](upright_transition_speed_diagnostic.md)、[第21批及新种子验证终局](upright_cycle_batch21_results.md)、[v23设计与工程](upright_cycle_v23.md)、[固定两轮反馈诊断与验证终局](upright_balance_refresh_diagnostic.md)、[第二十批终局](upright_cycle_batch20_results.md)；前置[第十九批终局](upright_cycle_batch19_results.md)、[v22设计与工程](upright_cycle_v22.md) |
 | 当前正在做什么、状态文件在哪里、下一步怎么接 | [当前交接](current_handoff.md) |
 | 三个功能目标、控制接口与用户已确认的约束 | [需求基线](current_scope.md) |
 | repo、容器与版本管理 | [工程说明](engineering_handoff.md)的管理章节；[demo 索引](../demo_project/README.md)。工程说明其余训练接口主要为历史 recovery 原型。 |
@@ -49,3 +50,5 @@
 - 修改 demo 入口和工具职责时更新对应 demo README；它用于项目导览，不写逐批进度。区分用户确认、实测与推测，过时结论注明历史边界。
 - 早期实验文档保留当时的运行状态与判断；其中的“当前”“定时启用”“下一步”均按文档日期理解，不覆盖[当前交接](current_handoff.md)。
 - 文档使用相对链接；仓库公开，不写主机地址、账户、密钥或代理配置。
+
+- [v25能力训练与第23批](upright_cycle_v25.md)：最少调整接管、双向满速、镜像与可恢复课程；正式每份1000更新。
