@@ -155,7 +155,8 @@ def run(folder,control):
                 if len(state['jobs'])<len(plan['jobs']) and enabled(control):
                     queue_event(control,folder/f'job_{result["job"]}_event.json',
                         f'[step单路结果事件] {folder}/{result["job"]}/job_status.json已有结果。'
-                        f'读取{folder}/batch_status.json及{control}确认其余任务实际状态。'
+                        f'先读取{control.parent}/active.json、{folder}/agent_review.json（若有）、{folder}/batch_status.json及{control}。'
+                        '若是已处理旧事件且更新批次已运行，只补记接收，不重复发批或中止新训练。'
                         '用户授权持续迭代，仅GPU0/1。立即审查本路真实轨迹/analysis.json和失败原因，准备改进；'
                         '同批其它路仍可运行，不能修改固定副本或重复发批。等整批完成事件后汇总并验证、推送下一轮。')
         state.update(status='complete' if all(job['status']=='complete' for job in state['jobs']) else 'failed',finished_at=stamp())
@@ -164,7 +165,8 @@ def run(folder,control):
         if enabled(control):
             event_kind='工程检查完成' if plan['kind']=='engineering' else '正式批次完成/异常'
             message=(f'[step自动迭代事件：{event_kind}] 固定目录 {folder}；控制文件 {control}。'
-                '先核对enabled与batch_status.json、每路analysis.json、日志和实际进程，避免重复启动。'
+                f'先核对{control.parent}/active.json、enabled、agent_review.json（若有）、batch_status.json、每路analysis.json、日志和实际进程。'
+                '若事件属于已处理的旧轮次且更新批次已运行，只补记接收，不重复发批或中止新训练。'
                 '只负责step，物理GPU仅0/1。用户已授权持续分析、修改优化、工程验证并重新从零训练。'
                 '检查真实阶段、请求/执行/实测关节、接触、运动和成功/失败轨迹，记录结论与下一轮修改假设；'
                 '任何无效物理或失败工程不得作策略结论。新配置/源码先过容器门槛、提交推送、冻结，再启动下一批并延续同一事件链。'
