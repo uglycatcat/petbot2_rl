@@ -1,0 +1,96 @@
+"""Reviewed experiment choices, separate from immutable user requirements."""
+from dataclasses import asdict, dataclass, fields
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+@dataclass(frozen=True)
+class Config:
+    schema: str = 'upright_restart_round01_v1'
+    series: str = 'upright_restart_20261030'
+    round: int = 1
+    seed: int = 101
+    iterations: int = 1000
+    num_envs: int = 2048
+    decimation: int = 30  # source timestep 2ms -> policy 60ms
+    history: int = 5
+    rollout_steps: int = 32
+    learning_rate: float = 0.0003
+    checkpoint_interval: int = 100
+    probe_interval: int = 100
+    probe_count: int = 32
+    curriculum_pass_rate: float = 0.8
+    curriculum_consecutive: int = 2
+    low_speed: float = 0.10
+    low_yaw: float = 0.30
+    initial_hip: float = 0.10
+    baseline_fraction: float = 0.2
+    warmup_s: float = 1.5
+    warmup_timeout_s: float = 4.0
+    rise_timeout_s: float = 12.0
+    support_enter_s: float = 0.30
+    lifted_confirm_s: float = 0.06
+    return_confirm_s: float = 0.12
+    ground_confirm_s: float = 0.18
+    hold_s: float = 2.0
+    balance_train_s: float = 8.0
+    balance_eval_s: float = 30.0
+    landing_timeout_s: float = 4.0
+    handoff_hold_s: float = 0.6
+    handoff_timeout_s: float = 3.0
+    handoff_blend_s: float = 0.3
+    lift_gap_m: float = 0.025
+    support_gap_m: float = 0.075
+    ground_gap_m: float = 0.012
+    hip_slew_rad_s: float = 6.0
+    wheel_slew_rad_s2: float = 150.0
+    heading_kp: float = 1.0
+    heading_kd: float = 0.1
+    heading_wheel_correction_rad_s: float = 2.0
+    yaw_quality_rad: float = 0.35
+    imu_noise_std: float = 0.0
+    joint_noise_std: float = 0.0
+
+    def validate(self):
+        for key in ('iterations', 'num_envs', 'decimation', 'history', 'rollout_steps',
+                    'checkpoint_interval', 'probe_interval', 'probe_count', 'curriculum_consecutive'):
+            value = getattr(self, key)
+            if type(value) is not int or value <= 0:
+                raise ValueError(f'{key} must be a positive integer')
+        if self.schema != 'upright_restart_round01_v1' or self.round != 1:
+            raise ValueError('This implementation supports the reviewed round01 configuration')
+        if self.num_envs > 4096 or self.probe_count > self.num_envs:
+            raise ValueError('Invalid environment/probe count; maximum 4096 environments')
+        if not 0 < self.curriculum_pass_rate <= 1 or not 0 <= self.baseline_fraction < 1:
+            raise ValueError('Invalid curriculum probabilities')
+        if not 0 <= self.low_speed <= .75 or not 0 <= self.initial_hip <= 1:
+            raise ValueError('Curriculum range exceeds source/required bounds')
+        for key, value in asdict(self).items():
+            if isinstance(value, float) and (not __import__('math').isfinite(value) or value < 0):
+                raise ValueError(f'Invalid numeric configuration: {key}')
+        for key in ('hold_s', 'rise_timeout_s', 'landing_timeout_s', 'support_enter_s',
+                    'handoff_blend_s', 'yaw_quality_rad', 'learning_rate'):
+            if getattr(self, key) <= 0:
+                raise ValueError(f'{key} must be positive')
+        return self
+
+    def to_dict(self):
+        return asdict(self)
+
+
+def load_config(path=None, **overrides):
+    data = json.loads(Path(path or ROOT/'configs/round01.json').read_text())
+    unknown = data.keys() - {f.name for f in fields(Config)}
+    if unknown:
+        raise ValueError(f'Unknown configuration keys: {sorted(unknown)}')
+    data.update({k: v for k, v in overrides.items() if v is not None})
+    return Config(**data).validate()
+
+
+def require_execution(kind):
+    state = json.loads((ROOT/'project.json').read_text())
+    key = {'training': 'training_enabled', 'engineering': 'engineering_execution_enabled',
+           'evaluation': 'evaluation_enabled'}[kind]
+    if not state.get(key, False):
+        raise RuntimeError(f'{kind} is paused pending user review. No simulator or training was started.')

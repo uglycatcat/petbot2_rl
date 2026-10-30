@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "baseline_recovery",
+  "phase": "implementation_review",
   "training_enabled": false,
   "automatic_iteration_enabled": false,
-  "training_implemented": false,
+  "training_implemented": true,
   "policy_validated": false,
-  "reason": "Requirements are settled. Recover and adapt audited early implementations without historical model dependencies; a complete redesign is not required.",
+  "reason": "Round01 implementation is ready for code review only. User requested no training dispatch before joint review.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -15,6 +15,11 @@
     "series": "upright_restart_20261030",
     "round": 1,
     "name": "upright_restart_round01",
-    "status": "planned_not_started"
-  }
+    "status": "implemented_pending_user_review_not_started"
+  },
+  "engineering_execution_enabled": false,
+  "evaluation_enabled": false,
+  "engineering_validated": false,
+  "implementation_review": "docs/round01_implementation.md",
+  "cpu_contract_tests_passed": 27
 }
