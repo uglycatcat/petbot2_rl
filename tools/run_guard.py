@@ -41,7 +41,7 @@ def main():
     a.log.parent.mkdir(parents=True,exist_ok=True)
     reason=None;started=time.monotonic();peak=used
     with a.log.open('w') as log:
-        child=subprocess.Popen(['docker','exec','-w',a.workdir,a.container,'python3','-c',bootstrap,pidfile,token,*command],stdout=log,stderr=subprocess.STDOUT)
+        child=subprocess.Popen(['docker','exec','-w',a.workdir,a.container,'/isaac-sim/python.sh','-c',bootstrap,pidfile,token,*command],stdout=log,stderr=subprocess.STDOUT)
         try:
             while child.poll() is None:
                 if time.monotonic()-started>a.timeout: reason='timeout';break
@@ -55,10 +55,10 @@ def main():
             raise
         finally:
             if reason:
-                subprocess.run(['docker','exec',a.container,'python3','-c',kill,pidfile,token],check=False)
+                subprocess.run(['docker','exec',a.container,'/isaac-sim/python.sh','-c',kill,pidfile,token],check=False)
                 try: child.wait(timeout=15)
                 except subprocess.TimeoutExpired:
-                    subprocess.run(['docker','exec',a.container,'python3','-c',kill.replace('SIGTERM','SIGKILL'),pidfile,token],check=False)
+                    subprocess.run(['docker','exec',a.container,'/isaac-sim/python.sh','-c',kill.replace('SIGTERM','SIGKILL'),pidfile,token],check=False)
                     child.wait(timeout=15)
     matches=FATAL.findall(a.log.read_text(errors='replace'))
     artifact=json.loads(a.status.read_text()) if a.status.exists() else {}
