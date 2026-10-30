@@ -20,7 +20,12 @@
 
 ```bash
 python3 -m step_demo check
-python3 -m unittest discover -s tests -v
+```
+
+完整测试含PyTorch和RSL-RL依赖，使用专用容器执行：
+
+```bash
+docker exec -w /workspace/demo_project/step_rl_demo petbot-step-gpu1 /isaac-sim/python.sh -m unittest discover -s tests -v
 ```
 
 源模型默认相对本项目读取`../../robot_description`。独立检出时可显式指定模型目录：
@@ -70,7 +75,7 @@ python3 tools/run_guard.py --workdir /workspace/runs/step_run_example/source \
   -m step_demo train --run-dir ../train --asset-dir ../asset --model-dir ../../../robot_description
 ```
 
-默认使用第2轮有界Beta配置：512环境、1000次更新，详见[第2轮](docs/round02.md)。工程检查使用 `--training-config configs/round02_gate.json`（128环境、8更新）；加 `--stop-after 4`验证在更新边界中断，再以相同入口和 `--resume`完成剩余预算。恢复时不改配置，不指定外来检查点；若进程意外退出，恢复最近一次完整保存的更新，当前未保存rollout丢弃。日志使用新名字。
+默认使用第3轮有界Beta与边沿势奖励配置：512环境、1000次更新，详见[第3轮](docs/round03.md)。工程检查使用 `--training-config configs/round03_gate.json`（128环境、8更新）；加 `--stop-after 4`验证在更新边界中断，再以相同入口和 `--resume`完成剩余预算。恢复时不改配置，不指定外来检查点；若进程意外退出，恢复最近一次完整保存的更新，当前未保存rollout丢弃。日志使用新名字。
 
 独立进程重载评估，把上述监督参数的日志/状态改为新路径，执行：
 
