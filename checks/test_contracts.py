@@ -132,6 +132,59 @@ class ControlContracts(unittest.TestCase):
 
 
 class LearningContracts(unittest.TestCase):
+    def return_runtime(self, cfg=None):
+        cfg = cfg or replace(CFG, rise_front_return_penalty=.5)
+        p, s = Runtime(2, 'cpu', .06, cfg, MODEL), state()
+        p.reset(torch.arange(2)); p.control.request_rise(s, torch.arange(2)); p.invoked[:] = True
+        s['gap'][:] = .04
+        t = truth(); t['front_z'][:] = .085
+        p.advance(s, t)
+        s['gap'][:] = 0
+        p.advance(s, truth())
+        return p, s
+
+    def test_early_return_cost_changes_without_relaxing_exit_or_success(self):
+        p, s = self.return_runtime()
+        m = p.advance(s, truth())
+        torch.testing.assert_close(m['failure_penalty'], torch.full((2,), .5))
+        self.assertTrue(m['early_front_return'].all())
+        self.assertTrue(m['done'].all() and m['failure'].all())
+        self.assertTrue((m['reason'] == Reason.FRONT_RETURN).all())
+        self.assertFalse(m['goal'].any() or m['complete'].any() or m['support_truth'].any())
+        self.assertTrue((p.control.phase == Phase.EXIT).all())
+        for _ in range(10): p.before_action(s); p.control.update(s)
+        self.assertTrue((p.control.phase == Phase.EXIT).all())
+
+    def test_real_fall_on_front_return_keeps_full_penalty(self):
+        for defect in ('body_contact', 'root_height', 'rear_z'):
+            p, s = self.return_runtime()
+            t = truth()
+            t[defect][:] = {'body_contact': True, 'root_height': .02, 'rear_z': .08}[defect]
+            m = p.advance(s, t)
+            torch.testing.assert_close(m['failure_penalty'], torch.full((2,), 5.))
+            self.assertTrue(m['failure'].all()); self.assertFalse(m['early_front_return'].any())
+
+    def test_established_balance_return_and_timeout_keep_full_penalty(self):
+        p, s = self.return_runtime()
+        p.control.phase[:] = Phase.BALANCE; p.control.entered[:] = True
+        m = p.advance(s, truth())
+        torch.testing.assert_close(m['failure_penalty'], torch.full((2,), 5.))
+        self.assertFalse(m['early_front_return'].any())
+        p, s = self.return_runtime()
+        p.control.lifted[:] = False; p.control.return_run[:] = 0
+        p.control.age[:] = CFG.rise_timeout_s
+        m = p.advance(s, truth())
+        self.assertTrue((m['reason'] == Reason.RISE_TIMEOUT).all())
+        torch.testing.assert_close(m['failure_penalty'], torch.full((2,), 5.))
+
+    def test_early_return_reward_difference_is_only_terminal_cost(self):
+        old, s = self.return_runtime(CFG)
+        new, _ = self.return_runtime()
+        a, b = old.advance(s, truth()), new.advance(s, truth())
+        torch.testing.assert_close(b['reward']-a['reward'], torch.full((2,), 4.5))
+        for key in ('done', 'failure', 'goal', 'complete', 'reason'):
+            torch.testing.assert_close(a[key], b[key])
+
     def bridge_runtime(self, n=2):
         cfg = replace(CFG, rise_prepare_weight=.2, rise_partial_lift_weight=.5, rise_support_weight=2.)
         p, s = Runtime(n, 'cpu', .06, cfg, MODEL), state(n)

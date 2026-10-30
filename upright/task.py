@@ -135,6 +135,8 @@ def metrics(env):
             'Cycle/stage_goal': result['goal'].float().mean(),
             'Cycle/perception_mismatch': result['perception_mismatch'].float().mean(),
             'Cycle/course_level': float(p.course.level),
+            'Cycle/early_front_return': result['early_front_return'].float().mean(),
+            'Cycle/failure_penalty': result['failure_penalty'].mean(),
             'Physics/rear_contact_fraction': t['rear_fraction'].mean(),
             'Physics/wheel_actual_peak': s['wheel'].abs().max(),
             'Physics/wheel_target_peak': p.control.executed[:, 1:].abs().max(),

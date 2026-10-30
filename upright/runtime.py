@@ -172,7 +172,19 @@ class Runtime:
         reward += self.dt*((2+2*tracking)*balancing - .1*transition
                            - .15*transition*heading_error.square()
                            - .02*rising*adjustment - .002*target_change.square().sum(-1)*self.invoked)
-        reward -= 5*m['failure']
+        # The first unsuccessful lift still ends this invocation immediately.
+        # A large early terminal penalty was cheaper to postpone until timeout,
+        # suppressing exploration just below the lift detector. Grade only an
+        # upright, rear-supported front return before any BALANCE entry; never
+        # soften actual falls or loss of an established two-wheel state.
+        early_return = (m['failure'] & (before == Phase.RISE)
+                        & (m['reason'] == Reason.FRONT_RETURN) & ~c.entered
+                        & rear_near & ~truth['body_contact'] & (truth['root_height'] >= .025)
+                        & (s['g'][:, 2] < -.25) & (s['g'][:, 1].abs() < .35))
+        penalty = torch.where(early_return, self.cfg.rise_front_return_penalty, 5.)*m['failure']
+        reward -= penalty
+        m['failure_penalty'] = penalty
+        m['early_front_return'] = early_return
         m['rise_bridge_reward'] = self.dt*bridge
         return reward
 

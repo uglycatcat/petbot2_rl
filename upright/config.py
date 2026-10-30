@@ -53,6 +53,7 @@ class Config:
     rise_partial_lift_weight: float = 0.0
     rise_support_weight: float = 0.0
     rise_prepare_decay_s: float = 2.0
+    rise_front_return_penalty: float = 5.0
     heading_kp: float = 1.0
     heading_kd: float = 0.1
     heading_wheel_correction_rad_s: float = 2.0
@@ -88,7 +89,7 @@ class Config:
 
 
 def load_config(path=None, **overrides):
-    data = json.loads(Path(path or ROOT/'configs/round02.json').read_text())
+    data = json.loads(Path(path or ROOT/'configs/round03.json').read_text())
     unknown = data.keys() - {f.name for f in fields(Config)}
     if unknown:
         raise ValueError(f'Unknown configuration keys: {sorted(unknown)}')
