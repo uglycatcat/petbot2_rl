@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "implementation_review",
+  "phase": "engineering_gate",
   "training_enabled": false,
-  "automatic_iteration_enabled": false,
+  "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round01 implementation is ready for code review only. User requested no training dispatch before joint review.",
+  "reason": "User authorized event-driven training/evaluation/iteration on physical GPU2/3 only. Formal training starts after the engineering gate.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -15,11 +15,15 @@
     "series": "upright_restart_20261030",
     "round": 1,
     "name": "upright_restart_round01",
-    "status": "implemented_pending_user_review_not_started"
+    "status": "engineering_gate_pending"
   },
-  "engineering_execution_enabled": false,
-  "evaluation_enabled": false,
+  "engineering_execution_enabled": true,
+  "evaluation_enabled": true,
   "engineering_validated": false,
   "implementation_review": "docs/round01_implementation.md",
-  "cpu_contract_tests_passed": 27
+  "cpu_contract_tests_passed": 27,
+  "allowed_host_gpus": [
+    2,
+    3
+  ]
 }

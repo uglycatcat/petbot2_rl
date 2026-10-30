@@ -19,9 +19,12 @@ def main(argv=None):
     parser.add_argument('--seed', type=int)
     parser.add_argument('--iterations', type=int)
     parser.add_argument('--num-envs', type=int)
+    parser.add_argument('--interrupt-after-update', type=int, help='Engineering fault injection at a durable update boundary')
     parser.add_argument('--device', default='cuda:0')
     parser.add_argument('--dry-run', action='store_true', help='Read-only plan; no simulator, files or training')
     args = parser.parse_args(argv)
+    if args.interrupt_after_update is not None and args.kind != 'engineering':
+        parser.error('Interruption injection is only permitted for an engineering gate')
     cfg = load_config(args.config, seed=args.seed, iterations=args.iterations, num_envs=args.num_envs)
     if args.dry_run:
         print(json.dumps(dict(config=cfg.to_dict(), identity=identities(cfg),
@@ -33,8 +36,8 @@ def main(argv=None):
         raise RuntimeError('Isaac training is only allowed inside the dedicated container')
     if args.run_dir is None:
         parser.error('--run-dir is required; no implicit latest run is selected')
-    if not args.device.startswith('cuda:'):
-        parser.error('Training requires an explicit CUDA device in the dedicated container')
+    if args.device != 'cuda:0':
+        parser.error('Dedicated single-GPU containers use logical cuda:0 (physical GPU2 or GPU3)')
     folder = args.run_dir.resolve()
     # Fixed source copies retain the project/model relative layout; outputs live below this checkout.
     if not folder.is_relative_to(ROOT/'outputs'):
@@ -103,8 +106,14 @@ def main(argv=None):
             finish_pending_probe()
             while runner.completed_updates < cfg.iterations:
                 boundary = min(cfg.iterations, ((runner.completed_updates//cfg.probe_interval)+1)*cfg.probe_interval)
+                if args.interrupt_after_update is not None:
+                    if args.interrupt_after_update <= runner.completed_updates:
+                        raise ValueError('Interruption target must be later than the resumed update')
+                    boundary = min(boundary, args.interrupt_after_update)
                 runner.learn_chunk(boundary-runner.completed_updates)
                 p = env.upright_runtime
+                if args.interrupt_after_update == runner.completed_updates:
+                    raise KeyboardInterrupt('Engineering fault injection after durable update boundary')
                 finish_pending_probe()
                 status.update(updates_completed=runner.completed_updates, course_level=p.course.level)
                 atomic_json(folder/'status.json', status)

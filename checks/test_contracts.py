@@ -2,10 +2,11 @@
 from dataclasses import replace
 import json
 from pathlib import Path
+from unittest.mock import patch
 import tempfile
 import unittest
 import torch
-from upright.config import Config, require_execution
+from upright.config import Config, require_execution, require_gpu_isolation
 from upright.controller import Controller, Phase, Reason, wheel_mix
 from upright.curriculum import Curriculum
 from upright.geometry import WheelGeometry, orientation
@@ -179,8 +180,14 @@ class LearningContracts(unittest.TestCase):
         replace(CFG, iterations=10000).validate()
 
     def test_execution_stays_disabled(self):
-        for kind in ('training', 'engineering', 'evaluation'):
-            with self.assertRaises(RuntimeError): require_execution(kind)
+        with patch('upright.config.json.loads', return_value={}):
+            for kind in ('training', 'engineering', 'evaluation'):
+                with self.assertRaises(RuntimeError): require_execution(kind)
+
+    def test_gpu0_and_gpu1_are_rejected(self):
+        for gpu in ('0', '1'):
+            with patch.dict('os.environ', {'PETBOT_HOST_GPU': gpu, 'PETBOT_GPU_UUID': 'GPU-test'}):
+                with self.assertRaises(RuntimeError): require_gpu_isolation()
 
 
 class GeometryAndRecovery(unittest.TestCase):

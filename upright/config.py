@@ -1,6 +1,8 @@
 """Reviewed experiment choices, separate from immutable user requirements."""
 from dataclasses import asdict, dataclass, fields
 import json
+import os
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -93,4 +95,19 @@ def require_execution(kind):
     key = {'training': 'training_enabled', 'engineering': 'engineering_execution_enabled',
            'evaluation': 'evaluation_enabled'}[kind]
     if not state.get(key, False):
-        raise RuntimeError(f'{kind} is paused pending user review. No simulator or training was started.')
+        raise RuntimeError(f'{kind} is not enabled by the current authorization/engineering state. No simulator or training was started.')
+    require_gpu_isolation()
+
+
+def require_gpu_isolation():
+    """The container exposes one physical GPU, selected from the user-owned 2/3 allocation."""
+    host_gpu = os.environ.get('PETBOT_HOST_GPU')
+    uuid = os.environ.get('PETBOT_GPU_UUID', '')
+    if host_gpu not in ('2', '3') or not uuid.startswith('GPU-'):
+        raise RuntimeError('upright may only execute in a dedicated physical GPU2/GPU3 container')
+    if os.environ.get('NVIDIA_VISIBLE_DEVICES') != uuid or os.environ.get('CUDA_VISIBLE_DEVICES') != '0':
+        raise RuntimeError('Single-GPU Docker isolation is required, including renderer visibility')
+    visible = subprocess.check_output(['nvidia-smi', '--query-gpu=uuid', '--format=csv,noheader'], text=True)
+    if visible.strip().splitlines() != [uuid]:
+        raise RuntimeError('Visible physical GPUs differ from the assigned single GPU')
+    return dict(host_gpu=int(host_gpu), uuid=uuid, logical_device='cuda:0')
