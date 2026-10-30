@@ -27,6 +27,7 @@ def main():
     if a.log.exists(): p.error('Use a fresh log path')
     if not 0<a.memory_fraction<1: p.error('memory-fraction must be between 0 and 1')
     container=json.loads(subprocess.check_output(['docker','inspect',a.container],text=True))[0]
+    if not container['State']['Running']:p.error('Dedicated step container is not running')
     requests=container['HostConfig'].get('DeviceRequests') or []
     devices=[item for request in requests for item in (request.get('DeviceIDs') or [])]
     expected_uuid=subprocess.check_output(['nvidia-smi',f'--id={a.gpu}','--query-gpu=uuid','--format=csv,noheader'],text=True).strip()

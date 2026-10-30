@@ -13,12 +13,12 @@ def main():
     project=Path(__file__).resolve().parents[1]; root=project.parents[1]
     subprocess.run(['docker','image','inspect',args.image],check=True,stdout=subprocess.DEVNULL)
     subprocess.run(['docker','run','-d','--name',args.name,'--label','petbot.project=step',
-        '--gpus',f'device={args.gpu}','--shm-size','4g',
+        '--gpus',f'device={args.gpu}','--shm-size','4g','--entrypoint','bash',
         '-e','ACCEPT_EULA=Y','-e','PRIVACY_CONSENT=Y','-e','OMNI_KIT_ALLOW_ROOT=1',
         '-v',f'{project}:/workspace/demo_project/step_rl_demo',
         '-v',f'{root/"robot_description"}:/workspace/robot_description:ro',
         '-v',f'{root/"demo_project/runs"}:/workspace/runs',
         '-w','/workspace/demo_project/step_rl_demo',args.image,
-        'bash','-c','while true; do sleep 3600; done'],check=True)
+        '-c','while true; do sleep 3600; done'],check=True)
 
 if __name__=='__main__': main()
