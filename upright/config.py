@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-@dataclass(frozen=True)
+@dataclass
 class Config:
     schema: str = 'upright_restart_round01_v1'
     series: str = 'upright_restart_20261030'
