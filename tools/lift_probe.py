@@ -28,7 +28,9 @@ def main():
     p.add_argument('--model-dir',type=Path)
     p.add_argument('--output',type=Path,required=True)
     p.add_argument('--authority',choices=('baseline','hip_fast','wheel_fast','fast'),required=True)
+    p.add_argument('--hip-rate',type=float,help='Finite software target slew comparison; physical limits unchanged')
     AppLauncher.add_app_launcher_args(p);args=p.parse_args()
+    if args.hip_rate is not None and not 0<args.hip_rate<=100.:p.error('hip-rate must be in (0,100]')
     args.output.mkdir(parents=True,exist_ok=False)
     app=AppLauncher(args).app
     try:
@@ -39,6 +41,7 @@ def main():
         training['num_envs']=len(cases)
         if args.authority in ('fast','hip_fast'):training['hip_target_rate_rad_s']=100.
         if args.authority in ('fast','wheel_fast'):training['wheel_target_accel_rad_s2']=1000.
+        if args.hip_rate is not None:training['hip_target_rate_rad_s']=args.hip_rate
         env=StepEnv(load_config(model_dir=args.model_dir),training,args.asset_dir,args.device)
         env.trace_ids=list(range(len(cases)));env.reset()
         result=[dict(case=i,profile=c,max_both_front_min_z=-1.,lifted=False,cleared=False,landed=False,
