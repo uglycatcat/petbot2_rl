@@ -44,18 +44,18 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "c95d41392fc309c9cad7e571930ed9119362888b",
+      "verified_commit": "cd1a1b0d1d9f898892bb4eadef88a6a1707bad56",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round02_running_gpu2_gpu3_random_initialization_event_iteration",
-      "local_validation": "Round01 completed2x1000 updates, independent rise0/32 each,4 follow-up evaluations skipped; no OOM/resume. Scripted matched physics shows rise slew bottleneck. Round02 rise-only authority+dense lift/support bridge:34 CPU tests,128env8 updates, same-run4-to8 recovery (optimizer80-to160),2048env scale and32-case reload engineering pass; reload0/32, capability unvalidated. Seeds101/102 each2048env1000updates on GPU2/3 from random; no historical weights; no timers/goals.",
+      "status": "restart_round03_running_gpu2_gpu3_random_initialization_event_iteration",
+      "local_validation": "Round02 execution valid2x1000, independent rise0/32 each,4 planned skips, no OOM/resume. Round03 only grades pre-balance upright rear-supported front-return penalty5-to0.5; immediate failure/exit and success criteria unchanged.38 CPU tests,32 scripted physics cases identical to round02 except16 terminal rewards,128env8 updates with same-run4-to8 recovery,2048env2 updates and32-case reload accepted; reload0/32. GPU2/3 seeds101/102 each2048env1000updates randomly initialized; no historical weights/timers/goals.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round02_s101@gpu2",
-        "upright_restart_round02_s102@gpu3"
+        "upright_restart_round03_s101@gpu2",
+        "upright_restart_round03_s102@gpu3"
       ]
     },
     {
