@@ -21,6 +21,16 @@ def profiles():
     return cases
 
 
+def edge_profiles():
+    # Finite open-loop reachability checks, never used to initialize or train PPO.
+    return [dict(kind='pulse', preload=preload, hip=-1., wheel=wheel,
+                 delay=distance/(.03*wheel)+.05, duration=duration)
+            for preload in (0., .5)
+            for wheel in (8., 12., 16., 20.)
+            for distance in (.07, .10, .13, .16)
+            for duration in (.08, .16, .30)]
+
+
 def main():
     from isaaclab.app import AppLauncher
     p=argparse.ArgumentParser(description=__doc__)
@@ -29,6 +39,7 @@ def main():
     p.add_argument('--output',type=Path,required=True)
     p.add_argument('--authority',choices=('baseline','hip_fast','wheel_fast','fast'),required=True)
     p.add_argument('--hip-rate',type=float,help='Finite software target slew comparison; physical limits unchanged')
+    p.add_argument('--profile-set',choices=('lift','edge'),default='lift')
     AppLauncher.add_app_launcher_args(p);args=p.parse_args()
     if args.hip_rate is not None and not 0<args.hip_rate<=100.:p.error('hip-rate must be in (0,100]')
     args.output.mkdir(parents=True,exist_ok=False)
@@ -37,7 +48,8 @@ def main():
         import torch
         from step_demo.config import PROJECT_ROOT,load_config
         from step_demo.isaac_env import StepEnv
-        cases=profiles();training=json.loads((PROJECT_ROOT/'configs/train_v1.json').read_text())
+        cases=edge_profiles() if args.profile_set=='edge' else profiles()
+        training=json.loads((PROJECT_ROOT/'configs/train_v1.json').read_text())
         training['num_envs']=len(cases)
         if args.authority in ('fast','hip_fast'):training['hip_target_rate_rad_s']=100.
         if args.authority in ('fast','wheel_fast'):training['wheel_target_accel_rad_s2']=1000.
@@ -47,10 +59,14 @@ def main():
         result=[dict(case=i,profile=c,max_both_front_min_z=-1.,lifted=False,cleared=False,landed=False,
                      peak_actual_wheel=0.,terminal=None) for i,c in enumerate(cases)]
         with (args.output/'trace.jsonl').open('x') as file,torch.inference_mode():
-            for step in range(150):
+            for step in range(250 if args.profile_set=='edge' else 150):
                 t=step*env.step_dt;values=[]
                 for c in cases:
                     if t<.10: hip,wheel=0.,0.
+                    elif c['kind']=='pulse':
+                        hip=(c['preload'] if t<.1+c['delay'] else
+                             c['hip'] if t<.1+c['delay']+c['duration'] else 0.)
+                        wheel=c['wheel']
                     elif c['kind']=='switch' and t<.45:hip,wheel=c['preload'],0.
                     elif c['kind']=='delayed' and t<.1+c['delay']:hip,wheel=0.,c['wheel']
                     else:hip,wheel=c['hip'],c['wheel']
@@ -65,7 +81,7 @@ def main():
                     r['peak_actual_wheel']=max(r['peak_actual_wheel'],*(abs(row['joint_velocity'][i][j]) for j in env.wheels))
                     if row['failure'][i] or row['completed'][i]:
                         r['terminal']=dict(time=row['elapsed'][i],failure=row['failure'][i],completed=row['completed'][i],com=row['com'][i])
-        summary=dict(status='passed',kind='physical_authority_diagnostic_not_training_data',authority=args.authority,
+        summary=dict(status='passed',kind='physical_authority_diagnostic_not_training_data',authority=args.authority,profile_set=args.profile_set,
             training=training,cases=result,lifted=sum(x['lifted'] for x in result),cleared=sum(x['cleared'] for x in result),
             landed=sum(x['landed'] for x in result),max_front_height=max(x['max_both_front_min_z'] for x in result),
             source_sha256=env.asset['source_sha256'],captured_substeps=env.captured_substeps)
