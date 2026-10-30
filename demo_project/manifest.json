@@ -49,8 +49,8 @@
         "demo"
       ],
       "shallow": false,
-      "status": "V28 scratch rise reward support proxy corrected after physical contact diagnosis; engineering queue with two random32-update runs,30+2 recovery and reloads started. No formal batch26; C58 retained.",
-      "local_validation": "Contact diagnosis complete:21 supported lift samples had rear centers30.013-30.616mm and bilateral contact duty<0.2. No OOM/runtime errors,0/6 balance; actual wheel peak42.76rad/s remains. CUDA reward/curriculum/mirror checks passed; new PhysX/short-training/recovery/reload pending.",
+      "status": "V28 engineering accepted; both random32-update policies still0/64 balance. Batch26 started: two fresh random1000-update runs, seeds60/61, fixedb357dd7, no historical weights. C58 retained.",
+      "local_validation": "Eight steps complete; no OOM/runtime/PhysX failures. Random initialization and30+2 same-run recovery verified;306 physical probe frames unchanged. Targets<=25rad/s and rear effort<=0.38Nm; actual wheel peaks18.29/61.91rad/s remain unresolved. Policy/sim2sim not accepted.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []

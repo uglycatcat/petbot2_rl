@@ -4,7 +4,7 @@
 
 | 项目 | 职责 | 当前开发状态 |
 |---|---|---|
-| [upright_rl_demo](upright_rl_demo/README.md) | 从随机初始化训练完整起立、两轮遥控、前轮落地与交接；保留历史评估入口。 | C58桌面基本流程获认可；新训练移除历史父模型依赖，第25批两份从零1000更新仍未学会完整起立；后轮接触诊断后v28起立奖励修正正在工程验收，第26批尚未启动，见[当前交接](../docs/current_handoff.md)。 |
+| [upright_rl_demo](upright_rl_demo/README.md) | 从随机初始化训练完整起立、两轮遥控、前轮落地与交接；保留历史评估入口。 | C58桌面基本流程获认可；新训练移除历史父模型依赖，第25批两份从零1000更新仍未学会完整起立；v28起立奖励修正通过工程验收但重载仍0/128进入两轮，第26批两份从零1000更新已启动，见[当前交接](../docs/current_handoff.md)。 |
 | [step_rl_demo](step_rl_demo/README.md) | 前轮登上0–3 cm低台阶后加速爬升。 | 仅登记与需求说明，尚无训练代码。 |
 | [recovery_rl_demo](recovery_rl_demo/README.md) | 重新设计分阶段跌倒恢复。 | 仅登记与需求说明，尚无训练代码。 |
 | [recovery_agile_01](recovery_agile_01/PETBOT.md) | 基于AGILE的早期恢复原型。 | 历史实验，不能直接作为新恢复任务的设计或成功基线。 |
