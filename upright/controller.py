@@ -53,6 +53,7 @@ class Controller:
         self.previous = self.executed.clone(); self.handoff_start = self.executed.clone()
         self.requested_action = self.executed.clone()
         self.requested_command = self.command.clone()
+        self.yaw_correction = z()
 
     def reset(self, ids):
         for key, value in vars(self).items():
@@ -148,6 +149,14 @@ class Controller:
         hip = self.lo + (action[:, 0]+1)*.5*(self.hi-self.lo)
         common = action[:, 1]*self.limit
         differential = action[:, 2]*self.limit
+        # Deterministic command/measurement feedback, not a parent policy. The
+        # one scratch actor still controls the hips, common drive and residual.
+        balance_correction = (self.cfg.balance_yaw_feedforward*self.command[:, 1]*self.track/(2*.03)
+                              + self.cfg.balance_yaw_feedback*(self.command[:, 1]-s['motion'][:, 1]))
+        bound = self.cfg.balance_yaw_correction_limit_rad_s
+        self.yaw_correction.copy_(torch.where(self.phase == Phase.BALANCE,
+                                              balance_correction.clamp(-bound, bound), 0.))
+        differential = (differential+self.yaw_correction).clamp(-self.limit, self.limit)
         # Zero commanded turning during transitions; small feedback resists yaw drift.
         yaw_error = wrap(self.yaw_reference-s['yaw'])
         correction = (self.cfg.heading_kp*yaw_error-self.cfg.heading_kd*s['motion'][:, 1]).clamp(

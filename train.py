@@ -12,7 +12,7 @@ from upright.experiment import atomic_json, identities, locked_run, new_manifest
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--config', type=Path, default=ROOT/'configs/round03.json')
+    parser.add_argument('--config', type=Path, default=ROOT/'configs/round04.json')
     parser.add_argument('--run-dir', type=Path)
     parser.add_argument('--resume-interrupted', type=Path)
     parser.add_argument('--kind', choices=('training', 'engineering'), default='training')
@@ -99,7 +99,8 @@ def main(argv=None):
                                   cfg.probe_count, duration=cfg.balance_train_s,
                                   output=folder/f'probe_{boundary:06d}_attempt{attempt:02d}',
                                   kind='development_curriculum_probe')
-                p.course.observe_probe(boundary, result['success'], result['count'], level)
+                qualified = result['success'] if level < 2 else result['basic_control_pass']
+                p.course.observe_probe(boundary, qualified, result['count'], level)
                 if p.course.level != level:
                     # Isaac observation history can be allocated by PPO under
                     # inference_mode; its reset must remain in that context.

@@ -49,7 +49,7 @@ def evaluate(env, policy, level, count, duration=None, moving=True, output=None,
                 max_wheel = max(max_wheel, float(snap['wheel'][:count][active].abs().max()))
                 max_target = max(max_target, float(snap['executed_targets'][:count, 1:][active].abs().max()))
                 max_effort = torch.maximum(max_effort, snap['effort'][:count][active].abs().amax(0))
-            if output is not None:
+            if output is not None or level == 2:
                 # All evaluated episodes, including failures, remain reviewable.
                 traces.append(dict(t=(step+1)*env.step_dt, active=active.cpu().tolist(),
                     **{k: value[:count].detach().cpu().tolist() for k, value in snap.items()}))
@@ -75,6 +75,9 @@ def evaluate(env, policy, level, count, duration=None, moving=True, output=None,
                       target_limit_pass=max_target <= 25.00001,
                       effort_limit_pass=bool((max_effort <= effort_limits+1e-3).all()),
                       policy_pass_not_inferred_from_exit=True)
+        if level == 2:
+            from .response import basic_response
+            result.update(basic_response(traces, count, complete.cpu().tolist(), env.step_dt))
         if output is not None:
             output = Path(output); output.mkdir(parents=True, exist_ok=False)
             atomic_json(output/'result.json', result)

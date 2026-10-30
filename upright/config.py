@@ -38,6 +38,7 @@ class Config:
     hold_s: float = 2.0
     balance_train_s: float = 8.0
     balance_eval_s: float = 30.0
+    balance_observation_age_cap_s: float = 0.0
     landing_timeout_s: float = 4.0
     handoff_hold_s: float = 0.6
     handoff_timeout_s: float = 3.0
@@ -54,6 +55,9 @@ class Config:
     rise_support_weight: float = 0.0
     rise_prepare_decay_s: float = 2.0
     rise_front_return_penalty: float = 5.0
+    balance_yaw_feedforward: float = 0.0
+    balance_yaw_feedback: float = 0.0
+    balance_yaw_correction_limit_rad_s: float = 4.0
     heading_kp: float = 1.0
     heading_kd: float = 0.1
     heading_wheel_correction_rad_s: float = 2.0
@@ -89,7 +93,7 @@ class Config:
 
 
 def load_config(path=None, **overrides):
-    data = json.loads(Path(path or ROOT/'configs/round03.json').read_text())
+    data = json.loads(Path(path or ROOT/'configs/round04.json').read_text())
     unknown = data.keys() - {f.name for f in fields(Config)}
     if unknown:
         raise ValueError(f'Unknown configuration keys: {sorted(unknown)}')

@@ -34,6 +34,25 @@ def controller(n=2):
 
 
 class ControlContracts(unittest.TestCase):
+    def test_balance_yaw_feedback_is_mirrored_bounded_and_transition_isolated(self):
+        cfg = replace(CFG, balance_yaw_feedforward=1., balance_yaw_feedback=8.)
+        c, s = Controller(2, 'cpu', .06, cfg, MODEL, .1), state()
+        c.phase[:] = Phase.BALANCE
+        c.set_command([[.05, .3], [.05, -.3]])
+        s['motion'][:, 1] = torch.tensor([.1, -.1])
+        action = torch.tensor([[0., .2, 0.], [0., .2, 0.]])
+        a = c.targets(action, s)
+        torch.testing.assert_close(a[0, 1:], a[1, 1:].flip(-1))
+        torch.testing.assert_close(c.yaw_correction, torch.tensor([2.1, -2.1]))
+        s['motion'][:, 1] = torch.tensor([-100., 100.])
+        c.targets(action, s)
+        torch.testing.assert_close(c.yaw_correction, torch.tensor([4., -4.]))
+        self.assertLessEqual(float(c.executed[:, 1:].abs().max()), 25.)
+        for phase in (Phase.RISE, Phase.LAND, Phase.ORDINARY, Phase.HANDOFF, Phase.EXIT):
+            c.phase[:] = phase
+            c.targets(action, s)
+            self.assertFalse(c.yaw_correction.any())
+
     def test_rise_authority_does_not_change_balance_or_landing(self):
         cfg = replace(CFG, rise_hip_slew_rad_s=40., rise_wheel_slew_rad_s2=1000.)
         c = Controller(3, 'cpu', .06, cfg, MODEL, .1)
@@ -132,6 +151,19 @@ class ControlContracts(unittest.TestCase):
 
 
 class LearningContracts(unittest.TestCase):
+    def test_balance_clock_observation_is_bounded_without_changing_real_time(self):
+        cfg = replace(CFG, balance_observation_age_cap_s=2.)
+        p, s = Runtime(2, 'cpu', .06, cfg, MODEL), state()
+        p.control.phase[:] = Phase.BALANCE
+        p.control.age[:] = 8.
+        a = p.observation(s)
+        p.control.age[:] = 30.
+        torch.testing.assert_close(a, p.observation(s))
+        torch.testing.assert_close(p.control.age, torch.full((2,), 30.))
+        for phase in (Phase.RISE, Phase.LAND, Phase.HANDOFF):
+            p.control.phase[:] = phase
+            torch.testing.assert_close(p.observation_stage_age(), p.control.age)
+
     def return_runtime(self, cfg=None):
         cfg = cfg or replace(CFG, rise_front_return_penalty=.5)
         p, s = Runtime(2, 'cpu', .06, cfg, MODEL), state()

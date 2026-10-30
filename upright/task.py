@@ -148,7 +148,9 @@ def metrics(env):
                 effective_command=torch.where(((p.control.phase == 1) | (p.control.phase == 3))[:, None],
                                                p.control.transition_motion, p.control.command),
                 requested_action=p.control.requested_action, executed_targets=p.control.executed,
-                stage_time=p.control.age, longest_hold=p.longest_hold, curriculum_level=p.level).items()}
+                balance_yaw_correction=p.control.yaw_correction,
+                stage_time=p.control.age, policy_stage_time=p.observation_stage_age(),
+                longest_hold=p.longest_hold, curriculum_level=p.level).items()}
     return env.upright_metrics
 
 

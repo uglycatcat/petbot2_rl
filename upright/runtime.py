@@ -188,6 +188,13 @@ class Runtime:
         m['rise_bridge_reward'] = self.dt*bridge
         return reward
 
+    def observation_stage_age(self):
+        c = self.control
+        if self.cfg.balance_observation_age_cap_s > 0:
+            return torch.where(c.phase == Phase.BALANCE,
+                               c.age.clamp_max(self.cfg.balance_observation_age_cap_s), c.age)
+        return c.age
+
     def observation(self, s):
         c = self.control
         # All motion inputs are in the local/body frame; no world XY or absolute yaw.
@@ -204,5 +211,5 @@ class Runtime:
         return torch.cat((g, gyro, s['motion'], q, s['qd']*.1, s['wheel']*.05,
                           c.command, c.transition_motion, executed,
                           torch.nn.functional.one_hot(c.phase, 6).float(),
-                          torch.stack((yaw.sin(), yaw.cos()), -1), c.age[:, None]/12,
+                          torch.stack((yaw.sin(), yaw.cos()), -1), self.observation_stage_age()[:, None]/12,
                           s['gap'], c.ordinary_hip[:, None]), -1)
