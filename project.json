@@ -10,5 +10,11 @@
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
   "historical_weights_allowed": false,
-  "batch26_resume_allowed": false
+  "batch26_resume_allowed": false,
+  "next_experiment": {
+    "series": "upright_restart_20261030",
+    "round": 1,
+    "name": "upright_restart_round01",
+    "status": "planned_not_started"
+  }
 }
