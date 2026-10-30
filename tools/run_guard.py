@@ -45,6 +45,7 @@ def main():
         try:
             while child.poll() is None:
                 if time.monotonic()-started>a.timeout: reason='timeout';break
+                if FATAL.search(a.log.read_text(errors='replace')): reason='physical_or_python_error';break
                 gpu_out=subprocess.check_output(['nvidia-smi',f'--id={a.gpu}',
                     '--query-gpu=memory.used,memory.total','--format=csv,noheader,nounits'],text=True)
                 used,total=map(float,gpu_out.strip().split(','));peak=max(peak,used)
