@@ -1,0 +1,27 @@
+{
+  "schema": "petbot_step_v1",
+  "model_dir": "../../robot_description",
+  "terrain": {
+    "height_m": 0.02,
+    "initial_distance_m": 0.30,
+    "edge_angle_rad": 1.5707963267948966,
+    "platform_length_m": 2.0,
+    "platform_width_m": 2.0
+  },
+  "control": {
+    "default_hip_rad": 0.0,
+    "head_rad": 0.0,
+    "left_ear_rad": 0.0,
+    "right_ear_rad": 0.0
+  },
+  "acceptance": {
+    "post_climb_distance_m": 0.15,
+    "line_tolerance_m": 0.02,
+    "heading_tolerance_rad": 0.08726646259971647,
+    "hip_tolerance_rad": 0.05,
+    "stop_speed_m_s": 0.02,
+    "stop_yaw_rate_rad_s": 0.05,
+    "stop_hold_s": 0.5,
+    "timeout_s": 15.0
+  }
+}
