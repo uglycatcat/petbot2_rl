@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round03_engineering",
-  "training_enabled": false,
+  "phase": "round03_authorized",
+  "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round02 final rise0/32 for both seeds. Grade pre-balance non-fall front-return training cost while preserving immediate failure and all success criteria; engineering pending.",
+  "reason": "Round03 graded initial front-return cost passed38 CPU tests, identical scripted physics/exit comparison, short training4-to8 same-run recovery,2048 scale and32 independent reload. Reload0/32:22 timeout and10 front-return; policy unvalidated.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -15,11 +15,11 @@
     "series": "upright_restart_20261030",
     "round": 3,
     "name": "upright_restart_round03",
-    "status": "engineering_pending"
+    "status": "ready_for_fixed_scratch_launch"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": false,
+  "engineering_validated": true,
   "implementation_review": "docs/round01_implementation.md",
   "cpu_contract_tests_passed": 38,
   "allowed_host_gpus": [
