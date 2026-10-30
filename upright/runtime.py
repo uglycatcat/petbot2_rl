@@ -54,7 +54,7 @@ class Runtime:
             hip = (((ids//6) % 3).float()-1)*self.cfg.initial_hip
             if not self.probe_moving:
                 velocity.zero_(); hip.zero_()
-        self.initial_hip[ids].copy_(torch.where(moving, hip, 0.))
+        self.initial_hip[ids] = torch.where(moving, hip, 0.)
         command = torch.stack((torch.where(moving, velocity, 0.), torch.zeros_like(velocity)), -1)
         self.control.set_command(command, self.initial_hip[ids], ids)
 

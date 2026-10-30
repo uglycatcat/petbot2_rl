@@ -123,6 +123,18 @@ class ControlContracts(unittest.TestCase):
 
 
 class LearningContracts(unittest.TestCase):
+    def test_moving_probe_reaches_both_hip_initial_states(self):
+        p = Runtime(32, 'cpu', .06, CFG, MODEL)
+        p.probe_level = 2
+        with torch.inference_mode():
+            p.reset(torch.arange(32))
+        torch.testing.assert_close(p.initial_hip[:6], torch.full((6,), -CFG.initial_hip))
+        torch.testing.assert_close(p.initial_hip[12:18], torch.full((6,), CFG.initial_hip))
+        torch.testing.assert_close(p.control.ordinary_hip, p.initial_hip)
+        p.probe_level = 0
+        p.reset(torch.arange(32))
+        self.assertFalse(p.initial_hip.any())
+
     def test_probe_reset_can_leave_inference_mode(self):
         p, s = Runtime(2, 'cpu', .06, CFG, MODEL), state()
         p.reset(torch.arange(2)); p.control.request_rise(s, torch.arange(2)); p.invoked[:] = True
