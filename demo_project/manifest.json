@@ -44,18 +44,18 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "6ee0adc85ea3090d1fe2cc0b1cd9d85cf354653c",
+      "verified_commit": "53915e17663046990d80e01054412f7730d6eca8",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round05_running_gpu2_gpu3_random_initialization_event_iteration",
-      "local_validation": "Round04 valid2x1000 plus6 independent evaluations; rise/static/30s low cycle and basic32/32 each. No OOM or recovery. Single-seed60s complete32/32/basic31/32; landing acceleration/yaw and measured wheel overshoot remain. Round05 separates movement/entry/hip capability stages, preserves20% regression, performance-gated promotion and60s independent validation.49 CPU tests and PhysX/fresh8-update same-run4-to8 recovery/2048env scale/reload gate accepted. Seeds101/102 each2048env1000updates randomly initialized on GPU2/3. No history weights/timers/goals; not MuJoCo approval.",
+      "status": "restart_round06_running_gpu2_gpu3_random_initialization_event_iteration",
+      "local_validation": "Round05 valid2x1000 plus7 independent evaluations,1 planned skip; no OOM/recovery.60s low complete32/32 both,basic19/32 and32/32; seed102 expanded16/32. Fixed-policy bounded reference development probe32/32; speed feedback16/32 rejected. Round06 slew0.5m/s2 and1.5rad/s2 only two-wheel references,raw-request scoring,full ordinary authority,cached traces,stage dwell permits acceleration.53 CPU and PhysX/fresh8-update same-run4-to8 recovery/2048 scale/reload accepted. Seeds101/102 independently random1000 updates onGPU2/3. No historical initialization,timers,goals or MuJoCo approval.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round05_s101@gpu2",
-        "upright_restart_round05_s102@gpu3"
+        "upright_restart_round06_s101@gpu2",
+        "upright_restart_round06_s102@gpu3"
       ]
     },
     {

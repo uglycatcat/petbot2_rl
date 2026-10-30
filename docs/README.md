@@ -1,6 +1,6 @@
 # 项目文档索引
 
-- 当前：**upright第4轮从零恢复低速持续遥控，第5轮分阶段扩能力已在GPU2/3从零启动**。先看[当前交接](current_handoff.md)、[第4轮终局](upright_restart_round04_results.md)、[第5轮执行](upright_restart_round05_execution.md)和[需求基线](current_scope.md)。落地质量与全部能力未通过；旧第26批不恢复，禁止历史权重初始化、周期定时器和goal。
+- 当前：**upright第5轮低速流程保留但扩速仍失稳，第6轮有界运动参考已在GPU2/3从零启动**。先看[当前交接](current_handoff.md)、[第5轮终局](upright_restart_round05_results.md)、[第6轮执行](upright_restart_round06_execution.md)和[需求基线](current_scope.md)。开发对照不是独立终局；旧第26批不恢复，禁止历史权重初始化、周期定时器和goal。
 
 
 先读根目录 [AGENTS.md](../AGENTS.md) 的硬规则和里程碑，再读[当前交接](current_handoff.md)。只按手头问题打开下面相应文档；历史实验与 `runs/` 不需要全读。根目录 README 用于部署和使用，不承载进度。
