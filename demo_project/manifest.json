@@ -44,18 +44,18 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "ac2c04de83600f250474bcb3078131b1ad2c6be0",
+      "verified_commit": "c95d41392fc309c9cad7e571930ed9119362888b",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round01_running_gpu2_gpu3_random_initialization_event_iteration",
-      "local_validation": "30 CPU tests; cold asset conversion, neutral PhysX/contact probe, same-run forced 2-to-4 PPO recovery (optimizer40-to80), 2048env scale gate, independent32-case reload pass engineering. Reload0/32 rise, policy unvalidated. Three earlier integration failures retained, no OOM. Two independent2048env1000update trials, seeds101/102, GPU2/3 only; no historical models. C58 untouched; no timers/goals.",
+      "status": "restart_round02_running_gpu2_gpu3_random_initialization_event_iteration",
+      "local_validation": "Round01 completed2x1000 updates, independent rise0/32 each,4 follow-up evaluations skipped; no OOM/resume. Scripted matched physics shows rise slew bottleneck. Round02 rise-only authority+dense lift/support bridge:34 CPU tests,128env8 updates, same-run4-to8 recovery (optimizer80-to160),2048env scale and32-case reload engineering pass; reload0/32, capability unvalidated. Seeds101/102 each2048env1000updates on GPU2/3 from random; no historical weights; no timers/goals.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round01_s101@gpu2",
-        "upright_restart_round01_s102@gpu3"
+        "upright_restart_round02_s101@gpu2",
+        "upright_restart_round02_s102@gpu3"
       ]
     },
     {

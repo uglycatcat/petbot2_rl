@@ -1,6 +1,6 @@
 # 项目文档索引
 
-- 当前：**upright新第1轮已通过工程门槛，GPU2/3从零训练与事件迭代已启动**。先看[当前交接](current_handoff.md)、[执行记录](upright_restart_round01_execution.md)和[需求基线](current_scope.md)。旧第26批保持取消，旧模型不作训练来源，周期定时器与goal仍禁止。
+- 当前：**upright第1轮未学会起立，第2轮修正后GPU2/3从零训练已启动**。先看[当前交接](current_handoff.md)、[第1轮终局](upright_restart_round01_results.md)、[第2轮执行](upright_restart_round02_execution.md)和[需求基线](current_scope.md)。旧第26批不恢复，禁止历史权重初始化、周期定时器和goal。
 
 
 先读根目录 [AGENTS.md](../AGENTS.md) 的硬规则和里程碑，再读[当前交接](current_handoff.md)。只按手头问题打开下面相应文档；历史实验与 `runs/` 不需要全读。根目录 README 用于部署和使用，不承载进度。

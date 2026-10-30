@@ -4,7 +4,7 @@
 
 ## 当前阶段
 
-工程门槛已通过，新第1轮正式两份1000更新已启动。固定源码`ac2c04de83600f250474bcb3078131b1ad2c6be0`已推送，行为指纹与工程候选ba6b510一致；最后提交只更新授权开关和说明。候选方案见[计划](upright_restart_round01_plan.md)及[实现说明](../demo_project/upright_rl_demo/docs/round01_implementation.md)。本轮固定一个配置、两个独立种子101/102、各1000更新；只复用本次源模型生成资产，不使用工程短训权重。
+新第1轮已有效结束：两份1000更新及两项独立评估完成，四项后续评估按计划跳过，能力未通过；详见[终局分析](upright_restart_round01_results.md)。原工程证据保留如下。固定源码`ac2c04de83600f250474bcb3078131b1ad2c6be0`已推送，行为指纹与工程候选ba6b510一致；最后提交只更新授权开关和说明。候选方案见[计划](upright_restart_round01_plan.md)及[实现说明](../demo_project/upright_rl_demo/docs/round01_implementation.md)。本轮固定一个配置、两个独立种子101/102、各1000更新；只复用本次源模型生成资产，不使用工程短训权重。
 
 使用两个仅暴露单张物理卡的专用容器`petbot-upright-gpu2`和`petbot-upright-gpu3`，逻辑cuda:0分别为物理GPU2/3。宿主编排器与容器入口同时核对UUID并拒绝GPU0/1；专用GPU锁防重启，显存守护只停止本次任务。容器以只读方式挂载仓库、仅runs可写，不修改源模型或其他任务容器。
 
@@ -43,7 +43,7 @@
 | upright_restart_round01_s101 | 物理2 | 101 | 2048 / 1000 |
 | upright_restart_round01_s102 | 物理3 | 102 | 2048 / 1000 |
 
-控制目录`demo_project/runs/_upright_restart_round01`；`launch_status.json`记录启动器与两路固定副本，`eval_status.json`记录训练/验证的实际状态与退出证据，`eval_finished.json`只在队列结束后生成。`exit_watch_pid.json`记录一次性退出观察器，`completion_notice.json`/失败通知记录同一会话事件提交结果。两份实际PPO更新已在日志中确认，非仅提交启动器。当前未结束，缺少eval_finished属于预期；run/status的更新数按课程检查分块刷新，中间进度以训练日志和最新耐久检查点为准，不能把初期status中的0误读为尚未执行PPO。先核查这些状态和实际进程，禁止重复启动。
+控制目录`demo_project/runs/_upright_restart_round01`；`launch_status.json`记录启动器与两路固定副本，`eval_status.json`记录训练/验证的实际状态与退出证据，`eval_finished.json`只在队列结束后生成。`exit_watch_pid.json`记录一次性退出观察器，`completion_notice.json`/失败通知记录同一会话事件提交结果。两份实际PPO更新已在日志中确认，非仅提交启动器。现launch_status/eval_status/eval_finished齐全且实际进程均退出；run/status的更新数按课程检查分块刷新，中间进度以训练日志和最新耐久检查点为准，不能把初期status中的0误读为尚未执行PPO。先核查这些状态和实际进程，禁止重复启动。
 
 两份run.json必须为initialization=random、historical_models=[]、frozen_parents=false，分别保存自身initialization.pt。工程资产可复用，工程权重不复制。正式种子101与工程相同不意味着加载工程模型；它从第0更新重新随机初始化。后续故障只允许同次恢复。
 

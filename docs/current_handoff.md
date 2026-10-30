@@ -1,10 +1,10 @@
-# 当前交接：upright新第1轮已启动，仅GPU2/3
+# 当前交接：upright第1轮未学会起立，第2轮已启动
 
 更新：2026-10-30。先读AGENTS.md，再读本页。upright按最新GPU2/3从零训练授权执行，旧第26批不恢复；完成事件先核查实际状态再分析迭代。
 
 ## 最新指令与执行边界
 
-用户已确认单Actor–Critic并授权训练、评估和结果驱动自动迭代。**upright仅物理GPU2/3，GPU0/1留给step。** 新第1轮固定ac2c04d，两独立随机种子101/102，各2048环境×1000更新已启动；[执行记录](upright_restart_round01_execution.md)包含工程证据、失败和运行入口。无周期定时器或goal。
+用户持续授权单Actor–Critic从零训练、评估和事件驱动自动迭代，仅GPU2/3。第1轮两份1000更新已有效结束，各0/32起立、全部超时，无显存中断/恢复；见[终局](upright_restart_round01_results.md)。第2轮固定c95d413，仅修正RISE目标变化能力与连续抬升/支撑奖励，工程门槛通过，种子101/102各2048环境×1000更新已从随机初始化启动。详见[执行](upright_restart_round02_execution.md)。无周期定时器/goal，不加载旧权重。
 
 用户最新纠正：需求与期望效果已明确，早期已实现基本起立、两轮与落地，应核查并复用有效代码和经验，重点是训练代码迭代效率，不必全部重新设计。此前将整个旧实现永久排除的解释范围过大，已纠正；完整封存仍保留；已选择性复用静止v5资产/分布代码并实现独立完整循环。新训练仍禁止历史权重和冻结父依赖。
 
@@ -19,13 +19,13 @@
 
 ## 当前工程实际状态
 
-`demo_project/upright_rl_demo`已完成新第1轮代码与工程门槛：30项CPU检查、冷资产转换、32环境物理探针、128环境2→4同次恢复、2048环境2更新规模检查和32回合固定重载。运行身份一致，优化器步数40→80；当前短训0/32进入两轮、全部起立超时，目标/力矩与有限轨迹有效。此前冻结Config与两处InferenceTensor重置失败均保留，无显存中断。正式训练不加载这些短训权重。
+`demo_project/upright_rl_demo`当前配置configs/round02.json。34项CPU检查、128环境8更新、4→8同次恢复（优化器80→160）、2048环境2更新及32回合独立重载有效，无新增工程运行失败或显存中断。短训重载仍0/32起立，全部超时；工程有效不代表能力通过。32例物理动作探针确认2例短暂真实后轮支撑、连续奖励生效、随后回落正确退出；没有完整起立成功样本。目标/力矩守源限制，实际轮速超调仍需后续审查。正式训练不加载工程权重。
 
 入口见[demo README](../demo_project/upright_rl_demo/README.md)、[需求基线](current_scope.md)、[重建计划](../demo_project/upright_rl_demo/docs/rebuild_plan.md)、[架构边界](../demo_project/upright_rl_demo/docs/architecture.md)。重整验收见[upright_reorganization_20261030.md](upright_reorganization_20261030.md)。
 
 ## 后续工作顺序
 
-**新编号：** 系列`upright_restart_20261030`，当前`upright_restart_round01`；不覆盖历史同号批次。控制目录`demo_project/runs/_upright_restart_round01`含launch_status/eval_status/eval_finished（尚未结束时无finished）；两份独立运行目录为`upright_restart_round01_s101`、`upright_restart_round01_s102`。实际进程与日志优先于本文，禁止重复启动。
+**新编号：** 系列upright_restart_20261030，当前upright_restart_round02。控制目录`demo_project/runs/_upright_restart_round02`，两份运行`upright_restart_round02_s101`/`upright_restart_round02_s102`。launch_status/eval_status与实际进程为准，结束前无eval_finished是正常状态；不要重复启动。第1轮控制目录已有三份终局状态与acceptance.json，不恢复或覆盖。
 
 用户最新明确：需求已经清晰，历史实现的筛选和设计由agent判断；优先以较短、多批次demo训练快速验证实现。1000更新不是最终交付上限，正式从零流程可按收敛和验收需要使用10000或更多更新。本次为预算与职责澄清，未重新启动已取消队列。
 
