@@ -15,6 +15,7 @@ from isaaclab_physx.physics import PhysxCfg
 from .config import StepConfig
 from .estimator import InertialEstimator
 from .tensor_math import rotate, heading
+from .rewards import edge_potential, potential_difference
 
 
 def tensor(value):
@@ -38,12 +39,15 @@ class StepEnv(DirectRLEnv):
     def __init__(self, task: StepConfig, training: dict, asset_dir: Path, device='cuda:0'):
         self.task = task
         self.training = training
+        self.edge_reward = training.get('reward_version','legacy') == 'edge_v3'
         self.asset_dir = asset_dir.resolve()
         self.asset = json.loads((asset_dir / 'asset.json').read_text())
         cfg = StepEnvCfg()
         cfg.seed = training['seed']; cfg.scene.num_envs = training['num_envs']
         cfg.decimation = training['decimation']; cfg.sim.render_interval = cfg.decimation
         cfg.sim.device = device; cfg.episode_length_s = task.acceptance.timeout_s
+        if self.edge_reward:
+            cfg.is_finite_horizon = True  # The 15 s task deadline is a failure, not a time-limit bootstrap.
         super().__init__(cfg)
         self.hips = self.robot.find_joints(['left_frame_1', 'right_frame_1'], preserve_order=True)[0]
         self.wheels = self.robot.find_joints(['left_rear_wheel_1', 'right_rear_wheel_1'], preserve_order=True)[0]
@@ -81,6 +85,8 @@ class StepEnv(DirectRLEnv):
         self.wheel_speed_peak = torch.zeros(n, device=d)
         self.max_lift_fraction = torch.zeros(n, 2, device=d)
         self.reward_progress = torch.zeros(n, device=d)
+        self.previous_potential = torch.zeros(n, device=d)
+        self.motion_cost = torch.zeros(n, device=d)
         self.landing_cost = torch.zeros(n,device=d)
         self.previous_forward = torch.zeros(n, device=d)
         self.new_landing = torch.zeros(n, device=d)
@@ -171,6 +177,7 @@ class StepEnv(DirectRLEnv):
         self.reward_progress.zero_(); self.new_landing.zero_(); self.new_ascent.zero_()
         self.force_peak.zero_()
         self.landing_cost.zero_()
+        self.motion_cost.zero_()
 
     def _apply_action(self):
         self._capture(self._sim_step_counter - 1)
@@ -252,6 +259,8 @@ class StepEnv(DirectRLEnv):
         self.force_peak = torch.maximum(self.force_peak, force.norm(dim=-1).amax(-1))
         self.platform_normal=normal;self.platform_contact_x=contact_x
         self.wheel_speed_peak = torch.maximum(self.wheel_speed_peak,vel[:,self.wheels].abs().amax(-1))
+        self.motion_cost += dt*(.003*vel[:,self.hips].square().mean(-1)
+                               + .01*(vel[:,self.wheels].abs()-25.).clamp_min(0.).square().mean(-1))
         lift_fraction = (z_min[:,:2]/(height+.005)).clamp(0.,1.) * before_edge
         gain = (lift_fraction-self.max_lift_fraction).clamp_min(0.).sum(-1)
         self.max_lift_fraction = torch.maximum(self.max_lift_fraction,lift_fraction)
@@ -293,6 +302,20 @@ class StepEnv(DirectRLEnv):
         reward -= self.step_dt * on_platform * pos[:,self.hips].square().mean(-1)
         reward += self.step_dt * (self.phase==3) * torch.exp(-self.com_vel.square().sum(-1)/.01)
         reward -= 5*(self.failure>0).float()
+        if self.edge_reward:
+            current = edge_potential(self.com[:,0]-self.origin_com[:,0],
+                self.edge_x[:,None]-self.maximum[:,:2,0], self.minimum[:,:2,2], self.task.terrain.height_m)
+            timeout = self.episode_length_buf >= self.max_episode_length
+            terminal = (self.failure>0) | self.completed | timeout
+            shaping, self.previous_potential = potential_difference(
+                self.previous_potential, current, self.training.get('discount_gamma',.99), terminal)
+            reward = shaping + 2*self.new_landing + 3*self.new_ascent + 10*self.completed.float()
+            reward -= self.landing_cost + self.motion_cost
+            reward -= .02*(self.executed-self.last_actions).square().sum(-1)
+            reward -= self.step_dt*(1. + 2*(self.com[:,1]-self.origin_com[:,1]).square() + self.yaw.square()
+                                    + on_platform*pos[:,self.hips].square().mean(-1))
+            reward -= 3*((self.failure>0) | (timeout & ~self.completed)).float()
+            self.last_shaping = shaping
         self.last_reward = reward.clone()
         if self.trace_ids is not None:
             self.last_trace=self.trace(self.trace_ids)
@@ -339,7 +362,8 @@ class StepEnv(DirectRLEnv):
         if hasattr(self,'failure'):
             self.estimator.reset(env_ids)
             for name in ('front_lifted','front_cleared','front_landed','front_hit','rear_air_s','failure','phase',
-                         'stop_time','completed','supported_top','max_lift_fraction','previous_forward','wheel_speed_peak','ascent_rewarded'):
+                         'stop_time','completed','supported_top','max_lift_fraction','previous_forward','wheel_speed_peak','ascent_rewarded',
+                         'previous_potential','motion_cost'):
                 getattr(self,name)[env_ids] = 0
             self.drive_start[env_ids]=float('nan')
             self.top_contact_age[env_ids]=1.
@@ -359,6 +383,11 @@ class StepEnv(DirectRLEnv):
             controller_effort_estimate=tensor(self.robot.data.applied_torque)[ids].tolist(),
             com=(self.com[ids]-self.origin_com[ids]).tolist(),velocity=self.com_vel[ids].tolist(),
             estimated_com=self.estimator.com_position[ids].tolist(),estimated_velocity=self.estimator.com_velocity[ids].tolist(),
+            imu_acceleration=tensor(self.imu.data.lin_acc_b)[ids].tolist(),imu_gyro=tensor(self.imu.data.ang_vel_b)[ids].tolist(),
+            estimated_quaternion=self.estimator.q[ids].tolist(),
+            true_quaternion=tensor(self.robot.data.body_link_quat_w)[ids,self.lower_body].tolist(),
+            reward=self.last_reward[ids].tolist(),motion_cost=self.motion_cost[ids].tolist(),
+            potential=self.previous_potential[ids].tolist(),
             yaw=self.yaw[ids].tolist(),yaw_rate=tensor(self.robot.data.body_link_ang_vel_w)[ids,self.lower_body,2].tolist(),
             wheel_min=self.minimum[ids].tolist(),wheel_max=self.maximum[ids].tolist(),
             platform_normal=self.platform_normal[ids].tolist(),platform_contact_x=self.platform_contact_x[ids].tolist(),

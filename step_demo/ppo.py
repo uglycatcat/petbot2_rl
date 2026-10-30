@@ -20,7 +20,7 @@ def runner_config(t):
         actor=dict(**model, distribution_cfg=distribution),
         critic=deepcopy(model), algorithm=dict(class_name='PPO', learning_rate=t['learning_rate'],
             num_learning_epochs=t['num_learning_epochs'], num_mini_batches=t['num_mini_batches'],
-            clip_param=.2, gamma=.99, lam=.95, entropy_coef=.01, desired_kl=.01,
+            clip_param=.2, gamma=t.get('discount_gamma',.99), lam=.95, entropy_coef=.01, desired_kl=.01,
             schedule=t.get('learning_rate_schedule','adaptive'), rnd_cfg=None, symmetry_cfg=None))
 
 

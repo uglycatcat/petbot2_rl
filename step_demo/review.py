@@ -35,7 +35,8 @@ def summarize(run, evaluation):
     if len(terminals)!=result['num_envs']: raise ValueError('Missing or duplicate first-episode evaluations')
     seen=set();phases=Counter();examples={};frames=0;counts=Counter()
     peaks=dict(estimator_error_m=0.,yaw_rad=0.,lateral_m=0.,hip_asymmetry_rad=0.,wheel_asymmetry_rad_s=0.,
-               sampled_actual_wheel_rad_s=0.,head_ear_error_rad=0.,contact_force_n=0.,raw_action_abs=0.)
+               sampled_actual_wheel_rad_s=0.,head_ear_error_rad=0.,contact_force_n=0.,raw_action_abs=0.,
+               estimator_orientation_error_rad=0.)
     action_count=0;action_outside_count=0
     for row in records(evaluation/'trace.jsonl'):
         frames+=1
@@ -54,6 +55,12 @@ def summarize(run, evaluation):
             if not (-1.-1e-5<=target[0]<=1.2+1e-5 and -1e-5<=target[1]<=25.+1e-5):
                 raise ValueError('Executed targets exceed the source contract')
             peaks['estimator_error_m']=max(peaks['estimator_error_m'],math.dist(com,row['estimated_com'][local]))
+            if 'estimated_quaternion' in row:
+                qe,qt=row['estimated_quaternion'][local],row['true_quaternion'][local]
+                denominator=math.sqrt(sum(x*x for x in qe)*sum(x*x for x in qt))
+                cosine=abs(sum(x*y for x,y in zip(qe,qt)))/max(denominator,1e-12)
+                peaks['estimator_orientation_error_rad']=max(peaks['estimator_orientation_error_rad'],
+                    2*math.acos(min(1.,cosine)))
             peaks['yaw_rad']=max(peaks['yaw_rad'],abs(row['yaw'][local]))
             peaks['lateral_m']=max(peaks['lateral_m'],abs(com[1]))
             peaks['hip_asymmetry_rad']=max(peaks['hip_asymmetry_rad'],abs(q[hips[0]]-q[hips[1]]))
