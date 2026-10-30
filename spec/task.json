@@ -1,0 +1,74 @@
+{
+  "schema": "petbot_upright_user_requirements_v1",
+  "requirements_source": "../../docs/current_scope.md",
+  "model": {
+    "scene": "../../robot_description/mjcf/scene.xml",
+    "robot": "../../robot_description/mjcf/robot_description.xml",
+    "read_only": true,
+    "physical_parameters_may_change": false
+  },
+  "actuation": {
+    "hip_joints": ["left_frame", "right_frame"],
+    "hip_target_relationship": "equal_common_angle",
+    "hip_output": "position_rad",
+    "rear_wheel_actuators": ["left_rear_wheel", "right_rear_wheel"],
+    "wheel_output": "velocity_rad_s",
+    "head_and_ears": "hold_default_targets",
+    "user_wheel_diameter_m": 0.06,
+    "user_max_straight_speed_m_s": 1.5,
+    "wheel_target_limit_rule": "min(user_speed_divided_by_radius, source_mjcf_limit)",
+    "expected_wheel_target_limit_rad_s": 25.0,
+    "effort_and_joint_limits": "source_mjcf",
+    "measured_overspeed_must_be_reported": true
+  },
+  "control": {
+    "ordinary_four_wheel": "full_source_model_capability_independent_of_policy_curriculum",
+    "q_e": "ordinary_mode_common_hip_target_only",
+    "space_first": "takeover_and_straight_rise",
+    "rise_adjustment": "allowed_when_needed_but_discouraged",
+    "rise_heading": "takeover_heading_no_commanded_turn",
+    "two_wheel": "forward_reverse_stop_turn_and_combined_motion",
+    "two_wheel_manual_hip_control": false,
+    "two_wheel_hip_control": "policy_balancing_degree_of_freedom",
+    "space_second": "front_wheel_landing_then_ordinary_controller",
+    "landing_default_common_hip_rad": 0.0,
+    "landing_speed_and_handoff": "preserve_actual_motion_and_continuous_control_transfer",
+    "unexpected_fall": "exit_to_ordinary_report_real_posture_require_new_request",
+    "automatic_rerise": false,
+    "one_policy_call": "one_rise_hold_land_or_interrupt"
+  },
+  "capability": {
+    "required_continuous_straight_speed_m_s": [-0.75, 0.75],
+    "turning_and_combined_range": "establish_empirically_with_joint_wheel_limits",
+    "takeover_and_direct_rise_ranges": "separate_exploration_of_speed_and_common_hip_angle",
+    "mirror_behavior": "mirrored_initial_state_history_and_commands_produce_mirrored_motion",
+    "priority": "stability_and_basic_control_without_lowering_required_straight_speed",
+    "steady_speed_tolerance": null,
+    "required_hold_duration_s": null
+  },
+  "training": {
+    "initialization": "random",
+    "historical_models": [],
+    "frozen_parents": false,
+    "teacher_or_demonstration_data": false,
+    "formal_updates_per_run": 1000,
+    "recovery": "same_run_forced_interruption_only_with_optimizer_curriculum_and_rng",
+    "curriculum": "learn_within_the_same_run_without_importing_historical_policies",
+    "platform": "Isaac_Lab_RSL_RL_PPO",
+    "network_architecture": null,
+    "control_period_s": null,
+    "reward_design": null,
+    "domain_randomization_design": null,
+    "disturbance_design": null,
+    "periodic_timers": false,
+    "goal": false
+  },
+  "validation": {
+    "engineering_success_is_policy_success": false,
+    "record_requested_executed_measured": true,
+    "inspect_success_and_failure_trajectories": true,
+    "deploy_format": "onnx",
+    "onnx_export_is_sim2sim_pass": false,
+    "final_sim2sim_acceptance": "user_desktop_experience"
+  }
+}

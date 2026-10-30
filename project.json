@@ -1,0 +1,14 @@
+{
+  "schema": "petbot_upright_rebuild_v1",
+  "phase": "clean_rebuild",
+  "training_enabled": false,
+  "automatic_iteration_enabled": false,
+  "training_implemented": false,
+  "policy_validated": false,
+  "reason": "User requested preserving requirements only and rebuilding independently of inherited-training-era implementation.",
+  "specification": "spec/task.json",
+  "planned_training_entrypoint": "train.py",
+  "historical_implementation_role": "archive_only_not_reusable_baseline",
+  "historical_weights_allowed": false,
+  "batch26_resume_allowed": false
+}
