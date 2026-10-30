@@ -68,7 +68,8 @@ def evaluate(env, policy, level, count, duration=None, moving=True, output=None,
         source = load_model()
         effort_limits = max_effort.new_tensor([source['actuators'][name]['effort'] for name in POSITION_JOINTS+REAR_WHEELS])
         result = dict(kind=kind, count=count, level=level, requested_balance_s=effective_duration,
-                      command_profile=p.stage_ranges[level].cpu().tolist(),
+                      command_profile=p.stage_ranges[level].cpu().tolist(), command_dwell_s=float(p.stage_dwell[level]),
+                      scoring_command='raw_requested_command',
                       sequence='full_signed_straight_and_mirrored_turns' if level >= 3 else 'baseline_v1',
                       all_episodes_finished=finished, stage_goal=int(goal.sum()), complete=int(complete.sum()),
                       entered_two_wheel=int(entered.sum()), success=int((goal if level == 0 else complete).sum()),

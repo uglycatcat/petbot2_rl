@@ -145,8 +145,8 @@ def metrics(env):
         if env.upright_record:
             env.upright_snapshot = {k: v.clone() for k, v in dict(
                 **s, **t, **result, phase=p.control.phase, requested_command=p.control.requested_command,
-                effective_command=torch.where(((p.control.phase == 1) | (p.control.phase == 3))[:, None],
-                                               p.control.transition_motion, p.control.command),
+                effective_command=p.control.effective_command,
+                control_reference=p.control.executed_reference,
                 requested_action=p.control.requested_action, executed_targets=p.control.executed,
                 balance_yaw_correction=p.control.yaw_correction,
                 stage_time=p.control.age, policy_stage_time=p.observation_stage_age(),

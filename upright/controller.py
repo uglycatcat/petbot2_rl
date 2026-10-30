@@ -54,6 +54,9 @@ class Controller:
         self.requested_action = self.executed.clone()
         self.requested_command = self.command.clone()
         self.yaw_correction = z()
+        self.motion_reference = self.command.clone()
+        self.executed_reference = self.command.clone()
+        self.effective_command = self.command.clone()
 
     def reset(self, ids):
         for key, value in vars(self).items():
@@ -72,6 +75,28 @@ class Controller:
                 raise ValueError('Ordinary hip command outside source range')
             ordinary = (self.phase[ids] == Phase.ORDINARY) | (self.phase[ids] == Phase.EXIT)
             self.ordinary_hip[ids] = torch.where(ordinary, target, self.ordinary_hip[ids])
+
+    def reference_enabled(self):
+        return self.cfg.balance_linear_accel_m_s2 > 0 or self.cfg.balance_yaw_accel_rad_s2 > 0
+
+    def update_motion_reference(self):
+        # Called once before each policy observation. Ordinary commands retain source authority.
+        if not self.reference_enabled():
+            self.motion_reference.copy_(self.command)
+            return
+        rate = self.command.new_tensor([self.cfg.balance_linear_accel_m_s2,
+                                        self.cfg.balance_yaw_accel_rad_s2])
+        step = torch.where(rate > 0, rate*self.dt, torch.inf)
+        filtered = self.motion_reference+(self.command-self.motion_reference).clamp(-step, step)
+        # Hold the last policy reference through LAND; actual-motion transition/handoff is separate.
+        self.motion_reference.copy_(torch.where((self.phase == Phase.BALANCE)[:, None], filtered,
+                                      torch.where((self.phase == Phase.LAND)[:, None], self.motion_reference, self.command)))
+
+    def motion_command(self):
+        if not self.reference_enabled():
+            return self.command
+        active = (self.phase == Phase.BALANCE) | (self.phase == Phase.LAND)
+        return torch.where(active[:, None], self.motion_reference, self.command)
 
     def request_rise(self, state, ids):
         allowed = (self.phase[ids] == Phase.ORDINARY) | (self.phase[ids] == Phase.EXIT)
@@ -144,15 +169,18 @@ class Controller:
             raise ValueError('Policy requires three finite bounded actions')
         self.previous.copy_(self.executed); self.requested_action.copy_(action)
         self.requested_command.copy_(self.command)
+        reference = self.motion_command()
+        self.executed_reference.copy_(reference)
         policy = (self.phase >= Phase.RISE) & (self.phase <= Phase.LAND)
         transition = (self.phase == Phase.RISE) | (self.phase == Phase.LAND)
+        self.effective_command.copy_(torch.where(transition[:, None], self.transition_motion, reference))
         hip = self.lo + (action[:, 0]+1)*.5*(self.hi-self.lo)
         common = action[:, 1]*self.limit
         differential = action[:, 2]*self.limit
         # Deterministic command/measurement feedback, not a parent policy. The
         # one scratch actor still controls the hips, common drive and residual.
-        balance_correction = (self.cfg.balance_yaw_feedforward*self.command[:, 1]*self.track/(2*.03)
-                              + self.cfg.balance_yaw_feedback*(self.command[:, 1]-s['motion'][:, 1]))
+        balance_correction = (self.cfg.balance_yaw_feedforward*reference[:, 1]*self.track/(2*.03)
+                              + self.cfg.balance_yaw_feedback*(reference[:, 1]-s['motion'][:, 1]))
         bound = self.cfg.balance_yaw_correction_limit_rad_s
         self.yaw_correction.copy_(torch.where(self.phase == Phase.BALANCE,
                                               balance_correction.clamp(-bound, bound), 0.))

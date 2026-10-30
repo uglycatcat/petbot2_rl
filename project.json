@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round05_authorized",
-  "training_enabled": true,
+  "phase": "round06_engineering",
+  "training_enabled": false,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round05 engineering accepted:49 CPU checks; fresh128env8updates with4-to8 full-state recovery,2048env2updates,32case independent reload0/32 normal front returns. Higher-capability fixed-current-policy development probe8/32 complete7/32 basic,24 balance falls; source constraints valid. New formal training random only.",
+  "reason": "Round05 inverse transitions fail; bounded reference intervention32/32 versus baseline16/32. Round06 engineering pending.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -13,13 +13,13 @@
   "batch26_resume_allowed": false,
   "next_experiment": {
     "series": "upright_restart_20261030",
-    "round": 5,
-    "name": "upright_restart_round05",
-    "status": "ready_for_fixed_scratch_launch"
+    "round": 6,
+    "name": "upright_restart_round06",
+    "status": "engineering_pending"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": true,
+  "engineering_validated": false,
   "implementation_review": "docs/round01_implementation.md",
   "cpu_contract_tests_passed": 49,
   "allowed_host_gpus": [

@@ -7,7 +7,7 @@ from .model import wheel_geometry
 
 OBSERVATION_FIELDS = [('gravity_body', 3), ('gyro_body', 3), ('estimated_motion', 2),
                       ('position_joints', 5), ('joint_rates_scaled', 5), ('wheel_rates_scaled', 2),
-                      ('requested_command', 2), ('transition_motion', 2), ('executed_targets_scaled', 3),
+                      ('control_reference', 2), ('transition_motion', 2), ('executed_targets_scaled', 3),
                       ('phase_one_hot', 6), ('transition_heading_sin_cos', 2), ('phase_age_scaled', 1),
                       ('estimated_front_clearance', 2), ('ordinary_hip_target', 1)]
 OBSERVATION_DIM = sum(size for _, size in OBSERVATION_FIELDS)
@@ -19,6 +19,11 @@ class Runtime:
         self.control = Controller(n, device, dt, cfg, model, self.geometry.track)
         self.course = Curriculum(cfg)
         self.stage_ranges = torch.tensor([[0., 0., 0., 0.], [0., 0., 0., 0.]]+cfg.motion_stages(), device=device)
+        # Leave at least one second after the largest commanded reversal's reference ramp.
+        self.stage_dwell = torch.full((len(self.stage_ranges),), 2., device=device)
+        for axis, rate in enumerate((cfg.balance_linear_accel_m_s2, cfg.balance_yaw_accel_rad_s2)):
+            if rate > 0:
+                self.stage_dwell = torch.maximum(self.stage_dwell, 2*self.stage_ranges[:, axis]/rate+1.)
         self.generator = torch.Generator(device=device).manual_seed(cfg.seed)
         z = lambda: torch.zeros(n, device=device)
         self.level = z().long(); self.episode_age = z(); self.command_age = z()
@@ -76,7 +81,7 @@ class Runtime:
             self.invoked[ids] = True
         balance = c.phase == Phase.BALANCE
         self.command_age += balance*self.dt
-        change = balance & (self.level >= 2) & (self.command_age >= 2.)
+        change = balance & (self.level >= 2) & (self.command_age >= self.stage_dwell[self.level])
         ids = change.nonzero().flatten()
         if len(ids):
             if self.probe_level is None:
@@ -91,7 +96,7 @@ class Runtime:
                 if self.probe_level >= 3:
                     table = s['motion'].new_tensor([[.5, 0], [1, 0], [-1, 0], [-.5, 0], [0, 0],
                                                    [0, 1], [1, 1], [.5, -1], [0, 0]])
-                index = (self.balance_elapsed[ids]/2).long() % len(table)
+                index = (self.balance_elapsed[ids]/self.stage_dwell[self.level[ids]]).long() % len(table)
                 command = table[index]*self.stage_ranges[self.level[ids], :2]
                 command[:, 1] *= torch.where(ids % 2 == 0, 1., -1.)
             c.set_command(command, ids=ids); self.command_age[ids] = 0
@@ -99,6 +104,7 @@ class Runtime:
         limit = torch.where(self.level == 1, self.cfg.hold_s, duration)
         landing = balance & (self.level > 0) & (self.balance_elapsed >= limit)
         c.request_land(s, landing.nonzero().flatten())
+        c.update_motion_reference()
         return ready.nonzero().flatten()
 
     def advance(self, s, truth):
@@ -161,7 +167,7 @@ class Runtime:
         land_phi = ((.15-truth['front_z'].amax(-1))/.105).clamp(0, 1)*rear_near*landing
         land_gain = (land_phi-self.peak_land).clamp_min(0)*landing
         self.peak_land.copy_(torch.maximum(self.peak_land, land_phi))
-        error = s['motion']-c.command
+        error = s['motion']-c.motion_command()
         tracking = .5*torch.exp(-(error[:, 0]/.10).square())+.5*torch.exp(-(error[:, 1]/.30).square())
         transition = rising | landing
         heading_error = wrap(s['yaw']-c.yaw_reference)
@@ -219,7 +225,7 @@ class Runtime:
         yaw = torch.where((c.phase == Phase.RISE) | (c.phase == Phase.LAND), yaw, 0.)
         executed = c.executed/s['q'].new_tensor([1.2, 25., 25.])
         return torch.cat((g, gyro, s['motion'], q, s['qd']*.1, s['wheel']*.05,
-                          c.command, c.transition_motion, executed,
+                          c.motion_command(), c.transition_motion, executed,
                           torch.nn.functional.one_hot(c.phase, 6).float(),
                           torch.stack((yaw.sin(), yaw.cos()), -1), self.observation_stage_age()[:, None]/12,
                           s['gap'], c.ordinary_hip[:, None]), -1)
