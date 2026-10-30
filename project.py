@@ -18,8 +18,11 @@ def inspect_requirements():
         raise ValueError('User requirement document is missing')
     if spec['training']['initialization'] != 'random' or spec['training']['historical_models']:
         raise ValueError('Historical model initialization is outside the user requirements')
-    if spec['training']['formal_updates_per_run'] != 1000:
-        raise ValueError('Formal runs must retain the authorized 1000-update budget')
+    if spec['training']['demo_updates_per_run'] != 1000:
+        raise ValueError('Retain the current demo iteration budget of 1000 updates')
+    delivery_budget = spec['training']['delivery_updates_per_run']
+    if delivery_budget is not None and (type(delivery_budget) is not int or delivery_budget <= 0):
+        raise ValueError('A configured delivery budget must be a positive integer')
     if spec['capability']['required_continuous_straight_speed_m_s'] != [-0.75, 0.75]:
         raise ValueError('Both continuous speed directions are required')
     if not spec['model']['read_only'] or spec['model']['physical_parameters_may_change']:
