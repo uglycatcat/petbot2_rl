@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "552f876001532291c0c07969417a0a10aaab6538",
+      "verified_commit": "b357dd720ae5cc42e0c630476a0df007fe7dbc3e",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "Batch25 two random1000-update runs failed to enter balance; both low reloads64 rise timeouts. No formal batch26. Physics sequence diagnostic216/216 ended: max gap165.5mm, support0.28s, zero balance entries. Six-case rear contact diagnosis next; C58 desktop retained.",
-      "local_validation": "Batch25 all22 checkpoints/2000 loss updates finite, no inherited weights/restart/OOM; nine original PIDs exited. Training geometric lift counts3927/4053, max gap38.9/33.0mm, no balance. Reload actual wheel peak23.74/32.79rad/s. New commit only adds diagnostic tool; task code unchanged. Sequence diagnostic target/effort bounds valid, actual wheel peak67.76rad/s unresolved; no runtime/OOM. 552f876 only extends diagnostic logging.",
+      "status": "V28 scratch rise reward support proxy corrected after physical contact diagnosis; engineering queue with two random32-update runs,30+2 recovery and reloads started. No formal batch26; C58 retained.",
+      "local_validation": "Contact diagnosis complete:21 supported lift samples had rear centers30.013-30.616mm and bilateral contact duty<0.2. No OOM/runtime errors,0/6 balance; actual wheel peak42.76rad/s remains. CUDA reward/curriculum/mirror checks passed; new PhysX/short-training/recovery/reload pending.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
