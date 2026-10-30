@@ -103,11 +103,11 @@ class Controller:
         ground = upright & (s['gap'].abs().amax(-1) < self.cfg.ground_gap_m) & (s['rear_skew'].abs() < .02)
         rise_balance = (before == Phase.RISE) | (before == Phase.BALANCE)
         lift = s['gap'].amin(-1) > self.cfg.lift_gap_m
-        self.lift_run = torch.where(rise_balance & lift, self.lift_run+self.dt, 0.)
+        self.lift_run.copy_(torch.where(rise_balance & lift, self.lift_run+self.dt, 0.))
         self.lifted |= rise_balance & (self.lift_run >= self.cfg.lifted_confirm_s)
-        self.return_run = torch.where(rise_balance & self.lifted & (s['gap'].amin(-1) < self.cfg.ground_gap_m), self.return_run+self.dt, 0.)
-        self.support_run = torch.where(support & rise_balance, self.support_run+self.dt, 0.)
-        self.ground_run = torch.where(ground & (before == Phase.LAND), self.ground_run+self.dt, 0.)
+        self.return_run.copy_(torch.where(rise_balance & self.lifted & (s['gap'].amin(-1) < self.cfg.ground_gap_m), self.return_run+self.dt, 0.))
+        self.support_run.copy_(torch.where(support & rise_balance, self.support_run+self.dt, 0.))
+        self.ground_run.copy_(torch.where(ground & (before == Phase.LAND), self.ground_run+self.dt, 0.))
         enter = (before == Phase.RISE) & (self.support_run >= self.cfg.support_enter_s)
         handoff = (before == Phase.LAND) & (self.ground_run >= self.cfg.ground_confirm_s)
         failure = active & (~finite | fallen)
@@ -128,7 +128,7 @@ class Controller:
         self.ordinary_hip[handoff] = 0
         self.ordinary_hip[failure] = s['q'][failure, 3:].mean(-1).clamp(self.lo, self.hi)
         good_handoff = (before == Phase.HANDOFF) & ground & (s['q'][:, 3:].abs().amax(-1) < .1)
-        self.handoff_run = torch.where(good_handoff, self.handoff_run+self.dt, 0.)
+        self.handoff_run.copy_(torch.where(good_handoff, self.handoff_run+self.dt, 0.))
         success = (self.handoff_run >= self.cfg.handoff_hold_s) & ~failure & ~self.completed
         self.completed |= success
         self.phase[success] = Phase.ORDINARY
@@ -163,8 +163,8 @@ class Controller:
         alpha = (self.age/self.cfg.handoff_blend_s).clamp(0, 1)
         drive = torch.where(transferring[:, None], self.handoff_start[:, 1:] + alpha[:, None]*(drive-self.handoff_start[:, 1:]), drive)
         ordinary_hip = torch.where(transferring, slew(self.executed[:, 0], ordinary_hip, self.cfg.hip_slew_rad_s*self.dt), ordinary_hip)
-        self.executed[:, 0] = torch.where(policy, hip, ordinary_hip).clamp(self.lo, self.hi)
-        self.executed[:, 1:] = torch.where(policy[:, None], wheels, drive).clamp(-self.limit, self.limit)
+        self.executed[:, 0].copy_(torch.where(policy, hip, ordinary_hip).clamp(self.lo, self.hi))
+        self.executed[:, 1:].copy_(torch.where(policy[:, None], wheels, drive).clamp(-self.limit, self.limit))
         # EXIT is not an active policy stage; advance its handoff blend without re-entering.
         self.age += (self.phase == Phase.EXIT)*self.dt
         return self.executed

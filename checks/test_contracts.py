@@ -123,6 +123,15 @@ class ControlContracts(unittest.TestCase):
 
 
 class LearningContracts(unittest.TestCase):
+    def test_probe_reset_can_leave_inference_mode(self):
+        p, s = Runtime(2, 'cpu', .06, CFG, MODEL), state()
+        p.reset(torch.arange(2)); p.control.request_rise(s, torch.arange(2)); p.invoked[:] = True
+        s['gap'][:] = .1
+        with torch.inference_mode():
+            for _ in range(8): p.advance(s, truth(raised=True))
+        p.reset(torch.arange(2))
+        self.assertFalse(p.control.entered.any())
+
     def test_idle_rise_has_no_positive_stream(self):
         p, s = Runtime(2, 'cpu', .06, CFG, MODEL), state()
         p.reset(torch.arange(2)); p.control.request_rise(s, torch.arange(2)); p.invoked[:] = True

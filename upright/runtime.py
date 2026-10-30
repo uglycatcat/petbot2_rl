@@ -54,7 +54,7 @@ class Runtime:
             hip = (((ids//6) % 3).float()-1)*self.cfg.initial_hip
             if not self.probe_moving:
                 velocity.zero_(); hip.zero_()
-        self.initial_hip[ids] = torch.where(moving, hip, 0.)
+        self.initial_hip[ids].copy_(torch.where(moving, hip, 0.))
         command = torch.stack((torch.where(moving, velocity, 0.), torch.zeros_like(velocity)), -1)
         self.control.set_command(command, self.initial_hip[ids], ids)
 
@@ -103,8 +103,8 @@ class Runtime:
         in_balance = c.phase == Phase.BALANCE
         self.balance_seen |= in_balance & physical_support
         self.balance_elapsed += in_balance*self.dt
-        self.true_hold = torch.where(in_balance & physical_support, self.true_hold+self.dt, 0.)
-        self.longest_hold = torch.maximum(self.longest_hold, self.true_hold)
+        self.true_hold.copy_(torch.where(in_balance & physical_support, self.true_hold+self.dt, 0.))
+        self.longest_hold.copy_(torch.maximum(self.longest_hold, self.true_hold))
         stage_goal = (self.level == 0) & (self.true_hold >= self.cfg.hold_s)
         warmup_failed = ~self.invoked & (self.episode_age >= self.cfg.warmup_timeout_s)
         physical_fall = self.invoked & ((truth['root_height'] < .025) | truth['body_contact'])
@@ -147,10 +147,10 @@ class Runtime:
         prepare = .25*(-s['g'][:, 0]/.8).clamp(0, 1)*rear_near
         phi = (prepare+lift)*rising
         gain = (phi-self.peak_rise).clamp_min(0)*rising
-        self.peak_rise = torch.maximum(self.peak_rise, phi)
+        self.peak_rise.copy_(torch.maximum(self.peak_rise, phi))
         land_phi = ((.15-truth['front_z'].amax(-1))/.105).clamp(0, 1)*rear_near*landing
         land_gain = (land_phi-self.peak_land).clamp_min(0)*landing
-        self.peak_land = torch.maximum(self.peak_land, land_phi)
+        self.peak_land.copy_(torch.maximum(self.peak_land, land_phi))
         error = s['motion']-c.command
         tracking = .5*torch.exp(-(error[:, 0]/.10).square())+.5*torch.exp(-(error[:, 1]/.30).square())
         transition = rising | landing

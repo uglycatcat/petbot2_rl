@@ -77,8 +77,45 @@ def main():
     runtime_error = (cause or {}).get('runtime_error') or python.check()
     guard_stopped = bool((cause or {}).get('guard_stopped'))
     code = 81 if p_error else 82 if runtime_error else 80 if guard_stopped else process_code
+    # Native Isaac shutdown may return 0 even after Python selected a nonzero
+    # status. Runtime artifacts and requested update counts are mandatory.
+    artifact_error = None
+    runtime_state = None
+    mounts = sorted(inspected['Mounts'], key=lambda m: len(m['Destination']), reverse=True)
+    host_work = None
+    for mount in mounts:
+        relative = Path(args.workdir)
+        if relative.is_relative_to(mount['Destination']):
+            host_work = Path(mount['Source'])/relative.relative_to(mount['Destination'])
+            break
+    if code == 0 and command[0] == 'train.py':
+        try:
+            run = host_work/command[command.index('--run-dir')+1]
+            runtime_state = json.loads((run/'status.json').read_text())
+            if runtime_state['state'] in ('interrupted','failed_oom'):
+                code = 130 if runtime_state['state']=='interrupted' else 80
+            elif runtime_state['state'] != 'complete_execution_only':
+                raise RuntimeError('Training status is not complete: '+runtime_state['state'])
+            else:
+                manifest = json.loads((run/'run.json').read_text())
+                latest = json.loads((run/'checkpoints/latest.json').read_text())
+                expected = manifest['config']['iterations']
+                if runtime_state['updates_completed'] != expected or latest['updates_completed'] != expected or not (run/'checkpoints'/latest['file']).is_file():
+                    raise RuntimeError('Final training updates/checkpoint missing')
+        except Exception as exc:
+            artifact_error = repr(exc); code = 83
+    elif code == 0 and command[0] == 'evaluate.py':
+        try:
+            result = host_work/command[command.index('--output')+1]/'result.json'
+            payload = json.loads(result.read_text())
+            if payload['kind'] != 'independent_validation' or not payload['all_episodes_finished']:
+                raise RuntimeError('Evaluation did not finish all requested episodes')
+            if not result.with_name('trace.jsonl').is_file(): raise RuntimeError('Evaluation trajectory missing')
+        except Exception as exc:
+            artifact_error = repr(exc); code = 83
     save(args.log.with_suffix('.exit.json'), dict(exit_code=code, process_exit_code=process_code,
          physics_error=p_error, runtime_error=runtime_error, guard_stopped=guard_stopped,
+         artifact_error=artifact_error, runtime_state=runtime_state,
          gpu=args.gpu, gpu_uuid=identity, container=container, job_token=token,
          sampled_peak_mib=peak, total_mib=total, elapsed_s=time.time()-begin, command=invocation))
     return code
