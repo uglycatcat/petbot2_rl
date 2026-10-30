@@ -47,6 +47,12 @@ class Config:
     ground_gap_m: float = 0.012
     hip_slew_rad_s: float = 6.0
     wheel_slew_rad_s2: float = 150.0
+    rise_hip_slew_rad_s: float = 6.0
+    rise_wheel_slew_rad_s2: float = 150.0
+    rise_prepare_weight: float = 0.0
+    rise_partial_lift_weight: float = 0.0
+    rise_support_weight: float = 0.0
+    rise_prepare_decay_s: float = 2.0
     heading_kp: float = 1.0
     heading_kd: float = 0.1
     heading_wheel_correction_rad_s: float = 2.0
@@ -60,8 +66,8 @@ class Config:
             value = getattr(self, key)
             if type(value) is not int or value <= 0:
                 raise ValueError(f'{key} must be a positive integer')
-        if self.schema != 'upright_restart_round01_v1' or self.round != 1:
-            raise ValueError('This implementation supports the reviewed round01 configuration')
+        if self.schema != 'upright_restart_round01_v1' or type(self.round) is not int or self.round < 1:
+            raise ValueError('Unsupported configuration schema or invalid round number')
         if self.num_envs > 4096 or self.probe_count > self.num_envs:
             raise ValueError('Invalid environment/probe count; maximum 4096 environments')
         if not 0 < self.curriculum_pass_rate <= 1 or not 0 <= self.baseline_fraction < 1:
@@ -72,7 +78,7 @@ class Config:
             if isinstance(value, float) and (not __import__('math').isfinite(value) or value < 0):
                 raise ValueError(f'Invalid numeric configuration: {key}')
         for key in ('hold_s', 'rise_timeout_s', 'landing_timeout_s', 'support_enter_s',
-                    'handoff_blend_s', 'yaw_quality_rad', 'learning_rate'):
+                    'handoff_blend_s', 'yaw_quality_rad', 'learning_rate', 'rise_prepare_decay_s'):
             if getattr(self, key) <= 0:
                 raise ValueError(f'{key} must be positive')
         return self
@@ -82,7 +88,7 @@ class Config:
 
 
 def load_config(path=None, **overrides):
-    data = json.loads(Path(path or ROOT/'configs/round01.json').read_text())
+    data = json.loads(Path(path or ROOT/'configs/round02.json').read_text())
     unknown = data.keys() - {f.name for f in fields(Config)}
     if unknown:
         raise ValueError(f'Unknown configuration keys: {sorted(unknown)}')

@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round01_authorized",
-  "training_enabled": true,
+  "phase": "round02_engineering_gate",
+  "training_enabled": false,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "User-authorized GPU2/3-only event iteration. Engineering gate accepted; policy capability remains unvalidated.",
+  "reason": "Round01 failed basic rise; round02 restores rise-only target authority and dense lift/support credit. Engineering validation pending.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -13,13 +13,13 @@
   "batch26_resume_allowed": false,
   "next_experiment": {
     "series": "upright_restart_20261030",
-    "round": 1,
-    "name": "upright_restart_round01",
-    "status": "ready_for_fixed_scratch_launch"
+    "round": 2,
+    "name": "upright_restart_round02",
+    "status": "engineering_gate_pending"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": true,
+  "engineering_validated": false,
   "implementation_review": "docs/round01_implementation.md",
   "cpu_contract_tests_passed": 30,
   "allowed_host_gpus": [

@@ -158,12 +158,22 @@ class Runtime:
         target_change = (c.executed-c.previous)/s['q'].new_tensor([2.2, 25., 25.])
         adjustment = (s['motion'][:, 0]-self.takeover_motion[:, 0]).abs()
         reward = 3*gain + 5*land_gain
+        # Restore the early scratch task's dense bridge. Real partial lift and
+        # rear support earn credit before the strict BALANCE entry event. A
+        # grounded preparatory pitch alone remains net-negative and expires.
+        prep_decay = (1-c.age/self.cfg.rise_prepare_decay_s).clamp(0, 1)
+        support_duration = (c.support_run/self.cfg.support_enter_s).clamp(0, 1)
+        bridge = rising*(self.cfg.rise_prepare_weight*prepare*prep_decay
+                          + self.cfg.rise_partial_lift_weight*lift.square()
+                          + self.cfg.rise_support_weight*m['support_truth']*(.2+.8*support_duration))
+        reward += self.dt*bridge
         reward += 5*m['entered_balance']*m['support_truth']*safe
         reward += 10*m['goal']*safe + 30*m['complete']*safe
         reward += self.dt*((2+2*tracking)*balancing - .1*transition
                            - .15*transition*heading_error.square()
                            - .02*rising*adjustment - .002*target_change.square().sum(-1)*self.invoked)
         reward -= 5*m['failure']
+        m['rise_bridge_reward'] = self.dt*bridge
         return reward
 
     def observation(self, s):

@@ -77,7 +77,7 @@ def main():
                 state['variants'][variant['name']]=dict(state='training',gpu=variant['gpu'],seed=variant['seed'],
                                                        source=work.relative_to(REPOSITORY).as_posix(),initialization='random')
                 save(out/'launch_status.json',state)
-            command=['train.py','--kind','training','--config','configs/round01.json','--run-dir','outputs/train',
+            command=['train.py','--kind','training','--config',plan['config'],'--run-dir','outputs/train',
                      '--seed',str(variant['seed']),'--iterations',str(variant['iterations']),
                      '--num-envs',str(variant['num_envs']),'--device','cuda:0']
             for attempt in range(3):
@@ -124,14 +124,14 @@ def main():
                 state['variants'].setdefault(variant['name'],{}).update(state='failed',error=repr(error))
                 save(out/'launch_status.json',state)
             notify(out,variant['name']+'_failure',thread,
-                f"upright新系列{name}的{variant['name']}失败。读取AGENTS.md、docs/current_handoff.md、docs/upright_restart_round01_execution.md及该批状态和实际进程；其他运行可能仍在进行。仅GPU2/3，受迫中断先恢复同一运行；禁止重复启动或加载历史父模型。先核查日志/显存/产物，工程退出0不代表能力通过，无周期定时器或goal。")
+                f"upright新系列{name}的{variant['name']}失败。读取AGENTS.md、docs/current_handoff.md、{plan['execution_document']}及该批状态和实际进程；其他运行可能仍在进行。仅GPU2/3，受迫中断先恢复同一运行；禁止重复启动或加载历史父模型。先核查日志/显存/产物，工程退出0不代表能力通过，无周期定时器或goal。")
             return dict(name=variant['name'],execution_complete=False,error=repr(error),acceptance_pending=True)
 
     with ThreadPoolExecutor(max_workers=2) as pool:
         results=list(pool.map(run,plan['variants']))
     save(out/'eval_finished.json',dict(results=results,finished_at=time.time(),acceptance_pending=True))
     notify(out,'completion',thread,
-        f"upright新系列{name}训练与评估队列已结束。先读AGENTS.md、docs/current_handoff.md、docs/upright_restart_round01_execution.md，核查该批launch_status/eval_status/eval_finished、实际进程、缺失/失败/显存中断与同次恢复证据；分析请求/执行/实测及成功和失败轨迹。仅GPU2/3；新实验从随机初始化，不加载历史权重。先分析再修改继续已授权事件迭代，1000更新demo预算与全部能力要求保持；队列结束不是策略通过，不重复启动，不启用周期定时器或goal。")
+        f"upright新系列{name}训练与评估队列已结束。先读AGENTS.md、docs/current_handoff.md、{plan['execution_document']}，核查该批launch_status/eval_status/eval_finished、实际进程、缺失/失败/显存中断与同次恢复证据；分析请求/执行/实测及成功和失败轨迹。仅GPU2/3；新实验从随机初始化，不加载历史权重。先分析再修改继续已授权事件迭代，1000更新demo预算与全部能力要求保持；队列结束不是策略通过，不重复启动，不启用周期定时器或goal。")
 
 
 if __name__=='__main__': main()

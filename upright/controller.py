@@ -154,8 +154,11 @@ class Controller:
             -self.cfg.heading_wheel_correction_rad_s, self.cfg.heading_wheel_correction_rad_s)
         differential = torch.where(transition, correction, differential)
         wheels = wheel_mix(common, differential, self.limit)
-        hip = slew(self.executed[:, 0], hip, self.cfg.hip_slew_rad_s*self.dt)
-        wheels = slew(self.executed[:, 1:], wheels, self.cfg.wheel_slew_rad_s2*self.dt)
+        rising = self.phase == Phase.RISE
+        hip_step = torch.where(rising, self.cfg.rise_hip_slew_rad_s, self.cfg.hip_slew_rad_s)*self.dt
+        wheel_step = torch.where(rising, self.cfg.rise_wheel_slew_rad_s2, self.cfg.wheel_slew_rad_s2)*self.dt
+        hip = slew(self.executed[:, 0], hip, hip_step)
+        wheels = slew(self.executed[:, 1:], wheels, wheel_step[:, None])
         drive = wheel_mix(self.command[:, 0]/.03, self.command[:, 1]*self.track/(2*.03), self.limit)
         ordinary_hip = self.ordinary_hip
         transferring = (self.phase == Phase.HANDOFF) | (self.phase == Phase.EXIT)

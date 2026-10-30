@@ -11,7 +11,7 @@ def runner_config(cfg, model, device):
     home = (2*model['joints']['left_frame']['default']-lo-hi)/(hi-lo)
     return dict(seed=cfg.seed, device=device, num_steps_per_env=cfg.rollout_steps,
         save_interval=cfg.checkpoint_interval, logger='tensorboard', experiment_name='upright_restart',
-        run_name=f'round01_seed{cfg.seed}', obs_groups={'actor': ['policy'], 'critic': ['policy']},
+        run_name=f'round{cfg.round:02d}_seed{cfg.seed}', obs_groups={'actor': ['policy'], 'critic': ['policy']},
         actor=dict(class_name='MLPModel', hidden_dims=[128, 128], activation='elu', obs_normalization=True,
             distribution_cfg=dict(class_name='upright.distribution:UprightBetaDistribution',
                                   initial_mean=[home, 0., 0.], initial_std=[.35, .45, .15], shape_cap=128.)),

@@ -34,6 +34,15 @@ def controller(n=2):
 
 
 class ControlContracts(unittest.TestCase):
+    def test_rise_authority_does_not_change_balance_or_landing(self):
+        cfg = replace(CFG, rise_hip_slew_rad_s=40., rise_wheel_slew_rad_s2=1000.)
+        c = Controller(3, 'cpu', .06, cfg, MODEL, .1)
+        c.phase[:] = torch.tensor([Phase.RISE, Phase.BALANCE, Phase.LAND])
+        action = torch.tensor([[1., 1., 0.]]).repeat(3, 1)
+        result = c.targets(action, state(3))
+        torch.testing.assert_close(result[0], torch.tensor([1.2, 25., 25.]))
+        torch.testing.assert_close(result[1:], torch.tensor([[.36, 9., 9.]]).repeat(2, 1))
+
     def test_wheel_limit_and_mirror(self):
         common, differential = torch.tensor([25., -25., 5.]), torch.tensor([8., 8., -2.])
         a = wheel_mix(common, differential, 25)
@@ -123,6 +132,42 @@ class ControlContracts(unittest.TestCase):
 
 
 class LearningContracts(unittest.TestCase):
+    def bridge_runtime(self, n=2):
+        cfg = replace(CFG, rise_prepare_weight=.2, rise_partial_lift_weight=.5, rise_support_weight=2.)
+        p, s = Runtime(n, 'cpu', .06, cfg, MODEL), state(n)
+        p.reset(torch.arange(n)); p.control.request_rise(s, torch.arange(n)); p.invoked[:] = True
+        return p, s
+
+    def test_preparatory_pitch_cannot_earn_positive_grounded_stream(self):
+        p, s = self.bridge_runtime()
+        s['g'][:] = torch.tensor([-.8, 0., -.6])
+        p.advance(s, truth())  # bounded one-time progress is intentionally separate
+        for _ in range(40):
+            result = p.advance(s, truth())
+            self.assertTrue((result['reward'] < 0).all())
+        self.assertFalse(result['rise_bridge_reward'].any())
+
+    def test_real_partial_lift_has_ordered_credit_without_success(self):
+        p, s = self.bridge_runtime()
+        t = truth(); t['front_z'][:] = torch.tensor([[.08, .08], [.10, .10]])
+        s['gap'][:] = torch.tensor([[.035, .035], [.055, .055]])
+        result = p.advance(s, t)
+        self.assertGreater(float(result['rise_bridge_reward'][1]), float(result['rise_bridge_reward'][0]))
+        self.assertGreater(float(result['rise_bridge_reward'][0]), 0)
+        self.assertFalse(result['goal'].any()); self.assertFalse(result['complete'].any())
+        self.assertTrue((p.control.phase == Phase.RISE).all())
+
+    def test_truth_support_gets_credit_before_strict_entry(self):
+        p, s = self.bridge_runtime(); s['gap'][:] = .1
+        result = p.advance(s, truth(raised=True))
+        self.assertTrue((result['rise_bridge_reward'] > 0).all())
+        self.assertTrue((p.control.phase == Phase.RISE).all())
+        self.assertFalse(result['goal'].any())
+        fallen = truth(raised=True); fallen['body_contact'][:] = True
+        result = p.advance(s, fallen)
+        self.assertFalse(result['rise_bridge_reward'].any())
+        self.assertTrue(result['failure'].all())
+
     def test_moving_probe_reaches_both_hip_initial_states(self):
         p = Runtime(32, 'cpu', .06, CFG, MODEL)
         p.probe_level = 2
