@@ -14,7 +14,9 @@ def main():
     parser.add_argument('--run-dir', type=Path, required=True)
     parser.add_argument('--checkpoint', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--scenario', choices=('rise', 'static_cycle', 'low_cycle'), required=True)
+    parser.add_argument('--scenario', choices=('rise', 'static_cycle', 'low_cycle', 'capability_cycle'), required=True)
+    parser.add_argument('--level', type=int, help='Explicit capability level; default is reached training course')
+    parser.add_argument('--duration', type=float, help='Two-wheel verification duration, without changing training identity')
     parser.add_argument('--count', type=int, default=32)
     parser.add_argument('--device', default='cuda:0')
     args = parser.parse_args()
@@ -30,6 +32,10 @@ def main():
         raise ValueError('Refusing to overwrite an evaluation')
     if args.count < 1 or args.count > cfg.num_envs:
         raise ValueError('Invalid evaluation case count')
+    if args.level is not None and (args.scenario != 'capability_cycle' or not 2 <= args.level <= cfg.max_course_level):
+        raise ValueError('Explicit level requires a configured moving capability scenario')
+    if args.duration is not None and (not __import__('math').isfinite(args.duration) or args.duration <= 0):
+        raise ValueError('Duration must be positive and finite')
     app = env = None
     try:
         from isaaclab.app import AppLauncher
@@ -41,17 +47,24 @@ def main():
         from upright.learning import Adapter, runner_config
         from upright.evaluation import evaluate
         env_cfg = UprightEnvCfg(); env_cfg.apply_experiment(cfg)
+        if args.duration is not None:
+            env_cfg.episode_length_s += max(0., args.duration-max(cfg.balance_train_s, cfg.balance_eval_s))
         env_cfg.scene.num_envs = args.count; env_cfg.seed = cfg.seed+10000; env_cfg.sim.device = args.device
         env = ManagerBasedRLEnv(cfg=env_cfg); env.reset()
         runner = OnPolicyRunner(Adapter(env), runner_config(cfg, SPEC, args.device), log_dir=None, device=args.device)
         saved = torch.load(args.checkpoint, map_location=args.device, weights_only=False)
         check_identity(saved.get('restart', {}), manifest)
         runner.alg.load(saved, load_cfg=dict(actor=True, critic=True, optimizer=False, iteration=False, rnd=False), strict=True)
-        level = {'rise': 0, 'static_cycle': 1, 'low_cycle': 2}[args.scenario]
+        trained_level = saved['restart']['curriculum']['level']
+        if args.scenario == 'capability_cycle':
+            level = args.level if args.level is not None else max(2, trained_level)
+        else:
+            level = {'rise': 0, 'static_cycle': 1, 'low_cycle': 2}[args.scenario]
         result = evaluate(env, runner.get_inference_policy(device=args.device), level, args.count,
-                          duration=cfg.balance_eval_s, output=args.output)
+                          duration=args.duration if args.duration is not None else cfg.balance_eval_s, output=args.output)
         result.update(run_id=manifest['run_id'], checkpoint=args.checkpoint.name,
-                      updates_completed=saved['restart']['updates_completed'], scenario=args.scenario)
+                      updates_completed=saved['restart']['updates_completed'], scenario=args.scenario,
+                      trained_course_level=trained_level, outside_trained_course=level > trained_level)
         atomic_json(args.output/'result.json', result)
         print(json.dumps(result, indent=2))
     finally:

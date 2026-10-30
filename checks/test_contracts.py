@@ -304,7 +304,7 @@ class LearningContracts(unittest.TestCase):
         self.assertEqual(a.shape, (2, OBSERVATION_DIM))
 
     def test_curriculum_never_advances_on_iterations_alone(self):
-        c = Curriculum(CFG)
+        c = Curriculum(replace(CFG, iterations=2000))
         for update in (100, 200, 1000): c.observe_probe(update, 0, 32, 0)
         self.assertEqual(c.level, 0)
         c.observe_probe(1100, 32, 32, 0)

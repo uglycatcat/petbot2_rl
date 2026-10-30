@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round04_authorized",
-  "training_enabled": true,
+  "phase": "round05_engineering",
+  "training_enabled": false,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round04:44 CPU tests, fresh128env8 updates with4-to8 full-state same-run recovery,2048env scale and32-case reload valid. Short reload0/32. Fixed-current-policy combination probe32/32 cycle and27/32 basic, development only; source constraints pass. Ready for independent scratch training.",
+  "reason": "Round04 low-range protocol passed; round05 staged capability curriculum awaits engineering validation.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -13,13 +13,13 @@
   "batch26_resume_allowed": false,
   "next_experiment": {
     "series": "upright_restart_20261030",
-    "round": 4,
-    "name": "upright_restart_round04",
-    "status": "ready_for_fixed_scratch_launch"
+    "round": 5,
+    "name": "upright_restart_round05",
+    "status": "engineering_pending"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": true,
+  "engineering_validated": false,
   "implementation_review": "docs/round01_implementation.md",
   "cpu_contract_tests_passed": 44,
   "allowed_host_gpus": [

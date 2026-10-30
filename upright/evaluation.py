@@ -11,6 +11,8 @@ def evaluate(env, policy, level, count, duration=None, moving=True, output=None,
     if kind not in ('independent_validation', 'development_curriculum_probe'):
         raise ValueError('Evaluation kind must be explicit')
     p = env.upright_runtime
+    if level not in range(p.cfg.max_course_level+1):
+        raise ValueError('Evaluation course level outside configured stages')
     old = (p.probe_level, p.probe_duration, p.probe_moving, env.upright_record)
     saved_rng, scenario_rng = rng_state(), p.generator.get_state()
     p.probe_level, p.probe_duration, p.probe_moving = level, duration, moving
@@ -49,7 +51,7 @@ def evaluate(env, policy, level, count, duration=None, moving=True, output=None,
                 max_wheel = max(max_wheel, float(snap['wheel'][:count][active].abs().max()))
                 max_target = max(max_target, float(snap['executed_targets'][:count, 1:][active].abs().max()))
                 max_effort = torch.maximum(max_effort, snap['effort'][:count][active].abs().amax(0))
-            if output is not None or level == 2:
+            if output is not None or level >= 2:
                 # All evaluated episodes, including failures, remain reviewable.
                 traces.append(dict(t=(step+1)*env.step_dt, active=active.cpu().tolist(),
                     **{k: value[:count].detach().cpu().tolist() for k, value in snap.items()}))
@@ -66,6 +68,8 @@ def evaluate(env, policy, level, count, duration=None, moving=True, output=None,
         source = load_model()
         effort_limits = max_effort.new_tensor([source['actuators'][name]['effort'] for name in POSITION_JOINTS+REAR_WHEELS])
         result = dict(kind=kind, count=count, level=level, requested_balance_s=effective_duration,
+                      command_profile=p.stage_ranges[level].cpu().tolist(),
+                      sequence='full_signed_straight_and_mirrored_turns' if level >= 3 else 'baseline_v1',
                       all_episodes_finished=finished, stage_goal=int(goal.sum()), complete=int(complete.sum()),
                       entered_two_wheel=int(entered.sum()), success=int((goal if level == 0 else complete).sum()),
                       longest_support_s=longest.cpu().tolist(), failure_codes=failures.cpu().tolist(),
@@ -75,7 +79,7 @@ def evaluate(env, policy, level, count, duration=None, moving=True, output=None,
                       target_limit_pass=max_target <= 25.00001,
                       effort_limit_pass=bool((max_effort <= effort_limits+1e-3).all()),
                       policy_pass_not_inferred_from_exit=True)
-        if level == 2:
+        if level >= 2:
             from .response import basic_response
             result.update(basic_response(traces, count, complete.cpu().tolist(), env.step_dt))
         if output is not None:

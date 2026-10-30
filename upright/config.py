@@ -1,5 +1,5 @@
 """Reviewed experiment choices, separate from immutable user requirements."""
-from dataclasses import asdict, dataclass, fields
+from dataclasses import asdict, dataclass, fields, field
 import json
 import os
 import subprocess
@@ -21,6 +21,8 @@ class Config:
     learning_rate: float = 0.0003
     checkpoint_interval: int = 100
     probe_interval: int = 100
+    bootstrap_probe_interval: int = 0
+    capability_stages: list[list[float]] = field(default_factory=list)
     probe_count: int = 32
     curriculum_pass_rate: float = 0.8
     curriculum_consecutive: int = 2
@@ -65,12 +67,35 @@ class Config:
     imu_noise_std: float = 0.0
     joint_noise_std: float = 0.0
 
+    def motion_stages(self):
+        # Each row: two-wheel vx/yaw, four-wheel entry vx, common hip initial angle.
+        return self.capability_stages or [[self.low_speed, self.low_yaw, self.low_speed, self.initial_hip]]
+
+    @property
+    def max_course_level(self):
+        return len(self.motion_stages())+1
+
     def validate(self):
         for key in ('iterations', 'num_envs', 'decimation', 'history', 'rollout_steps',
                     'checkpoint_interval', 'probe_interval', 'probe_count', 'curriculum_consecutive'):
             value = getattr(self, key)
             if type(value) is not int or value <= 0:
                 raise ValueError(f'{key} must be a positive integer')
+        if type(self.bootstrap_probe_interval) is not int or self.bootstrap_probe_interval < 0:
+            raise ValueError('Invalid bootstrap probe interval')
+        if self.bootstrap_probe_interval and self.probe_interval % self.bootstrap_probe_interval:
+            raise ValueError('Bootstrap probe interval must divide motion probe interval')
+        previous = None
+        for stage in self.motion_stages():
+            if len(stage) != 4 or any(type(v) not in (int, float) or not __import__('math').isfinite(v) or v < 0 for v in stage):
+                raise ValueError('Capability stage needs four finite nonnegative ranges')
+            if stage[0] > .75 or stage[2] > .75 or stage[3] > 1:
+                raise ValueError('Capability range exceeds source/required bounds')
+            if previous and any(a < b for a, b in zip(stage, previous)):
+                raise ValueError('Capability stages must not shrink; regression is sampled separately')
+            previous = stage
+        if self.motion_stages()[0] != [self.low_speed, self.low_yaw, self.low_speed, self.initial_hip]:
+            raise ValueError('First capability stage must preserve the low-range baseline')
         if self.schema != 'upright_restart_round01_v1' or type(self.round) is not int or self.round < 1:
             raise ValueError('Unsupported configuration schema or invalid round number')
         if self.num_envs > 4096 or self.probe_count > self.num_envs:
@@ -93,7 +118,7 @@ class Config:
 
 
 def load_config(path=None, **overrides):
-    data = json.loads(Path(path or ROOT/'configs/round04.json').read_text())
+    data = json.loads(Path(path or ROOT/'configs/round05.json').read_text())
     unknown = data.keys() - {f.name for f in fields(Config)}
     if unknown:
         raise ValueError(f'Unknown configuration keys: {sorted(unknown)}')

@@ -12,7 +12,7 @@ from upright.experiment import atomic_json, identities, locked_run, new_manifest
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--config', type=Path, default=ROOT/'configs/round04.json')
+    parser.add_argument('--config', type=Path, default=ROOT/'configs/round05.json')
     parser.add_argument('--run-dir', type=Path)
     parser.add_argument('--resume-interrupted', type=Path)
     parser.add_argument('--kind', choices=('training', 'engineering'), default='training')
@@ -87,7 +87,7 @@ def main(argv=None):
             def finish_pending_probe():
                 p = env.upright_runtime
                 boundary = runner.completed_updates
-                if boundary <= 0 or boundary % cfg.probe_interval or p.course.last_probe_update >= boundary:
+                if not p.course.probe_due(boundary):
                     return
                 level = p.course.level
                 # An interrupted probe is repeated at the same PPO boundary;
@@ -109,7 +109,7 @@ def main(argv=None):
                 runner.save_boundary()
             finish_pending_probe()
             while runner.completed_updates < cfg.iterations:
-                boundary = min(cfg.iterations, ((runner.completed_updates//cfg.probe_interval)+1)*cfg.probe_interval)
+                boundary = min(cfg.iterations, env.upright_runtime.course.next_probe_update(runner.completed_updates))
                 if args.interrupt_after_update is not None:
                     if args.interrupt_after_update <= runner.completed_updates:
                         raise ValueError('Interruption target must be later than the resumed update')

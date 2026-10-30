@@ -18,6 +18,7 @@ class Runtime:
         self.geometry = WheelGeometry(wheel_geometry(), device)
         self.control = Controller(n, device, dt, cfg, model, self.geometry.track)
         self.course = Curriculum(cfg)
+        self.stage_ranges = torch.tensor([[0., 0., 0., 0.], [0., 0., 0., 0.]]+cfg.motion_stages(), device=device)
         self.generator = torch.Generator(device=device).manual_seed(cfg.seed)
         z = lambda: torch.zeros(n, device=device)
         self.level = z().long(); self.episode_age = z(); self.command_age = z()
@@ -41,17 +42,23 @@ class Runtime:
             getattr(self, name)[ids] = 0
         level = self.course.level if self.probe_level is None else self.probe_level
         self.level[ids] = level
-        if level == 2 and self.probe_level is None:
+        if level >= 2 and self.probe_level is None:
             baseline = self.uniform(len(ids))[:, 0] < self.cfg.baseline_fraction
-            self.level[ids[baseline]] = 1
-        moving = self.level[ids] == 2
+            # Preserve static cycles and earlier moving stages instead of dropping acquired tasks.
+            if level == 2:
+                self.level[ids[baseline]] = 1
+            else:
+                earlier = 1+(self.uniform(len(ids))[:, 0]*(level-1)).long()
+                self.level[ids[baseline]] = earlier[baseline]
+        moving = self.level[ids] >= 2
+        ranges = self.stage_ranges[self.level[ids]]
         if self.probe_level is None:
-            velocity = (2*self.uniform(len(ids))[:, 0]-1)*self.cfg.low_speed
-            hip = (2*self.uniform(len(ids))[:, 0]-1)*self.cfg.initial_hip
+            velocity = (2*self.uniform(len(ids))[:, 0]-1)*ranges[:, 2]
+            hip = (2*self.uniform(len(ids))[:, 0]-1)*ranges[:, 3]
         else:
             # Deterministic paired initial states, independent of training random draws.
-            velocity = (((ids//2) % 3).float()-1)*self.cfg.low_speed
-            hip = (((ids//6) % 3).float()-1)*self.cfg.initial_hip
+            velocity = (((ids//2) % 3).float()-1)*ranges[:, 2]
+            hip = (((ids//6) % 3).float()-1)*ranges[:, 3]
             if not self.probe_moving:
                 velocity.zero_(); hip.zero_()
         self.initial_hip[ids] = torch.where(moving, hip, 0.)
@@ -69,11 +76,11 @@ class Runtime:
             self.invoked[ids] = True
         balance = c.phase == Phase.BALANCE
         self.command_age += balance*self.dt
-        change = balance & (self.level == 2) & (self.command_age >= 2.)
+        change = balance & (self.level >= 2) & (self.command_age >= 2.)
         ids = change.nonzero().flatten()
         if len(ids):
             if self.probe_level is None:
-                command = (2*self.uniform(len(ids), 2)-1)*s['motion'].new_tensor([self.cfg.low_speed, self.cfg.low_yaw])
+                command = (2*self.uniform(len(ids), 2)-1)*self.stage_ranges[self.level[ids], :2]
                 category = (self.uniform(len(ids))[:, 0]*5).long()
                 command[category == 0] = 0  # stop
                 command[category == 1, 1] = 0  # straight
@@ -81,8 +88,11 @@ class Runtime:
             else:
                 # Intermediate speeds, reversal, stop, pure turns and paired arcs.
                 table = s['motion'].new_tensor([[.5, 0], [-1, 0], [0, 0], [0, 1], [1, 1], [.5, -1], [-.5, 0], [0, 0]])
+                if self.probe_level >= 3:
+                    table = s['motion'].new_tensor([[.5, 0], [1, 0], [-1, 0], [-.5, 0], [0, 0],
+                                                   [0, 1], [1, 1], [.5, -1], [0, 0]])
                 index = (self.balance_elapsed[ids]/2).long() % len(table)
-                command = table[index]*s['motion'].new_tensor([self.cfg.low_speed, self.cfg.low_yaw])
+                command = table[index]*self.stage_ranges[self.level[ids], :2]
                 command[:, 1] *= torch.where(ids % 2 == 0, 1., -1.)
             c.set_command(command, ids=ids); self.command_age[ids] = 0
         duration = self.cfg.balance_train_s if self.probe_duration is None else self.probe_duration
