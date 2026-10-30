@@ -33,7 +33,9 @@
 
 证据：`runs/_scratch_v27_rise_gate1/{launch_status,eval_status,eval_finished,engineering_review,learning_review,acceptance_review,completion_event_reconciliation}.json`；`review_learning.py`保留本次轨迹与恢复分析。
 
-## 第25批：正式检验奖励纠正的学习收益
+## 第25批：正式检验奖励纠正的学习收益（已结束）
+
+终局：两份1000更新均未进入两轮，低速重载各64/64起立超时，无显存中断/恢复；短训抬升迹象没有转化为完整能力。见[第25批终局](upright_cycle_batch25_results.md)和[下一步动作衔接诊断](upright_scratch_rise_sequence_diagnostic.md)。以下保留固定实验设计。
 
 32更新仅出现有限的抬升探索，尚不能断言已摆脱局部最优。发批依据是驻留奖励缺口已在实测轨迹消除、进展信号有效、工程链路完整；正式1000更新用于检验能否学会完整流程，不能把短训奖励响应当成功。
 

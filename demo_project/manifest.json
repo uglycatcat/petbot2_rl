@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "78b9252e7c6ae212764eaf5415413808b630f0f2",
+      "verified_commit": "552f876001532291c0c07969417a0a10aaab6538",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "V27 scratch engineering accepted, policy failed: two32-update runs and same-run30+2 recovery complete; both reloads0/64 balance. Batch25 two fresh4096x1000 runs launched at78b9252, seeds60/61. C58 remains desktop benchmark.",
-      "local_validation": "Eight engineering steps complete, all11 original PIDs exited, no OOM/runtime/PhysX interruption. Grounded transition/smooth rewards zero; training recorded8/57 geometric liftoffs, no balance entry. Target/effort bounds valid; actual wheel peaks39.56/43.21rad/s remain. ONNX parity<=7.2e-7 is not sim2sim acceptance.",
+      "status": "Batch25 two random1000-update runs failed to enter balance; both low reloads64 rise timeouts. No formal batch26. Physics sequence diagnostic216/216 ended: max gap165.5mm, support0.28s, zero balance entries. Six-case rear contact diagnosis next; C58 desktop retained.",
+      "local_validation": "Batch25 all22 checkpoints/2000 loss updates finite, no inherited weights/restart/OOM; nine original PIDs exited. Training geometric lift counts3927/4053, max gap38.9/33.0mm, no balance. Reload actual wheel peak23.74/32.79rad/s. New commit only adds diagnostic tool; task code unchanged. Sequence diagnostic target/effort bounds valid, actual wheel peak67.76rad/s unresolved; no runtime/OOM. 552f876 only extends diagnostic logging.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
