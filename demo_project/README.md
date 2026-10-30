@@ -4,7 +4,7 @@
 
 | 项目 | 职责 | 当前开发状态 |
 |---|---|---|
-| [upright_rl_demo](upright_rl_demo/README.md) | 核查复用早期有效源码，完善从随机初始化到完整起落与两轮遥控的工程。 | 新第1轮训练代码与27项CPU检查已完成，待用户核对；PhysX/短训待验收，未发训练。见[当前交接](../docs/current_handoff.md)。 |
+| [upright_rl_demo](upright_rl_demo/README.md) | 从随机初始化完成起落与两轮遥控；不依赖历史权重。 | 新第1轮ac2c04d已过工程门槛，GPU2/3两种子各2048环境×1000更新已启动，完成/异常驱动继续分析迭代；能力待评估。见[执行证据](../docs/upright_restart_round01_execution.md)。 |
 | [step_rl_demo](step_rl_demo/README.md) | 前轮登上0–3 cm低台阶后加速爬升。 | 仅登记与需求说明，尚无训练代码。 |
 | [recovery_rl_demo](recovery_rl_demo/README.md) | 重新设计分阶段跌倒恢复。 | 仅登记与需求说明，尚无训练代码。 |
 | [recovery_agile_01](recovery_agile_01/PETBOT.md) | 基于AGILE的早期恢复原型。 | 历史实验，不能直接作为新恢复任务的设计或成功基线。 |

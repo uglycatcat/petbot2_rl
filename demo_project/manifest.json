@@ -44,16 +44,19 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "8f01ded327c9a3def917ba9cc5c9a8cea18cfcff",
+      "verified_commit": "ac2c04de83600f250474bcb3078131b1ad2c6be0",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "Round01 independent scratch cycle implemented for user review. Training, engineering and evaluation execution remain disabled; no jobs launched.",
-      "local_validation": "27 CPU contract tests pass, including native random-model ONNX parity and synthetic checkpoint IO; source XML and launch-pause checks pass. No asset conversion, PhysX, PPO training/reload or MuJoCo validation.",
+      "status": "restart_round01_running_gpu2_gpu3_random_initialization_event_iteration",
+      "local_validation": "30 CPU tests; cold asset conversion, neutral PhysX/contact probe, same-run forced 2-to-4 PPO recovery (optimizer40-to80), 2048env scale gate, independent32-case reload pass engineering. Reload0/32 rise, policy unvalidated. Three earlier integration failures retained, no OOM. Two independent2048env1000update trials, seeds101/102, GPU2/3 only; no historical models. C58 untouched; no timers/goals.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": []
+      "active_tasks": [
+        "upright_restart_round01_s101@gpu2",
+        "upright_restart_round01_s102@gpu3"
+      ]
     },
     {
       "name": "step_rl_demo",

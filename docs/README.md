@@ -1,6 +1,6 @@
 # 项目文档索引
 
-- 当前：**停训并独立重建upright**。先看[当前交接](current_handoff.md)、[纯需求基线](current_scope.md)和[重整记录](upright_reorganization_20261030.md)。旧实现已封存；按最新澄清核查复用早期有效源码，移除历史权重依赖。下表中的历史方案和授权不覆盖当前暂停。
+- 当前：**upright新第1轮已通过工程门槛，GPU2/3从零训练与事件迭代已启动**。先看[当前交接](current_handoff.md)、[执行记录](upright_restart_round01_execution.md)和[需求基线](current_scope.md)。旧第26批保持取消，旧模型不作训练来源，周期定时器与goal仍禁止。
 
 
 先读根目录 [AGENTS.md](../AGENTS.md) 的硬规则和里程碑，再读[当前交接](current_handoff.md)。只按手头问题打开下面相应文档；历史实验与 `runs/` 不需要全读。根目录 README 用于部署和使用，不承载进度。
