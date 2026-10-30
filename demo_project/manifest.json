@@ -44,12 +44,12 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "2670335598578f901242ae39c26bac782551ba44",
+      "verified_commit": "ade8ae24ecc403913449152998549ce6b54dad5f",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "Requirements settled; audited early-source reuse is permitted to recover an independent scratch training pipeline. Historical weights and frozen parents remain forbidden. Batch26 cancelled; training not restarted.",
+      "status": "Restart series upright_restart_20261030 round01 planned: independent scratch training for the low-speed complete cycle. Audited early-source reuse allowed; historical weights and frozen parents forbidden. Batch26 cancelled; training not restarted.",
       "local_validation": "180 archived source files verified unchanged; batch26 cancelled, processes exited. New read-only specification/XML checks pass and training entry refuses execution. No new PhysX/PPO/sim2sim validation.",
       "task": null,
       "usage": "README.md",
