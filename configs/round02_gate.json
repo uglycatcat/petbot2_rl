@@ -11,7 +11,7 @@
   "head_kd": 0.1,
   "ear_kp": 0.4,
   "ear_kd": 0.02,
-  "hip_target_rate_rad_s": 100.0,
+  "hip_target_rate_rad_s": 20.0,
   "wheel_target_accel_rad_s2": 100.0,
   "num_steps_per_env": 64,
   "hidden_dims": [

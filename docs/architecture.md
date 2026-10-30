@@ -28,7 +28,7 @@ IMU按2ms采样，陀螺积分姿态，加速度去重力后积分。编码器�
 
 ## 训练与证据
 
-默认1024环境、每环境64步rollout、PPO 5 epoch/4 minibatch、2×128 ELU actor/critic、学习率3e-4、clip0.2、gamma0.99、lambda0.95、可学习log标准差初值0.5；默认1000更新。工程配置128环境6更新，不能混作正式训练。
+当前默认第2轮512环境、每环境64步rollout、PPO 5 epoch/4 minibatch、2×128 ELU actor/critic、固定学习率3e-4、clip0.2、gamma0.99、lambda0.95、原生有界Beta分布；默认1000更新。首版Gaussian配置仅作历史复现，不能作为后续默认。工程配置128环境6更新，不能混作正式训练。
 
 新运行创建唯一身份、代码/源模型/派生资产指纹、完整配置、随机初始化参数及空优化器证据。检查点保存actor/critic/归一化/优化器、实际学习率、更新计数和Python/NumPy/Torch/CUDA随机状态。恢复只接受原运行原配置，重新建立物理回合；RSL-RL保存的是0基更新索引，恢复从iter+1继续，不重复最后一次更新。
 

@@ -48,7 +48,7 @@ def main(argv):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command',choices=('train','evaluate'))
     parser.add_argument('--config',type=Path,default=DEFAULT_CONFIG)
-    parser.add_argument('--training-config',type=Path,default=PROJECT_ROOT/'configs/train_v1.json')
+    parser.add_argument('--training-config',type=Path,default=PROJECT_ROOT/'configs/round02_seed70.json')
     parser.add_argument('--model-dir',type=Path)
     parser.add_argument('--asset-dir',type=Path,default=PROJECT_ROOT/'artifacts/robot')
     parser.add_argument('--run-dir',type=Path,required=True)
@@ -153,7 +153,12 @@ def main(argv):
         write_json(output/'status.json',dict(status='failed',error=traceback.format_exc()))
         raise
     finally:
-        if env is not None: env.close()
-        if app is not None: app.close()
-        lock.close()
+        try:
+            if env is not None: env.close()
+        finally:
+            # Kit may exit during app.close; explicitly unlock before shutdown so
+            # a forked native worker cannot retain this run's flock indefinitely.
+            fcntl.flock(lock,fcntl.LOCK_UN)
+            lock.close()
+            if app is not None: app.close()
     return 0

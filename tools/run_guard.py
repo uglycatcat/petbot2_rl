@@ -74,6 +74,10 @@ def main():
                 except subprocess.TimeoutExpired:
                     subprocess.run(['docker','exec',a.container,'/isaac-sim/python.sh','-c',kill.replace('SIGTERM','SIGKILL'),pidfile,token],check=False)
                     child.wait(timeout=15)
+            # Native Kit fork workers can outlive a successful launcher and retain
+            # file locks. Clean only this token, including after a normal exit.
+            subprocess.run(['docker','exec','-w',a.workdir,a.container,'/isaac-sim/python.sh',
+                            'tools/cleanup_run.py','--token',token],check=True)
     matches=FATAL.findall(a.log.read_text(errors='replace'))
     artifact=json.loads(a.status.read_text()) if a.status.exists() else {}
     valid=(reason is None and child.returncode==0 and not matches and artifact.get('status') in ('complete','interrupted','passed'))
