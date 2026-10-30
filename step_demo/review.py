@@ -35,7 +35,8 @@ def summarize(run, evaluation):
     if len(terminals)!=result['num_envs']: raise ValueError('Missing or duplicate first-episode evaluations')
     seen=set();phases=Counter();examples={};frames=0;counts=Counter()
     peaks=dict(estimator_error_m=0.,yaw_rad=0.,lateral_m=0.,hip_asymmetry_rad=0.,wheel_asymmetry_rad_s=0.,
-               sampled_actual_wheel_rad_s=0.,head_ear_error_rad=0.,contact_force_n=0.)
+               sampled_actual_wheel_rad_s=0.,head_ear_error_rad=0.,contact_force_n=0.,raw_action_abs=0.)
+    action_count=0;action_outside_count=0
     for row in records(evaluation/'trace.jsonl'):
         frames+=1
         for local,i in enumerate(layout['trace_ids']):
@@ -44,6 +45,10 @@ def summarize(run, evaluation):
             speed=math.sqrt(sum(x*x for x in row['velocity'][local]))
             phase=row['phase'][local];failure=row['failure'][local];completed=row['completed'][local]
             target=[row['hip_target'][local],row['wheel_target'][local]]
+            raw=row['action'][local]
+            if not all(math.isfinite(x) for x in raw):raise ValueError('Nonfinite raw policy action')
+            action_count+=len(raw);action_outside_count+=sum(abs(x)>1.+1e-6 for x in raw)
+            peaks['raw_action_abs']=max(peaks['raw_action_abs'],*(abs(x) for x in raw))
             if not all(math.isfinite(x) for x in (*q,*v,*com,*target)):
                 raise ValueError('Nonfinite physical trajectory')
             if not (-1.-1e-5<=target[0]<=1.2+1e-5 and -1e-5<=target[1]<=25.+1e-5):
@@ -76,6 +81,8 @@ def summarize(run, evaluation):
                 bucket=examples.setdefault(category,[])
                 if len(bucket)<3: bucket.append(example)
     if len(seen)!=result['num_envs']: raise ValueError('Terminal physics frames missing from trace')
+    if origin['training'].get('policy_distribution')=='beta' and action_outside_count:
+        raise ValueError('Bounded policy produced out-of-range actions')
     train_counts=Counter();first_lift=0;front_landing=0
     for episode in records(run/'episodes.jsonl'):
         train_counts[str(episode['failure'])]+=1
@@ -86,7 +93,8 @@ def summarize(run, evaluation):
         run_id=origin['run_id'],completed_updates=latest['completed_updates'],random_initialization_verified=True,
         evaluation=dict(episodes=result['num_envs'],successes=result['successes'],outcomes=dict(counts),
             phases=dict(phases),peaks=peaks,substep_actual_wheel_peak_rad_s=max(r['actual_wheel_peak'] for r in terminals.values()),
-            scalar_completion_agrees=True,frames=frames,examples=examples,scene_randomization=False),
+            scalar_completion_agrees=True,frames=frames,examples=examples,scene_randomization=False,
+            raw_action_outside_fraction=action_outside_count/max(action_count,1)),
         training=dict(checkpoint_accounted_totals=status['totals'],recorded_episode_outcomes=dict(train_counts),
             recorded_both_front_lift=first_lift,recorded_both_front_landing=front_landing,
             last_update=updates[-1],last_50_mean_collect_s=statistics.mean(r['collect_s'] for r in last)),

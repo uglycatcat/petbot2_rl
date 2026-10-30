@@ -1,0 +1,29 @@
+{
+  "schema": "petbot_step_ppo_v1",
+  "seed": 71,
+  "num_envs": 512,
+  "iterations": 1000,
+  "save_interval": 50,
+  "decimation": 10,
+  "hip_kp": 8.0,
+  "hip_kd": 0.2,
+  "head_kp": 3.0,
+  "head_kd": 0.1,
+  "ear_kp": 0.4,
+  "ear_kd": 0.02,
+  "hip_target_rate_rad_s": 3.0,
+  "wheel_target_accel_rad_s2": 100.0,
+  "num_steps_per_env": 64,
+  "hidden_dims": [
+    128,
+    128
+  ],
+  "learning_rate": 0.0003,
+  "initial_std": 0.5,
+  "num_learning_epochs": 5,
+  "num_mini_batches": 4,
+  "initialization": "random",
+  "pretrained_models": [],
+  "policy_distribution": "beta",
+  "learning_rate_schedule": "fixed"
+}

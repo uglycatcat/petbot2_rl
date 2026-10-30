@@ -15,6 +15,9 @@ def profiles():
     for preload,hip in ((-1.,1.),(1.,-1.),(-.5,1.),(.5,-1.)):
         for wheel in (0.,8.,16.,25.):
             cases.append(dict(kind='switch',preload=preload,hip=hip,wheel=wheel))
+    for delay in (.15,.25,.35,.45):
+        for wheel in (8.,16.,25.):
+            cases.append(dict(kind='delayed',preload=0.,hip=-1.,wheel=wheel,delay=delay))
     return cases
 
 
@@ -24,7 +27,7 @@ def main():
     p.add_argument('--asset-dir',type=Path,required=True)
     p.add_argument('--model-dir',type=Path)
     p.add_argument('--output',type=Path,required=True)
-    p.add_argument('--authority',choices=('baseline','fast'),required=True)
+    p.add_argument('--authority',choices=('baseline','hip_fast','wheel_fast','fast'),required=True)
     AppLauncher.add_app_launcher_args(p);args=p.parse_args()
     args.output.mkdir(parents=True,exist_ok=False)
     app=AppLauncher(args).app
@@ -34,8 +37,8 @@ def main():
         from step_demo.isaac_env import StepEnv
         cases=profiles();training=json.loads((PROJECT_ROOT/'configs/train_v1.json').read_text())
         training['num_envs']=len(cases)
-        if args.authority=='fast':
-            training.update(hip_target_rate_rad_s=100.,wheel_target_accel_rad_s2=1000.)
+        if args.authority in ('fast','hip_fast'):training['hip_target_rate_rad_s']=100.
+        if args.authority in ('fast','wheel_fast'):training['wheel_target_accel_rad_s2']=1000.
         env=StepEnv(load_config(model_dir=args.model_dir),training,args.asset_dir,args.device)
         env.trace_ids=list(range(len(cases)));env.reset()
         result=[dict(case=i,profile=c,max_both_front_min_z=-1.,lifted=False,cleared=False,landed=False,
@@ -46,6 +49,7 @@ def main():
                 for c in cases:
                     if t<.10: hip,wheel=0.,0.
                     elif c['kind']=='switch' and t<.45:hip,wheel=c['preload'],0.
+                    elif c['kind']=='delayed' and t<.1+c['delay']:hip,wheel=0.,c['wheel']
                     else:hip,wheel=c['hip'],c['wheel']
                     values.append([hip,wheel/12.5-1.])
                 obs,reward,terminated,truncated,_=env.step(torch.tensor(values,device=env.device))

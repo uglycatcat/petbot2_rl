@@ -12,13 +12,26 @@ from rsl_rl.runners import OnPolicyRunner
 
 def runner_config(t):
     model = dict(class_name='MLPModel', hidden_dims=t['hidden_dims'], activation='elu', obs_normalization=True)
+    distribution = (dict(class_name='BetaDistribution', action_range=(-1.,1.))
+                    if t.get('policy_distribution','gaussian')=='beta' else
+                    dict(class_name='GaussianDistribution', init_std=t['initial_std'], std_type='log'))
     return dict(num_steps_per_env=t['num_steps_per_env'], save_interval=t['save_interval'],
         logger='tensorboard', check_for_nan=True, obs_groups={'actor':['policy'],'critic':['policy']},
-        actor=dict(**model, distribution_cfg=dict(class_name='GaussianDistribution', init_std=t['initial_std'], std_type='log')),
+        actor=dict(**model, distribution_cfg=distribution),
         critic=deepcopy(model), algorithm=dict(class_name='PPO', learning_rate=t['learning_rate'],
             num_learning_epochs=t['num_learning_epochs'], num_mini_batches=t['num_mini_batches'],
             clip_param=.2, gamma=.99, lam=.95, entropy_coef=.01, desired_kl=.01,
-            schedule='adaptive', rnd_cfg=None, symmetry_cfg=None))
+            schedule=t.get('learning_rate_schedule','adaptive'), rnd_cfg=None, symmetry_cfg=None))
+
+
+def distribution_metrics(distribution):
+    mean=distribution.mean.detach();std=distribution.std.detach()
+    if not torch.isfinite(mean).all() or not torch.isfinite(std).all():
+        raise RuntimeError('Nonfinite action distribution')
+    kind=type(distribution).__name__
+    if kind=='BetaDistribution' and (mean.abs().max()>1.+1e-6 or std.max()>1.):
+        raise RuntimeError('Bounded policy distribution violated its action range')
+    return dict(kind=kind,mean_abs_max=float(mean.abs().max()),std_min=float(std.min()),std_max=float(std.max()))
 
 
 def state_digest(state):
@@ -46,7 +59,7 @@ class StepRunner(OnPolicyRunner):
                 original_log(**values)
                 record=dict(completed_updates=values['it']+1,losses=losses,
                     learning_rate=values['learning_rate'],collect_s=values['collect_time'],learn_s=values['learn_time'],
-                    totals=env.unwrapped.totals.copy())
+                    totals=env.unwrapped.totals.copy(),distribution=distribution_metrics(self.alg.actor.distribution))
                 write_json(Path(log_dir)/'progress.json',record)
                 with (Path(log_dir)/'updates.jsonl').open('a') as file: file.write(json.dumps(record)+'\n')
             self.logger.log=log_progress
