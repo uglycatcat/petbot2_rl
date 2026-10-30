@@ -1,6 +1,6 @@
 # 新第1轮：从零恢复低速完整循环
 
-2026-10-30用户要求后续重新从第1轮编号。新系列标识为`upright_restart_20261030`，本轮计划名`upright_restart_round01`；不得覆盖旧完整循环batch1、旧rebuild_batch1或其他历史目录。本页为实施与发批计划，尚未启动训练，第26批保持取消。
+2026-10-30用户要求后续重新从第1轮编号。新系列标识为`upright_restart_20261030`，本轮计划名`upright_restart_round01`；不得覆盖旧完整循环batch1、旧rebuild_batch1或其他历史目录。本页为实施与发批计划，已写入待核对代码，尚未启动训练，第26批保持取消。用户最新授权只修改、不发训练，详见[实现复核](../demo_project/upright_rl_demo/docs/round01_implementation.md)。
 
 ## 目标与范围
 

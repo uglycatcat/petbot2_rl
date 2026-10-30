@@ -44,13 +44,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "ade8ae24ecc403913449152998549ce6b54dad5f",
+      "verified_commit": "8f01ded327c9a3def917ba9cc5c9a8cea18cfcff",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "Restart series upright_restart_20261030 round01 planned: independent scratch training for the low-speed complete cycle. Audited early-source reuse allowed; historical weights and frozen parents forbidden. Batch26 cancelled; training not restarted.",
-      "local_validation": "180 archived source files verified unchanged; batch26 cancelled, processes exited. New read-only specification/XML checks pass and training entry refuses execution. No new PhysX/PPO/sim2sim validation.",
+      "status": "Round01 independent scratch cycle implemented for user review. Training, engineering and evaluation execution remain disabled; no jobs launched.",
+      "local_validation": "27 CPU contract tests pass, including native random-model ONNX parity and synthetic checkpoint IO; source XML and launch-pause checks pass. No asset conversion, PhysX, PPO training/reload or MuJoCo validation.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
@@ -67,7 +67,7 @@
       ],
       "shallow": false,
       "status": "registered_placeholder_readme_only",
-      "local_validation": "Task goal only: lift the front wheels onto a 0–3cm step below rear-wheel radius, then accelerate to climb. No implementation or training. See README.md.",
+      "local_validation": "Task goal only: lift the front wheels onto a 0\u20133cm step below rear-wheel radius, then accelerate to climb. No implementation or training. See README.md.",
       "task": null,
       "usage": "README.md",
       "active_tasks": []
