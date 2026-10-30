@@ -101,7 +101,10 @@ def main(argv=None):
                                   kind='development_curriculum_probe')
                 p.course.observe_probe(boundary, result['success'], result['count'], level)
                 if p.course.level != level:
-                    env.reset()
+                    # Isaac observation history can be allocated by PPO under
+                    # inference_mode; its reset must remain in that context.
+                    with torch.inference_mode():
+                        env.reset()
                 runner.save_boundary()
             finish_pending_probe()
             while runner.completed_updates < cfg.iterations:

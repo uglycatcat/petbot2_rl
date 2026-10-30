@@ -6,6 +6,7 @@ from .controller import Phase, Reason
 from .experiment import atomic_json, rng_state, restore_rng
 
 
+@torch.inference_mode()
 def evaluate(env, policy, level, count, duration=None, moving=True, output=None, kind='independent_validation'):
     if kind not in ('independent_validation', 'development_curriculum_probe'):
         raise ValueError('Evaluation kind must be explicit')
