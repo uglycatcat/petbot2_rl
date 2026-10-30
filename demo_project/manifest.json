@@ -44,18 +44,18 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "f906116d48455e83637c82392f291cde1aac27a4",
+      "verified_commit": "6ee0adc85ea3090d1fe2cc0b1cd9d85cf354653c",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round04_running_gpu2_gpu3_random_initialization_event_iteration",
-      "local_validation": "Round03 valid2x1000 and6 evaluations, rise/static32/32 each,30s mixed0/32 and32/32; yaw missing; no OOM/resume. Round04 bounds BALANCE time observation2s, trains30s, adds geometry+measured yaw feedback8 capped4rad/s, separates settled basic response from completion.44 CPU tests,128env8 updates with4-to8 same-run recovery,2048env2 updates and32-case reload engineering accepted. Fixed current-policy development probe32/32 complete and27/32 basic, not independent validation. Seeds101/102 each2048env1000updates randomly initialized on GPU2/3; no historical weights/timers/goals.",
+      "status": "restart_round05_running_gpu2_gpu3_random_initialization_event_iteration",
+      "local_validation": "Round04 valid2x1000 plus6 independent evaluations; rise/static/30s low cycle and basic32/32 each. No OOM or recovery. Single-seed60s complete32/32/basic31/32; landing acceleration/yaw and measured wheel overshoot remain. Round05 separates movement/entry/hip capability stages, preserves20% regression, performance-gated promotion and60s independent validation.49 CPU tests and PhysX/fresh8-update same-run4-to8 recovery/2048env scale/reload gate accepted. Seeds101/102 each2048env1000updates randomly initialized on GPU2/3. No history weights/timers/goals; not MuJoCo approval.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round04_s101@gpu2",
-        "upright_restart_round04_s102@gpu3"
+        "upright_restart_round05_s101@gpu2",
+        "upright_restart_round05_s102@gpu3"
       ]
     },
     {
