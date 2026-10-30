@@ -25,7 +25,7 @@ def edge_profiles():
     # Finite open-loop reachability checks, never used to initialize or train PPO.
     return [dict(kind='pulse', preload=preload, hip=-1., wheel=wheel,
                  delay=distance/(.03*wheel)+.05, duration=duration)
-            for preload in (0., .5)
+            for preload in (0., .5, 1.)
             for wheel in (8., 12., 16., 20.)
             for distance in (.07, .10, .13, .16)
             for duration in (.08, .16, .30)]
