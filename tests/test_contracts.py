@@ -144,12 +144,14 @@ class ContractTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     load_config(path)
 
-    def test_unimplemented_training_and_evaluation_fail_explicitly(self):
-        for command in ("train", "evaluate"):
-            with redirect_stderr(io.StringIO()) as stderr, self.assertRaises(SystemExit) as caught:
-                main([command])
-            self.assertEqual(caught.exception.code, 2)
-            self.assertIn("no run started", stderr.getvalue())
+    def test_training_rejects_foreign_initialization(self):
+        from step_demo.config import PROJECT_ROOT
+        from step_demo.runtime import load_training
+        data = json.loads((PROJECT_ROOT/'configs/train_v1.json').read_text())
+        data['pretrained_models']=['historical.pt']
+        with tempfile.TemporaryDirectory(prefix='step-config-') as directory:
+            path=Path(directory)/'train.json';path.write_text(json.dumps(data))
+            with self.assertRaises(ValueError): load_training(path)
 
 
 if __name__ == "__main__":
