@@ -110,7 +110,8 @@ try:
                     wheel_actual=s['wheel'], joint_position=s['q'], position_target=m['position_target'],
                     gravity=s['g'], front_z=s['front_z'], gap=m['wheel_gap'],
                     rear_fraction=s['rear_fraction'], motion=torch.stack((s['forward'], s['heading_rate']), -1),
-                    rear_z=tensor(env.scene['robot'].data.body_pos_w)[:, rear_ids, 2],
+                    rear_z=s['rear_z'], rise_rear_proximity=m['rise_rear_proximity'],
+                    lift_reward=m['lift_reward'], rise_contact_cost=m['rise_contact_cost'],
                     rear_force=tensor(env.scene['contact_forces'].data.net_forces_w)[:, env.upright_ids[3]],
                     support_duration=progress.support_run, angular_velocity=s['vel'][:, 3:],
                     failure_code=m['failure_code'], progress=m['rise_progress_reward'])

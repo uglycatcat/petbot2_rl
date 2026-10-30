@@ -100,6 +100,13 @@ def metrics(env):
     p = ensure(env)
     if env.moving_step != env.common_step_counter:
         s = state(env)
+        if getattr(env.cfg, 'from_scratch', False):
+            # Reward-only physical measurement, captured before any terminal reset.
+            # Actor observations and all stage/exit predicates remain unchanged.
+            if not hasattr(env, 'scratch_rear_body_ids'):
+                env.scratch_rear_body_ids = env.scene['robot'].find_bodies(
+                    ['left_rear_wheel', 'right_rear_wheel'], preserve_order=True)[0]
+            s['rear_z'] = tensor(env.scene['robot'].data.body_pos_w)[:, env.scratch_rear_body_ids, 2]
         p.update_motion(s)
         fixed = s['q'].new_tensor([SPEC['joints'][n]['default'] for n in POSITION_JOINTS[:3]])
         m = p.update(s, fixed)
@@ -143,6 +150,9 @@ def observations(env):
 def reward(env, kind):
     metrics(env)
     if kind in ('settled_rise_reward','preparation_cost'):return metrics(env)[1][kind]
+    if kind == 'physical_contact' and getattr(env.cfg, 'from_scratch', False):
+        s, m = metrics(env)
+        return torch.where(m['phase']==1, m['rise_contact_cost'], 1.-s['rear_fraction'])*m['active']
     return base.reward(env, kind)
 
 

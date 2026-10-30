@@ -199,7 +199,7 @@ try:
             reflex_contract=None,adapter_limits=None,adapter_gate=None,adapter_observation_stats=None,
             actor_normalization='fresh',concentration_scale=[1.,1.,1.],scratch=SCRATCH_CONTRACT,
             split_curriculum=dict(SPLIT_CONTRACT,initial_levels=[0,0,0,0,0]),
-            command_sampling='scratch_then_split_continuous_v1',reward_design='rise_progress_v2')
+            command_sampling='scratch_then_split_continuous_v1',reward_design='rise_ground_proximity_v3')
         contract['symmetry']=dict(contract['symmetry'],frozen_feedback=None)
     if args.checkpoint:
         prior=json.loads((pathlib.Path(args.checkpoint).parent/'config.json').read_text())
@@ -407,7 +407,8 @@ try:
                 if args.capability_version=='v25':
                     trace[-1].update({k:m[k].tolist() for k in ('preparing','preparation_elapsed','preparation_speed_change','preparation_hip_change','initial_motion_frame','rise_settled','curriculum_levels')})
                 if args.from_scratch:
-                    trace[-1].update({k:m[k].tolist() for k in ('rise_progress_reward','rise_lift_fraction','rise_front_gap','transition_track','smooth_reward')})
+                    trace[-1].update({k:m[k].tolist() for k in ('rise_progress_reward','rise_lift_fraction','rise_front_gap','rise_rear_proximity','rise_contact_cost','lift_reward','transition_track','smooth_reward')})
+                    trace[-1]['rear_height']=s['rear_z'].tolist()
                 assert torch.isfinite(obs['policy']).all() and torch.isfinite(r).all()
                 alive &= ~done.bool()
                 if not alive.any():break

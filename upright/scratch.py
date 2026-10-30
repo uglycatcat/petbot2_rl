@@ -3,7 +3,7 @@ import torch
 from .split_curriculum import SplitCurriculumProgress
 from .scratch_learning import CONTRACT as LEARNING_CONTRACT, rise_rewards
 
-CONTRACT=dict(version='scratch_curriculum_v2',pretrained_models=[],rise_learning=LEARNING_CONTRACT,
+CONTRACT=dict(version='scratch_curriculum_v3',pretrained_models=[],rise_learning=LEARNING_CONTRACT,
     policy='single_trainable_mlp_20ms',history='five_58_feature_frames_20ms',
     ordinary_and_yaw='explicit_source_control_no_learned_parent',
     bootstrap=[dict(frame=[0.,0.],motion=[0.,0.],hold=4.),
@@ -82,14 +82,14 @@ class ScratchProgress(SplitCurriculumProgress):
         return m
 
     def curriculum_state_dict(self):
-        return dict(version=4,design='scratch_curriculum_v2',split=super().curriculum_state_dict(),
+        return dict(version=5,design='scratch_curriculum_v3',split=super().curriculum_state_dict(),
             learning_stats=self.learning_stats.cpu(),
             bootstrap_stage=self.bootstrap_stage,bootstrap_trials=self.bootstrap_trials,
             bootstrap_success=self.bootstrap_success,bootstrap_streak=self.bootstrap_streak,
             bootstrap_history=self.bootstrap_history)
 
     def load_curriculum_state_dict(self,data,restore_streams=True):
-        assert data['version']==4 and data['design']=='scratch_curriculum_v2'
+        assert data['version']==5 and data['design']=='scratch_curriculum_v3'
         super().load_curriculum_state_dict(data['split'],restore_streams)
         self.learning_stats.copy_(data['learning_stats'])
         for key in ('bootstrap_stage','bootstrap_trials','bootstrap_success','bootstrap_streak','bootstrap_history'):
