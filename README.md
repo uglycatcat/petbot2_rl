@@ -44,16 +44,16 @@ python3 -m step_demo check --model-dir /path/to/robot_description
 | `tests/` | 合成输入验证动作、观测边界及结束判据；非仿真证据 |
 | `docs/` | 用户契约、实现边界与下一阶段门槛 |
 
-本项目由`repo`物化，源码在`demoproj/step_rl_demo`分支。训练只在专用容器内使用固定提交副本，产物放主仓库忽略的`demo_project/runs/`；不启动周期定时器或自动长训队列。
+本项目由`repo`物化，源码在`demoproj/step_rl_demo`分支。训练只在专用容器内使用固定提交副本，产物放主仓库忽略的`demo_project/runs/`；用户已授权持续正式训练与完成事件迭代，详见[自动迭代](docs/automation.md)；不使用周期定时器。
 
 ## 容器与训练
 
-运行时：Isaac Lab 3.0.0-beta2、PyTorch 2.10.0+cu128、RSL-RL 5.4.1、Python 3.12。专用容器为 `petbot-step-train`。`docker/Dockerfile`记录构建依赖；`tools/container.py`创建容器并将源模型只读挂载，默认选择物理GPU 2。已存在容器不要重复创建。
+运行时：Isaac Lab 3.0.0-beta2、PyTorch 2.10.0+cu128、RSL-RL 5.4.1、Python 3.12。专用容器为 `petbot-step-gpu0` 和 `petbot-step-gpu1`。`docker/Dockerfile`记录构建依赖；`tools/container.py`创建容器并将源模型只读挂载，仅允许物理GPU 0/1，默认GPU 1。已存在容器不要重复创建。
 
 先在容器构建本demo派生资产：
 
 ```bash
-docker exec petbot-step-train /isaac-sim/python.sh tools/prepare_asset.py
+docker exec petbot-step-gpu1 /isaac-sim/python.sh tools/prepare_asset.py
 ```
 
 完成代码提交后，在宿主机冻结源码与派生资产。每次使用新目录：

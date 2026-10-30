@@ -2,6 +2,7 @@
 from copy import deepcopy
 import hashlib
 import json
+import math
 from pathlib import Path
 import random
 import numpy as np
@@ -37,6 +38,18 @@ class StepRunner(OnPolicyRunner):
     def __init__(self, env, cfg, origin, log_dir=None, device='cuda:0'):
         self.origin = origin
         super().__init__(env, deepcopy(cfg), log_dir, device)
+        if log_dir:
+            original_log=self.logger.log
+            def log_progress(**values):
+                losses={k:float(v) for k,v in values['loss_dict'].items()}
+                if not all(math.isfinite(x) for x in losses.values()): raise RuntimeError('Nonfinite PPO loss')
+                original_log(**values)
+                record=dict(completed_updates=values['it']+1,losses=losses,
+                    learning_rate=values['learning_rate'],collect_s=values['collect_time'],learn_s=values['learn_time'],
+                    totals=env.unwrapped.totals.copy())
+                write_json(Path(log_dir)/'progress.json',record)
+                with (Path(log_dir)/'updates.jsonl').open('a') as file: file.write(json.dumps(record)+'\n')
+            self.logger.log=log_progress
 
     def save(self, path, infos=None):
         data = self.alg.save()

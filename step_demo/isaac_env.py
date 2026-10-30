@@ -93,6 +93,7 @@ class StepEnv(DirectRLEnv):
         self.episode_serial = torch.zeros(n, dtype=torch.long, device=d)
         self.totals = dict(episodes=0, successes=0, front_collisions=0, rear_air=0, falls=0, timeouts=0)
         self.terminal_records = []
+        self.attempt_id = 'probe'
 
     def _setup_scene(self):
         t = self.training
@@ -313,9 +314,10 @@ class StepEnv(DirectRLEnv):
         if hasattr(self,'failure'):
             ended = env_ids[self.episode_length_buf[env_ids] > 0]
             for i in ended.tolist():
-                record = dict(env=i, episode=int(self.episode_serial[i]), success=bool(self.completed[i]),
+                record = dict(attempt=self.attempt_id,env=i, episode=int(self.episode_serial[i]), success=bool(self.completed[i]),
                     failure=int(self.failure[i]), timeout=bool(self.reset_time_outs[i]), phase=int(self.phase[i]),
-                    front_lifted=self.front_lifted[i].tolist(), front_landed=self.front_landed[i].tolist(),
+                    front_lifted=self.front_lifted[i].tolist(), front_cleared=self.front_cleared[i].tolist(),
+                    front_landed=self.front_landed[i].tolist(),
                     actual_wheel_peak=float(self.wheel_speed_peak[i]), estimator_error_m=float(
                         (self.estimator.com_position[i]-(self.com[i]-self.origin_com[i])).norm()))
                 self.terminal_records.append(record)
@@ -347,7 +349,7 @@ class StepEnv(DirectRLEnv):
             self.packet_count[env_ids]=1; self.episode_serial[env_ids]+=1
 
     def trace(self, ids):
-        return dict(episode=self.episode_serial[ids].tolist(),phase=self.phase[ids].tolist(),failure=self.failure[ids].tolist(),
+        return dict(attempt=self.attempt_id,episode=self.episode_serial[ids].tolist(),phase=self.phase[ids].tolist(),failure=self.failure[ids].tolist(),
             elapsed=(self.episode_length_buf[ids]*self.step_dt).tolist(),
             completed=self.completed[ids].tolist(),origin_com=self.origin_com[ids].tolist(),edge_x=self.edge_x[ids].tolist(),
             action=self.raw_actions[ids].tolist(),executed=self.executed[ids].tolist(),

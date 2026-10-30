@@ -1,0 +1,35 @@
+# 正式训练与事件迭代（2026-10-30）
+
+用户授权持续执行训练、数据分析、代码/配置优化、工程检查及下一轮训练；目前**仅使用物理GPU 0/1**。本项目独立，不包含sim2sim。每份新实验随机初始化，旧实验模型不能作为下一轮初值；同次受迫中断可以恢复完整状态。
+
+## 流程
+
+1. agent读取上一轮`analysis.json`、终局与真实轨迹，检查成功和失败样本，记录问题、优化假设和具体修改；下一轮plan必须引用上一轮证据和决策。
+2. 修改只发生在开发checkout。训练代码改动完成后过容器工程门槛；提交推送`demoproj/step_rl_demo`，用`tools/freeze.py`创建新的固定源码/资产副本。
+3. 宿主机`tools/campaign.py run`同时编排最多两路，分别在`petbot-step-gpu0/1`运行；容器只暴露对应一块GPU，源模型只读。GPU0/1之外的编号和暴露不匹配的容器被拒绝。整卡显存阈值78%，资源不足等待，不抢占其它进程。
+4. 每路训练结束后独立进程重载最终模型评估，CPU流式分析`trace.jsonl`、`episodes.jsonl`和`updates.jsonl`。初始化、更新数、目标范围、物理轨迹、成功判据不一致时结果无效。
+5. 单路结果和整批完成/异常通过本机`codex queue`投递到**同一会话**，由agent继续语义分析和优化。此处没有子agent、周期定时器或goal，也没有随机改参数的固定脚本。
+
+训练/评估失败会保存原始日志和运行副本，触发事件诊断；不把失败进程自动当成功。只有具有本次完整检查点的运行才能以原源码/配置恢复。恢复轨迹使用独立文件与attempt身份，不覆盖之前证据。
+
+## 状态与停止
+
+本机控制文件位于主仓库忽略目录`demo_project/runs/_step_campaign_20261030/control.json`，包含用户授权开关、同一会话身份和GPU白名单，不入库。批次目录保存`plan.json`、`revision.json`、`batch_status.json`；每路保存`job_status.json`、`analysis.json`及train/evaluation子目录。训练`progress.json`每次更新刷新，`updates.jsonl`追加更新指标；不能只看进程或日志最后一句。
+
+关闭流程：
+
+```bash
+python3 tools/campaign.py stop --control ../runs/_step_campaign_20261030/control.json
+```
+
+守护器读取关闭开关后，只终止本次带唯一token的进程组，不再投递下一轮。停止不修改任何其它用户工作。人工停止后不能由旧完成事件重新启用。
+
+事件先落盘再投递，成功或投递结果未知都不会盲目重复投递。`continuation_event.json`和`job_*_event.json`区分queued/failed/delivery_unknown；queued表示本机会话服务已接收，实际后续分析取决于会话服务可运行。控制器退出、主机停机或事件服务故障需要按状态恢复，不能宣称此时仍在自动迭代。
+
+事件机制以本机Codex CLI 0.162.1的`codex queue --help`及投递实测为准；会话继续执行背景参照[OpenAI Docs：非交互运行与恢复](https://learn.chatgpt.com/docs/non-interactive-mode)。
+
+## 首批安排
+
+`round01_seed70/71.json`：两个独立随机种子70/71，各512环境、1000更新、64步rollout，每50更新保存。沿用已向用户说明的首版MDP，建立同配置基线，不把工程短训权重带入正式训练。工程门槛使用512环境×3更新及独立重载核查两个GPU资源配置。实际启动与终局以主仓库step交接和运行状态文件为准。
+
+前轮整体越沿判据、目标变化率和无记忆观测的学习影响仍待结果检验；后续优化不能通过降低前轮避碰、后轮支撑、四轮登台和停稳目标来抬高成功率。

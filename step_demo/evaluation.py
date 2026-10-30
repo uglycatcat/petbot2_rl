@@ -64,7 +64,7 @@ class CompletionTracker:
             (s.rear_support_lost, "rear_support_lost"),
             (s.body_collision_or_fall, "body_collision_or_fall"),
             (s.deliberate_reverse, "deliberate_reverse"),
-            (self.elapsed_s >= self.config.timeout_s, "timeout"),
+            (self.elapsed_s + 1e-9 >= self.config.timeout_s, "timeout"),
         ):
             if failure:
                 self.stage, self.reason = Stage.FAILED, reason

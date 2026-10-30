@@ -96,17 +96,21 @@ def main(argv):
         if args.command=='evaluate': actual['num_envs']=args.eval_envs
         env=StepEnv(task,actual,args.asset_dir,args.device)
         env.trace_ids=list(range(min(actual['num_envs'],8))) if args.command=='train' else list(range(actual['num_envs']))
-        trace_file=(output/('trace_resume.jsonl' if args.resume else 'trace.jsonl')).open('w')
+        attempt=uuid.uuid4().hex[:12]
+        trace_file=(output/(f'trace_resume_{attempt}.jsonl' if args.resume else 'trace.jsonl')).open('x')
         episode_file=(output/'episodes.jsonl').open('a')
         env.trace_writer=trace_file; env.episode_writer=episode_file
+        env.attempt_id=attempt
         wrapped=RslRlVecEnvWrapper(env)
         runner=StepRunner(wrapped,runner_config(t),origin,str(run) if args.command=='train' else None,args.device)
+        write_json(output/'layout.json',dict(joints=env.robot.joint_names,hips=env.hips,rear_wheels=env.wheels,
+            trace_ids=env.trace_ids,step_dt=env.step_dt,source_code_sha256=origin['code_sha256']))
         write_json(output/'runtime.json',{name:importlib.metadata.version(name) for name in ('torch','rsl-rl-lib','numpy')})
         if args.resume or args.command=='evaluate':
             basename=args.checkpoint or json.loads((run/'latest.json').read_text())['checkpoint']
             if Path(basename).name!=basename or not basename.endswith('.pt'): raise ValueError('Checkpoint must be a basename within this run')
             restored=runner.restore(run/basename,training=args.command=='train')
-            write_json(output/'restored.json',dict(checkpoint=basename,**restored))
+            write_json(output/f'restored_{attempt}.json',dict(checkpoint=basename,**restored))
         else:
             assert not runner.alg.optimizer.state
             assert all(p.requires_grad for p in runner.alg.actor.parameters())
@@ -118,6 +122,8 @@ def main(argv):
             remaining=t['iterations']-runner.current_learning_iteration
             if remaining<=0: raise ValueError('This run has exhausted its update budget')
             count=min(remaining,args.stop_after or remaining)
+            write_json(output/'status.json',dict(status='running',completed_updates=runner.current_learning_iteration,
+                total_updates=t['iterations'],attempt=attempt))
             runner.learn(count,init_at_random_ep_len=False)
             completed=runner.current_learning_iteration+1
             write_json(output/'status.json',dict(status='complete' if completed==t['iterations'] else 'interrupted',
