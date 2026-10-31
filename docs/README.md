@@ -1,6 +1,6 @@
 # 项目文档索引
 
-- 当前：**upright第9轮低速两路32/32，第10轮边界指令混合已在GPU2/3从零启动**。先看[当前交接](current_handoff.md)、[第9轮终局](upright_restart_round09_results.md)、[第10轮执行](upright_restart_round10_execution.md)和[需求基线](current_scope.md)。扩速及全部目标仍未通过；旧第26批不恢复，禁止历史权重初始化、周期定时器和goal。
+- 当前：**upright第10轮低速保持、扩速局部改善，第11轮GAE信用分配对照已在GPU2/3从零启动**。先看[当前交接](current_handoff.md)、[第10轮终局](upright_restart_round10_results.md)、[第11轮执行](upright_restart_round11_execution.md)和[需求基线](current_scope.md)。全部能力仍未通过；旧第26批不恢复，禁止历史权重初始化、周期定时器和goal。
 
 
 先读根目录 [AGENTS.md](../AGENTS.md) 的硬规则和里程碑，再读[当前交接](current_handoff.md)。只按手头问题打开下面相应文档；历史实验与 `runs/` 不需要全读。根目录 README 用于部署和使用，不承载进度。

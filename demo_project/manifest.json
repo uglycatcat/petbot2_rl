@@ -44,18 +44,18 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "43d14e4b82a8d5e5ff4574cf526efc936fa49f65",
+      "verified_commit": "a09ff3e813d24cdd030565b9ba51fe8c4fd1cb9e",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round10_running_gpu2_gpu3_random_initialization_event_iteration",
-      "local_validation": "Round09 valid2x1000 and8 independent evaluations, no missing/OOM/recovery. Both seeds low60s complete/basic32/32; seed101 at+-0.5 complete23/32 with9 BALANCE front returns, seed102 at+-0.2 complete32/32. Round10 higher-course boundary mixture25%, continuous75%, low sampler and independent evaluation unchanged.72 CPU,PhysX,same-run4-to8 recovery,2048 scale,reload and exact60s expanded evaluation parity accepted. One engineering recovery orchestration error rejected82 for old config, corrected same run and preserved. Fresh seeds101/102 random1000 onGPU2/3, no historic initialization. Full0.75,symmetry,overshoot andMuJoCo unresolved. No timers/goals.",
+      "status": "restart_round11_running_gpu2_gpu3_random_initialization_event_iteration",
+      "local_validation": "Round10 valid2x1000 and8 independent evaluations, no missing/OOM/recovery. Both low60s complete/basic32/32; seed101 at+-0.5 complete28/32 (7rescued,2new failures), seed102 at+-0.2 complete32/32. Actual wheel peak95.71rad/s during successful LAND; full capability not passed. Round11 GAE lambda0.95 with same gamma,samples,1000 updates,rewards,control and scoring; default train CLI uses current config.76 CPU,PhysX,4-to8 same-run recovery,reload,actual default-entry2048 scale and exact60s expanded trajectory parity accepted. Fresh seeds101/102 onGPU2/3,no historic initialization. Full0.75,symmetry,overshoot,MuJoCo unresolved; no timers/goals.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round10_s101@gpu2",
-        "upright_restart_round10_s102@gpu3"
+        "upright_restart_round11_s101@gpu2",
+        "upright_restart_round11_s102@gpu3"
       ]
     },
     {
