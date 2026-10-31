@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round07_engineering",
-  "training_enabled": false,
+  "phase": "round07_ready",
+  "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round06 preserved stability but low forward tracking remains weak; round07 adds signed mean velocity and landing-speed costs, engineering pending.",
+  "reason": "Round07 reward engineering accepted: scratch/recovery/scale/reload and fixed-policy physics neutrality verified; capability still pending independent scratch trials.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -15,13 +15,13 @@
     "series": "upright_restart_20261030",
     "round": 7,
     "name": "upright_restart_round07",
-    "status": "engineering_pending"
+    "status": "ready_random_initialization"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": false,
+  "engineering_validated": true,
   "implementation_review": "docs/round01_implementation.md",
-  "cpu_contract_tests_passed": 53,
+  "cpu_contract_tests_passed": 59,
   "allowed_host_gpus": [
     2,
     3
