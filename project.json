@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round07_ready",
-  "training_enabled": true,
+  "phase": "round08_engineering",
+  "training_enabled": false,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round07 reward engineering accepted: scratch/recovery/scale/reload and fixed-policy physics neutrality verified; capability still pending independent scratch trials.",
+  "reason": "Round07 improves signed velocity response but seed102 loses LAND completion; isolate the added landing-speed cost by disabling it, preserving BALANCE reward and control. Engineering pending.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -13,13 +13,13 @@
   "batch26_resume_allowed": false,
   "next_experiment": {
     "series": "upright_restart_20261030",
-    "round": 7,
-    "name": "upright_restart_round07",
-    "status": "ready_random_initialization"
+    "round": 8,
+    "name": "upright_restart_round08",
+    "status": "engineering_pending"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": true,
+  "engineering_validated": false,
   "implementation_review": "docs/round01_implementation.md",
   "cpu_contract_tests_passed": 59,
   "allowed_host_gpus": [
