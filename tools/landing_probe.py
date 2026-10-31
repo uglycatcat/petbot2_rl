@@ -16,13 +16,17 @@ def main():
     p.add_argument('--asset-dir', type=Path, required=True)
     p.add_argument('--model-dir', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
-    p.add_argument('--mode', choices=('replay', 'tails'), required=True)
+    p.add_argument('--mode', choices=('replay', 'tails', 'brake'), required=True)
     AppLauncher.add_app_launcher_args(p)
     a = p.parse_args()
     rows = [json.loads(line) for line in (a.evaluation/'trace.jsonl').open()]
     n = len(rows[0]['episode'])
     landing_steps = [next(k for k, row in enumerate(rows)
                          if row['episode'][i] == 1 and all(row['front_landed'][i])) for i in range(n)]
+    # Brake intervention starts strictly after the recorded required drive.
+    # Missing entries keep their original actions, including real rear failures.
+    brake_steps = [next((k for k, row in enumerate(rows)
+                        if row['episode'][i] == 1 and row['phase'][i] >= 3), len(rows)) for i in range(n)]
     cases = [dict(hip=h, wheel=w, hip_rate=3.) for h in (-.7, -.4, 0., .3) for w in (4., 8., 12., 16.)]
     a.output.mkdir(parents=True, exist_ok=False)
     app = AppLauncher(a).app
@@ -58,14 +62,18 @@ def main():
                     hip_actual=tensor(self.robot.data.joint_pos)[:, self.hips].tolist(),
                     wheel_actual=tensor(self.robot.data.joint_vel)[:, self.wheels].tolist()))+'\n')
             env._capture = types.MethodType(capture, env)
-            count = len(rows) if a.mode == 'replay' else 200
+            count = 200 if a.mode == 'tails' else len(rows)
             with torch.inference_mode():
                 for step in range(count):
                     values = []
                     for i in range(n):
-                        if a.mode == 'replay' or step <= landing_steps[i]:
+                        prefix = (a.mode == 'replay' or step <=
+                                  (brake_steps[i] if a.mode == 'brake' else landing_steps[i]))
+                        if prefix:
                             value = rows[step]['action'][i]
                             requested[i] = rows[step]['hip_target'][i]
+                        elif a.mode == 'brake':
+                            value = [0., -1.]
                         else:
                             case = cases[i % len(cases)]
                             target = case['hip'] if step*env.step_dt < 2. else 0.
@@ -80,14 +88,14 @@ def main():
                     for i, result in enumerate(results):
                         if d['episode'][i] != 1 or result['terminal'] is not None:
                             continue
-                        if a.mode == 'replay' or step <= landing_steps[i]:
+                        if a.mode == 'replay' or step <= (brake_steps[i] if a.mode == 'brake' else landing_steps[i]):
                             for key in ('com', 'joint_position', 'joint_velocity', 'estimated_com'):
                                 result['max_prefix_physics_error'] = max(result['max_prefix_physics_error'],
                                     max(abs(x-y) for x, y in zip(d[key][i], rows[step][key][i])))
                         result['ever_all_top'] |= all(d['supported_top'][i])
                         result['max_phase'] = max(result['max_phase'], d['phase'][i])
                         result['max_rear_speed'] = rear_peaks[i]
-                        if d['failure'][i] or d['completed'][i]:
+                        if d['failure'][i] or d['completed'][i] or d['elapsed'][i] >= env.task.acceptance.timeout_s:
                             result['terminal'] = dict(time=d['elapsed'][i], failure=d['failure'][i],
                                 completed=d['completed'][i], phase=d['phase'][i], com=d['com'][i])
                     if all(r['terminal'] is not None for r in results):

@@ -56,3 +56,20 @@ def component_increment(previous, current, invalid):
     best = torch.maximum(previous, current)
     best = torch.where(invalid[:, None], previous, best)
     return (best-previous).sum(-1), best
+
+
+def settled_progress(parts, hip_error, hip_speed, home_hold, stable_top,
+                     drive_complete, speed):
+    """Replace transient position credit with settling, and expose braking progress.
+
+    All eight components still pass through the historical-best accumulator.
+    Holding or repeating a motion cannot repeatedly earn these rewards.
+    """
+    parts = parts.clone()
+    position = (1.-hip_error/.8).clamp(0., 1.)
+    quiet = torch.exp(-(hip_speed/.5).square())
+    parts[:, 5] = (position*quiet + (home_hold/.2).clamp(0., 1.))*stable_top
+    # The existing continuous stopped-time credit remains worth one point.
+    # Add one bounded point for slowing down after the required platform drive.
+    parts[:, 7] += (1.-speed/.3).clamp(0., 1.)*drive_complete
+    return parts

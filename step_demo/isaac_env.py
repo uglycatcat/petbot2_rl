@@ -16,7 +16,7 @@ from .config import StepConfig
 from .estimator import InertialEstimator
 from .tensor_math import rotate, heading
 from .rewards import (edge_potential, potential_difference, progress_increment, terminal_reward,
-                      staged_progress, component_increment)
+                      staged_progress, component_increment, settled_progress)
 from .progress import drive_memory
 from .contacts import forbidden_front_contact
 
@@ -42,9 +42,10 @@ class StepEnv(DirectRLEnv):
     def __init__(self, task: StepConfig, training: dict, asset_dir: Path, device='cuda:0'):
         self.task = task
         self.training = training
-        self.stage_reward = training.get('reward_version') == 'stage_v5'
-        self.progress_reward = training.get('reward_version') in ('progress_v4','stage_v5')
-        self.edge_reward = training.get('reward_version','legacy') in ('edge_v3','progress_v4','stage_v5')
+        self.settle_reward = training.get('reward_version') == 'settle_v6'
+        self.stage_reward = training.get('reward_version') in ('stage_v5','settle_v6')
+        self.progress_reward = training.get('reward_version') in ('progress_v4','stage_v5','settle_v6')
+        self.edge_reward = training.get('reward_version','legacy') in ('edge_v3','progress_v4','stage_v5','settle_v6')
         self.asset_dir = asset_dir.resolve()
         self.asset = json.loads((asset_dir / 'asset.json').read_text())
         cfg = StepEnvCfg()
@@ -94,6 +95,7 @@ class StepEnv(DirectRLEnv):
         self.best_progress = torch.zeros(n, device=d)
         self.stage_credit = torch.zeros(n, 8, device=d)
         self.drive_support_gap = torch.zeros(n, device=d)
+        self.home_hold = torch.zeros(n, device=d)
         self.near_top = torch.zeros(n, dtype=torch.bool, device=d)
         self.relift_cost = torch.zeros(n, device=d)
         self.motion_cost = torch.zeros(n, device=d)
@@ -304,6 +306,9 @@ class StepEnv(DirectRLEnv):
         else:
             self.drive_start = torch.where(~ready, float('nan'), torch.where(entering, forward, self.drive_start))
         drove = ready & (forward-self.drive_start >= a.post_climb_distance_m)
+        # Reward-only dwell; the task's phase and completion contract is unchanged.
+        quiet_home = tensor(self.robot.data.joint_vel)[:,self.hips].abs().amax(-1) <= .5
+        self.home_hold = torch.where(ready & quiet_home, self.home_hold+self.step_dt, 0.)
         stopped = drove & (self.com_vel.norm(dim=-1) <= a.stop_speed_m_s)
         stopped &= tensor(self.robot.data.body_link_ang_vel_w)[:,self.lower_body,2].abs() <= a.stop_yaw_rate_rad_s
         self.stop_time = torch.where(stopped,self.stop_time+self.step_dt,0.)
@@ -353,6 +358,11 @@ class StepEnv(DirectRLEnv):
                         self.maximum[:,2:,0]>=self.edge_x[:,None]-.005,
                         self.supported_top.all(-1),pos[:,self.hips].abs().amax(-1),aligned,
                         drive_fraction,self.stop_time/a.stop_hold_s)
+                    if self.settle_reward:
+                        stable_top=self.supported_top.all(-1) & self.front_landed.all(-1) & aligned
+                        parts=settled_progress(parts,pos[:,self.hips].abs().amax(-1),
+                            tensor(self.robot.data.joint_vel)[:,self.hips].abs().amax(-1),
+                            self.home_hold,stable_top,self.phase>=3,self.com_vel.norm(dim=-1))
                     gain,self.stage_credit=component_increment(self.stage_credit,parts,failed)
                     self.best_progress=self.stage_credit.sum(-1)
                     reward=gain+2*self.new_landing*(~failed)
@@ -414,7 +424,7 @@ class StepEnv(DirectRLEnv):
             self.estimator.reset(env_ids)
             for name in ('front_lifted','front_cleared','front_landed','front_hit','rear_air_s','failure','phase',
                          'stop_time','completed','supported_top','max_lift_fraction','previous_forward','wheel_speed_peak','ascent_rewarded',
-                         'previous_potential','best_progress','motion_cost','stage_credit','drive_support_gap','near_top','relift_cost'):
+                         'previous_potential','best_progress','motion_cost','stage_credit','drive_support_gap','near_top','relift_cost','home_hold'):
                 getattr(self,name)[env_ids] = 0
             self.drive_start[env_ids]=float('nan')
             self.top_contact_age[env_ids]=1.
@@ -441,6 +451,7 @@ class StepEnv(DirectRLEnv):
             potential=self.previous_potential[ids].tolist(),
             progress_credit=self.best_progress[ids].tolist(),shaping_reward=self.last_shaping[ids].tolist() if self.edge_reward else [],
             stage_credit=self.stage_credit[ids].tolist(),relift_cost=self.relift_cost[ids].tolist(),
+            home_hold=self.home_hold[ids].tolist(),
             drive_start=self.drive_start[ids].tolist(),drive_support_gap=self.drive_support_gap[ids].tolist(),near_top=self.near_top[ids].tolist(),
             yaw=self.yaw[ids].tolist(),yaw_rate=tensor(self.robot.data.body_link_ang_vel_w)[ids,self.lower_body,2].tolist(),
             wheel_min=self.minimum[ids].tolist(),wheel_max=self.maximum[ids].tolist(),

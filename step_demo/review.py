@@ -31,7 +31,7 @@ def summarize(run, evaluation):
         raise ValueError('Evaluation must reload the completed final model')
     layout=read(evaluation/'layout.json'); hips=layout['hips'];wheels=layout['rear_wheels']
     config=load_config()
-    support_memory=.06 if origin['training'].get('reward_version')=='stage_v5' else 0.
+    support_memory=.06 if origin['training'].get('reward_version') in ('stage_v5','settle_v6') else 0.
     trackers={i:CompletionTracker(config.acceptance,support_memory) for i in range(result['num_envs'])}
     terminals={r['env']:r for r in result['episodes']}
     if len(terminals)!=result['num_envs']: raise ValueError('Missing or duplicate first-episode evaluations')
