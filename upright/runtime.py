@@ -1,4 +1,5 @@
 """Scenario sampling, observations and rewards; simulation truths stay out of policy inputs."""
+import math
 import torch
 from .controller import Controller, Phase, Reason
 from .curriculum import Curriculum
@@ -30,6 +31,7 @@ class Runtime:
         self.true_hold = z(); self.longest_hold = z(); self.peak_rise = z(); self.peak_land = z()
         self.balance_elapsed = z(); self.balance_seen = z().bool(); self.invoked = z().bool()
         self.episode_goal = z().bool(); self.true_cycle = z().bool(); self.failure = z().bool()
+        self.balance_velocity_error = z()
         self.initial_hip = z(); self.takeover_motion = torch.zeros(n, 2, device=device)
         self.probe_level = None
         self.probe_duration = None
@@ -43,7 +45,7 @@ class Runtime:
         self.control.reset(ids)
         for name in ('episode_age', 'command_age', 'true_hold', 'longest_hold', 'peak_rise',
                      'peak_land', 'balance_elapsed', 'balance_seen', 'invoked', 'episode_goal',
-                     'true_cycle', 'failure', 'initial_hip', 'takeover_motion'):
+                     'true_cycle', 'failure', 'initial_hip', 'takeover_motion', 'balance_velocity_error'):
             getattr(self, name)[ids] = 0
         level = self.course.level if self.probe_level is None else self.probe_level
         self.level[ids] = level
@@ -154,6 +156,26 @@ class Runtime:
         self.last = result
         return result
 
+    @staticmethod
+    def huber(value):
+        absolute = value.abs()
+        return torch.where(absolute <= 1., .5*value.square(), absolute-.5)
+
+    def velocity_costs(self, s, balancing, landing):
+        # Smooth the signed error (not its magnitude): distinguish persistent bias
+        # from short physical fluctuations. It is reward state, never a policy input.
+        error = s['motion'][:, 0]-self.control.motion_command()[:, 0]
+        alpha = 1.-math.exp(-self.dt/self.cfg.balance_velocity_error_tau_s)
+        self.balance_velocity_error.copy_(torch.where(balancing,
+            self.balance_velocity_error+alpha*(error-self.balance_velocity_error), 0.))
+        balance_cost = self.dt*self.cfg.balance_velocity_cost*self.huber(
+            self.balance_velocity_error/self.cfg.balance_velocity_error_scale_m_s)*balancing
+        # Preserve the speed measured at LAND entry, not zero or the last remote setpoint.
+        landing_error = s['motion'][:, 0]-self.control.transition_motion[:, 0]
+        land_cost = self.dt*self.cfg.landing_velocity_cost*self.huber(
+            landing_error/self.cfg.landing_velocity_error_scale_m_s)*landing
+        return balance_cost, land_cost
+
     def reward(self, s, truth, m, rear_near):
         c = self.control; before = m['phase_before']
         safe = ~m['failure']; rising = (before == Phase.RISE) & safe
@@ -198,7 +220,11 @@ class Runtime:
                         & rear_near & ~truth['body_contact'] & (truth['root_height'] >= .025)
                         & (s['g'][:, 2] < -.25) & (s['g'][:, 1].abs() < .35))
         penalty = torch.where(early_return, self.cfg.rise_front_return_penalty, 5.)*m['failure']
-        reward -= penalty
+        balance_cost, land_cost = self.velocity_costs(s, balancing, landing)
+        reward -= penalty+balance_cost+land_cost
+        m['balance_velocity_error_mean'] = self.balance_velocity_error.clone()
+        m['balance_velocity_cost'] = balance_cost
+        m['landing_velocity_cost'] = land_cost
         m['failure_penalty'] = penalty
         m['early_front_return'] = early_return
         m['rise_bridge_reward'] = self.dt*bridge

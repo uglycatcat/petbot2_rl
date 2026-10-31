@@ -111,9 +111,9 @@ def main():
                         save(out/'eval_status.json',status)
                     continue
                 if scenario == 'capability_cycle' and (final.get('course_level',0) <= 2 or
-                        results.get('low_cycle',{}).get('basic_control_pass',0) < 26):
+                        results.get('low_cycle',{}).get('success',0) < 26):
                     with mutex:
-                        status[variant['name']+'_eval_'+scenario]=dict(state='skipped',reason='No trained higher stage or low-range regression below80%; analyze first')
+                        status[variant['name']+'_eval_'+scenario]=dict(state='skipped',reason='No trained higher stage or low-range physical completion below80%; analyze first')
                         save(out/'eval_status.json',status)
                     continue
                 good,evidence=step(variant,work,'eval_'+scenario,['evaluate.py','--run-dir','outputs/train',

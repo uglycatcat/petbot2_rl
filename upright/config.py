@@ -57,6 +57,11 @@ class Config:
     rise_support_weight: float = 0.0
     rise_prepare_decay_s: float = 2.0
     rise_front_return_penalty: float = 5.0
+    balance_velocity_cost: float = 0.0
+    balance_velocity_error_tau_s: float = 0.3
+    balance_velocity_error_scale_m_s: float = 0.05
+    landing_velocity_cost: float = 0.0
+    landing_velocity_error_scale_m_s: float = 0.2
     balance_linear_accel_m_s2: float = 0.0  # zero disables reference slew for legacy configs
     balance_yaw_accel_rad_s2: float = 0.0
     balance_yaw_feedforward: float = 0.0
@@ -110,7 +115,8 @@ class Config:
             if isinstance(value, float) and (not __import__('math').isfinite(value) or value < 0):
                 raise ValueError(f'Invalid numeric configuration: {key}')
         for key in ('hold_s', 'rise_timeout_s', 'landing_timeout_s', 'support_enter_s',
-                    'handoff_blend_s', 'yaw_quality_rad', 'learning_rate', 'rise_prepare_decay_s'):
+                    'handoff_blend_s', 'yaw_quality_rad', 'learning_rate', 'rise_prepare_decay_s',
+                    'balance_velocity_error_tau_s', 'balance_velocity_error_scale_m_s', 'landing_velocity_error_scale_m_s'):
             if getattr(self, key) <= 0:
                 raise ValueError(f'{key} must be positive')
         return self
@@ -120,7 +126,7 @@ class Config:
 
 
 def load_config(path=None, **overrides):
-    data = json.loads(Path(path or ROOT/'configs/round06.json').read_text())
+    data = json.loads(Path(path or ROOT/'configs/round07.json').read_text())
     unknown = data.keys() - {f.name for f in fields(Config)}
     if unknown:
         raise ValueError(f'Unknown configuration keys: {sorted(unknown)}')

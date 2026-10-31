@@ -137,6 +137,8 @@ def metrics(env):
             'Cycle/course_level': float(p.course.level),
             'Cycle/early_front_return': result['early_front_return'].float().mean(),
             'Cycle/failure_penalty': result['failure_penalty'].mean(),
+            'Cycle/balance_velocity_cost': result['balance_velocity_cost'].mean(),
+            'Cycle/landing_velocity_cost': result['landing_velocity_cost'].mean(),
             'Physics/rear_contact_fraction': t['rear_fraction'].mean(),
             'Physics/wheel_actual_peak': s['wheel'].abs().max(),
             'Physics/wheel_target_peak': p.control.executed[:, 1:].abs().max(),

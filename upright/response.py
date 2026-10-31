@@ -49,7 +49,18 @@ def basic_response(traces, count, complete, dt):
                   sufficient_coverage=required <= coverage[i], windows=windows[i],
                   passed=bool(complete[i] and required <= coverage[i]
                               and all(w['passed'] for w in windows[i]))) for i in range(count)]
+    groups = {}
+    for case in cases:
+        for window in case['windows']:
+            key = tuple(window['request'])
+            groups.setdefault(key, []).append(window)
+    window_summary = []
+    for request, items in sorted(groups.items()):
+        seconds = sum(x['measured_s'] for x in items)
+        window_summary.append(dict(request=list(request), windows=len(items),
+            passed=sum(x['passed'] for x in items), measured_s=seconds,
+            actual_mean=[sum(x['actual_mean'][j]*x['measured_s'] for x in items)/seconds for j in range(2)]))
     return dict(basic_control_pass=sum(c['passed'] for c in cases),
                 basic_response=dict(protocol='settled_signed_response_v1', settle_s=settle_s,
                     minimum_measure_s=measure_s, response_fraction=[.25, 2.],
-                    zero_command_mean_limits=[.05, .15], cases=cases))
+                    zero_command_mean_limits=[.05, .15], cases=cases, window_summary=window_summary))
