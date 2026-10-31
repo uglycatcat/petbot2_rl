@@ -44,18 +44,18 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "e74d9b1c5864bf85a49a754e6136deabbbe3b77a",
+      "verified_commit": "43d14e4b82a8d5e5ff4574cf526efc936fa49f65",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round09_running_gpu2_gpu3_random_initialization_event_iteration",
-      "local_validation": "Round08 valid2x1000,7 independent evaluations,1 planned skip; no OOM/recovery. Seed101 low/wider-hip expanded complete/basic32/32; seed102 static/low complete24/32,basic22/32,16 LAND failures. Round09 mixes50% moving training episodes with random4-8s balance and50%30s;20% earlier-course replay,probe cadence50 updates preserving two80% passes (final range reachable within1000),30s probes and60s independent evaluation unchanged.67 CPU,PhysX,8-update same-run4-to8 recovery,2048 scale,reload,mixed first-episode physical check and exact60s evaluation parity accepted. Seeds101/102 random1000 updates onGPU2/3,no historic initialization. Landing reliability,overshoot,symmetry and0.75 goal unresolved. No timers,goals or MuJoCo approval.",
+      "status": "restart_round10_running_gpu2_gpu3_random_initialization_event_iteration",
+      "local_validation": "Round09 valid2x1000 and8 independent evaluations, no missing/OOM/recovery. Both seeds low60s complete/basic32/32; seed101 at+-0.5 complete23/32 with9 BALANCE front returns, seed102 at+-0.2 complete32/32. Round10 higher-course boundary mixture25%, continuous75%, low sampler and independent evaluation unchanged.72 CPU,PhysX,same-run4-to8 recovery,2048 scale,reload and exact60s expanded evaluation parity accepted. One engineering recovery orchestration error rejected82 for old config, corrected same run and preserved. Fresh seeds101/102 random1000 onGPU2/3, no historic initialization. Full0.75,symmetry,overshoot andMuJoCo unresolved. No timers/goals.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round09_s101@gpu2",
-        "upright_restart_round09_s102@gpu3"
+        "upright_restart_round10_s101@gpu2",
+        "upright_restart_round10_s102@gpu3"
       ]
     },
     {
