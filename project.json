@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round12_engineering",
-  "training_enabled": false,
+  "phase": "round12_ready",
+  "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round11 low-range retained but both0/32 at0.75; round12 finer gated curriculum requires engineering checks before fresh training.",
+  "reason": "Round12 finer gated curriculum accepted:78 CPU, scratch/recovery/reload/default-entry2048 scale valid, fixed-policy level6 expanded60s traces unchanged. Full0.75 capability awaits fresh1000-update trials.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -15,11 +15,11 @@
     "series": "upright_restart_20261030",
     "round": 12,
     "name": "upright_restart_round12",
-    "status": "engineering_pending"
+    "status": "ready_random_initialization"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": false,
+  "engineering_validated": true,
   "implementation_review": "docs/round01_implementation.md",
   "cpu_contract_tests_passed": 78,
   "allowed_host_gpus": [
