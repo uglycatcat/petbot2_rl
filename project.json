@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round12_ready",
-  "training_enabled": true,
+  "phase": "round13_engineering",
+  "training_enabled": false,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round12 finer gated curriculum accepted:78 CPU, scratch/recovery/reload/default-entry2048 scale valid, fixed-policy level6 expanded60s traces unchanged. Full0.75 capability awaits fresh1000-update trials.",
+  "reason": "Round12 low stability retained but0.75 fails; stable support can receive negative reward from unbounded speed cost. Round13 caps only this cost and requires engineering checks.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -13,15 +13,15 @@
   "batch26_resume_allowed": false,
   "next_experiment": {
     "series": "upright_restart_20261030",
-    "round": 12,
-    "name": "upright_restart_round12",
-    "status": "ready_random_initialization"
+    "round": 13,
+    "name": "upright_restart_round13",
+    "status": "engineering_pending"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": true,
+  "engineering_validated": false,
   "implementation_review": "docs/round01_implementation.md",
-  "cpu_contract_tests_passed": 78,
+  "cpu_contract_tests_passed": 81,
   "allowed_host_gpus": [
     2,
     3

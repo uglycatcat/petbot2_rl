@@ -56,4 +56,34 @@ class VelocityCostContracts(unittest.TestCase):
         for k in ['balance_velocity_error_tau_s','balance_velocity_error_scale_m_s','landing_velocity_error_scale_m_s']:
             with self.assertRaises(ValueError):replace(CFG,**{k:0.}).validate()
 
+    def test_cap_preserves_small_errors_and_is_smooth_monotone_bounded(self):
+        p=Runtime(2,'cpu',.06,replace(CFG,balance_velocity_cost_cap=1.5),MODEL)
+        raw=torch.tensor([0.,.36,.7499,.7501,1.,3.,10.],requires_grad=True)
+        cost=p.limit_balance_velocity_cost(raw)
+        torch.testing.assert_close(cost[:3],raw[:3])
+        self.assertTrue((cost[1:]>cost[:-1]).all())
+        self.assertTrue((cost>=0).all() and (cost<1.5).all())
+        slope=torch.autograd.grad(cost.sum(),raw)[0]
+        self.assertTrue((slope>=0).all() and (slope<=1).all())
+        self.assertLess(float((slope[2]-slope[3]).abs()),.001)
+        legacy=Runtime(2,'cpu',.06,CFG,MODEL)
+        torch.testing.assert_close(legacy.limit_balance_velocity_cost(raw),raw)
+
+    def test_large_bias_keeps_real_support_positive_and_failure_cost_unchanged(self):
+        cfg=replace(CFG,balance_velocity_cost_cap=1.5,landing_velocity_cost=0.)
+        p=Runtime(2,'cpu',.06,cfg,MODEL);p.reset(torch.arange(2));p.level[:]=2;p.balance_duration[:]=30.
+        p.control.phase[:]=Phase.BALANCE;p.invoked[:]=True;p.control.set_command([[-.75,0],[.75,0]])
+        p.control.executed[:]=torch.tensor([1.2,25.,-25.]);p.control.previous[:]=torch.tensor([-1.,-25.,25.])
+        s=state();s['motion'][:,0]=torch.tensor([.75,-.75]);s['gap'][:]=.1
+        for _ in range(80):a=p.advance(s,truth(raised=True))
+        self.assertTrue(a['support_truth'].all() and not a['done'].any())
+        self.assertTrue((a['reward']>0).all());self.assertTrue((a['balance_velocity_cost']<=.09).all())
+        t=truth(raised=True);t['body_contact'][:]=True;a=p.advance(s,t)
+        self.assertTrue(a['failure'].all());torch.testing.assert_close(a['failure_penalty'],torch.full((2,),5.))
+        self.assertFalse(a['balance_velocity_cost'].any())
+
+    def test_cap_cannot_exceed_support_reward_or_accept_invalid_values(self):
+        for cap in (-1.,2.,float('inf'),float('nan'),True,'1.5'):
+            with self.assertRaises(ValueError):replace(CFG,balance_velocity_cost_cap=cap).validate()
+
 if __name__=='__main__':unittest.main()

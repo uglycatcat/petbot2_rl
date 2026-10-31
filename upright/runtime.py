@@ -184,6 +184,17 @@ class Runtime:
         absolute = value.abs()
         return torch.where(absolute <= 1., .5*value.square(), absolute-.5)
 
+    def limit_balance_velocity_cost(self, value):
+        cap = self.cfg.balance_velocity_cost_cap
+        if cap == 0:
+            return value
+        # Keep the small-error cost exact, then approach a bound smoothly. The
+        # bound stays below the real-support reward; a temporary speed bias must
+        # not make stable two-wheel support less valuable than ending the call.
+        knee = .5*cap
+        excess = (value-knee).clamp_min(0)
+        return value.clamp_max(knee) + knee*(-torch.expm1(-excess/knee))
+
     def velocity_costs(self, s, balancing, landing):
         # Smooth the signed error (not its magnitude): distinguish persistent bias
         # from short physical fluctuations. It is reward state, never a policy input.
@@ -191,8 +202,9 @@ class Runtime:
         alpha = 1.-math.exp(-self.dt/self.cfg.balance_velocity_error_tau_s)
         self.balance_velocity_error.copy_(torch.where(balancing,
             self.balance_velocity_error+alpha*(error-self.balance_velocity_error), 0.))
-        balance_cost = self.dt*self.cfg.balance_velocity_cost*self.huber(
-            self.balance_velocity_error/self.cfg.balance_velocity_error_scale_m_s)*balancing
+        cost_rate = self.cfg.balance_velocity_cost*self.huber(
+            self.balance_velocity_error/self.cfg.balance_velocity_error_scale_m_s)
+        balance_cost = self.dt*self.limit_balance_velocity_cost(cost_rate)*balancing
         # Preserve the speed measured at LAND entry, not zero or the last remote setpoint.
         landing_error = s['motion'][:, 0]-self.control.transition_motion[:, 0]
         land_cost = self.dt*self.cfg.landing_velocity_cost*self.huber(

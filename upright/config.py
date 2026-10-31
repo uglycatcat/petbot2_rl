@@ -63,6 +63,7 @@ class Config:
     rise_prepare_decay_s: float = 2.0
     rise_front_return_penalty: float = 5.0
     balance_velocity_cost: float = 0.0
+    balance_velocity_cost_cap: float = 0.0  # reward/second; zero retains legacy unbounded cost
     balance_velocity_error_tau_s: float = 0.3
     balance_velocity_error_scale_m_s: float = 0.05
     landing_velocity_cost: float = 0.0
@@ -116,6 +117,8 @@ class Config:
             raise ValueError('Invalid environment/probe count; maximum 4096 environments')
         if not 0 < self.curriculum_pass_rate <= 1 or not 0 <= self.baseline_fraction < 1:
             raise ValueError('Invalid curriculum probabilities')
+        if type(self.balance_velocity_cost_cap) not in (int, float) or not 0 <= self.balance_velocity_cost_cap < 2:
+            raise ValueError('Velocity cost cap must be below the two-wheel support reward of 2/s')
         if not 0 <= self.short_cycle_fraction < 1:
             raise ValueError('Short-cycle mixture must retain full-duration training episodes')
         if not 0 <= self.boundary_command_fraction < 1:
@@ -139,7 +142,7 @@ class Config:
 
 
 def load_config(path=None, **overrides):
-    data = json.loads(Path(path or ROOT/'configs/round12.json').read_text())
+    data = json.loads(Path(path or ROOT/'configs/round13.json').read_text())
     unknown = data.keys() - {f.name for f in fields(Config)}
     if unknown:
         raise ValueError(f'Unknown configuration keys: {sorted(unknown)}')
