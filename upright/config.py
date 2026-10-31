@@ -19,6 +19,7 @@ class Config:
     history: int = 5
     rollout_steps: int = 32
     learning_rate: float = 0.0003
+    gae_lambda: float | None = None  # None retains legacy physical-time scaling
     checkpoint_interval: int = 100
     probe_interval: int = 100
     bootstrap_probe_interval: int = 0
@@ -94,6 +95,8 @@ class Config:
                 raise ValueError(f'{key} must be a positive integer')
         if type(self.bootstrap_probe_interval) is not int or self.bootstrap_probe_interval < 0:
             raise ValueError('Invalid bootstrap probe interval')
+        if self.gae_lambda is not None and (type(self.gae_lambda) not in (int, float) or not 0 <= self.gae_lambda <= 1):
+            raise ValueError('GAE lambda must be finite and within [0, 1]')
         if self.bootstrap_probe_interval and self.probe_interval % self.bootstrap_probe_interval:
             raise ValueError('Bootstrap probe interval must divide motion probe interval')
         previous = None
@@ -136,7 +139,7 @@ class Config:
 
 
 def load_config(path=None, **overrides):
-    data = json.loads(Path(path or ROOT/'configs/round10.json').read_text())
+    data = json.loads(Path(path or ROOT/'configs/round11.json').read_text())
     unknown = data.keys() - {f.name for f in fields(Config)}
     if unknown:
         raise ValueError(f'Unknown configuration keys: {sorted(unknown)}')

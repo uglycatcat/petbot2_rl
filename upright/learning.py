@@ -18,7 +18,8 @@ def runner_config(cfg, model, device):
         critic=dict(class_name='MLPModel', hidden_dims=[256, 128], activation='elu', obs_normalization=True),
         algorithm=dict(class_name='PPO', value_loss_coef=1., use_clipped_value_loss=True, clip_param=.2,
             entropy_coef=.001, num_learning_epochs=5, num_mini_batches=4, learning_rate=cfg.learning_rate,
-            schedule='fixed', gamma=.997**(cfg.decimation/10), lam=.95**(cfg.decimation/10),
+            schedule='fixed', gamma=.997**(cfg.decimation/10),
+            lam=cfg.gae_lambda if cfg.gae_lambda is not None else .95**(cfg.decimation/10),
             desired_kl=.01, max_grad_norm=1.))
 
 

@@ -12,7 +12,8 @@ from upright.experiment import atomic_json, identities, locked_run, new_manifest
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--config', type=Path, default=ROOT/'configs/round09.json')
+    # One current default in load_config; explicit archived configs remain selectable.
+    parser.add_argument('--config', type=Path)
     parser.add_argument('--run-dir', type=Path)
     parser.add_argument('--resume-interrupted', type=Path)
     parser.add_argument('--kind', choices=('training', 'engineering'), default='training')
