@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round10_engineering",
-  "training_enabled": false,
+  "phase": "round10_ready",
+  "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round09 low-range recovered; round10 tests training-only boundary command exposure. Scratch rollout engineering pending.",
+  "reason": "Round10 boundary sampling accepted: scratch/recovery/scale/reload valid; fixed-policy training sampler includes both boundary signs and continuous targets; independent60s expanded traces unchanged. One misconfigured recovery invocation was rejected and corrected in the same run. Full capability not validated.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -15,13 +15,13 @@
     "series": "upright_restart_20261030",
     "round": 10,
     "name": "upright_restart_round10",
-    "status": "engineering_pending"
+    "status": "ready_random_initialization"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": false,
+  "engineering_validated": true,
   "implementation_review": "docs/round01_implementation.md",
-  "cpu_contract_tests_passed": 67,
+  "cpu_contract_tests_passed": 72,
   "allowed_host_gpus": [
     2,
     3
