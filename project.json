@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round13_ready",
-  "training_enabled": true,
+  "phase": "round14_engineering",
+  "training_enabled": false,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round13 bounded balance speed cost accepted:81 CPU, exact fixed-policy physical/scoring parity with only reward changes, scratch recovery/reload/default-entry2048 scale valid. Fresh1000-update trials still required for capability.",
+  "reason": "Round13 stability improved but full speed remains unproven; widen only positive speed-tracking reward from0.1 to0.3m/s. Engineering pending.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -13,15 +13,15 @@
   "batch26_resume_allowed": false,
   "next_experiment": {
     "series": "upright_restart_20261030",
-    "round": 13,
-    "name": "upright_restart_round13",
-    "status": "ready_random_initialization"
+    "round": 14,
+    "name": "upright_restart_round14",
+    "status": "engineering_pending"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": true,
+  "engineering_validated": false,
   "implementation_review": "docs/round01_implementation.md",
-  "cpu_contract_tests_passed": 81,
+  "cpu_contract_tests_passed": 83,
   "allowed_host_gpus": [
     2,
     3

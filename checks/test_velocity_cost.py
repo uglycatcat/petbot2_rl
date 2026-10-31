@@ -86,4 +86,33 @@ class VelocityCostContracts(unittest.TestCase):
         for cap in (-1.,2.,float('inf'),float('nan'),True,'1.5'):
             with self.assertRaises(ValueError):replace(CFG,balance_velocity_cost_cap=cap).validate()
 
+    def test_wide_tracking_rewards_progress_without_changing_cost_or_control(self):
+        cfg=replace(CFG,balance_velocity_cost_cap=1.5,landing_velocity_cost=0.)
+        old=Runtime(2,'cpu',.06,cfg,MODEL)
+        new=Runtime(2,'cpu',.06,replace(cfg,balance_velocity_tracking_scale_m_s=.3),MODEL)
+        s=state();s['motion'][:,0]=torch.tensor([.5,-.5]);s['gap'][:]=.1
+        for p in (old,new):
+            p.reset(torch.arange(2));p.level[:]=2;p.balance_duration[:]=30.
+            p.control.phase[:]=Phase.BALANCE;p.invoked[:]=True
+            p.control.set_command([[.75,0],[-.75,0]])
+        for _ in range(20):
+            a,b=old.advance(s,truth(raised=True)),new.advance(s,truth(raised=True))
+            for key in a:
+                if key!='reward':torch.testing.assert_close(a[key],b[key])
+            torch.testing.assert_close(old.observation(s),new.observation(s))
+            torch.testing.assert_close(old.control.targets(torch.zeros(2,3),s),new.control.targets(torch.zeros(2,3),s))
+        expected=.06*(torch.exp(torch.tensor(-(.25/.3)**2))-torch.exp(torch.tensor(-(.25/.1)**2)))
+        torch.testing.assert_close(b['reward']-a['reward'],expected.expand(2))
+        self.assertGreater(float(expected),.029)
+        # No extra reward in a failed state, and terminal severity is identical.
+        t=truth(raised=True);t['body_contact'][:]=True
+        a,b=old.advance(s,t),new.advance(s,t)
+        torch.testing.assert_close(a['reward'],b['reward'])
+        torch.testing.assert_close(a['failure_penalty'],b['failure_penalty'])
+
+    def test_tracking_scale_validation_and_legacy_default(self):
+        self.assertEqual(Config().balance_velocity_tracking_scale_m_s,.1)
+        for value in (0.,-1.,.76,float('inf'),float('nan'),True,'0.3'):
+            with self.assertRaises(ValueError):replace(CFG,balance_velocity_tracking_scale_m_s=value).validate()
+
 if __name__=='__main__':unittest.main()

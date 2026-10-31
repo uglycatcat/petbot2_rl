@@ -225,7 +225,10 @@ class Runtime:
         land_gain = (land_phi-self.peak_land).clamp_min(0)*landing
         self.peak_land.copy_(torch.maximum(self.peak_land, land_phi))
         error = s['motion']-c.motion_command()
-        tracking = .5*torch.exp(-(error[:, 0]/.10).square())+.5*torch.exp(-(error[:, 1]/.30).square())
+        # A wider positive reward retains a learning signal while stable motion
+        # is still far from the requested speed. Fine accuracy keeps the existing
+        # signed-error cost; neither the command nor the acceptance tolerance changes.
+        tracking = .5*torch.exp(-(error[:, 0]/self.cfg.balance_velocity_tracking_scale_m_s).square())+.5*torch.exp(-(error[:, 1]/.30).square())
         transition = rising | landing
         heading_error = wrap(s['yaw']-c.yaw_reference)
         target_change = (c.executed-c.previous)/s['q'].new_tensor([2.2, 25., 25.])
