@@ -8,6 +8,8 @@ import random
 import numpy as np
 import torch
 from rsl_rl.runners import OnPolicyRunner
+from rsl_rl.modules import BetaDistribution
+from .distributions import CeilingBetaDistribution, std_ceiling_at
 
 
 def runner_config(t):
@@ -15,6 +17,8 @@ def runner_config(t):
     distribution = (dict(class_name='BetaDistribution', action_range=(-1.,1.))
                     if t.get('policy_distribution','gaussian')=='beta' else
                     dict(class_name='GaussianDistribution', init_std=t['initial_std'], std_type='log'))
+    if 'beta_std_ceiling' in t:
+        distribution['class_name']='step_demo.distributions:CeilingBetaDistribution'
     return dict(num_steps_per_env=t['num_steps_per_env'], save_interval=t['save_interval'],
         logger='tensorboard', check_for_nan=True, obs_groups={'actor':['policy'],'critic':['policy']},
         actor=dict(**model, distribution_cfg=distribution),
@@ -29,9 +33,13 @@ def distribution_metrics(distribution):
     if not torch.isfinite(mean).all() or not torch.isfinite(std).all():
         raise RuntimeError('Nonfinite action distribution')
     kind=type(distribution).__name__
-    if kind=='BetaDistribution' and (mean.abs().max()>1.+1e-6 or std.max()>1.):
+    if isinstance(distribution,BetaDistribution) and (mean.abs().max()>1.+1e-6 or std.max()>1.):
         raise RuntimeError('Bounded policy distribution violated its action range')
-    return dict(kind=kind,mean_abs_max=float(mean.abs().max()),std_min=float(std.min()),std_max=float(std.max()))
+    result=dict(kind=kind,mean_abs_max=float(mean.abs().max()),std_min=float(std.min()),std_max=float(std.max()))
+    if isinstance(distribution,CeilingBetaDistribution):
+        result['std_ceiling']=float(distribution.std_ceiling)
+        if std.max()>distribution.std_ceiling+1e-6:raise RuntimeError('Action variance ceiling violated')
+    return result
 
 
 def state_digest(state):
@@ -51,6 +59,7 @@ class StepRunner(OnPolicyRunner):
     def __init__(self, env, cfg, origin, log_dir=None, device='cuda:0'):
         self.origin = origin
         super().__init__(env, deepcopy(cfg), log_dir, device)
+        self._set_std_ceiling(0)
         if log_dir:
             original_log=self.logger.log
             def log_progress(**values):
@@ -62,7 +71,15 @@ class StepRunner(OnPolicyRunner):
                     totals=env.unwrapped.totals.copy(),distribution=distribution_metrics(self.alg.actor.distribution))
                 write_json(Path(log_dir)/'progress.json',record)
                 with (Path(log_dir)/'updates.jsonl').open('a') as file: file.write(json.dumps(record)+'\n')
+                # Change only after PPO has consumed this rollout's log-probs.
+                # Checkpoints now contain the ceiling for the next collection.
+                self._set_std_ceiling(values['it']+1)
             self.logger.log=log_progress
+
+    def _set_std_ceiling(self, completed_updates):
+        schedule=self.origin['training'].get('beta_std_ceiling')
+        if schedule is not None:
+            self.alg.actor.distribution.set_std_ceiling(std_ceiling_at(schedule,completed_updates))
 
     def save(self, path, infos=None):
         data = self.alg.save()
@@ -87,6 +104,11 @@ class StepRunner(OnPolicyRunner):
         self.alg.load(data, None, strict=True)
         self.alg.learning_rate = data['learning_rate']
         self.current_learning_iteration = data['completed_updates']
+        schedule=self.origin['training'].get('beta_std_ceiling')
+        if schedule is not None:
+            actual=float(self.alg.actor.distribution.std_ceiling)
+            if abs(actual-std_ceiling_at(schedule,data['completed_updates']))>1e-6:
+                raise ValueError('Checkpoint action variance curriculum is inconsistent')
         if training:
             torch.set_rng_state(data['rng']['torch'].cpu())
             torch.cuda.set_rng_state_all([v.cpu() for v in data['rng']['cuda']])

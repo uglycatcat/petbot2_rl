@@ -26,10 +26,18 @@ def code_digest():
 def load_training(path):
     defaults=json.loads((PROJECT_ROOT/'configs/train_v1.json').read_text())
     t=json.loads(Path(path).read_text())
-    optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma'}
+    optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling'}
     if set(t)-optional!=set(defaults) or t['schema']!='petbot_step_ppo_v1': raise ValueError('Unknown training schema/fields')
     if t.get('policy_distribution','gaussian') not in ('gaussian','beta'):raise ValueError('Unknown policy distribution')
     if t.get('learning_rate_schedule','adaptive') not in ('adaptive','fixed'):raise ValueError('Unknown learning rate schedule')
+    if 'beta_std_ceiling' in t:
+        s=t['beta_std_ceiling']
+        if (t.get('policy_distribution')!='beta' or not isinstance(s,dict)
+                or set(s)!={'start_update','end_update','final_std'}
+                or type(s['start_update']) is not int or type(s['end_update']) is not int
+                or not 0<=s['start_update']<s['end_update']<=t['iterations']
+                or not isinstance(s['final_std'],(int,float)) or not .005<=s['final_std']<=.577):
+            raise ValueError('Invalid Beta variance curriculum')
     if t.get('reward_version','legacy') not in ('legacy','edge_v3','progress_v4','stage_v5','settle_v6'):raise ValueError('Unknown reward version')
     if not 0<t.get('discount_gamma',.99)<=1:raise ValueError('Invalid discount gamma')
     if t.get('reward_version') in ('progress_v4','stage_v5','settle_v6') and t.get('discount_gamma')!=1.:
@@ -52,7 +60,7 @@ def main(argv):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command',choices=('train','evaluate'))
     parser.add_argument('--config',type=Path,default=DEFAULT_CONFIG)
-    parser.add_argument('--training-config',type=Path,default=PROJECT_ROOT/'configs/round06_seed70.json')
+    parser.add_argument('--training-config',type=Path,default=PROJECT_ROOT/'configs/round07_seed70.json')
     parser.add_argument('--model-dir',type=Path)
     parser.add_argument('--asset-dir',type=Path,default=PROJECT_ROOT/'artifacts/robot')
     parser.add_argument('--run-dir',type=Path,required=True)
