@@ -33,3 +33,26 @@ def terminal_reward(success, failed, elapsed):
     # With gamma=1 and no per-step time tax, failure has the same price at every
     # time. Only successful completion has a small duration preference.
     return success.float()*(20.-.1*elapsed)-5.*failed.float()
+
+
+def staged_progress(forward, front_gap, wheel_z, height, front_landed,
+                    rear_contact, rear_at_edge, four_top, hip_error, aligned,
+                    drive_fraction, stop_fraction):
+    """Separate bounded progress credits so re-lifting cannot pay after landing."""
+    approach = (10.*forward-.5).clamp(0., 6.)
+    clearance = ((.10-front_gap)/.10).clamp(0., 1.) * (wheel_z[:, :2]/(height+.005)).clamp(0., 1.)
+    clearance = torch.where(front_landed, 0., clearance)
+    landed = front_landed.all(-1)
+    rear = 1.5*(wheel_z[:, 2:]/height).clamp(0., 1.)
+    rear *= rear_contact & rear_at_edge & landed[:, None]
+    stable_top = four_top & landed & aligned
+    home = 2.*(1.-hip_error/.8).clamp(0., 1.)*stable_top
+    drive = 2.*drive_fraction.clamp(0., 1.)*stable_top
+    stop = stop_fraction.clamp(0., 1.)*stable_top
+    return torch.cat((approach[:, None], clearance, rear, home[:, None], drive[:, None], stop[:, None]), -1)
+
+
+def component_increment(previous, current, invalid):
+    best = torch.maximum(previous, current)
+    best = torch.where(invalid[:, None], previous, best)
+    return (best-previous).sum(-1), best

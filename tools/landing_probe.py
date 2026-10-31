@@ -37,12 +37,18 @@ def main():
                         max_prefix_physics_error=0., ever_all_top=False, terminal=None,
                         max_phase=0, max_rear_speed=0.) for i in range(n)]
         requested = [0.] * n
+        rear_peaks = [0.] * n
         original = env._capture
         with (a.output/'substeps.jsonl').open('x') as sub, (a.output/'trace.jsonl').open('x') as trace:
             def capture(self, counter):
                 old = self._capture_counter; original(counter)
                 if self._capture_counter == old:
                     return
+                measured = tensor(self.robot.data.joint_vel)[:, self.wheels].abs().amax(-1).tolist()
+                serial = self.episode_serial.tolist()
+                for i, value in enumerate(measured):
+                    if serial[i] == 1 and results[i]['terminal'] is None:
+                        rear_peaks[i] = max(rear_peaks[i], value)
                 sub.write(json.dumps(dict(counter=counter, episode=self.episode_serial.tolist(),
                     failure=self.failure.tolist(), rear_air_s=self.rear_air_s.tolist(),
                     net_force=self.wheel_contact_force.tolist(), platform_normal=self.platform_normal.tolist(),
@@ -80,7 +86,7 @@ def main():
                                     max(abs(x-y) for x, y in zip(d[key][i], rows[step][key][i])))
                         result['ever_all_top'] |= all(d['supported_top'][i])
                         result['max_phase'] = max(result['max_phase'], d['phase'][i])
-                        result['max_rear_speed'] = float(env.wheel_speed_peak[i]) if not d['failure'][i] else result['max_rear_speed']
+                        result['max_rear_speed'] = rear_peaks[i]
                         if d['failure'][i] or d['completed'][i]:
                             result['terminal'] = dict(time=d['elapsed'][i], failure=d['failure'][i],
                                 completed=d['completed'][i], phase=d['phase'][i], com=d['com'][i])

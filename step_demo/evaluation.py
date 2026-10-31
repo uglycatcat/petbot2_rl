@@ -26,6 +26,7 @@ class EvaluationSample:
     rear_support_lost: bool  # geometry/contact evidence; needs physical validation
     body_collision_or_fall: bool
     deliberate_reverse: bool  # target violation, separate from measured rollback
+    near_top_during_contact_gap: bool = False  # bounded geometry envelope, not verified support
 
 
 class Stage(str, Enum):
@@ -37,8 +38,9 @@ class Stage(str, Enum):
 
 
 class CompletionTracker:
-    def __init__(self, config: AcceptanceConfig):
+    def __init__(self, config: AcceptanceConfig, support_memory_s: float = 0.):
         self.config = config
+        self.support_memory_s = support_memory_s
         self.reset()
 
     def reset(self):
@@ -48,6 +50,7 @@ class CompletionTracker:
         self.stopped_s = 0.
         self.drive_start_m: float | None = None
         self.front_clearance = [False, False]
+        self.support_gap_s = 0.
 
     def update(self, s: EvaluationSample) -> Stage:
         numbers = (s.dt_s, s.forward_m, s.lateral_m, s.heading_rad, s.speed_m_s,
@@ -73,11 +76,13 @@ class CompletionTracker:
         heading_error = math.atan2(math.sin(s.heading_rad), math.cos(s.heading_rad))
         aligned = (abs(s.lateral_m) <= self.config.line_tolerance_m
                    and abs(heading_error) <= self.config.heading_tolerance_rad)
-        ready = (s.four_wheels_on_top and all(self.front_clearance) and aligned
-                 and max(abs(x) for x in s.hip_error_rad) <= self.config.hip_tolerance_rad)
+        pose_valid = all(self.front_clearance) and aligned and max(abs(x) for x in s.hip_error_rad) <= self.config.hip_tolerance_rad
+        ready = s.four_wheels_on_top and pose_valid
+        self.support_gap_s = 0. if ready else self.support_gap_s+s.dt_s
         if not ready:
-            # Returning to the line/pose does not retain an invalid drive segment.
-            self.drive_start_m = None
+            keep = pose_valid and s.near_top_during_contact_gap and self.support_gap_s <= self.support_memory_s+1e-7
+            if not keep:
+                self.drive_start_m = None
             self.stopped_s = 0.
             self.stage = Stage.CROSSING
             return self.stage

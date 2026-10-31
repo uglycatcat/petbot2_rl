@@ -30,7 +30,9 @@ def summarize(run, evaluation):
     if result['status']!='complete' or result['completed_updates']!=latest['completed_updates']:
         raise ValueError('Evaluation must reload the completed final model')
     layout=read(evaluation/'layout.json'); hips=layout['hips'];wheels=layout['rear_wheels']
-    config=load_config(); trackers={i:CompletionTracker(config.acceptance) for i in range(result['num_envs'])}
+    config=load_config()
+    support_memory=.06 if origin['training'].get('reward_version')=='stage_v5' else 0.
+    trackers={i:CompletionTracker(config.acceptance,support_memory) for i in range(result['num_envs'])}
     terminals={r['env']:r for r in result['episodes']}
     if len(terminals)!=result['num_envs']: raise ValueError('Missing or duplicate first-episode evaluations')
     seen=set();phases=Counter();examples={};frames=0;counts=Counter()
@@ -71,7 +73,8 @@ def summarize(run, evaluation):
             phases[str(phase)]+=1
             sample=EvaluationSample(layout['step_dt'],com[0],com[1],row['yaw'][local],speed,row['yaw_rate'][local],
                 tuple(q[j] for j in hips),tuple(row['front_cleared'][local]),all(row['supported_top'][local]),
-                row['front_hit'][local],failure==2,failure==3,failure==4)
+                row['front_hit'][local],failure==2,failure==3,failure==4,
+                row.get('near_top',[False]*len(layout['trace_ids']))[local])
             stage=trackers[i].update(sample)
             timed_out=row['elapsed'][local]+1e-5>=config.acceptance.timeout_s
             if failure or completed or timed_out:
