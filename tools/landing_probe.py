@@ -77,10 +77,14 @@ def main():
                 sub.write(json.dumps(dict(counter=counter, episode=self.episode_serial.tolist(),
                     failure=self.failure.tolist(), rear_air_s=self.rear_air_s.tolist(),
                     net_force=self.wheel_contact_force.tolist(), platform_normal=self.platform_normal.tolist(),
+                    platform_contact_x=self.platform_contact_x.tolist(),
+                    front_touched=self.front_touched.tolist(),supported_top=self.supported_top.tolist(),
+                    body_weight=(tensor(self.robot.data.body_mass).sum(-1)*9.81).tolist(),
                     wheel_z=self.minimum[:, :, 2].tolist(),
                     wheel_min_x=(self.minimum[:, :, 0]-self.edge_x[:, None]).tolist(),
                     hip_target=self.hip_target.tolist(), wheel_target=self.wheel_target.tolist(),
                     hip_actual=tensor(self.robot.data.joint_pos)[:, self.hips].tolist(),
+                    hip_velocity=tensor(self.robot.data.joint_vel)[:, self.hips].tolist(),
                     wheel_actual=tensor(self.robot.data.joint_vel)[:, self.wheels].tolist()))+'\n')
             env._capture = types.MethodType(capture, env)
             count = (round(a.horizon_s/env.step_dt) if a.mode == 'transition'

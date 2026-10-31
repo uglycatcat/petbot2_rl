@@ -73,3 +73,17 @@ def settled_progress(parts, hip_error, hip_speed, home_hold, stable_top,
     # Add one bounded point for slowing down after the required platform drive.
     parts[:, 7] += (1.-speed/.3).clamp(0., 1.)*drive_complete
     return parts
+
+
+def touch_costs(front_normal_z, contact, body_weight, hip_velocity, touched, four_top, dt):
+    """Substep costs for excess top loading and hip motion during rear ascent.
+
+    A static front load below total robot weight incurs no impact cost. Actual
+    contact impulses are integrated even before the full-clearance milestone.
+    Together with the existing .003 hip-speed cost, transition motion weighs .03.
+    """
+    excess = (front_normal_z/body_weight[:, None]-1.).clamp_min(0.)
+    impact = dt*(excess.square()*contact).sum(-1)
+    transition = touched.all(-1) & ~four_top
+    motion = dt*.027*hip_velocity.square().mean(-1)*transition
+    return impact, motion
