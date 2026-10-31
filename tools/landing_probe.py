@@ -20,14 +20,28 @@ def main():
     p.add_argument('--hip-rate', type=float, default=20.)
     p.add_argument('--wheel-scale', type=float, default=1.)
     p.add_argument('--horizon-s', type=float, default=2.)
+    p.add_argument('--anchor', choices=('landing', 'top_contact'), default='landing')
+    p.add_argument('--lead-time-s', type=float, default=0.)
     AppLauncher.add_app_launcher_args(p)
     a = p.parse_args()
     if not 0 < a.hip_rate <= 20. or not 0 < a.wheel_scale <= 1. or not 0 < a.horizon_s <= 15.:
         p.error('Diagnostic rates/scales/horizon must stay within the original limits')
+    if not 0 <= a.lead_time_s <= .2 or (a.mode not in ('tails', 'transition') and
+                                       (a.anchor != 'landing' or a.lead_time_s)):
+        p.error('Contact timing interventions apply only to finite tails/transition probes')
     rows = [json.loads(line) for line in (a.evaluation/'trace.jsonl').open()]
     n = len(rows[0]['episode'])
     landing_steps = [next(k for k, row in enumerate(rows)
                          if row['episode'][i] == 1 and all(row['front_landed'][i])) for i in range(n)]
+    if a.anchor == 'top_contact':
+        # Offline diagnostic timing only: never exposed as an actor input.
+        landing_steps = [next(k for k, row in enumerate(rows)
+            if row['episode'][i] == 1 and not row['front_hit'][i]
+            and all(v[2] > .02 for v in row['platform_normal'][i][:2])
+            and all(x > row['edge_x'][i]+.002 for x in row['platform_contact_x'][i][:2]))
+            for i in range(n)]
+    dt = json.loads((a.evaluation/'layout.json').read_text())['step_dt']
+    landing_steps = [max(0, k-round(a.lead_time_s/dt)) for k in landing_steps]
     first_end = [max(k for k, row in enumerate(rows) if row['episode'][i] == 1) for i in range(n)]
     transition_step = max(landing_steps)+1
     # Brake intervention starts strictly after the recorded required drive.
@@ -122,6 +136,7 @@ def main():
                         break
         (a.output/'result.json').write_text(json.dumps(dict(status='passed',
             kind='finite_diagnostic_not_training', mode=a.mode, source_sha256=env.asset['source_sha256'],
+            anchor=a.anchor, lead_time_s=a.lead_time_s, anchor_steps=landing_steps,
             intervention=dict(after_control_step=transition_step, hip_rate=a.hip_rate,
                               wheel_scale=a.wheel_scale, horizon_s=a.horizon_s) if a.mode == 'transition' else None,
             maximum_prefix_error=max(r['max_prefix_physics_error'] for r in results), cases=results), indent=2)+'\n')
