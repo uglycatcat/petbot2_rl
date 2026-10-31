@@ -38,7 +38,7 @@ class CreditAssignment(unittest.TestCase):
         self.assertGreater(initial[1], 4*initial[0])
 
     def test_current_budget_gamma_and_legacy_lambda_are_preserved(self):
-        old = load_config(ROOT/'configs/round10.json'); new = load_config()
+        old = load_config(ROOT/'configs/round10.json'); new = load_config(ROOT/'configs/round11.json')
         before = runner_config(old, MODEL, 'cpu'); after = runner_config(new, MODEL, 'cpu')
         self.assertAlmostEqual(before['algorithm']['lam'], .95**3)
         self.assertEqual(after['algorithm']['lam'], .95)

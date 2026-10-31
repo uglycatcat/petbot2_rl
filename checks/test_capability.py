@@ -75,4 +75,40 @@ class CapabilityContracts(unittest.TestCase):
             with self.assertRaises(ValueError): replace(CFG, capability_stages=stages).validate()
         with self.assertRaises(ValueError): replace(CFG, bootstrap_probe_interval=30).validate()
 
+    def test_finer_course_preserves_full_speed_mirrors_and_entry_ranges(self):
+        cfg = load_config()
+        p = Runtime(32, 'cpu', .06, cfg, MODEL)
+        for level, speed in ((7, .6), (8, .75)):
+            p.probe_level = level; p.reset(torch.arange(32))
+            self.assertAlmostEqual(float(p.initial_hip.abs().max()), .2, places=6)
+            self.assertAlmostEqual(float(p.control.command[:, 0].abs().max()), .3, places=6)
+            dwell = float(p.stage_dwell[level])
+            for index, sign in ((1, 1), (2, -1)):
+                p.control.phase[:] = Phase.BALANCE
+                p.command_age[:] = dwell+.1; p.balance_elapsed[:] = index*dwell+.1
+                p.before_action(state(32))
+                torch.testing.assert_close(p.control.command[:, 0], torch.full((32,), sign*speed))
+            p.command_age[:] = dwell+.1; p.balance_elapsed[:] = 6*dwell+.1
+            p.before_action(state(32))
+            torch.testing.assert_close(p.control.command[::2, 1], -p.control.command[1::2, 1])
+            self.assertAlmostEqual(float(p.control.command[:, 1].abs().max()), .5, places=6)
+
+    def test_faster_probes_keep_failure_reset_recovery_and_budget_gate(self):
+        cfg = load_config(); c = Curriculum(cfg)
+        self.assertTrue(c.probe_due(25))
+        c.observe_probe(25, 26, 32, 0)
+        c.observe_probe(50, 25, 32, 0)
+        c.observe_probe(75, 26, 32, 0)
+        restored = Curriculum(cfg); restored.load_state_dict(c.state_dict())
+        self.assertEqual(restored.level, 0)
+        self.assertFalse(restored.probe_due(75))
+        self.assertEqual(restored.next_probe_update(75), 100)
+        restored.observe_probe(100, 26, 32, 0)
+        self.assertEqual(restored.level, 1)
+        restored.level = cfg.max_course_level-1; restored.streak = 0
+        restored.observe_probe(975, 32, 32, restored.level)
+        final = restored.observe_probe(1000, 32, 32, restored.level)
+        self.assertTrue(final['promotion_deferred_at_budget'])
+        self.assertEqual(restored.level, cfg.max_course_level-1)
+
 if __name__ == '__main__': unittest.main()
