@@ -43,6 +43,24 @@ class Runtime:
     def uniform(self, count, width=1):
         return torch.rand((count, width), device=self.level.device, generator=self.generator)
 
+    def training_command(self, ids):
+        ranges = self.stage_ranges[self.level[ids], :2]
+        normalized = 2*self.uniform(len(ids), 2)-1
+        category = (self.uniform(len(ids))[:, 0]*5).long()
+        # Keep the continuous distribution and original categories. Mix in exact
+        # boundaries after the low-range course, with independent symmetric signs.
+        # No fixed evaluation sequence, future command, or teacher is supplied.
+        eligible = (self.level[ids] >= 3).nonzero().flatten()
+        if self.cfg.boundary_command_fraction and len(eligible):
+            selected = self.uniform(len(eligible))[:, 0] < self.cfg.boundary_command_fraction
+            edge_ids = eligible[selected]
+            normalized[edge_ids] = torch.where(normalized[edge_ids] >= 0, 1., -1.)
+        command = normalized*ranges
+        command[category == 0] = 0  # stop
+        command[category == 1, 1] = 0  # straight
+        command[category == 2, 0] = 0  # pure turn
+        return command
+
     def reset(self, ids):
         self.control.reset(ids)
         for name in ('episode_age', 'command_age', 'true_hold', 'longest_hold', 'peak_rise',
@@ -98,11 +116,7 @@ class Runtime:
         ids = change.nonzero().flatten()
         if len(ids):
             if self.probe_level is None:
-                command = (2*self.uniform(len(ids), 2)-1)*self.stage_ranges[self.level[ids], :2]
-                category = (self.uniform(len(ids))[:, 0]*5).long()
-                command[category == 0] = 0  # stop
-                command[category == 1, 1] = 0  # straight
-                command[category == 2, 0] = 0  # pure turn
+                command = self.training_command(ids)
             else:
                 # Intermediate speeds, reversal, stop, pure turns and paired arcs.
                 table = s['motion'].new_tensor([[.5, 0], [-1, 0], [0, 0], [0, 1], [1, 1], [.5, -1], [-.5, 0], [0, 0]])

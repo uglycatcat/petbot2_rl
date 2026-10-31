@@ -30,6 +30,7 @@ class Config:
     low_yaw: float = 0.30
     initial_hip: float = 0.10
     baseline_fraction: float = 0.2
+    boundary_command_fraction: float = 0.0  # training only, moving levels >= 3
     warmup_s: float = 1.5
     warmup_timeout_s: float = 4.0
     rise_timeout_s: float = 12.0
@@ -114,6 +115,8 @@ class Config:
             raise ValueError('Invalid curriculum probabilities')
         if not 0 <= self.short_cycle_fraction < 1:
             raise ValueError('Short-cycle mixture must retain full-duration training episodes')
+        if not 0 <= self.boundary_command_fraction < 1:
+            raise ValueError('Boundary commands must retain continuous-range training commands')
         if self.short_cycle_fraction and not (self.hold_s <= self.short_balance_min_s <= self.short_balance_max_s < self.balance_train_s):
             raise ValueError('Short-cycle duration must retain genuine support and be below the long duration')
         if not 0 <= self.low_speed <= .75 or not 0 <= self.initial_hip <= 1:
@@ -133,7 +136,7 @@ class Config:
 
 
 def load_config(path=None, **overrides):
-    data = json.loads(Path(path or ROOT/'configs/round09.json').read_text())
+    data = json.loads(Path(path or ROOT/'configs/round10.json').read_text())
     unknown = data.keys() - {f.name for f in fields(Config)}
     if unknown:
         raise ValueError(f'Unknown configuration keys: {sorted(unknown)}')
