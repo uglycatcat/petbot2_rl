@@ -10,7 +10,7 @@
   "rollout_steps": 32,
   "learning_rate": 0.0003,
   "checkpoint_interval": 100,
-  "probe_interval": 100,
+  "probe_interval": 50,
   "probe_count": 32,
   "curriculum_pass_rate": 0.8,
   "curriculum_consecutive": 2,

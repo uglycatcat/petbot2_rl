@@ -51,6 +51,23 @@ class CycleDurationContracts(unittest.TestCase):
         p.control.phase[:]=Phase.BALANCE;s=state();a=p.observation(s);p.balance_duration[:]=torch.tensor([4.,60.]);p.short_cycle[:]=True
         torch.testing.assert_close(a,p.observation(s))
 
+    def test_demo_budget_can_reach_full_speed_without_weakening_promotion(self):
+        from upright.config import load_config
+        from upright.curriculum import Curriculum
+        cfg=load_config();course=Curriculum(cfg);first_full=None
+        for update in range(1,cfg.iterations+1):
+            if course.probe_due(update):
+                previous=course.level
+                course.observe_probe(update,cfg.probe_count,cfg.probe_count,previous)
+                if course.level>previous:
+                    self.assertEqual([r['level'] for r in course.probes[-2:]],[previous,previous])
+                if course.level==cfg.max_course_level and first_full is None:first_full=update
+        self.assertIsNotNone(first_full)
+        self.assertLess(first_full,cfg.iterations)
+        self.assertEqual(cfg.motion_stages()[-1][0],.75)
+        self.assertEqual(cfg.curriculum_consecutive,2)
+        self.assertEqual(cfg.curriculum_pass_rate,.8)
+
     def test_invalid_mixture_and_short_duration_rejected(self):
         for kwargs in [dict(short_cycle_fraction=1.),dict(short_cycle_fraction=-.1),dict(short_balance_min_s=1.),dict(short_balance_max_s=31.),dict(short_balance_min_s=9.,short_balance_max_s=8.)]:
             with self.assertRaises(ValueError):replace(CFG,**kwargs).validate()
