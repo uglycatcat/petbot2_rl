@@ -44,18 +44,18 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "a7e7147b6d2866f3b7f7fff2a9f8774694eb1876",
+      "verified_commit": "baef8a43cc62b171384dd27964030ec5b6fc1ddb",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round07_running_gpu2_gpu3_random_initialization_event_iteration",
-      "local_validation": "Round06 valid2x1000,6 original independent evaluations,2 planned skips,1 supplemental. No OOM/recovery.60s low complete32/32 both,basic16/32 and31/32; seed101 expanded0.20m/s,0.50rad/s complete/basic32/32. Signed smoothed velocity and landing measured-entry-speed Huber costs added; controller,criteria and curriculum unchanged.59 CPU,PhysX,8-update same-run4-to8 recovery,2048 scale,reload and fixed-policy reward neutrality accepted. Seeds101/102 independently random1000 updates onGPU2/3. Small-speed bias,landing quality,actual wheel overshoot and0.75 goal unresolved. No historical initialization,timers,goals or MuJoCo approval.",
+      "status": "restart_round08_running_gpu2_gpu3_random_initialization_event_iteration",
+      "local_validation": "Round07 valid2x1000,7 independent evaluations,1 planned skip; no OOM/recovery. Seed101 low/wider-hip expanded complete/basic32/32; seed102 low60s balance stable and916/916 motion windows pass but static/low LAND each0/32. Round08 disables only LAND velocity cost,keeps BALANCE velocity cost and control/criteria/curriculum.59 CPU,PhysX,8-update same-run4-to8 recovery,2048 scale,reload and exact failed-policy physics parity accepted; no policy acceptance. Seeds101/102 random1000 updates onGPU2/3,no historic initialization. Landing regression,actual wheel overshoot,symmetry and0.75 goal unresolved. No timers,goals or MuJoCo approval.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round07_s101@gpu2",
-        "upright_restart_round07_s102@gpu3"
+        "upright_restart_round08_s101@gpu2",
+        "upright_restart_round08_s102@gpu3"
       ]
     },
     {

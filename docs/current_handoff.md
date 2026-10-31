@@ -1,10 +1,10 @@
-# 当前交接：upright第6轮扩速稳定，第7轮强化速度响应已启动
+# 当前交接：upright第7轮落地退化，第8轮单项奖励对照已启动
 
 更新：2026-10-31。先读AGENTS.md，再读本页。upright按最新GPU2/3从零训练授权执行，旧第26批不恢复；完成事件先核查实际状态再分析迭代。
 
 ## 最新指令与执行边界
 
-用户持续授权单Actor–Critic从零训练、评估和事件迭代，仅GPU2/3。第6轮2训练/6原生评估有效、2项跳过，另1项独立扩速补评有效，无缺失/显存中断/恢复。低速60秒完整各32/32、基本16/32与31/32，不足均为+0.05m/s；seed101扩速±0.20m/s/±0.50rad/s完整/基本32/32，但不能覆盖小速度回归不足、宽髋及±0.75未证明。见[终局](upright_restart_round06_results.md)。第7轮固定a7e7147，强化两轮持续速度偏差及落地速度继承奖励，原控制与原始请求评分保持；工程门槛后两种子各2048环境×1000更新随机初始化启动。见[执行](upright_restart_round07_execution.md)。无历史权重、周期定时器/goal。
+用户持续授权单Actor–Critic从零训练、评估和事件迭代，仅GPU2/3。第7轮2训练/7独立评估有效、1项跳过，无缺失/显存中断/恢复。seed101低速及共同髋±0.20rad扩速完整/基本均32/32；seed102两轮60秒稳定、916/916运动窗口合格，但静止/低速落地各0/32、共64次LAND后仰退出，不能整体升级。双向0.75及更广范围仍未证明。见[终局](upright_restart_round07_results.md)。第8轮固定baef8a4，只撤去新增LAND速度代价，保留两轮跟踪收益及控制/评分/课程，工程门槛后两种子各2048环境×1000更新随机初始化启动。见[执行](upright_restart_round08_execution.md)。无历史权重、周期定时器/goal。
 
 用户最新纠正：需求与期望效果已明确，早期已实现基本起立、两轮与落地，应核查并复用有效代码和经验，重点是训练代码迭代效率，不必全部重新设计。此前将整个旧实现永久排除的解释范围过大，已纠正；完整封存仍保留；已选择性复用静止v5资产/分布代码并实现独立完整循环。新训练仍禁止历史权重和冻结父依赖。
 
@@ -19,13 +19,13 @@
 
 ## 当前工程实际状态
 
-`demo_project/upright_rl_demo`当前配置configs/round07.json，59项容器CPU及PhysX、128环境8更新/4→8同次恢复、2048规模、独立重载有效。新增BALANCE有符号速度误差0.3秒平滑Huber代价（尺度0.05m/s、权重2）及LAND相对入口实测速度Huber代价（尺度0.20、权重2），只影响奖励，不进入策略观测或控制。新奖励固定网络60秒物理检查与第6轮原始低速完整/基本一致；分组窗口报告不改变原逐回合评分。两轮参考0.5m/s²/1.5rad/s²、原始请求验收、普通控制全能力、落地速度继承/默认髋位保持；小速度偏弱、落地加速/偏航及实际轮速超调仍未宣称修复。
+`demo_project/upright_rl_demo`当前配置configs/round08.json，59项容器CPU及PhysX、128环境8更新/4→8同次恢复、2048规模、独立重载有效。仅LAND速度代价权重2→0，BALANCE有符号速度误差0.3秒平滑Huber代价（尺度0.05m/s、权重2）保留；原落地继承实测速度/默认髋位/交接、控制器和成功判据不变。固定第7轮失败网络78帧全部物理/控制字段逐项相同，原32次后仰失败保留，只移除奖励代价，不能宣称修好落地。物理轮速超调、转向镜像差异和能力范围继续单列。
 
 入口见[demo README](../demo_project/upright_rl_demo/README.md)、[需求基线](current_scope.md)、[重建计划](../demo_project/upright_rl_demo/docs/rebuild_plan.md)、[架构边界](../demo_project/upright_rl_demo/docs/architecture.md)。重整验收见[upright_reorganization_20261030.md](upright_reorganization_20261030.md)。
 
 ## 后续工作顺序
 
-**新编号：** 系列upright_restart_20261030，当前upright_restart_round07；控制目录`demo_project/runs/_upright_restart_round07`，运行`upright_restart_round07_s101`/`upright_restart_round07_s102`。状态与实际进程为准，运行中无eval_finished正常。第6轮原生192回合及补充32回合轨迹、随机初始化与开发失败审计齐全，旧进程已退出，不重复启动。第7轮固定旧网络检查只作工程开发验证，不作PPO或历史初始化。
+**新编号：** 系列upright_restart_20261030，当前upright_restart_round08；控制目录`demo_project/runs/_upright_restart_round08`，运行`upright_restart_round08_s101`/`upright_restart_round08_s102`。状态与实际进程为准，运行中无eval_finished正常。第7轮224个独立回合与开发失败、随机初始化身份审计齐全，旧进程已退出，不重复启动。固定旧网络只作奖励变更的工程检查，不作PPO或历史初始化。
 
 用户最新明确：需求已经清晰，历史实现的筛选和设计由agent判断；优先以较短、多批次demo训练快速验证实现。1000更新不是最终交付上限，正式从零流程可按收敛和验收需要使用10000或更多更新。本次为预算与职责澄清，未重新启动已取消队列。
 

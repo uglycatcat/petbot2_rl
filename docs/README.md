@@ -1,6 +1,6 @@
 # 项目文档索引
 
-- 当前：**upright第6轮扩速稳定，小速度响应/落地质量待改善，第7轮已在GPU2/3从零启动**。先看[当前交接](current_handoff.md)、[第6轮终局](upright_restart_round06_results.md)、[第7轮执行](upright_restart_round07_execution.md)和[需求基线](current_scope.md)。固定网络工程检查不是新PPO终局；旧第26批不恢复，禁止历史权重初始化、周期定时器和goal。
+- 当前：**upright第7轮速度响应改善但一路落地退化，第8轮单项奖励对照已在GPU2/3从零启动**。先看[当前交接](current_handoff.md)、[第7轮终局](upright_restart_round07_results.md)、[第8轮执行](upright_restart_round08_execution.md)和[需求基线](current_scope.md)。完整失败不能被运动窗口合格掩盖；旧第26批不恢复，禁止历史权重初始化、周期定时器和goal。
 
 
 先读根目录 [AGENTS.md](../AGENTS.md) 的硬规则和里程碑，再读[当前交接](current_handoff.md)。只按手头问题打开下面相应文档；历史实验与 `runs/` 不需要全读。根目录 README 用于部署和使用，不承载进度。
