@@ -1,6 +1,6 @@
 # 项目文档索引
 
-- 当前：**upright第7轮速度响应改善但一路落地退化，第8轮单项奖励对照已在GPU2/3从零启动**。先看[当前交接](current_handoff.md)、[第7轮终局](upright_restart_round07_results.md)、[第8轮执行](upright_restart_round08_execution.md)和[需求基线](current_scope.md)。完整失败不能被运动窗口合格掩盖；旧第26批不恢复，禁止历史权重初始化、周期定时器和goal。
+- 当前：**upright第8轮落地部分恢复，第9轮短完整循环混合已在GPU2/3从零启动**。先看[当前交接](current_handoff.md)、[第8轮终局](upright_restart_round08_results.md)、[第9轮执行](upright_restart_round09_execution.md)和[需求基线](current_scope.md)。短训练回合不替代60秒独立验收；旧第26批不恢复，禁止历史权重初始化、周期定时器和goal。
 
 
 先读根目录 [AGENTS.md](../AGENTS.md) 的硬规则和里程碑，再读[当前交接](current_handoff.md)。只按手头问题打开下面相应文档；历史实验与 `runs/` 不需要全读。根目录 README 用于部署和使用，不承载进度。

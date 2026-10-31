@@ -44,18 +44,18 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "baef8a43cc62b171384dd27964030ec5b6fc1ddb",
+      "verified_commit": "e74d9b1c5864bf85a49a754e6136deabbbe3b77a",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round08_running_gpu2_gpu3_random_initialization_event_iteration",
-      "local_validation": "Round07 valid2x1000,7 independent evaluations,1 planned skip; no OOM/recovery. Seed101 low/wider-hip expanded complete/basic32/32; seed102 low60s balance stable and916/916 motion windows pass but static/low LAND each0/32. Round08 disables only LAND velocity cost,keeps BALANCE velocity cost and control/criteria/curriculum.59 CPU,PhysX,8-update same-run4-to8 recovery,2048 scale,reload and exact failed-policy physics parity accepted; no policy acceptance. Seeds101/102 random1000 updates onGPU2/3,no historic initialization. Landing regression,actual wheel overshoot,symmetry and0.75 goal unresolved. No timers,goals or MuJoCo approval.",
+      "status": "restart_round09_running_gpu2_gpu3_random_initialization_event_iteration",
+      "local_validation": "Round08 valid2x1000,7 independent evaluations,1 planned skip; no OOM/recovery. Seed101 low/wider-hip expanded complete/basic32/32; seed102 static/low complete24/32,basic22/32,16 LAND failures. Round09 mixes50% moving training episodes with random4-8s balance and50%30s;20% earlier-course replay,probe cadence50 updates preserving two80% passes (final range reachable within1000),30s probes and60s independent evaluation unchanged.67 CPU,PhysX,8-update same-run4-to8 recovery,2048 scale,reload,mixed first-episode physical check and exact60s evaluation parity accepted. Seeds101/102 random1000 updates onGPU2/3,no historic initialization. Landing reliability,overshoot,symmetry and0.75 goal unresolved. No timers,goals or MuJoCo approval.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round08_s101@gpu2",
-        "upright_restart_round08_s102@gpu3"
+        "upright_restart_round09_s101@gpu2",
+        "upright_restart_round09_s102@gpu3"
       ]
     },
     {
