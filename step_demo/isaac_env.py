@@ -15,7 +15,8 @@ from isaaclab_physx.physics import PhysxCfg
 from .config import StepConfig
 from .estimator import InertialEstimator
 from .tensor_math import rotate, heading
-from .rewards import edge_potential, potential_difference
+from .rewards import edge_potential, potential_difference, progress_increment, terminal_reward
+from .contacts import forbidden_front_contact
 
 
 def tensor(value):
@@ -39,7 +40,8 @@ class StepEnv(DirectRLEnv):
     def __init__(self, task: StepConfig, training: dict, asset_dir: Path, device='cuda:0'):
         self.task = task
         self.training = training
-        self.edge_reward = training.get('reward_version','legacy') == 'edge_v3'
+        self.progress_reward = training.get('reward_version') == 'progress_v4'
+        self.edge_reward = training.get('reward_version','legacy') in ('edge_v3','progress_v4')
         self.asset_dir = asset_dir.resolve()
         self.asset = json.loads((asset_dir / 'asset.json').read_text())
         cfg = StepEnvCfg()
@@ -86,6 +88,7 @@ class StepEnv(DirectRLEnv):
         self.max_lift_fraction = torch.zeros(n, 2, device=d)
         self.reward_progress = torch.zeros(n, device=d)
         self.previous_potential = torch.zeros(n, device=d)
+        self.best_progress = torch.zeros(n, device=d)
         self.motion_cost = torch.zeros(n, device=d)
         self.landing_cost = torch.zeros(n,device=d)
         self.previous_forward = torch.zeros(n, device=d)
@@ -231,8 +234,7 @@ class StepEnv(DirectRLEnv):
         self.front_lifted |= before_edge & above_edge
         self.front_cleared |= self.front_lifted & (x_min[:,:2] > self.edge_x[:,None] + .0005) & above_edge
         top_contact = (normal[:,:,2] > .02) & (z_min >= height-.002) & (x_min > self.edge_x[:,None]+.0005)
-        bad = ((normal[:,:2,:2].norm(dim=-1) > .01)
-               | ((normal[:,:2].norm(dim=-1) > .02) & (contact_x[:,:2] <= self.edge_x[:,None]+.0005)))
+        bad = forbidden_front_contact(normal[:,:2],contact_x[:,:2],x_min[:,:2],self.edge_x)
         self.front_hit |= bad.any(-1)
         landed = self.front_cleared & top_contact[:,:2]
         first_landing=landed & ~self.front_landed
@@ -258,6 +260,7 @@ class StepEnv(DirectRLEnv):
         self.failure = torch.where(self.failure == 0, failure, self.failure)
         self.force_peak = torch.maximum(self.force_peak, force.norm(dim=-1).amax(-1))
         self.platform_normal=normal;self.platform_contact_x=contact_x
+        self.wheel_contact_force=force
         self.wheel_speed_peak = torch.maximum(self.wheel_speed_peak,vel[:,self.wheels].abs().amax(-1))
         self.motion_cost += dt*(.003*vel[:,self.hips].square().mean(-1)
                                + .01*(vel[:,self.wheels].abs()-25.).clamp_min(0.).square().mean(-1))
@@ -316,6 +319,16 @@ class StepEnv(DirectRLEnv):
                                     + on_platform*pos[:,self.hips].square().mean(-1))
             reward -= 3*((self.failure>0) | (timeout & ~self.completed)).float()
             self.last_shaping = shaping
+            if self.progress_reward:
+                failed=(self.failure>0) | (timeout & ~self.completed)
+                gain,self.best_progress=progress_increment(self.best_progress,current,failed)
+                reward=gain+(2*self.new_landing+3*self.new_ascent)*(~failed)
+                reward+=terminal_reward(self.completed,failed,self.episode_length_buf*self.step_dt)
+                reward-=self.landing_cost+self.motion_cost
+                reward-=.02*(self.executed-self.last_actions).square().sum(-1)
+                reward-=self.step_dt*(2*(self.com[:,1]-self.origin_com[:,1]).square()+self.yaw.square()
+                                      +on_platform*pos[:,self.hips].square().mean(-1))
+                self.last_shaping=gain
         self.last_reward = reward.clone()
         if self.trace_ids is not None:
             self.last_trace=self.trace(self.trace_ids)
@@ -363,7 +376,7 @@ class StepEnv(DirectRLEnv):
             self.estimator.reset(env_ids)
             for name in ('front_lifted','front_cleared','front_landed','front_hit','rear_air_s','failure','phase',
                          'stop_time','completed','supported_top','max_lift_fraction','previous_forward','wheel_speed_peak','ascent_rewarded',
-                         'previous_potential','motion_cost'):
+                         'previous_potential','best_progress','motion_cost'):
                 getattr(self,name)[env_ids] = 0
             self.drive_start[env_ids]=float('nan')
             self.top_contact_age[env_ids]=1.
@@ -388,9 +401,11 @@ class StepEnv(DirectRLEnv):
             true_quaternion=tensor(self.robot.data.body_link_quat_w)[ids,self.lower_body].tolist(),
             reward=self.last_reward[ids].tolist(),motion_cost=self.motion_cost[ids].tolist(),
             potential=self.previous_potential[ids].tolist(),
+            progress_credit=self.best_progress[ids].tolist(),shaping_reward=self.last_shaping[ids].tolist() if self.edge_reward else [],
             yaw=self.yaw[ids].tolist(),yaw_rate=tensor(self.robot.data.body_link_ang_vel_w)[ids,self.lower_body,2].tolist(),
             wheel_min=self.minimum[ids].tolist(),wheel_max=self.maximum[ids].tolist(),
             platform_normal=self.platform_normal[ids].tolist(),platform_contact_x=self.platform_contact_x[ids].tolist(),
+            wheel_contact_force=self.wheel_contact_force[ids].tolist(),rear_air_s=self.rear_air_s[ids].tolist(),
             front_hit=self.front_hit[ids].tolist(),front_lifted=self.front_lifted[ids].tolist(),
             front_cleared=self.front_cleared[ids].tolist(),front_landed=self.front_landed[ids].tolist(),
             supported_top=self.supported_top[ids].tolist(),force_peak=self.force_peak[ids].tolist())

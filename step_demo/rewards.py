@@ -15,3 +15,21 @@ def potential_difference(previous, current, gamma, terminal):
     # A discounted closed motion cycle cannot farm shaping reward.
     current = torch.where(terminal, torch.zeros_like(current), current)
     return gamma*current-previous, current
+
+
+def progress_increment(previous_best, current, invalid):
+    """Pay for a bounded new task best once, including across height oscillations.
+
+    A 5 cm approach deadband excludes the observed 0--2 cm rear-hop failures.
+    Invalid terminal frames cannot earn new credit; earlier valid progress remains.
+    """
+    candidate=(current-.5).clamp_min(0.)
+    best=torch.maximum(previous_best, candidate)
+    best=torch.where(invalid,previous_best,best)
+    return best-previous_best,best
+
+
+def terminal_reward(success, failed, elapsed):
+    # With gamma=1 and no per-step time tax, failure has the same price at every
+    # time. Only successful completion has a small duration preference.
+    return success.float()*(20.-.1*elapsed)-5.*failed.float()
