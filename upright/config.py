@@ -39,6 +39,9 @@ class Config:
     ground_confirm_s: float = 0.18
     hold_s: float = 2.0
     balance_train_s: float = 8.0
+    short_cycle_fraction: float = 0.0  # training-only moving episode mixture
+    short_balance_min_s: float = 4.0
+    short_balance_max_s: float = 8.0
     balance_eval_s: float = 30.0
     balance_observation_age_cap_s: float = 0.0
     landing_timeout_s: float = 4.0
@@ -109,6 +112,10 @@ class Config:
             raise ValueError('Invalid environment/probe count; maximum 4096 environments')
         if not 0 < self.curriculum_pass_rate <= 1 or not 0 <= self.baseline_fraction < 1:
             raise ValueError('Invalid curriculum probabilities')
+        if not 0 <= self.short_cycle_fraction < 1:
+            raise ValueError('Short-cycle mixture must retain full-duration training episodes')
+        if self.short_cycle_fraction and not (self.hold_s <= self.short_balance_min_s <= self.short_balance_max_s < self.balance_train_s):
+            raise ValueError('Short-cycle duration must retain genuine support and be below the long duration')
         if not 0 <= self.low_speed <= .75 or not 0 <= self.initial_hip <= 1:
             raise ValueError('Curriculum range exceeds source/required bounds')
         for key, value in asdict(self).items():
@@ -126,7 +133,7 @@ class Config:
 
 
 def load_config(path=None, **overrides):
-    data = json.loads(Path(path or ROOT/'configs/round08.json').read_text())
+    data = json.loads(Path(path or ROOT/'configs/round09.json').read_text())
     unknown = data.keys() - {f.name for f in fields(Config)}
     if unknown:
         raise ValueError(f'Unknown configuration keys: {sorted(unknown)}')

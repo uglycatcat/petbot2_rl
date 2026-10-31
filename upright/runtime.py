@@ -32,6 +32,8 @@ class Runtime:
         self.balance_elapsed = z(); self.balance_seen = z().bool(); self.invoked = z().bool()
         self.episode_goal = z().bool(); self.true_cycle = z().bool(); self.failure = z().bool()
         self.balance_velocity_error = z()
+        self.balance_duration = torch.full((n,), cfg.balance_train_s, device=device)
+        self.short_cycle = z().bool()
         self.initial_hip = z(); self.takeover_motion = torch.zeros(n, 2, device=device)
         self.probe_level = None
         self.probe_duration = None
@@ -45,7 +47,7 @@ class Runtime:
         self.control.reset(ids)
         for name in ('episode_age', 'command_age', 'true_hold', 'longest_hold', 'peak_rise',
                      'peak_land', 'balance_elapsed', 'balance_seen', 'invoked', 'episode_goal',
-                     'true_cycle', 'failure', 'initial_hip', 'takeover_motion', 'balance_velocity_error'):
+                     'true_cycle', 'failure', 'initial_hip', 'takeover_motion', 'balance_velocity_error', 'short_cycle'):
             getattr(self, name)[ids] = 0
         level = self.course.level if self.probe_level is None else self.probe_level
         self.level[ids] = level
@@ -71,6 +73,15 @@ class Runtime:
         self.initial_hip[ids] = torch.where(moving, hip, 0.)
         command = torch.stack((torch.where(moving, velocity, 0.), torch.zeros_like(velocity)), -1)
         self.control.set_command(command, self.initial_hip[ids], ids)
+        # Sample only training episode timing. The actor never sees the future Space time.
+        duration = self.cfg.balance_train_s if self.probe_duration is None else self.probe_duration
+        self.balance_duration[ids] = torch.where(self.level[ids] == 1, self.cfg.hold_s, duration)
+        if self.probe_level is None and self.cfg.short_cycle_fraction > 0:
+            moving_ids = ids[moving]
+            short = self.uniform(len(moving_ids))[:, 0] < self.cfg.short_cycle_fraction
+            sampled = self.cfg.short_balance_min_s + (self.cfg.short_balance_max_s-self.cfg.short_balance_min_s)*self.uniform(len(moving_ids))[:, 0]
+            self.balance_duration[moving_ids] = torch.where(short, sampled, self.cfg.balance_train_s)
+            self.short_cycle[moving_ids] = short
 
     def before_action(self, s):
         c = self.control
@@ -102,9 +113,7 @@ class Runtime:
                 command = table[index]*self.stage_ranges[self.level[ids], :2]
                 command[:, 1] *= torch.where(ids % 2 == 0, 1., -1.)
             c.set_command(command, ids=ids); self.command_age[ids] = 0
-        duration = self.cfg.balance_train_s if self.probe_duration is None else self.probe_duration
-        limit = torch.where(self.level == 1, self.cfg.hold_s, duration)
-        landing = balance & (self.level > 0) & (self.balance_elapsed >= limit)
+        landing = balance & (self.level > 0) & (self.balance_elapsed >= self.balance_duration)
         c.request_land(s, landing.nonzero().flatten())
         c.update_motion_reference()
         return ready.nonzero().flatten()
@@ -134,9 +143,7 @@ class Runtime:
         self.failure |= fail
         self.episode_goal |= stage_goal & ~self.failure
         # A complete cycle requires a real sustained two-wheel interval and real four-wheel landing.
-        required_hold = torch.where(self.level == 1, self.cfg.hold_s, self.cfg.balance_train_s)
-        if self.probe_duration is not None:
-            required_hold = torch.where(self.level == 1, self.cfg.hold_s, self.probe_duration)
+        required_hold = self.balance_duration
         real_ground = (truth['front_z'].amax(-1) < .065) & rear_near & ~truth['body_contact']
         valid_cycle = c.completed & self.balance_seen & (self.longest_hold >= required_hold-.15) & real_ground & ~self.failure
         self.true_cycle |= valid_cycle
@@ -150,6 +157,8 @@ class Runtime:
         result['goal'] = self.episode_goal.clone()
         result['complete'] = self.true_cycle.clone()
         result['done'] = self.failure | self.episode_goal | c.completed
+        result['balance_required_s'] = self.balance_duration.clone()
+        result['short_cycle'] = self.short_cycle.clone()
         result['perception_mismatch'] = result['support_estimate'] != physical_support
         result['reason'] = c.reason.clone()
         result['reward'] = self.reward(s, truth, result, rear_near)
