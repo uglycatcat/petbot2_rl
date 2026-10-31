@@ -44,18 +44,18 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "53915e17663046990d80e01054412f7730d6eca8",
+      "verified_commit": "a7e7147b6d2866f3b7f7fff2a9f8774694eb1876",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round06_running_gpu2_gpu3_random_initialization_event_iteration",
-      "local_validation": "Round05 valid2x1000 plus7 independent evaluations,1 planned skip; no OOM/recovery.60s low complete32/32 both,basic19/32 and32/32; seed102 expanded16/32. Fixed-policy bounded reference development probe32/32; speed feedback16/32 rejected. Round06 slew0.5m/s2 and1.5rad/s2 only two-wheel references,raw-request scoring,full ordinary authority,cached traces,stage dwell permits acceleration.53 CPU and PhysX/fresh8-update same-run4-to8 recovery/2048 scale/reload accepted. Seeds101/102 independently random1000 updates onGPU2/3. No historical initialization,timers,goals or MuJoCo approval.",
+      "status": "restart_round07_running_gpu2_gpu3_random_initialization_event_iteration",
+      "local_validation": "Round06 valid2x1000,6 original independent evaluations,2 planned skips,1 supplemental. No OOM/recovery.60s low complete32/32 both,basic16/32 and31/32; seed101 expanded0.20m/s,0.50rad/s complete/basic32/32. Signed smoothed velocity and landing measured-entry-speed Huber costs added; controller,criteria and curriculum unchanged.59 CPU,PhysX,8-update same-run4-to8 recovery,2048 scale,reload and fixed-policy reward neutrality accepted. Seeds101/102 independently random1000 updates onGPU2/3. Small-speed bias,landing quality,actual wheel overshoot and0.75 goal unresolved. No historical initialization,timers,goals or MuJoCo approval.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round06_s101@gpu2",
-        "upright_restart_round06_s102@gpu3"
+        "upright_restart_round07_s101@gpu2",
+        "upright_restart_round07_s102@gpu3"
       ]
     },
     {
