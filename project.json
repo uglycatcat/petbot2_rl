@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round09_engineering",
-  "training_enabled": false,
+  "phase": "round09_ready",
+  "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round08 only partially restores LAND; add training-only short moving cycles with random Space timing while retaining full-duration probes and evaluation. Engineering pending.",
+  "reason": "Round09 timing mixture and budget-reachable gated curriculum accepted: fixed-policy mixed physical rollouts, exact60s parity, scratch/recovery/scale/reload valid. Capability awaits independent scratch trials.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -15,13 +15,13 @@
     "series": "upright_restart_20261030",
     "round": 9,
     "name": "upright_restart_round09",
-    "status": "engineering_pending"
+    "status": "ready_random_initialization"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": false,
+  "engineering_validated": true,
   "implementation_review": "docs/round01_implementation.md",
-  "cpu_contract_tests_passed": 59,
+  "cpu_contract_tests_passed": 67,
   "allowed_host_gpus": [
     2,
     3
