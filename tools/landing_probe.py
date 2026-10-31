@@ -16,13 +16,20 @@ def main():
     p.add_argument('--asset-dir', type=Path, required=True)
     p.add_argument('--model-dir', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
-    p.add_argument('--mode', choices=('replay', 'tails', 'brake'), required=True)
+    p.add_argument('--mode', choices=('replay', 'tails', 'brake', 'transition'), required=True)
+    p.add_argument('--hip-rate', type=float, default=20.)
+    p.add_argument('--wheel-scale', type=float, default=1.)
+    p.add_argument('--horizon-s', type=float, default=2.)
     AppLauncher.add_app_launcher_args(p)
     a = p.parse_args()
+    if not 0 < a.hip_rate <= 20. or not 0 < a.wheel_scale <= 1. or not 0 < a.horizon_s <= 15.:
+        p.error('Diagnostic rates/scales/horizon must stay within the original limits')
     rows = [json.loads(line) for line in (a.evaluation/'trace.jsonl').open()]
     n = len(rows[0]['episode'])
     landing_steps = [next(k for k, row in enumerate(rows)
                          if row['episode'][i] == 1 and all(row['front_landed'][i])) for i in range(n)]
+    first_end = [max(k for k, row in enumerate(rows) if row['episode'][i] == 1) for i in range(n)]
+    transition_step = max(landing_steps)+1
     # Brake intervention starts strictly after the recorded required drive.
     # Missing entries keep their original actions, including real rear failures.
     brake_steps = [next((k for k, row in enumerate(rows)
@@ -62,16 +69,27 @@ def main():
                     hip_actual=tensor(self.robot.data.joint_pos)[:, self.hips].tolist(),
                     wheel_actual=tensor(self.robot.data.joint_vel)[:, self.wheels].tolist()))+'\n')
             env._capture = types.MethodType(capture, env)
-            count = 200 if a.mode == 'tails' else len(rows)
+            count = (round(a.horizon_s/env.step_dt) if a.mode == 'transition'
+                     else 200 if a.mode == 'tails' else len(rows))
             with torch.inference_mode():
                 for step in range(count):
+                    if a.mode == 'transition' and step == transition_step:
+                        # Finite open-loop physical intervention only. Shared timing
+                        # preserves every original prefix through the last landing.
+                        env.training['hip_target_rate_rad_s'] = a.hip_rate
                     values = []
                     for i in range(n):
-                        prefix = (a.mode == 'replay' or step <=
-                                  (brake_steps[i] if a.mode == 'brake' else landing_steps[i]))
+                        prefix_end = (transition_step-1 if a.mode == 'transition'
+                                      else brake_steps[i] if a.mode == 'brake' else landing_steps[i])
+                        prefix = a.mode == 'replay' or step <= prefix_end
                         if prefix:
                             value = rows[step]['action'][i]
                             requested[i] = rows[step]['hip_target'][i]
+                        elif a.mode == 'transition':
+                            # Never feed another reset episode's actions into a
+                            # surviving first episode after a changed trajectory.
+                            raw = rows[min(step,first_end[i])]['action'][i]
+                            value = [raw[0], (raw[1]+1.)*a.wheel_scale-1.]
                         elif a.mode == 'brake':
                             value = [0., -1.]
                         else:
@@ -88,7 +106,9 @@ def main():
                     for i, result in enumerate(results):
                         if d['episode'][i] != 1 or result['terminal'] is not None:
                             continue
-                        if a.mode == 'replay' or step <= (brake_steps[i] if a.mode == 'brake' else landing_steps[i]):
+                        prefix_end = (transition_step-1 if a.mode == 'transition'
+                                      else brake_steps[i] if a.mode == 'brake' else landing_steps[i])
+                        if a.mode == 'replay' or step <= prefix_end:
                             for key in ('com', 'joint_position', 'joint_velocity', 'estimated_com'):
                                 result['max_prefix_physics_error'] = max(result['max_prefix_physics_error'],
                                     max(abs(x-y) for x, y in zip(d[key][i], rows[step][key][i])))
@@ -102,6 +122,8 @@ def main():
                         break
         (a.output/'result.json').write_text(json.dumps(dict(status='passed',
             kind='finite_diagnostic_not_training', mode=a.mode, source_sha256=env.asset['source_sha256'],
+            intervention=dict(after_control_step=transition_step, hip_rate=a.hip_rate,
+                              wheel_scale=a.wheel_scale, horizon_s=a.horizon_s) if a.mode == 'transition' else None,
             maximum_prefix_error=max(r['max_prefix_physics_error'] for r in results), cases=results), indent=2)+'\n')
         env.close()
     except BaseException:
