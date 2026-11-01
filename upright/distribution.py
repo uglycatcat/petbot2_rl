@@ -21,13 +21,14 @@ def parameters(x, span: float = 31.):
 class UprightBetaDistribution(BetaDistribution):
     """State-dependent spread, initialized around the physical default configuration.
 
-    Smooth alpha/beta bounds (1,32) prevent vanishing exploration.
+    Smooth configurable alpha/beta bounds prevent vanishing exploration.
+    The initial physical mean/std are invariant to the bound.
     Sampling, likelihood, deterministic evaluation and export share the same transform.
     Learning efficacy is deliberately separate from these numerical contracts.
     """
     def __init__(self, output_dim, initial_mean, initial_std, shape_cap=32.):
         super().__init__(output_dim, action_range=(-1.0, 1.0))
-        if shape_cap not in (32.,128.): raise ValueError("Unsupported Beta shape cap")
+        if shape_cap not in (32.,128.,512.): raise ValueError("Unsupported Beta shape cap")
         self.span=float(shape_cap)-1.
         mean = torch.as_tensor(initial_mean, dtype=torch.float32)
         std = torch.as_tensor(initial_std, dtype=torch.float32)

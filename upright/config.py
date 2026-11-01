@@ -20,6 +20,7 @@ class Config:
     rollout_steps: int = 32
     learning_rate: float = 0.0003
     gae_lambda: float | None = None  # None retains legacy physical-time scaling
+    beta_shape_cap: float = 128.0  # limits minimum exploration; does not limit physical targets
     critic_task_state: bool = False  # training-only state; never added to actor input
     checkpoint_interval: int = 100
     probe_interval: int = 100
@@ -93,6 +94,8 @@ class Config:
         return len(self.motion_stages())+1
 
     def validate(self):
+        if self.beta_shape_cap not in (128., 512.):
+            raise ValueError("Unsupported Beta exploration shape cap")
         if type(self.critic_task_state) is not bool:
             raise ValueError('critic_task_state must be boolean')
         if self.critic_task_state and any(getattr(self, key) <= 0 for key in
@@ -159,7 +162,7 @@ class Config:
 
 
 def load_config(path=None, **overrides):
-    data = json.loads(Path(path or ROOT/'configs/round17.json').read_text())
+    data = json.loads(Path(path or ROOT/'configs/round18.json').read_text())
     unknown = data.keys() - {f.name for f in fields(Config)}
     if unknown:
         raise ValueError(f'Unknown configuration keys: {sorted(unknown)}')

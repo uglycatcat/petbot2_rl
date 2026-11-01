@@ -15,7 +15,7 @@ def runner_config(cfg, model, device):
         obs_groups={'actor': ['policy'], 'critic': ['policy', 'critic_task'] if cfg.critic_task_state else ['policy']},
         actor=dict(class_name='MLPModel', hidden_dims=[128, 128], activation='elu', obs_normalization=True,
             distribution_cfg=dict(class_name='upright.distribution:UprightBetaDistribution',
-                                  initial_mean=[home, 0., 0.], initial_std=[.35, .45, .15], shape_cap=128.)),
+                                  initial_mean=[home, 0., 0.], initial_std=[.35, .45, .15], shape_cap=cfg.beta_shape_cap)),
         critic=dict(class_name='MLPModel', hidden_dims=[256, 128], activation='elu', obs_normalization=True),
         algorithm=dict(class_name='PPO', value_loss_coef=1., use_clipped_value_loss=True, clip_param=.2,
             entropy_coef=.001, num_learning_epochs=5, num_mini_batches=4, learning_rate=cfg.learning_rate,
