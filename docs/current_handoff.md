@@ -1,10 +1,10 @@
-# 当前交接：upright第13轮高范围稳定性改善，第14轮达速强化已从零启动
+# 当前交接：upright第14轮无一致收益，第15轮换向强化已从零启动
 
 更新：2026-11-01。先读AGENTS.md，再读本页。upright按最新GPU2/3从零训练授权执行，旧第26批不恢复；完成事件先核查实际状态再分析迭代。
 
 ## 最新指令与执行边界
 
-用户持续授权单Actor–Critic从零训练、评估和事件迭代，仅GPU2/3。第13轮2训练/8独立评估有效，无缺失/显存中断/恢复；低速完整各32/32、基本32/30，±.75请求60秒完整各24/32、基本24/10。参考达到±.75后实际均速约+.49/−.56和+.44/−.46m/s，双向满速未通过；16个失败均两轮阶段，实测轮速峰值50.94rad/s，见[终局](upright_restart_round13_results.md)。第14轮固定15d9a97仅扩大正速度奖励尺度，工程有效后GPU2/3两种子各2048×1000随机初始化启动，见[执行](upright_restart_round14_execution.md)。无历史权重、周期定时器/goal。
+用户持续授权单Actor–Critic从零训练、评估和事件迭代，仅GPU2/3。第14轮2训练/8独立评估有效，无缺失/显存中断/恢复；低速完整各32/32、基本31/30，高范围完整0/32、28/32、基本0/21。28次真实后仰及8次前轮回落均两轮阶段，第二份实际前+.433/后−.503，双向.75未达；实测轮速峰值81.323rad/s，见[终局](upright_restart_round14_results.md)。第15轮固定e673e87恢复第13轮奖励宽度并补长回合双向直线换向，工程通过后GPU2/3两种子各2048×1000随机初始化，见[执行](upright_restart_round15_execution.md)。无历史权重、周期定时器/goal。
 
 用户最新纠正：需求与期望效果已明确，早期已实现基本起立、两轮与落地，应核查并复用有效代码和经验，重点是训练代码迭代效率，不必全部重新设计。此前将整个旧实现永久排除的解释范围过大，已纠正；完整封存仍保留；已选择性复用静止v5资产/分布代码并实现独立完整循环。新训练仍禁止历史权重和冻结父依赖。
 
@@ -19,13 +19,13 @@
 
 ## 当前工程实际状态
 
-`demo_project/upright_rl_demo`当前配置configs/round14.json，83项容器CPU、PhysX固定策略仅奖励变化且物理/动作/评分逐项相同、128环境4→8同次恢复、独立重载及默认入口2048环境2更新有效。正速度奖励尺度.1→.3m/s，峰值仍1/秒；有界速度成本及小误差惩罚、角速度奖励、控制/物理、LAND速度继承/髋归位/交接、课程/探针/评分保持。固定旧网络只作工程对照，不能用于新PPO初始化。
+`demo_project/upright_rl_demo`当前配置configs/round15.json，88项CPU、固定第13轮原评估物理/动作/奖励/评分逐项一致、实际训练换向采样PhysX路径、128环境4→8恢复、独立重载及默认入口2048环境2更新有效。速度正奖励宽度回到.1，成本上界1.5保持；第3级起一半合格长回合用随机幅度/首方向的直线交替，其他混合长回合、短回合、低课程和确定性验证保持。计划不进入actor，固定网络只作工程检查，不作PPO初始化。
 
 入口见[demo README](../demo_project/upright_rl_demo/README.md)、[需求基线](current_scope.md)、[重建计划](../demo_project/upright_rl_demo/docs/rebuild_plan.md)、[架构边界](../demo_project/upright_rl_demo/docs/architecture.md)。重整验收见[upright_reorganization_20261030.md](upright_reorganization_20261030.md)。
 
 ## 后续工作顺序
 
-**新编号：** 系列upright_restart_20261030，当前upright_restart_round14；控制目录`demo_project/runs/_upright_restart_round14`，运行`upright_restart_round14_s101`/`upright_restart_round14_s102`。实际PPO、随机初始化和独立run_id已核验，状态与进程为准，运行中无eval_finished正常。第13轮256独立回合、80开发探针及全部失败已审查，完成事件已处理，不重复启动。
+**新编号：** 系列upright_restart_20261030，当前upright_restart_round15；控制目录`demo_project/runs/_upright_restart_round15`，运行`upright_restart_round15_s101`/`upright_restart_round15_s102`。实际PPO、随机初始化、空历史模型列表及独立run_id已核验；运行中无eval_finished正常。第14轮256独立回合、80开发探针已审查，旧事件已处理，不重复启动。
 
 用户最新明确：需求已经清晰，历史实现的筛选和设计由agent判断；优先以较短、多批次demo训练快速验证实现。1000更新不是最终交付上限，正式从零流程可按收敛和验收需要使用10000或更多更新。本次为预算与职责澄清，未重新启动已取消队列。
 

@@ -44,18 +44,18 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "15d9a9725452969f86e9c7750c0a4e7cc9fb8a0c",
+      "verified_commit": "e673e8705d2a922a89d3a52100d330319c71cd17",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round14_running_gpu2_gpu3_random_initialization_event_iteration",
-      "local_validation": "Round13 valid2x1000 and8 independent evaluations,no missing/OOM/recovery. Low60s complete32/32 each,basic32/30. High0.75-request60s complete24/24 of32,basic24/10;15 front returns and1 actual fall,all BALANCE. Reference-settled actual mean forward0.49/0.44,reverse-0.56/-0.46m/s; full speed unproven. Actual wheel peak50.94rad/s. Round14 widens only positive velocity reward scale0.1 to0.3m/s, preserves peak/capped costs/control/physics/scoring/course.83 CPU, exact physical parity with only reward changes,4-to8 recovery,reload,default-entry2048 scale accepted. Fresh seeds101/102 GPU2/3,2048x1000,actual PPO and identities verified. No historical weights,timers,goals; full0.75,symmetry,overshoot,MuJoCo unresolved.",
+      "status": "restart_round15_running_gpu2_gpu3_random_initialization_event_iteration",
+      "local_validation": "Round14 valid2x1000 and8 independent evaluations,no missing/OOM/recovery. Low60s complete32 each,basic31/30. High0.75-request60s complete0/28,basic0/21 of32;28 actual backward falls and8 front returns,all BALANCE. Seed102 settled actual forward0.433,reverse-0.503m/s; full speed unproven. Actual wheel peak81.323rad/s even in a completed episode. Round15 restores round13 positive speed reward width0.1 and adds random-amplitude symmetric straight reversals to half eligible long episodes,keeping mixed/short/regression samples and all control/physics/evaluation.88 CPU,exact original round13 physical/reward/scoring parity,actual training-command PhysX path,4-to8 recovery,reload,default-entry2048 scale accepted. Fresh seeds101/102 GPU2/3,2048x1000,actual PPO and identities verified. No historical training weights,timers,goals; full capability and MuJoCo unresolved.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round14_s101@gpu2",
-        "upright_restart_round14_s102@gpu3"
+        "upright_restart_round15_s101@gpu2",
+        "upright_restart_round15_s102@gpu3"
       ]
     },
     {

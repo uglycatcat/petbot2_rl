@@ -1,6 +1,6 @@
 # 项目文档索引
 
-- 当前：**upright第13轮高范围稳定性改善，第14轮正速度奖励扩宽已在GPU2/3从零启动**。先看[当前交接](current_handoff.md)、[第13轮终局](upright_restart_round13_results.md)、[第14轮执行](upright_restart_round14_execution.md)和[需求基线](current_scope.md)。双向.75实际能力仍未通过；旧第26批不恢复，禁止历史权重初始化、周期定时器和goal。
+- 当前：**upright第14轮无一致收益，第15轮换向强化已在GPU2/3从零启动**。先看[当前交接](current_handoff.md)、[第14轮终局](upright_restart_round14_results.md)、[第15轮执行](upright_restart_round15_execution.md)和[需求基线](current_scope.md)。双向.75、稳定性和全部能力仍未通过；旧第26批不恢复，禁止历史权重初始化、周期定时器和goal。
 
 
 先读根目录 [AGENTS.md](../AGENTS.md) 的硬规则和里程碑，再读[当前交接](current_handoff.md)。只按手头问题打开下面相应文档；历史实验与 `runs/` 不需要全读。根目录 README 用于部署和使用，不承载进度。
