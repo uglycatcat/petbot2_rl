@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round17_engineering",
-  "training_enabled": false,
+  "phase": "round17_ready",
+  "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round16 improves completion but not speed. Round17 adds24 bounded task/reward-memory features to training critic only; actor195, control, rewards, physics, evaluation remain unchanged. Engineering pending.",
+  "reason": "Round17 actor-isolated24-dim critic task memory accepted:98 CPU, exact fixed-round16 original physical/reward/scoring parity and actor isolation, scratch recovery/reload/default2048 scale. Actor195 and critic219 verified. Fresh1000-update capability trials required.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -15,11 +15,11 @@
     "series": "upright_restart_20261030",
     "round": 17,
     "name": "upright_restart_round17",
-    "status": "engineering_pending"
+    "status": "ready_random_initialization"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": false,
+  "engineering_validated": true,
   "implementation_review": "docs/round01_implementation.md",
   "cpu_contract_tests_passed": 98,
   "allowed_host_gpus": [
