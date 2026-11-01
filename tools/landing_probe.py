@@ -16,7 +16,7 @@ def main():
     p.add_argument('--asset-dir', type=Path, required=True)
     p.add_argument('--model-dir', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
-    p.add_argument('--mode', choices=('replay', 'tails', 'brake', 'transition'), required=True)
+    p.add_argument('--mode', choices=('replay', 'tails', 'brake', 'transition', 'support'), required=True)
     p.add_argument('--hip-rate', type=float, default=20.)
     p.add_argument('--wheel-scale', type=float, default=1.)
     p.add_argument('--horizon-s', type=float, default=2.)
@@ -58,7 +58,9 @@ def main():
         training = json.loads(a.training_config.read_text()); training['num_envs'] = n
         env = StepEnv(load_config(model_dir=a.model_dir), training, a.asset_dir, a.device)
         env.trace_ids = list(range(n)); env.reset()
-        results = [dict(env=i, case=cases[i % len(cases)] if a.mode == 'tails' else None,
+        results = [dict(env=i, case=(cases[i % len(cases)] if a.mode == 'tails' else
+                            ['hold_original_target','home1_wheel8','home3_wheel12','home6_wheel12'][i%4]
+                            if a.mode == 'support' else None),
                         max_prefix_physics_error=0., ever_all_top=False, terminal=None,
                         max_phase=0, max_rear_speed=0.) for i in range(n)]
         requested = [0.] * n
@@ -76,18 +78,21 @@ def main():
                         rear_peaks[i] = max(rear_peaks[i], value)
                 sub.write(json.dumps(dict(counter=counter, episode=self.episode_serial.tolist(),
                     failure=self.failure.tolist(), rear_air_s=self.rear_air_s.tolist(),
+                    rear_clearance=self.rear_clearance.tolist(),
                     net_force=self.wheel_contact_force.tolist(), platform_normal=self.platform_normal.tolist(),
                     platform_contact_x=self.platform_contact_x.tolist(),
                     front_touched=self.front_touched.tolist(),supported_top=self.supported_top.tolist(),
                     body_weight=(tensor(self.robot.data.body_mass).sum(-1)*9.81).tolist(),
                     wheel_z=self.minimum[:, :, 2].tolist(),
+                    wheel_body_position=tensor(self.robot.data.body_link_pos_w)[:,self.wheel_bodies].tolist(),
+                    wheel_body_quaternion=tensor(self.robot.data.body_link_quat_w)[:,self.wheel_bodies].tolist(),
                     wheel_min_x=(self.minimum[:, :, 0]-self.edge_x[:, None]).tolist(),
                     hip_target=self.hip_target.tolist(), wheel_target=self.wheel_target.tolist(),
                     hip_actual=tensor(self.robot.data.joint_pos)[:, self.hips].tolist(),
                     hip_velocity=tensor(self.robot.data.joint_vel)[:, self.hips].tolist(),
                     wheel_actual=tensor(self.robot.data.joint_vel)[:, self.wheels].tolist()))+'\n')
             env._capture = types.MethodType(capture, env)
-            count = (round(a.horizon_s/env.step_dt) if a.mode == 'transition'
+            count = (round(a.horizon_s/env.step_dt) if a.mode in ('transition','support')
                      else 200 if a.mode == 'tails' else len(rows))
             with torch.inference_mode():
                 for step in range(count):
@@ -97,12 +102,24 @@ def main():
                         env.training['hip_target_rate_rad_s'] = a.hip_rate
                     values = []
                     for i in range(n):
-                        prefix_end = (transition_step-1 if a.mode == 'transition'
+                        prefix_end = (first_end[i] if a.mode == 'support' else transition_step-1 if a.mode == 'transition'
                                       else brake_steps[i] if a.mode == 'brake' else landing_steps[i])
                         prefix = a.mode == 'replay' or step <= prefix_end
                         if prefix:
                             value = rows[step]['action'][i]
                             requested[i] = rows[step]['hip_target'][i]
+                        elif a.mode == 'support':
+                            # Finite engineering continuation only; original actions
+                            # stop at this environment's original first termination.
+                            # No reset-episode actions or weights enter this tail.
+                            if i % 4 == 0:
+                                value = rows[first_end[i]]['action'][i]
+                            else:
+                                rate = [0.,1.,3.,6.][i%4]
+                                requested[i] += max(-rate*env.step_dt,min(rate*env.step_dt,-requested[i]))
+                                speed = 8. if i%4==1 else 12.
+                                if env.phase[i] >= 3: speed = 0.
+                                value = [requested[i]/1.2 if requested[i]>=0 else requested[i],speed/12.5-1.]
                         elif a.mode == 'transition':
                             # Never feed another reset episode's actions into a
                             # surviving first episode after a changed trajectory.
@@ -124,7 +141,7 @@ def main():
                     for i, result in enumerate(results):
                         if d['episode'][i] != 1 or result['terminal'] is not None:
                             continue
-                        prefix_end = (transition_step-1 if a.mode == 'transition'
+                        prefix_end = (first_end[i] if a.mode == 'support' else transition_step-1 if a.mode == 'transition'
                                       else brake_steps[i] if a.mode == 'brake' else landing_steps[i])
                         if a.mode == 'replay' or step <= prefix_end:
                             for key in ('com', 'joint_position', 'joint_velocity', 'estimated_com'):

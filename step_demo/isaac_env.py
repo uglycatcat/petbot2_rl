@@ -19,6 +19,7 @@ from .rewards import (edge_potential, potential_difference, progress_increment, 
                       staged_progress, component_increment, settled_progress, touch_costs)
 from .progress import drive_memory
 from .contacts import forbidden_front_contact, early_top_contact
+from .terrain import convex_edges, wheel_terrain_clearance, rear_airborne
 
 
 def tensor(value):
@@ -65,6 +66,8 @@ class StepEnv(DirectRLEnv):
         self.joint_names = [n.removesuffix('_1') for n in self.robot.joint_names]
         self.estimator = InertialEstimator(self.num_envs, self.device, self.asset['source_bodies'], self.joint_names)
         self.vertices = [torch.tensor(self.asset['wheel_vertices'][name], device=self.device) for name in self.wheel_names]
+        self.rear_edges = [torch.tensor(convex_edges(self.asset['wheel_vertices'][name]),
+                                       dtype=torch.long, device=self.device) for name in self.wheel_names[2:]]
         n = self.num_envs; d = self.device
         self.actions = torch.zeros(n, 2, device=d); self.actions[:, 1] = -1
         self.raw_actions = self.actions.clone(); self.last_actions = self.actions.clone()
@@ -80,6 +83,7 @@ class StepEnv(DirectRLEnv):
         self.front_touched = torch.zeros_like(self.front_lifted)
         self.front_hit = torch.zeros(n, dtype=torch.bool, device=d)
         self.rear_air_s = torch.zeros(n, 2, device=d)
+        self.rear_clearance = torch.zeros(n, 2, device=d)
         self.failure = torch.zeros(n, dtype=torch.long, device=d)
         self.phase = torch.zeros(n, dtype=torch.long, device=d)
         self.drive_start = torch.full((n,), float('nan'), device=d)
@@ -233,6 +237,10 @@ class StepEnv(DirectRLEnv):
             axes = rotate(body_q[:,body,None,:].expand(-1,3,-1),basis)
             points = torch.matmul(verts,axes) + body_p[:, body, None, :]
             self.minimum[:, i] = points.amin(1)-.0001; self.maximum[:, i] = points.amax(1)+.0001
+            if i >= 2:
+                self.rear_clearance[:, i-2] = wheel_terrain_clearance(points, self.rear_edges[i-2],
+                    self.edge_x, self.scene.env_origins[:,1], self.task.terrain.height_m,
+                    self.task.terrain.platform_length_m, self.task.terrain.platform_width_m/2)
         force = torch.zeros(self.num_envs, 4, 3, device=self.device)
         normal = torch.zeros_like(force); contact_x = torch.full((self.num_envs,4),float('nan'),device=self.device)
         for name, sensor in self.contacts:
@@ -265,9 +273,8 @@ class StepEnv(DirectRLEnv):
             impact,motion = touch_costs(normal[:,:2,2],touch,mass.sum(-1)*9.81,
                 vel[:,self.hips],self.front_touched,self.supported_top.all(-1),dt)
             self.touch_impact_cost += impact; self.touch_motion_cost += motion
-        rear_surface = torch.where(x_min[:,2:] > self.edge_x[:,None], height, 0.)
         # Contactless frames near the terrain are not flight. A 20 ms gap is provisional.
-        rear_air = (z_min[:,2:] > rear_surface+.004) & (force[:,2:].norm(dim=-1) < .02)
+        rear_air = rear_airborne(self.rear_clearance, force[:,2:])
         self.rear_air_s = torch.where(rear_air, self.rear_air_s+dt, 0.)
         gravity_z = rotate(body_q[:,self.lower_body], torch.tensor([0.,0.,1.],device=self.device).expand(self.num_envs,-1))[:,2]
         body_hit = tensor(self.body_contact.data.net_forces_w).norm(dim=-1).amax(-1) > .5
@@ -434,7 +441,7 @@ class StepEnv(DirectRLEnv):
         self.robot.write_joint_velocity_to_sim_index(velocity=torch.zeros_like(joints),env_ids=env_ids)
         if hasattr(self,'failure'):
             self.estimator.reset(env_ids)
-            for name in ('front_lifted','front_cleared','front_landed','front_touched','front_hit','rear_air_s','failure','phase',
+            for name in ('front_lifted','front_cleared','front_landed','front_touched','front_hit','rear_air_s','rear_clearance','failure','phase',
                          'stop_time','completed','supported_top','max_lift_fraction','previous_forward','wheel_speed_peak','ascent_rewarded',
                          'previous_potential','best_progress','motion_cost','stage_credit','drive_support_gap','near_top','relift_cost','home_hold',
                          'touch_impact_cost','touch_motion_cost'):
@@ -472,6 +479,7 @@ class StepEnv(DirectRLEnv):
             wheel_min=self.minimum[ids].tolist(),wheel_max=self.maximum[ids].tolist(),
             platform_normal=self.platform_normal[ids].tolist(),platform_contact_x=self.platform_contact_x[ids].tolist(),
             wheel_contact_force=self.wheel_contact_force[ids].tolist(),rear_air_s=self.rear_air_s[ids].tolist(),
+            rear_clearance=self.rear_clearance[ids].tolist(),
             front_hit=self.front_hit[ids].tolist(),front_lifted=self.front_lifted[ids].tolist(),
             front_cleared=self.front_cleared[ids].tolist(),front_landed=self.front_landed[ids].tolist(),
             supported_top=self.supported_top[ids].tolist(),force_peak=self.force_peak[ids].tolist())
