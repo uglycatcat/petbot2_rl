@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round16_engineering",
-  "training_enabled": false,
+  "phase": "round16_ready",
+  "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round15 retains low-range cycle but high-speed bias and arc failures remain. Round16 changes only bounded velocity-cost tail to rational, preserving small-error cost and support margin; engineering pending.",
+  "reason": "Round16 rational velocity-cost tail accepted:91 CPU, exact fixed-round15 physical/action/observation/termination/scoring parity, independently recomputed reward, scratch recovery/reload/default-entry2048 scale valid. Fresh1000-update trials required for capability.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -15,11 +15,11 @@
     "series": "upright_restart_20261030",
     "round": 16,
     "name": "upright_restart_round16",
-    "status": "engineering_pending"
+    "status": "ready_random_initialization"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": false,
+  "engineering_validated": true,
   "implementation_review": "docs/round01_implementation.md",
   "cpu_contract_tests_passed": 91,
   "allowed_host_gpus": [
