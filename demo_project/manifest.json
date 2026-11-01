@@ -44,18 +44,18 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "f715a52116ca5738063e2a6ca19b841cd1045df6",
+      "verified_commit": "7dbae2e03a1591702ddef9d1441503fbb7a8e772",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round16_running_gpu2_gpu3_random_initialization_event_iteration",
-      "local_validation": "Round15 valid2x1000 and8 independent evaluations,no missing/OOM/recovery. Low60s complete32 each,basic32/31. High0.75-request60s complete21/29,basic19/29 of32;13 front returns and1 actual backward fall,all BALANCE. Settled forward0.500/0.446,reverse-0.552/-0.510m/s,full speed unproven. Actual wheel peak68.013rad/s. Round16 changes only bounded speed-cost tail from exponential to rational,retaining small-error cost,1.5/s cap,support margin,reversal sampler,control,physics,scoring.91 CPU,exact physical/action/observation/termination/scoring parity with fixed round15 policy,independent reward recomputation,4-to8 recovery,reload,default-entry2048 scale accepted. Fresh seeds101/102 GPU2/3,2048x1000,actual PPO and identities verified. No historical training weights,timers,goals; full capability and MuJoCo unresolved.",
+      "status": "restart_round17_running_gpu2_gpu3_random_initialization_event_iteration",
+      "local_validation": "Round16 valid2x1000/8 independent evals,no missing/OOM/recovery. Low60s complete32 each,basic32/31; high complete28/30,basic28/20,6 BALANCE front returns. Settled forward0.491/0.435,reverse-0.534/-0.479m/s,full speed unproven. Actual wheel peak84.177rad/s. Round17 adds24 bounded task/reward-memory features to critic only:219 critic,195 actor/ONNX. Rewards,physics,control,scenario and evaluation unchanged.98 CPU after correcting one fixture,exact fixed-round16 original trace/reward/scoring parity and actor isolation,4-to8 recovery,reload,default2048 scale accepted. Fresh GPU2/3 seeds101/102 x1000 actual PPO and random initialization verified. No historical training weights,timers,goals; full capability/MuJoCo unresolved.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round16_s101@gpu2",
-        "upright_restart_round16_s102@gpu3"
+        "upright_restart_round17_s101@gpu2",
+        "upright_restart_round17_s102@gpu3"
       ]
     },
     {
