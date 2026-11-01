@@ -20,6 +20,7 @@ from .rewards import (edge_potential, potential_difference, progress_increment, 
 from .progress import drive_memory
 from .contacts import forbidden_front_contact, early_top_contact
 from .terrain import convex_edges, wheel_terrain_clearance, rear_airborne
+from .critic_state import CRITIC_STATE_FIELDS, reward_state
 
 
 def tensor(value):
@@ -43,6 +44,7 @@ class StepEnv(DirectRLEnv):
     def __init__(self, task: StepConfig, training: dict, asset_dir: Path, device='cuda:0'):
         self.task = task
         self.training = training
+        self.reward_state_critic = training.get('critic_observation', 'policy') == 'reward_state_v11'
         self.smooth_braking = training.get('reward_version') == 'brake_v10'
         self.touch_reward = training.get('reward_version') in ('touch_v8','brake_v10')
         self.settle_reward = training.get('reward_version') in ('settle_v6','touch_v8','brake_v10')
@@ -52,6 +54,7 @@ class StepEnv(DirectRLEnv):
         self.asset_dir = asset_dir.resolve()
         self.asset = json.loads((asset_dir / 'asset.json').read_text())
         cfg = StepEnvCfg()
+        cfg.state_space = len(CRITIC_STATE_FIELDS) if self.reward_state_critic else 0
         cfg.seed = training['seed']; cfg.scene.num_envs = training['num_envs']
         cfg.decimation = training['decimation']; cfg.sim.render_interval = cfg.decimation
         cfg.sim.device = device; cfg.episode_length_s = task.acceptance.timeout_s
@@ -410,7 +413,22 @@ class StepEnv(DirectRLEnv):
             tensor(self.robot.data.joint_vel), self.hips, self.wheels, tensor(self.imu.data.ang_vel_b), self.executed)
         if not torch.isfinite(obs).all():
             raise RuntimeError('Nonfinite sensor observation')
-        return {'policy':obs.clamp(-100.,100.)}
+        observations = {'policy':obs.clamp(-100.,100.)}
+        if self.reward_state_critic:
+            state = self._critic_reward_state()
+            if not torch.isfinite(state).all():
+                raise RuntimeError('Nonfinite critic reward state')
+            observations['critic'] = state
+        return observations
+
+    def _critic_reward_state(self):
+        a = self.task.acceptance
+        return reward_state(credit=self.stage_credit, elapsed=self.episode_length_buf*self.step_dt,
+            timeout=a.timeout_s, phase=self.phase, supported_top=self.supported_top,
+            front_landed=self.front_landed, forward=self.com[:,0]-self.origin_com[:,0],
+            drive_start=self.drive_start, drive_distance=a.post_climb_distance_m,
+            support_gap=self.drive_support_gap, home_hold=self.home_hold,
+            stop_time=self.stop_time, stop_hold=a.stop_hold_s, near_top=self.near_top)
 
     def _reset_idx(self, env_ids):
         if env_ids is None:
@@ -457,6 +475,7 @@ class StepEnv(DirectRLEnv):
 
     def trace(self, ids):
         return dict(attempt=self.attempt_id,episode=self.episode_serial[ids].tolist(),phase=self.phase[ids].tolist(),failure=self.failure[ids].tolist(),
+            critic_reward_state=self._critic_reward_state()[ids].tolist() if self.reward_state_critic else [],
             elapsed=(self.episode_length_buf[ids]*self.step_dt).tolist(),
             completed=self.completed[ids].tolist(),origin_com=self.origin_com[ids].tolist(),edge_x=self.edge_x[ids].tolist(),
             action=self.raw_actions[ids].tolist(),executed=self.executed[ids].tolist(),

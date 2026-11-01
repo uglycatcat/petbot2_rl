@@ -20,7 +20,9 @@ def runner_config(t):
     if 'beta_std_ceiling' in t:
         distribution['class_name']='step_demo.distributions:CeilingBetaDistribution'
     return dict(num_steps_per_env=t['num_steps_per_env'], save_interval=t['save_interval'],
-        logger='tensorboard', check_for_nan=True, obs_groups={'actor':['policy'],'critic':['policy']},
+        logger='tensorboard', check_for_nan=True,
+        obs_groups={'actor':['policy'], 'critic':(['policy','critic']
+            if t.get('critic_observation', 'policy') == 'reward_state_v11' else ['policy'])},
         actor=dict(**model, distribution_cfg=distribution),
         critic=deepcopy(model), algorithm=dict(class_name='PPO', learning_rate=t['learning_rate'],
             num_learning_epochs=t['num_learning_epochs'], num_mini_batches=t['num_mini_batches'],
@@ -117,6 +119,7 @@ class StepRunner(OnPolicyRunner):
             for key,value in data['logger'].items(): setattr(self.logger,key,value)
         return dict(completed_updates=data['completed_updates'],
             actor_sha256=state_digest(self.alg.actor.state_dict()),
+            critic_sha256=state_digest(self.alg.critic.state_dict()),
             optimizer_states=len(self.alg.optimizer.state),
             learning_rate=self.alg.learning_rate,
             physics_episodes_restarted=True)

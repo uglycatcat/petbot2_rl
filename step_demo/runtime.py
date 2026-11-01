@@ -26,9 +26,11 @@ def code_digest():
 def load_training(path):
     defaults=json.loads((PROJECT_ROOT/'configs/train_v1.json').read_text())
     t=json.loads(Path(path).read_text())
-    optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling'}
+    optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling','critic_observation'}
     if set(t)-optional!=set(defaults) or t['schema']!='petbot_step_ppo_v1': raise ValueError('Unknown training schema/fields')
     if t.get('policy_distribution','gaussian') not in ('gaussian','beta'):raise ValueError('Unknown policy distribution')
+    if t.get('critic_observation', 'policy') not in ('policy', 'reward_state_v11'):
+        raise ValueError('Unknown critic observation')
     if t.get('learning_rate_schedule','adaptive') not in ('adaptive','fixed'):raise ValueError('Unknown learning rate schedule')
     if 'beta_std_ceiling' in t:
         s=t['beta_std_ceiling']
@@ -60,7 +62,7 @@ def main(argv):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command',choices=('train','evaluate'))
     parser.add_argument('--config',type=Path,default=DEFAULT_CONFIG)
-    parser.add_argument('--training-config',type=Path,default=PROJECT_ROOT/'configs/round10_seed70.json')
+    parser.add_argument('--training-config',type=Path,default=PROJECT_ROOT/'configs/round11_seed70.json')
     parser.add_argument('--model-dir',type=Path)
     parser.add_argument('--asset-dir',type=Path,default=PROJECT_ROOT/'artifacts/robot')
     parser.add_argument('--run-dir',type=Path,required=True)
@@ -107,6 +109,7 @@ def main(argv):
         import importlib.metadata
         from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper
         from .isaac_env import StepEnv
+        from .critic_state import CRITIC_STATE_FIELDS
         actual=t.copy()
         if args.command=='evaluate': actual['num_envs']=args.eval_envs
         env=StepEnv(task,actual,args.asset_dir,args.device)
@@ -119,7 +122,9 @@ def main(argv):
         wrapped=RslRlVecEnvWrapper(env)
         runner=StepRunner(wrapped,runner_config(t),origin,str(run) if args.command=='train' else None,args.device)
         write_json(output/'layout.json',dict(joints=env.robot.joint_names,hips=env.hips,rear_wheels=env.wheels,
-            trace_ids=env.trace_ids,step_dt=env.step_dt,source_code_sha256=origin['code_sha256']))
+            trace_ids=env.trace_ids,step_dt=env.step_dt,source_code_sha256=origin['code_sha256'],
+            actor_observation_dim=26, critic_observation_dim=48 if env.reward_state_critic else 26,
+            critic_extra_fields=list(CRITIC_STATE_FIELDS) if env.reward_state_critic else []))
         write_json(output/'runtime.json',{name:importlib.metadata.version(name) for name in ('torch','rsl-rl-lib','numpy')})
         if args.resume or args.command=='evaluate':
             basename=args.checkpoint or json.loads((run/'latest.json').read_text())['checkpoint']
@@ -132,7 +137,8 @@ def main(argv):
             initial=runner.alg.save();initial['origin']=origin
             torch.save(initial,run/'initial.pt')
             write_json(run/'initialization.json',dict(initialization='random',pretrained_models=[],
-                actor_sha256=state_digest(initial['actor_state_dict']),optimizer_states=0,frozen_parameters=0))
+                actor_sha256=state_digest(initial['actor_state_dict']),
+                critic_sha256=state_digest(initial['critic_state_dict']),optimizer_states=0,frozen_parameters=0))
         if args.command=='train':
             remaining=t['iterations']-runner.current_learning_iteration
             if remaining<=0: raise ValueError('This run has exhausted its update budget')
