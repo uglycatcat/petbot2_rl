@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round14_ready",
-  "training_enabled": true,
+  "phase": "round15_engineering",
+  "training_enabled": false,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round14 wide positive speed tracking accepted:83 CPU, exact fixed-policy physical/scoring parity with only reward changes, scratch recovery/reload/default-entry2048 scale valid. Fresh1000-update trials still required for capability.",
+  "reason": "Round14 has seed-dependent regression during full reversals. Restore round13 reward width and add long-episode symmetric reversal practice; engineering pending.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -13,15 +13,15 @@
   "batch26_resume_allowed": false,
   "next_experiment": {
     "series": "upright_restart_20261030",
-    "round": 14,
-    "name": "upright_restart_round14",
-    "status": "ready_random_initialization"
+    "round": 15,
+    "name": "upright_restart_round15",
+    "status": "engineering_pending"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": true,
+  "engineering_validated": false,
   "implementation_review": "docs/round01_implementation.md",
-  "cpu_contract_tests_passed": 83,
+  "cpu_contract_tests_passed": 88,
   "allowed_host_gpus": [
     2,
     3

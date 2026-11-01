@@ -34,6 +34,7 @@ class Runtime:
         self.balance_velocity_error = z()
         self.balance_duration = torch.full((n,), cfg.balance_train_s, device=device)
         self.short_cycle = z().bool()
+        self.reversal_episode = z().bool(); self.reversal_speed = z()
         self.initial_hip = z(); self.takeover_motion = torch.zeros(n, 2, device=device)
         self.probe_level = None
         self.probe_duration = None
@@ -59,13 +60,36 @@ class Runtime:
         command[category == 0] = 0  # stop
         command[category == 1, 1] = 0  # straight
         command[category == 2, 0] = 0  # pure turn
+        paired = self.reversal_episode[ids]
+        command[paired, 0] = self.reversal_speed[ids[paired]]
+        command[paired, 1] = 0.
+        self.reversal_speed[ids[paired]] *= -1
         return command
+
+    def sample_reversal_episodes(self, ids):
+        # Train transitions that independent command draws rarely expose. Keep
+        # low courses, short cycles and deterministic validation exactly intact.
+        # This schedule is private training state, never part of actor observations.
+        if self.probe_level is not None or not self.cfg.reversal_episode_fraction:
+            return
+        eligible = ids[(self.level[ids] >= 3) & ~self.short_cycle[ids]
+                       & (self.balance_duration[ids] >= 2*self.stage_dwell[self.level[ids]]+1.)]
+        if not len(eligible):
+            return
+        selected = eligible[self.uniform(len(eligible))[:, 0] < self.cfg.reversal_episode_fraction]
+        draws = self.uniform(len(selected), 3)
+        magnitude = .5+.5*draws[:, 0]
+        magnitude = torch.where(draws[:, 2] < self.cfg.boundary_command_fraction, 1., magnitude)
+        direction = torch.where(draws[:, 1] < .5, -1., 1.)
+        self.reversal_episode[selected] = True
+        self.reversal_speed[selected] = direction*magnitude*self.stage_ranges[self.level[selected], 0]
 
     def reset(self, ids):
         self.control.reset(ids)
         for name in ('episode_age', 'command_age', 'true_hold', 'longest_hold', 'peak_rise',
                      'peak_land', 'balance_elapsed', 'balance_seen', 'invoked', 'episode_goal',
-                     'true_cycle', 'failure', 'initial_hip', 'takeover_motion', 'balance_velocity_error', 'short_cycle'):
+                     'true_cycle', 'failure', 'initial_hip', 'takeover_motion', 'balance_velocity_error', 'short_cycle',
+                     'reversal_episode', 'reversal_speed'):
             getattr(self, name)[ids] = 0
         level = self.course.level if self.probe_level is None else self.probe_level
         self.level[ids] = level
@@ -100,6 +124,7 @@ class Runtime:
             sampled = self.cfg.short_balance_min_s + (self.cfg.short_balance_max_s-self.cfg.short_balance_min_s)*self.uniform(len(moving_ids))[:, 0]
             self.balance_duration[moving_ids] = torch.where(short, sampled, self.cfg.balance_train_s)
             self.short_cycle[moving_ids] = short
+        self.sample_reversal_episodes(ids)
 
     def before_action(self, s):
         c = self.control
@@ -173,6 +198,7 @@ class Runtime:
         result['done'] = self.failure | self.episode_goal | c.completed
         result['balance_required_s'] = self.balance_duration.clone()
         result['short_cycle'] = self.short_cycle.clone()
+        result['reversal_episode'] = self.reversal_episode.clone()
         result['perception_mismatch'] = result['support_estimate'] != physical_support
         result['reason'] = c.reason.clone()
         result['reward'] = self.reward(s, truth, result, rear_near)
