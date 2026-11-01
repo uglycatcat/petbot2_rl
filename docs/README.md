@@ -1,6 +1,6 @@
 # 项目文档索引
 
-- 当前：**upright第16轮已验收，第17轮critic补充已在GPU2/3从零启动**。先看[当前交接](current_handoff.md)、[第16轮结果](upright_restart_round16_results.md)、[第17轮执行](upright_restart_round17_execution.md)及[需求基线](current_scope.md)。双向.75及全部能力仍未通过；旧第26批不恢复，禁止历史训练权重、周期定时器和goal。
+- 当前：**upright第17轮已验收，第18轮降低探索下限已在GPU2/3从零启动**。先看[当前交接](current_handoff.md)、[第17轮结果](upright_restart_round17_results.md)、[第18轮执行](upright_restart_round18_execution.md)及[需求基线](current_scope.md)。双向.75及全部能力仍未通过；旧第26批不恢复，禁止历史训练权重、周期定时器和goal。
 
 
 先读根目录 [AGENTS.md](../AGENTS.md) 的硬规则和里程碑，再读[当前交接](current_handoff.md)。只按手头问题打开下面相应文档；历史实验与 `runs/` 不需要全读。根目录 README 用于部署和使用，不承载进度。
