@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round20_engineering",
-  "training_enabled": false,
+  "phase": "round20_ready",
+  "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round19 coarse cost regressed; bounded fixed-actor velocity feedback also rejected. Round20 tests30ms policy with equal physical rollout/discount horizon, prior fine rewards, no added feedback. Engineering pending.",
+  "reason": "Round20 30ms policy accepted:113 CPU physical-time contracts, random128env4-to8 complete recovery/reload, default2048 scale and fixed-old-actor development physics. Coarse cost withdrawn, no common-speed feedback. Fresh1000-update capability trials required.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -15,11 +15,11 @@
     "series": "upright_restart_20261030",
     "round": 20,
     "name": "upright_restart_round20",
-    "status": "engineering_pending"
+    "status": "ready_random_initialization"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": false,
+  "engineering_validated": true,
   "implementation_review": "docs/round01_implementation.md",
   "cpu_contract_tests_passed": 113,
   "allowed_host_gpus": [
