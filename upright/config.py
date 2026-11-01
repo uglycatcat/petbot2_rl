@@ -20,6 +20,7 @@ class Config:
     rollout_steps: int = 32
     learning_rate: float = 0.0003
     gae_lambda: float | None = None  # None retains legacy physical-time scaling
+    critic_task_state: bool = False  # training-only state; never added to actor input
     checkpoint_interval: int = 100
     probe_interval: int = 100
     bootstrap_probe_interval: int = 0
@@ -92,6 +93,11 @@ class Config:
         return len(self.motion_stages())+1
 
     def validate(self):
+        if type(self.critic_task_state) is not bool:
+            raise ValueError('critic_task_state must be boolean')
+        if self.critic_task_state and any(getattr(self, key) <= 0 for key in
+                ('return_confirm_s', 'ground_confirm_s', 'lifted_confirm_s', 'handoff_hold_s')):
+            raise ValueError('Critic timer normalization requires positive confirmation durations')
         for key in ('iterations', 'num_envs', 'decimation', 'history', 'rollout_steps',
                     'checkpoint_interval', 'probe_interval', 'probe_count', 'curriculum_consecutive'):
             value = getattr(self, key)
@@ -153,7 +159,7 @@ class Config:
 
 
 def load_config(path=None, **overrides):
-    data = json.loads(Path(path or ROOT/'configs/round16.json').read_text())
+    data = json.loads(Path(path or ROOT/'configs/round17.json').read_text())
     unknown = data.keys() - {f.name for f in fields(Config)}
     if unknown:
         raise ValueError(f'Unknown configuration keys: {sorted(unknown)}')

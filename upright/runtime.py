@@ -12,6 +12,13 @@ OBSERVATION_FIELDS = [('gravity_body', 3), ('gyro_body', 3), ('estimated_motion'
                       ('phase_one_hot', 6), ('transition_heading_sin_cos', 2), ('phase_age_scaled', 1),
                       ('estimated_front_clearance', 2), ('ordinary_hip_target', 1)]
 OBSERVATION_DIM = sum(size for _, size in OBSERVATION_FIELDS)
+CRITIC_TASK_FIELDS = [
+    'episode_age', 'phase_age', 'balance_elapsed', 'balance_duration', 'command_age',
+    'true_hold', 'peak_rise', 'peak_land', 'velocity_error_mean', 'takeover_velocity',
+    'support_run', 'return_run', 'ground_run', 'lift_run', 'handoff_run',
+    'lifted', 'entered', 'invoked', 'short_cycle', 'reversal_episode', 'course_level',
+    'raw_velocity_command', 'raw_yaw_command', 'next_reversal_velocity']
+CRITIC_TASK_DIM = len(CRITIC_TASK_FIELDS)
 
 class Runtime:
     def __init__(self, n, device, dt, cfg, model):
@@ -304,6 +311,34 @@ class Runtime:
             return torch.where(c.phase == Phase.BALANCE,
                                c.age.clamp_max(self.cfg.balance_observation_age_cap_s), c.age)
         return c.age
+
+    def critic_state(self):
+        """Bounded task/reward memory for value learning, read-only and actor-private.
+
+        The deployed actor retains its sensor history. In particular, scheduled
+        Space timing and future reversal direction never become actor inputs.
+        """
+        c, cfg = self.control, self.cfg
+        duration = self.balance_duration.clamp_min(cfg.hold_s)
+        longest = max(cfg.balance_train_s, cfg.balance_eval_s, cfg.hold_s)
+        horizon = cfg.warmup_timeout_s+cfg.rise_timeout_s+longest+cfg.landing_timeout_s+cfg.handoff_timeout_s+1.
+        phase_limit = torch.full_like(c.age, cfg.warmup_timeout_s)
+        for phase, limit in ((Phase.RISE, cfg.rise_timeout_s), (Phase.BALANCE, duration),
+                             (Phase.LAND, cfg.landing_timeout_s), (Phase.HANDOFF, cfg.handoff_timeout_s)):
+            phase_limit = torch.where(c.phase == phase, limit, phase_limit)
+        hold_limit = torch.where(self.level == 0, cfg.hold_s, duration)
+        yaw_limit = max(1e-6, *(r[1] for r in cfg.motion_stages()))
+        values = (self.episode_age/horizon, c.age/phase_limit, self.balance_elapsed/duration,
+                  duration/longest, self.command_age/self.stage_dwell[self.level],
+                  self.true_hold/hold_limit, self.peak_rise/1.25, self.peak_land,
+                  self.balance_velocity_error/.75, self.takeover_motion[:, 0]/.75,
+                  c.support_run/cfg.support_enter_s, c.return_run/cfg.return_confirm_s,
+                  c.ground_run/cfg.ground_confirm_s, c.lift_run/cfg.lifted_confirm_s,
+                  c.handoff_run/cfg.handoff_hold_s, c.lifted.float(), c.entered.float(),
+                  self.invoked.float(), self.short_cycle.float(), self.reversal_episode.float(),
+                  self.level.float()/cfg.max_course_level, c.command[:, 0]/.75,
+                  c.command[:, 1]/yaw_limit, self.reversal_speed/.75)
+        return torch.stack(values, -1).clamp(-1., 1.)
 
     def observation(self, s):
         c = self.control

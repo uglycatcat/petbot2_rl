@@ -156,11 +156,17 @@ def metrics(env):
                 balance_yaw_correction=p.control.yaw_correction,
                 stage_time=p.control.age, policy_stage_time=p.observation_stage_age(),
                 longest_hold=p.longest_hold, curriculum_level=p.level).items()}
+            if p.cfg.critic_task_state:
+                env.upright_snapshot['training_critic_state'] = p.critic_state().clone()
     return env.upright_metrics
 
 
 def observation(env):
     return ensure(env).observation(state(env))
+
+
+def critic_task_state(env):
+    return ensure(env).critic_state()
 
 
 def reward(env):
@@ -216,6 +222,14 @@ class ObservationsCfg:
             self.history_length = 5
             self.flatten_history_dim = True
     policy = Policy()
+    @configclass
+    class CriticTask(ObservationGroupCfg):
+        state = ObservationTermCfg(func=critic_task_state)
+        def __post_init__(self):
+            self.enable_corruption = False
+            self.concatenate_terms = True
+            self.history_length = 0
+    critic_task = CriticTask()
 
 @configclass
 class RewardsCfg:
@@ -259,3 +273,4 @@ class UprightEnvCfg(ManagerBasedRLEnvCfg):
         self.scene.contact_forces.history_length = self.decimation
         self.scene.lazy_sensor_update = False
         self.observations.policy.history_length = experiment.history
+        self.observations.critic_task = ObservationsCfg.CriticTask() if experiment.critic_task_state else None
