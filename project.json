@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round18_engineering",
-  "training_enabled": false,
+  "phase": "round18_ready",
+  "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round17 valid but basic response regressed; audit found near-floor differential exploration. Round18 changes only Beta shape cap128 to512, preserves initial mean/std and all task/control/reward/validation settings. Fresh training awaits engineering gate.",
+  "reason": "Round18 cap512 with invariant initial distribution accepted:103 CPU, exact original fixed-actor physical/reward/scoring parity, correct random scratch recovery/reload and default2048 scale. First wrong-config short attempt rejected and preserved. New1000-update capability trials required.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -15,11 +15,11 @@
     "series": "upright_restart_20261030",
     "round": 18,
     "name": "upright_restart_round18",
-    "status": "engineering_review"
+    "status": "ready_random_initialization"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": false,
+  "engineering_validated": true,
   "implementation_review": "docs/round01_implementation.md",
   "cpu_contract_tests_passed": 103,
   "allowed_host_gpus": [
