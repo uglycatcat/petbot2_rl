@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round19_engineering",
-  "training_enabled": false,
+  "phase": "round19_ready",
+  "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round18 improved basic response but sustained0.75 remains unproven. Round19 adds only bounded coarse velocity cost0.25/s with0.3m/s scale; combined cost bound1.75 below support2/s, all fine rewards/control/scoring retained. Await engineering gate.",
+  "reason": "Round19 coarse velocity cost accepted:109 CPU, fixed-old-actor physical/control/scoring equality with independently verified reward delta, random scratch4-to8 recovery/reload and default2048 scale. New1000-update capability trials required.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -15,11 +15,11 @@
     "series": "upright_restart_20261030",
     "round": 19,
     "name": "upright_restart_round19",
-    "status": "engineering_review"
+    "status": "ready_random_initialization"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": false,
+  "engineering_validated": true,
   "implementation_review": "docs/round01_implementation.md",
   "cpu_contract_tests_passed": 109,
   "allowed_host_gpus": [
