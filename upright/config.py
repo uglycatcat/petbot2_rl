@@ -67,6 +67,8 @@ class Config:
     rise_front_return_penalty: float = 5.0
     balance_velocity_cost: float = 0.0
     balance_velocity_cost_cap: float = 0.0  # reward/second; zero retains legacy unbounded cost
+    balance_velocity_coarse_weight: float = 0.0  # additional bounded broad-error cost per second
+    balance_velocity_coarse_scale_m_s: float = .3
     balance_velocity_cost_tail: str = 'exponential'  # legacy default; rational retains large-bias signal
     balance_velocity_tracking_scale_m_s: float = 0.1  # positive reward width; legacy default
     balance_velocity_error_tau_s: float = 0.3
@@ -131,6 +133,15 @@ class Config:
             raise ValueError('Invalid curriculum probabilities')
         if type(self.balance_velocity_cost_cap) not in (int, float) or not 0 <= self.balance_velocity_cost_cap < 2:
             raise ValueError('Velocity cost cap must be below the two-wheel support reward of 2/s')
+        if (type(self.balance_velocity_coarse_weight) not in (int, float)
+                or not 0 <= self.balance_velocity_coarse_weight < 2):
+            raise ValueError('Invalid coarse velocity weight')
+        if (type(self.balance_velocity_coarse_scale_m_s) not in (int, float)
+                or not 0 < self.balance_velocity_coarse_scale_m_s <= .75):
+            raise ValueError('Invalid coarse velocity scale')
+        if self.balance_velocity_coarse_weight and (self.balance_velocity_cost_cap <= 0
+                or self.balance_velocity_cost_cap+self.balance_velocity_coarse_weight >= 2):
+            raise ValueError('Combined velocity cost bound must stay below support reward2/s')
         if self.balance_velocity_cost_tail not in ('exponential', 'rational'):
             raise ValueError('Unknown velocity cost tail')
         if (type(self.balance_velocity_tracking_scale_m_s) not in (int, float)
@@ -162,7 +173,7 @@ class Config:
 
 
 def load_config(path=None, **overrides):
-    data = json.loads(Path(path or ROOT/'configs/round18.json').read_text())
+    data = json.loads(Path(path or ROOT/'configs/round19.json').read_text())
     unknown = data.keys() - {f.name for f in fields(Config)}
     if unknown:
         raise ValueError(f'Unknown configuration keys: {sorted(unknown)}')

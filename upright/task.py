@@ -138,6 +138,7 @@ def metrics(env):
             'Cycle/early_front_return': result['early_front_return'].float().mean(),
             'Cycle/failure_penalty': result['failure_penalty'].mean(),
             'Cycle/balance_velocity_cost': result['balance_velocity_cost'].mean(),
+            'Cycle/balance_velocity_coarse_cost': result['balance_velocity_coarse_cost'].mean(),
             'Cycle/landing_velocity_cost': result['landing_velocity_cost'].mean(),
             'Cycle/phase_balance_fraction': (result['phase_before'] == 2).float().mean(),
             'Cycle/phase_land_fraction': (result['phase_before'] == 3).float().mean(),

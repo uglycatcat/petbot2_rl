@@ -248,6 +248,13 @@ class Runtime:
             landing_error/self.cfg.landing_velocity_error_scale_m_s)*landing
         return balance_cost, land_cost
 
+    def coarse_balance_velocity_cost(self, balancing):
+        # Complement the unchanged fine objective at persistent .2-.3 m/s bias.
+        # Reuse the signed-error filter; no new state enters control or observations.
+        scaled = self.balance_velocity_error/self.cfg.balance_velocity_coarse_scale_m_s
+        rate = self.cfg.balance_velocity_coarse_weight*(-torch.expm1(-scaled.square()))
+        return self.dt*rate*balancing
+
     def reward(self, s, truth, m, rear_near):
         c = self.control; before = m['phase_before']
         safe = ~m['failure']; rising = (before == Phase.RISE) & safe
@@ -296,9 +303,11 @@ class Runtime:
                         & (s['g'][:, 2] < -.25) & (s['g'][:, 1].abs() < .35))
         penalty = torch.where(early_return, self.cfg.rise_front_return_penalty, 5.)*m['failure']
         balance_cost, land_cost = self.velocity_costs(s, balancing, landing)
-        reward -= penalty+balance_cost+land_cost
+        coarse_cost = self.coarse_balance_velocity_cost(balancing)
+        reward -= penalty+balance_cost+land_cost+coarse_cost
         m['balance_velocity_error_mean'] = self.balance_velocity_error.clone()
         m['balance_velocity_cost'] = balance_cost
+        m['balance_velocity_coarse_cost'] = coarse_cost
         m['landing_velocity_cost'] = land_cost
         m['failure_penalty'] = penalty
         m['early_front_return'] = early_return
