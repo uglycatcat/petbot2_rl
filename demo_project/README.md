@@ -4,7 +4,7 @@
 
 | 项目 | 职责 | 当前开发状态 |
 |---|---|---|
-| [upright_rl_demo](upright_rl_demo/README.md) | 从随机初始化完成起落与两轮遥控；不依赖历史权重。 | 第14轮低速完整各32/32，高范围0/32、28/32，无一致收益；第15轮e673e87恢复第13轮奖励并补长回合双向换向，GPU2/3各2048×1000随机初始化。见[执行](../docs/upright_restart_round15_execution.md)。 |
+| [upright_rl_demo](upright_rl_demo/README.md) | 从随机初始化完成起落与两轮遥控；不依赖历史权重。 | 第15轮低速完整各32/32，高范围21/29但双向满速未达；第16轮f715a52仅改有界速度成本尾部，GPU2/3各2048×1000随机初始化。见[执行](../docs/upright_restart_round16_execution.md)。 |
 | [step_rl_demo](step_rl_demo/README.md) | 前轮登上0–3 cm低台阶后加速爬升。 | 仅登记与需求说明，尚无训练代码。 |
 | [recovery_rl_demo](recovery_rl_demo/README.md) | 重新设计分阶段跌倒恢复。 | 仅登记与需求说明，尚无训练代码。 |
 | [recovery_agile_01](recovery_agile_01/PETBOT.md) | 基于AGILE的早期恢复原型。 | 历史实验，不能直接作为新恢复任务的设计或成功基线。 |
