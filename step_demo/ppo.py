@@ -18,7 +18,9 @@ def runner_config(t):
                     if t.get('policy_distribution','gaussian')=='beta' else
                     dict(class_name='GaussianDistribution', init_std=t['initial_std'], std_type='log'))
     if 'beta_std_ceiling' in t:
-        distribution['class_name']='step_demo.distributions:CeilingBetaDistribution'
+        name = ('ActionwiseCeilingBetaDistribution' if 'wheel_final_std' in t['beta_std_ceiling']
+                else 'CeilingBetaDistribution')
+        distribution['class_name']='step_demo.distributions:'+name
     return dict(num_steps_per_env=t['num_steps_per_env'], save_interval=t['save_interval'],
         logger='tensorboard', check_for_nan=True,
         obs_groups={'actor':['policy'], 'critic':(['policy','critic']
@@ -39,8 +41,11 @@ def distribution_metrics(distribution):
         raise RuntimeError('Bounded policy distribution violated its action range')
     result=dict(kind=kind,mean_abs_max=float(mean.abs().max()),std_min=float(std.min()),std_max=float(std.max()))
     if isinstance(distribution,CeilingBetaDistribution):
-        result['std_ceiling']=float(distribution.std_ceiling)
-        if std.max()>distribution.std_ceiling+1e-6:raise RuntimeError('Action variance ceiling violated')
+        result['std_ceiling']=distribution.std_ceiling.detach().cpu().tolist()
+        if distribution.std_ceiling.ndim:
+            result['std_min_per_action']=std.amin(dim=0).cpu().tolist()
+            result['std_max_per_action']=std.amax(dim=0).cpu().tolist()
+        if (std>distribution.std_ceiling+1e-6).any():raise RuntimeError('Action variance ceiling violated')
     return result
 
 
@@ -108,8 +113,10 @@ class StepRunner(OnPolicyRunner):
         self.current_learning_iteration = data['completed_updates']
         schedule=self.origin['training'].get('beta_std_ceiling')
         if schedule is not None:
-            actual=float(self.alg.actor.distribution.std_ceiling)
-            if abs(actual-std_ceiling_at(schedule,data['completed_updates']))>1e-6:
+            actual=self.alg.actor.distribution.std_ceiling
+            expected=torch.as_tensor(std_ceiling_at(schedule,data['completed_updates']),
+                                     dtype=actual.dtype,device=actual.device)
+            if actual.shape!=expected.shape or not torch.allclose(actual,expected,atol=1e-6,rtol=0):
                 raise ValueError('Checkpoint action variance curriculum is inconsistent')
         if training:
             torch.set_rng_state(data['rng']['torch'].cpu())

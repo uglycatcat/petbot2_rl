@@ -8,11 +8,15 @@ from rsl_rl.modules import BetaDistribution
 def std_ceiling_at(schedule, completed_updates):
     """Update-boundary curriculum, independent of terrain truth or episode stage."""
     start, end = schedule['start_update'], schedule['end_update']
+    finals = [schedule['final_std']]
+    if 'wheel_final_std' in schedule:
+        finals.append(schedule['wheel_final_std'])
     if completed_updates <= start:
-        return 1.  # Exact native distribution throughout initial exploration.
+        return [1., 1.] if len(finals) == 2 else 1.
     fraction = min(1., (completed_updates-start)/(end-start))
-    return math.exp((1-fraction)*math.log(1/math.sqrt(3.))
-                    + fraction*math.log(schedule['final_std']))
+    values = [math.exp((1-fraction)*math.log(1/math.sqrt(3.))
+                      + fraction*math.log(final)) for final in finals]
+    return values if len(values) == 2 else values[0]
 
 
 class CeilingBetaDistribution(BetaDistribution):
@@ -38,3 +42,19 @@ class CeilingBetaDistribution(BetaDistribution):
         self._alpha = self._alpha*scale
         self._beta = self._beta*scale
         self._distribution = torch.distributions.Beta(self._alpha, self._beta)
+
+
+class ActionwiseCeilingBetaDistribution(CeilingBetaDistribution):
+    """Independent hip/wheel ceilings, with unchanged native means and density."""
+    def __init__(self, output_dim, action_range=(-1., 1.)):
+        if output_dim != 2:
+            raise ValueError('Step action ceilings require common hip and wheel actions')
+        super().__init__(output_dim, action_range)
+        self.std_ceiling = torch.ones(output_dim)
+
+    def set_std_ceiling(self, value):
+        value = torch.as_tensor(value, dtype=self.std_ceiling.dtype, device=self.std_ceiling.device)
+        if (value.shape != self.std_ceiling.shape or not torch.isfinite(value).all()
+                or (value < .005).any() or (value > 1.).any()):
+            raise ValueError('Invalid per-action normalized std ceilings')
+        self.std_ceiling.copy_(value)
