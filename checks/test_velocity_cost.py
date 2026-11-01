@@ -115,4 +115,50 @@ class VelocityCostContracts(unittest.TestCase):
         for value in (0.,-1.,.76,float('inf'),float('nan'),True,'0.3'):
             with self.assertRaises(ValueError):replace(CFG,balance_velocity_tracking_scale_m_s=value).validate()
 
+    def test_rational_tail_preserves_precision_and_resolves_large_bias(self):
+        cfg=replace(CFG,balance_velocity_cost_cap=1.5)
+        old=Runtime(2,'cpu',.06,cfg,MODEL)
+        new=Runtime(2,'cpu',.06,replace(cfg,balance_velocity_cost_tail='rational'),MODEL)
+        raw=torch.tensor([0.,.36,.7499,.7501,1.,3.,7.,9.,11.,100.],requires_grad=True)
+        cost=new.limit_balance_velocity_cost(raw)
+        torch.testing.assert_close(cost[:3],raw[:3])
+        self.assertTrue((cost[1:]>cost[:-1]).all())
+        self.assertTrue((cost>=0).all() and (cost<1.5).all())
+        slope=torch.autograd.grad(cost.sum(),raw)[0]
+        self.assertTrue((slope>0).all() and (slope<=1).all())
+        self.assertLess(float((slope[2]-slope[3]).abs()),.001)
+        # Persistent .25 -> .20 m/s error: a useful return difference, still bounded.
+        self.assertGreater(float(cost[7]-cost[6]),.017)
+        self.assertLess(float(old.limit_balance_velocity_cost(raw)[7]-old.limit_balance_velocity_cost(raw)[6]),.001)
+        uncapped=Runtime(2,'cpu',.06,replace(CFG,balance_velocity_cost_tail='rational'),MODEL)
+        torch.testing.assert_close(uncapped.limit_balance_velocity_cost(raw),raw)
+
+    def test_rational_tail_only_changes_safe_balance_cost_and_return(self):
+        cfg=replace(CFG,balance_velocity_cost_cap=1.5,landing_velocity_cost=0.)
+        old=Runtime(2,'cpu',.06,cfg,MODEL)
+        new=Runtime(2,'cpu',.06,replace(cfg,balance_velocity_cost_tail='rational'),MODEL)
+        s=state();s['motion'][:,0]=torch.tensor([.5,-.5]);s['gap'][:]=.1
+        for p in (old,new):
+            p.reset(torch.arange(2));p.level[:]=2;p.balance_duration[:]=30.
+            p.control.phase[:]=Phase.BALANCE;p.invoked[:]=True
+            p.control.set_command([[.75,0],[-.75,0]])
+        for _ in range(20):
+            a,b=old.advance(s,truth(raised=True)),new.advance(s,truth(raised=True))
+            for key in a:
+                if key not in ('reward','balance_velocity_cost'):torch.testing.assert_close(a[key],b[key])
+            torch.testing.assert_close(old.observation(s),new.observation(s))
+            torch.testing.assert_close(old.control.targets(torch.zeros(2,3),s),new.control.targets(torch.zeros(2,3),s))
+            torch.testing.assert_close(b['reward']-a['reward'],a['balance_velocity_cost']-b['balance_velocity_cost'])
+            self.assertTrue((b['reward']>0).all() and (b['balance_velocity_cost']<.09).all())
+        t=truth(raised=True);t['body_contact'][:]=True
+        a,b=old.advance(s,t),new.advance(s,t)
+        torch.testing.assert_close(a['reward'],b['reward'])
+        torch.testing.assert_close(a['failure_penalty'],b['failure_penalty'])
+        self.assertFalse(b['balance_velocity_cost'].any())
+
+    def test_cost_tail_validation_and_legacy_default(self):
+        self.assertEqual(Config().balance_velocity_cost_tail,'exponential')
+        for value in ('unknown','',None,True,1):
+            with self.assertRaises(ValueError):replace(CFG,balance_velocity_cost_tail=value).validate()
+
 if __name__=='__main__':unittest.main()

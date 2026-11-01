@@ -219,6 +219,10 @@ class Runtime:
         # not make stable two-wheel support less valuable than ending the call.
         knee = .5*cap
         excess = (value-knee).clamp_min(0)
+        if self.cfg.balance_velocity_cost_tail == 'rational':
+            # Same knee, unit slope and bound, with a slower-decaying tail so
+            # persistent high-speed bias remains distinguishable in PPO returns.
+            return value.clamp_max(knee) + knee*(excess/(knee+excess))
         return value.clamp_max(knee) + knee*(-torch.expm1(-excess/knee))
 
     def velocity_costs(self, s, balancing, landing):
