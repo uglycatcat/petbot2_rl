@@ -43,11 +43,12 @@ class StepEnv(DirectRLEnv):
     def __init__(self, task: StepConfig, training: dict, asset_dir: Path, device='cuda:0'):
         self.task = task
         self.training = training
-        self.touch_reward = training.get('reward_version') == 'touch_v8'
-        self.settle_reward = training.get('reward_version') in ('settle_v6','touch_v8')
-        self.stage_reward = training.get('reward_version') in ('stage_v5','settle_v6','touch_v8')
-        self.progress_reward = training.get('reward_version') in ('progress_v4','stage_v5','settle_v6','touch_v8')
-        self.edge_reward = training.get('reward_version','legacy') in ('edge_v3','progress_v4','stage_v5','settle_v6','touch_v8')
+        self.smooth_braking = training.get('reward_version') == 'brake_v10'
+        self.touch_reward = training.get('reward_version') in ('touch_v8','brake_v10')
+        self.settle_reward = training.get('reward_version') in ('settle_v6','touch_v8','brake_v10')
+        self.stage_reward = training.get('reward_version') in ('stage_v5','settle_v6','touch_v8','brake_v10')
+        self.progress_reward = training.get('reward_version') in ('progress_v4','stage_v5','settle_v6','touch_v8','brake_v10')
+        self.edge_reward = training.get('reward_version','legacy') in ('edge_v3','progress_v4','stage_v5','settle_v6','touch_v8','brake_v10')
         self.asset_dir = asset_dir.resolve()
         self.asset = json.loads((asset_dir / 'asset.json').read_text())
         cfg = StepEnvCfg()
@@ -380,7 +381,8 @@ class StepEnv(DirectRLEnv):
                         stable_top=self.supported_top.all(-1) & self.front_landed.all(-1) & aligned
                         parts=settled_progress(parts,pos[:,self.hips].abs().amax(-1),
                             tensor(self.robot.data.joint_vel)[:,self.hips].abs().amax(-1),
-                            self.home_hold,stable_top,self.phase>=3,self.com_vel.norm(dim=-1))
+                            self.home_hold,stable_top,self.phase>=3,self.com_vel.norm(dim=-1),
+                            smooth_braking=self.smooth_braking)
                     gain,self.stage_credit=component_increment(self.stage_credit,parts,failed)
                     self.best_progress=self.stage_credit.sum(-1)
                     reward=gain+2*self.new_landing*(~failed)

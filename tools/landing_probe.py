@@ -92,7 +92,7 @@ def main():
                     hip_velocity=tensor(self.robot.data.joint_vel)[:, self.hips].tolist(),
                     wheel_actual=tensor(self.robot.data.joint_vel)[:, self.wheels].tolist()))+'\n')
             env._capture = types.MethodType(capture, env)
-            count = (round(a.horizon_s/env.step_dt) if a.mode in ('transition','support')
+            count = (round(a.horizon_s/env.step_dt) if a.mode in ('transition','support','brake')
                      else 200 if a.mode == 'tails' else len(rows))
             with torch.inference_mode():
                 for step in range(count):
@@ -102,6 +102,8 @@ def main():
                         env.training['hip_target_rate_rad_s'] = a.hip_rate
                     values = []
                     for i in range(n):
+                        if a.mode == 'brake' and results[i]['terminal'] is not None:
+                            values.append([0.,-1.]); continue
                         prefix_end = (first_end[i] if a.mode == 'support' else transition_step-1 if a.mode == 'transition'
                                       else brake_steps[i] if a.mode == 'brake' else landing_steps[i])
                         prefix = a.mode == 'replay' or step <= prefix_end

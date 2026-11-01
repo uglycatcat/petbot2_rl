@@ -59,7 +59,7 @@ def component_increment(previous, current, invalid):
 
 
 def settled_progress(parts, hip_error, hip_speed, home_hold, stable_top,
-                     drive_complete, speed):
+                     drive_complete, speed, smooth_braking=False):
     """Replace transient position credit with settling, and expose braking progress.
 
     All eight components still pass through the historical-best accumulator.
@@ -71,7 +71,10 @@ def settled_progress(parts, hip_error, hip_speed, home_hold, stable_top,
     parts[:, 5] = (position*quiet + (home_hold/.2).clamp(0., 1.))*stable_top
     # The existing continuous stopped-time credit remains worth one point.
     # Add one bounded point for slowing down after the required platform drive.
-    parts[:, 7] += (1.-speed/.3).clamp(0., 1.)*drive_complete
+    # Exponential credit keeps the original unit ceiling and near-zero slope,
+    # but also rewards slowing from the observed 0.5--0.65 m/s drive speeds.
+    brake = torch.exp(-speed/.3) if smooth_braking else (1.-speed/.3).clamp(0., 1.)
+    parts[:, 7] += brake*drive_complete
     return parts
 
 
