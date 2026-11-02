@@ -92,3 +92,13 @@ def touch_costs(front_normal_z, contact, body_weight, hip_velocity, touched, fou
     transition = touched.all(-1) & ~four_top
     motion = dt*.027*hip_velocity.square().mean(-1)*transition
     return impact, motion
+
+
+def post_top_home_cost(hip_position, four_top_seen, tolerance, dt):
+    """Charge departures from the existing home tolerance after four-wheel ascent.
+
+    This is a nonnegative running cost, not a holding bonus or controller.
+    It stays active through later support loss so leaving the platform cannot
+    switch the cost off. The caller resets the milestone at each new episode.
+    """
+    return dt * 10. * (hip_position.abs()-tolerance).clamp_min(0.).mean(-1) * four_top_seen
