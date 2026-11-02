@@ -44,18 +44,18 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "3c1bd5e41fc6cf6eecb2faf1b56b89c7b9926738",
+      "verified_commit": "a0963df46e3f1a07629d5150ebe7ab01877d7a21",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round21_running_gpu2_gpu3_random_initialization_event_iteration",
-      "local_validation": "Round20 valid2x1000/7 independent evals,1 planned skip,no missing/OOM/recovery. Seed101 remained static-course1 with36 failed landing probes; static/low0/32. Seed102 low32/32,high29/32,settled+0.487/-0.535m/s,actual wheel peak128.801rad/s.30ms not retained. Round21 restores round18 60ms/32-step/GAE0.95 and adds2s hold only in higher-level long training episodes; high hold4-to6s,short/low/all validation unchanged.119 CPU, fixed-round18 original physical/reward/scoring parity, actual training-command PhysX path,4-to8 recovery/reload/default2048 scale accepted. Fresh GPU2/3 seeds101/102 x1000 actual PPO and random initialization verified. No historical training weights,timers,goals; full capability/MuJoCo unresolved.",
+      "status": "restart_round22_running_gpu2_gpu3_random_initialization_event_iteration",
+      "local_validation": "Round21 valid2x1000/8 independent evals,no missing/OOM/recovery. Both low32/32;high1/32 and32/32;31 BALANCE failures,28 on full reverse request. Stable seed settles+0.413/-0.498m/s,overall wheel peak57.110rad/s. Long hold not retained. Round22 restores round18 timing and increases higher-course boundary fraction25-to50 percent; continuous targets,sign/category sampling,low regressions and native evaluation unchanged.122 CPU, original physics/reward/scoring parity,actual sampling PhysX branch,4-to8 recovery/reload/default2048 scale accepted. FreshGPU2/3 seeds101/102 x1000 actualPPO/random initialization verified. Desktop restart20_s102/C58 unchanged; no historical training weights,timers or goals; full capability unresolved.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round21_s101@gpu2",
-        "upright_restart_round21_s102@gpu3"
+        "upright_restart_round22_s101@gpu2",
+        "upright_restart_round22_s102@gpu3"
       ]
     },
     {

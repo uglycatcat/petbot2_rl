@@ -4,7 +4,7 @@
 
 - 桌面体验：upright默认改为新第20轮seed102单ONNX，旧C58保留；见[sim2sim发布记录](upright_restart20_sim2sim.md)。
 
-- 当前：**upright第20轮已验收，第21轮恢复60ms并增加长训练指令保持，已在GPU2/3从零启动**。先看[当前交接](current_handoff.md)、[第20轮结果](upright_restart_round20_results.md)、[第21轮执行](upright_restart_round21_execution.md)及[需求基线](current_scope.md)。双向.75及全部能力仍未通过；旧第26批不恢复，禁止历史训练权重、周期定时器和goal。
+- 当前：**upright第21轮已验收，第22轮恢复原时序并提高边界采样，已在GPU2/3从零启动**。先看[当前交接](current_handoff.md)、[第21轮结果](upright_restart_round21_results.md)、[第22轮执行](upright_restart_round22_execution.md)及[需求基线](current_scope.md)。双向.75及全部能力仍未通过；旧第26批不恢复，禁止历史训练权重、周期定时器和goal。
 
 
 先读根目录 [AGENTS.md](../AGENTS.md) 的硬规则和里程碑，再读[当前交接](current_handoff.md)。只按手头问题打开下面相应文档；历史实验与 `runs/` 不需要全读。根目录 README 用于部署和使用，不承载进度。
