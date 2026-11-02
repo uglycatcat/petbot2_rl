@@ -11,4 +11,4 @@
 
 任务与验证边界见 [MuJoCo 方案](../docs/upright_sim2sim_20261027.md)。
 
-Step独立项目：[std_s2s_step_project](std_s2s_step_project/README.md)提供ONNX/MuJoCo预览，启动静止、Space执行、R重置；默认第14轮seed71，保留第13轮seed71对照。前轮越沿落顶可见，但后轮离地与停车仍未通过，见[发布证据](../docs/step_sim2sim_20261102.md)。`std_train_step_project/`保持空目录预留，训练仍在step demo。两者分别由`rlproj/std_s2s_step_project`和`rlproj/std_train_step_project`版本化，执行`repo sync rl_project/std_s2s_step_project rl_project/std_train_step_project`同步。
+Step独立项目：[std_s2s_step_project](std_s2s_step_project/README.md)提供ONNX/MuJoCo预览，启动静止、Space执行、R重置；默认第14轮seed71，保留第13轮seed71对照。用户桌面确认可登台，但重复抬头与停车未解决；显示计算已与物理分开，默认目标60 FPS，实际桌面效果待复测。见[发布证据](../docs/step_sim2sim_20261102.md)和[反馈修复](../docs/step_desktop_feedback_20261102.md)。`std_train_step_project/`保持空目录预留，训练仍在step demo。两者分别由`rlproj/std_s2s_step_project`和`rlproj/std_train_step_project`版本化，执行`repo sync rl_project/std_s2s_step_project rl_project/std_train_step_project`同步。
