@@ -43,6 +43,10 @@ class Runtime:
         self.short_cycle = z().bool()
         self.reversal_episode = z().bool(); self.reversal_speed = z()
         self.initial_hip = z(); self.takeover_motion = torch.zeros(n, 2, device=device)
+        self.landing_case = torch.full((n,), -1, dtype=torch.long, device=device)
+        self.post_handoff_elapsed = z()
+        self.probe_landing = False
+        self.post_handoff_observe_s = 0.  # evaluation-only ordinary-controller observation
         self.probe_level = None
         self.probe_duration = None
         self.probe_moving = True
@@ -107,6 +111,8 @@ class Runtime:
 
     def reset(self, ids):
         self.control.reset(ids)
+        self.landing_case[ids] = -1
+        self.post_handoff_elapsed[ids] = 0
         for name in ('episode_age', 'command_age', 'true_hold', 'longest_hold', 'peak_rise',
                      'peak_land', 'balance_elapsed', 'balance_seen', 'invoked', 'episode_goal',
                      'true_cycle', 'failure', 'initial_hip', 'takeover_motion', 'balance_velocity_error', 'short_cycle',
@@ -152,6 +158,12 @@ class Runtime:
             self.balance_duration[moving_ids] = torch.where(short, sampled, self.cfg.balance_train_s)
             self.short_cycle[moving_ids] = short
         self.sample_reversal_episodes(ids)
+        if self.probe_landing:
+            self.landing_case[ids] = ids % 3  # zero, forward, reverse; separate fixed evaluation
+        elif self.probe_level is None and self.cfg.landing_scenario_fraction:
+            eligible = ids[(self.level[ids] >= 2) & ~self.short_cycle[ids]]
+            chosen = eligible[self.uniform(len(eligible))[:, 0] < self.cfg.landing_scenario_fraction]
+            self.landing_case[chosen] = (self.uniform(len(chosen))[:, 0]*3).long()
 
     def before_action(self, s):
         c = self.control
@@ -164,7 +176,9 @@ class Runtime:
             self.invoked[ids] = True
         balance = c.phase == Phase.BALANCE
         self.command_age += balance*self.dt
-        change = balance & (self.level >= 2) & (self.command_age >= self.command_dwell())
+        closing = balance & (self.landing_case >= 0) & (self.balance_elapsed >=
+                    self.balance_duration-self.stage_dwell[self.level].clamp_min(3.))
+        change = balance & ~closing & (self.level >= 2) & (self.command_age >= self.command_dwell())
         ids = change.nonzero().flatten()
         if len(ids):
             if self.probe_level is None:
@@ -179,6 +193,11 @@ class Runtime:
                 command = table[index]*self.stage_ranges[self.level[ids], :2]
                 command[:, 1] *= torch.where(ids % 2 == 0, 1., -1.)
             c.set_command(command, ids=ids); self.command_age[ids] = 0
+        closing_ids = closing.nonzero().flatten()
+        if len(closing_ids):
+            direction = s['motion'].new_tensor([0., 1., -1.])[self.landing_case[closing_ids]]
+            command = torch.stack((direction*self.stage_ranges[self.level[closing_ids], 0], torch.zeros_like(direction)), -1)
+            c.set_command(command, ids=closing_ids)
         landing = balance & (self.level > 0) & (self.balance_elapsed >= self.balance_duration)
         c.request_land(s, landing.nonzero().flatten())
         c.update_motion_reference()
@@ -212,7 +231,9 @@ class Runtime:
         required_hold = self.balance_duration
         real_ground = (truth['front_z'].amax(-1) < .065) & rear_near & ~truth['body_contact']
         valid_cycle = c.completed & self.balance_seen & (self.longest_hold >= required_hold-.15) & real_ground & ~self.failure
+        completion_event = valid_cycle & ~self.true_cycle
         self.true_cycle |= valid_cycle
+        self.post_handoff_elapsed += (c.completed & ~completion_event)*self.dt
         # Geometric handoff can occur without truth support: report failure, never a false success.
         mismatch = c.completed & ~valid_cycle
         c.reason[mismatch & ~self.failure] = Reason.SUPPORT_MISMATCH
@@ -222,7 +243,13 @@ class Runtime:
         result['support_truth'] = physical_support
         result['goal'] = self.episode_goal.clone()
         result['complete'] = self.true_cycle.clone()
-        result['done'] = self.failure | self.episode_goal | c.completed
+        result['completion_event'] = completion_event
+        # Only independent transfer validation extends observation. Targets are
+        # already ordinary-owned; PPO and native probes retain their end point.
+        ordinary_observed = self.post_handoff_elapsed >= self.post_handoff_observe_s
+        result['done'] = self.failure | self.episode_goal | (c.completed & ordinary_observed)
+        result['landing_case'] = self.landing_case.clone()
+        result['post_handoff_elapsed'] = self.post_handoff_elapsed.clone()
         result['balance_required_s'] = self.balance_duration.clone()
         result['short_cycle'] = self.short_cycle.clone()
         result['reversal_episode'] = self.reversal_episode.clone()
@@ -268,6 +295,18 @@ class Runtime:
             landing_error/self.cfg.landing_velocity_error_scale_m_s)*landing
         return balance_cost, land_cost
 
+    def landing_motion_quality(self, s):
+        # Whole-robot longitudinal velocity, not wheel sign. Same-direction
+        # slowing (including zero) is allowed; no exact-speed tracking in LAND.
+        entry = self.control.transition_motion[:, 0]
+        signed = entry.sign()*s['motion'][:, 0]
+        reverse = (-signed-.02).clamp_min(0)
+        overspeed = (signed-entry.abs()-.10).clamp_min(0)
+        moving_error = torch.maximum(reverse, overspeed)/.15
+        static_error = (s['motion'][:, 0].abs()-.02).clamp_min(0)/.10
+        error = torch.where(entry.abs() > .05, moving_error, static_error)
+        return 1./(1.+error.square())
+
     def coarse_balance_velocity_cost(self, balancing):
         # Complement the unchanged fine objective at persistent .2-.3 m/s bias.
         # Reuse the signed-error filter; no new state enters control or observations.
@@ -308,7 +347,7 @@ class Runtime:
                           + self.cfg.rise_support_weight*m['support_truth']*(.2+.8*support_duration))
         reward += self.dt*bridge
         reward += 5*m['entered_balance']*m['support_truth']*safe
-        reward += 10*m['goal']*safe + 30*m['complete']*safe
+        reward += 10*m['goal']*safe + 30*m.get('completion_event', m['complete'])*safe
         # Keep LAND unchanged; allow preparation without rewarding endless waiting.
         pitch_rate_excess = ((s['gyro'][:, 1].abs()-2.).clamp_min(0)/4.).square().clamp_max(1.)
         reward += self.dt*((2+2*tracking)*balancing - .1*landing - self.cfg.rise_time_cost*rising
@@ -326,6 +365,14 @@ class Runtime:
                         & rear_near & ~truth['body_contact'] & (truth['root_height'] >= .025)
                         & (s['g'][:, 2] < -.25) & (s['g'][:, 1].abs() < .35))
         penalty = torch.where(early_return, self.cfg.rise_front_return_penalty, 5.)*m['failure']
+        quality = self.landing_motion_quality(s)
+        approaching_ground = ((.10-s['gap'].amax(-1))/.10).clamp(0, 1)
+        landing_quality_cost = self.dt*self.cfg.landing_quality_cost*approaching_ground*(1-quality)*landing
+        landing_quality_bonus = self.cfg.landing_quality_bonus*quality*m['entered_handoff']*safe
+        reward += landing_quality_bonus-landing_quality_cost
+        m['landing_motion_quality'] = quality
+        m['landing_quality_cost'] = landing_quality_cost
+        m['landing_quality_bonus'] = landing_quality_bonus
         balance_cost, land_cost = self.velocity_costs(s, balancing, landing)
         coarse_cost = self.coarse_balance_velocity_cost(balancing)
         reward -= penalty+balance_cost+land_cost+coarse_cost

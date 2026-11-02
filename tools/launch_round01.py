@@ -131,6 +131,16 @@ def main():
                 with mutex:
                     status[variant['name']+'_eval_wide_takeover']=dict(state='skipped',reason='Native higher-course evaluation unavailable; analyze first')
                     save(out/'eval_status.json',status)
+            if plan.get('landing_transfer') and 'capability_cycle' in results:
+                good,evidence=step(variant,work,'eval_landing_transfer',['evaluate.py','--run-dir','outputs/train',
+                    '--checkpoint',checkpoint,'--output','outputs/eval_landing_transfer','--scenario','landing_transfer',
+                    '--duration','12','--count','32','--device','cuda:0'])
+                if not good: raise RuntimeError('Landing transfer evaluation execution failed')
+                results['landing_transfer']=json.loads((work/'outputs/eval_landing_transfer/result.json').read_text())
+            elif plan.get('landing_transfer'):
+                with mutex:
+                    status[variant['name']+'_eval_landing_transfer']=dict(state='skipped',reason='Native higher-course evaluation unavailable; analyze first')
+                    save(out/'eval_status.json',status)
             with mutex:
                 state['variants'][variant['name']]['state']='execution_finished_acceptance_pending'
                 save(out/'launch_status.json',state)

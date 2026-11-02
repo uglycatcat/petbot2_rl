@@ -150,7 +150,10 @@ class Controller:
         transferring = handoff | failure
         self.handoff_start[transferring] = self.executed[transferring]
         # Take over the real motion, not the former remote setpoint or zero speed.
-        self.command[transferring] = s['motion'][transferring]
+        if not self.cfg.live_ordinary_command:
+            self.command[transferring] = s['motion'][transferring]
+        # With live input, actual motion remains physical state and handoff_start
+        # preserves target continuity. It must not replace the operator request.
         self.ordinary_hip[handoff] = 0
         self.ordinary_hip[failure] = s['q'][failure, 3:].mean(-1).clamp(self.lo, self.hi)
         good_handoff = (before == Phase.HANDOFF) & ground & (s['q'][:, 3:].abs().amax(-1) < .1)

@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round23_ready",
-  "training_enabled": true,
+  "phase": "round24_engineering_pending",
+  "training_enabled": false,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Joint takeover/rise/stop-reverse engineering accepted:127 CPU;128env4-to8 same-run recovery/reload;default2048x2;fixed native1056-frame physics/control/observations and scoring exact;real expanded-training and wide-evaluation branches verified.No policy/full capability claim.",
+  "reason": "Round23 reviewed; implement landing motion quality and live ordinary handoff, engineering acceptance pending.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -13,15 +13,15 @@
   "batch26_resume_allowed": false,
   "next_experiment": {
     "series": "upright_restart_20261030",
-    "round": 23,
-    "name": "upright_restart_round23",
-    "status": "ready_random_initialization"
+    "round": 24,
+    "name": "upright_restart_round24",
+    "status": "engineering_pending"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": true,
+  "engineering_validated": false,
   "implementation_review": "docs/round01_implementation.md",
-  "cpu_contract_tests_passed": 127,
+  "cpu_contract_tests_passed": 135,
   "allowed_host_gpus": [
     2,
     3
