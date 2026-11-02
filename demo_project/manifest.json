@@ -73,17 +73,15 @@
         "demo"
       ],
       "shallow": false,
-      "status": "round19_running_gpu0_gpu1_random_pitch_curriculum",
+      "status": "round19_complete_seed71_reviewed_whole_batch_pending",
       "local_validation": "Round18 valid2x500,0/64both and0legal front landings;52/33edge collisions,12/31post-top relifts. Round19 only positive training pitch cost schedule0.1through100,to1at300,final200updates and every independent eval full original cost.148tests/9guarded jobs;midpoint0.55resume and full1eval verified;128real actions+64static exact physics/acceptance and scalar reward delta. Actual fresh initial.pt/PPO/GPU0/1 verified.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [
-        "step_round19_seed70@gpu0",
-        "step_round19_seed71@gpu1"
-      ],
+      "active_tasks": [],
       "active_training_commit": "ec0ce9c3f73b591a443242603bf0adb896b28607",
-      "next_iteration_requirement": "Review stage counts across0-100,100-300,300-500updates and final full-cost independent evaluation. Check curriculum regression, world body motion, one-flight, contacts, requested/executed/measured joints and complete drive-stop; no capability established.",
-      "body_pitch_requirement_status": "World lower_body objective retained; round19 learning scale ramps0.1to1,final200updates/evaluation original full cost. No new user angle/rate hard limits."
+      "next_iteration_requirement": "Review seed70 and whole batch before choosing change. Investigate sensor-memory representation/normalization and relift dynamics while retaining full pitch objective and complete autonomous task. No round20 started.",
+      "body_pitch_requirement_status": "Full cost final200updates/eval verified; curriculum restores landing exploration but seed71 worldpitch -66.47to51.34deg,ratepeak14.69rad/s remains unacceptable.",
+      "latest_lane_review": "Round19 seed71 valid500updates/full-costeval:0/64complete,51legalfrontland,41fourtop/home,0drive;7edge/55relift/2tilt. Exact1360substep replay and scalar contact/cost/memory valid. Started bit flips at40ready cases,39depart nextframe;5460fixed-actor decisions reconstructed, single-bit sensitivity supports memory interface audit, not physical repair."
     },
     {
       "name": "recovery_rl_demo",

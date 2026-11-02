@@ -1,6 +1,6 @@
 # 项目文档索引
 
-- Step独立训练：[第18轮终局](step_round18_results.md)、[第19轮执行](step_round19_execution.md)。第18轮合法落顶均0，物理/代价核验有效；第19轮学习课程0.1→1，148项容器/9项仿真通过，GPU0/1各512×500从零运行，独立评估保持完整目标。
+- Step独立训练：[第18轮终局](step_round18_results.md)、[第19轮执行](step_round19_execution.md)、[第19轮seed71审查](step_round19_seed71_review.md)。两路已结束，seed71合法落顶51/64、归髋41但短行/完整0；输入跳变与归位破坏已定位，seed70及整批决策待续接。
 
 - 最新upright桌面反馈：基本流程与约0.6m/s体验获认可；允许较慢、更多调整以改善起立泛化，零输入交接后退已修复、两轮微漂仍待训练。见[反馈与修复](upright_restart20_desktop_feedback_20261102.md)。
 
