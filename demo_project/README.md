@@ -4,7 +4,7 @@
 
 | 项目 | 职责 | 当前开发状态 |
 |---|---|---|
-| [upright_rl_demo](upright_rl_demo/README.md) | 从随机初始化完成起落与两轮遥控；不依赖历史权重。 | 第23轮高范围完整60/64、宽接管40/64，满速与落地未过；第24轮cb5b37c通过工程验收，GPU2/3各2048×1000从零。见[执行](../docs/upright_restart_round24_execution.md)。 |
+| [upright_rl_demo](upright_rl_demo/README.md) | 从随机初始化完成起落与两轮遥控；不依赖历史权重。 | 第24轮交接改善，高范围完整63/64、宽初态35/64，首接地滑动和满速未过；第25轮d60a04b工程验收中。见[执行](../docs/upright_restart_round25_execution.md)。 |
 | [step_rl_demo](step_rl_demo/README.md) | 固定2cm平台、初始质心前方30cm；同步髋角/轮速，前轮单次离地登台，沿线短行后停稳。 | 第17轮完整均0/64、落顶后重复离地56/59；第18轮世界俯仰软代价通过141项容器和8项仿真，GPU0/1各512×500从零运行。见[执行](../docs/step_round18_execution.md)。 |
 | [recovery_rl_demo](recovery_rl_demo/README.md) | 重新设计分阶段跌倒恢复。 | 仅登记与需求说明，尚无训练代码。 |
 | [recovery_agile_01](recovery_agile_01/PETBOT.md) | 基于AGILE的早期恢复原型。 | 历史实验，不能直接作为新恢复任务的设计或成功基线。 |

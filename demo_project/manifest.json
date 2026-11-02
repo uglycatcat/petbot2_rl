@@ -44,20 +44,19 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "cb5b37c0f00e5d647f0dac1c18f7b0920f0223c9",
+      "verified_commit": "d60a04b341864b6e356f1a838e23e59f6f9ceb22",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round24_running_gpu2_gpu3_random_landing_transfer",
-      "local_validation": "Round23 2x1000/10eval valid,noOOM/recovery;lowbasic63/64,highbasic59/64 buthighcomplete60/64,wide40/64;positive0.6rise20/20failed,fullspeed/landingunmet. Round24 135CPU and correctedGPUgate:4to8same-run recovery,reload0/32,default2048x2;native31750environmentframes physics/action/observationexact;32three-wayordinarytransfersvalid. Initial int32 probe failure with masked exit0 rejected;fixed dtype/cleanup,negative actual shell exit1;python.sh normalization audited;allfailure recordsretained,noOOM. Fixed2x2048x1000random actualPPOstartupverified,oldactorengineeringonly;no policy/sim2sim acceptance. Desktop20+618081e unchanged.",
+      "status": "restart_round25_engineering_pending_round24_reviewed",
+      "local_validation": "Round24 2x1000/12independent eval valid,no missing/OOM/recovery;highcomplete63/64,basic44/64,wide35/64 with20positive0.6rise failures. Zero-request handoff -.006/-.038m/s but first geometric ground still8cm travel;fullspeed .45-.50m/s. Round25 143CPU,expanded boundary+steady long straight sampling;actor195,critic221;GPU gate pending,formal training not started. No policy/sim2sim acceptance.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round24_s101@gpu2",
-        "upright_restart_round24_s102@gpu3"
+        "upright_restart_round25_gate01@gpu2_gpu3"
       ],
-      "active_training_commit": "cb5b37c0f00e5d647f0dac1c18f7b0920f0223c9",
+      "active_training_commit": null,
       "pending_design_review": "docs/upright_restart_landing_motion_20261102.md"
     },
     {
