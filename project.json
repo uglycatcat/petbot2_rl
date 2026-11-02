@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round26_engineering_pending",
-  "training_enabled": false,
+  "phase": "round26_ready",
+  "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round25 wide-entry gain retained; bounded command-centered BALANCE action plus near-ground LAND quality memory, engineering pending.",
+  "reason": "149CPU;fresh4to8same-run recovery,reload,default2048;native and landing physics/actions/scoring exact with center explicitly off, new LAND bonus independently audited;enabled action mapping checked in PhysX. Oldactor development only;not policy acceptance.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -15,11 +15,11 @@
     "series": "upright_restart_20261030",
     "round": 26,
     "name": "upright_restart_round26",
-    "status": "engineering_pending"
+    "status": "ready_random_initialization"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": false,
+  "engineering_validated": true,
   "implementation_review": "docs/round01_implementation.md",
   "cpu_contract_tests_passed": 149,
   "allowed_host_gpus": [
