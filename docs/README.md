@@ -1,5 +1,7 @@
 # 项目文档索引
 
+- Step桌面预览：[ONNX/MuJoCo发布记录](step_sim2sim_20261102.md)。启动静止、Space执行、R重置；默认第14轮seed71，前轮越沿后后轮离地，完整能力未通过；正式训练项目保持空。
+
 - 桌面体验：upright默认改为新第20轮seed102单ONNX，旧C58保留；见[sim2sim发布记录](upright_restart20_sim2sim.md)。
 
 - 当前：**upright第20轮已验收，第21轮恢复60ms并增加长训练指令保持，已在GPU2/3从零启动**。先看[当前交接](current_handoff.md)、[第20轮结果](upright_restart_round20_results.md)、[第21轮执行](upright_restart_round21_execution.md)及[需求基线](current_scope.md)。双向.75及全部能力仍未通过；旧第26批不恢复，禁止历史训练权重、周期定时器和goal。

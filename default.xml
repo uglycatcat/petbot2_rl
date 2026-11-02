@@ -125,4 +125,10 @@
            clone-depth="1"
            groups="reference" />
 
+  <!-- Step：独立ONNX/MuJoCo预览；正式训练目录暂留空。 -->
+  <project name="petbot2_rl" path="rl_project/std_train_step_project"
+           remote="ours" revision="rlproj/std_train_step_project" groups="rl" />
+  <project name="petbot2_rl" path="rl_project/std_s2s_step_project"
+           remote="ours" revision="rlproj/std_s2s_step_project" groups="rl" />
+
 </manifest>

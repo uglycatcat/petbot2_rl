@@ -10,3 +10,5 @@
 在仓库根目录执行 `repo sync rl_project/std_train_upright_project rl_project/std_s2s_upright_project`。已有本地修改先提交，不对运行固定副本执行同步。现有训练源码仍在 `demo_project/upright_rl_demo/`；`demo_project/runs/` 仍保留有效产物与运行依赖。根目录 `history/` 仅用于后续归档，不进版本管理；归档前必须保留策略来源与依赖索引。
 
 任务与验证边界见 [MuJoCo 方案](../docs/upright_sim2sim_20261027.md)。
+
+Step独立项目：[std_s2s_step_project](std_s2s_step_project/README.md)提供ONNX/MuJoCo预览，启动静止、Space执行、R重置；默认第14轮seed71，保留第13轮seed71对照。前轮越沿落顶可见，但后轮离地与停车仍未通过，见[发布证据](../docs/step_sim2sim_20261102.md)。`std_train_step_project/`保持空目录预留，训练仍在step demo。两者分别由`rlproj/std_s2s_step_project`和`rlproj/std_train_step_project`版本化，执行`repo sync rl_project/std_s2s_step_project rl_project/std_train_step_project`同步。
