@@ -14,7 +14,9 @@ from .body_pitch import pitch_cost_scale_at
 
 
 def runner_config(t):
-    model = dict(class_name='MLPModel', hidden_dims=t['hidden_dims'], activation='elu', obs_normalization=True)
+    model_class = ('step_demo.models:SensorMemoryMLP'
+                   if t.get('observation_normalization') == 'sensor_memory_unit_v20' else 'MLPModel')
+    model = dict(class_name=model_class, hidden_dims=t['hidden_dims'], activation='elu', obs_normalization=True)
     distribution = (dict(class_name='BetaDistribution', action_range=(-1.,1.))
                     if t.get('policy_distribution','gaussian')=='beta' else
                     dict(class_name='GaussianDistribution', init_std=t['initial_std'], std_type='log'))

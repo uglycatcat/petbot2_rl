@@ -26,10 +26,15 @@ def code_digest():
 def load_training(path):
     defaults=json.loads((PROJECT_ROOT/'configs/train_v1.json').read_text())
     t=json.loads(Path(path).read_text())
-    optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling','critic_observation','task_memory','wheel_mapping','body_pitch_curriculum'}
+    optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling','critic_observation','task_memory','wheel_mapping','body_pitch_curriculum','observation_normalization'}
     if set(t)-optional!=set(defaults) or t['schema']!='petbot_step_ppo_v1': raise ValueError('Unknown training schema/fields')
     if t.get('task_memory','none') not in ('none','sensor_stop_v16'):
         raise ValueError('Unknown deployable task memory')
+    if t.get('observation_normalization','empirical') not in ('empirical','sensor_memory_unit_v20'):
+        raise ValueError('Unknown observation normalization')
+    if t.get('observation_normalization') == 'sensor_memory_unit_v20' and (
+            t.get('task_memory') != 'sensor_stop_v16' or t.get('critic_observation','policy') != 'policy'):
+        raise ValueError('Unit memory normalization requires 29 policy-only sensor-memory inputs')
     if t.get('wheel_mapping','affine') not in ('affine','zero_centered','zero_margin'):
         raise ValueError('Unknown wheel action mapping')
     if t.get('reward_version') == 'stop_v16' and (t.get('task_memory') != 'sensor_stop_v16' or t.get('wheel_mapping') != 'zero_centered'):
@@ -83,7 +88,7 @@ def main(argv):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command',choices=('train','evaluate'))
     parser.add_argument('--config',type=Path,default=DEFAULT_CONFIG)
-    parser.add_argument('--training-config',type=Path,default=PROJECT_ROOT/'configs/round19_seed70.json')
+    parser.add_argument('--training-config',type=Path,default=PROJECT_ROOT/'configs/round20_seed70.json')
     parser.add_argument('--model-dir',type=Path)
     parser.add_argument('--asset-dir',type=Path,default=PROJECT_ROOT/'artifacts/robot')
     parser.add_argument('--run-dir',type=Path,required=True)
@@ -148,6 +153,7 @@ def main(argv):
             actor_observation_dim=env.cfg.observation_space,
             critic_observation_dim=env.cfg.observation_space+(len(CRITIC_STATE_FIELDS) if env.reward_state_critic else 0),
             wheel_mapping=env.wheel_mapping,task_memory=t.get('task_memory','none'),
+            observation_normalization=t.get('observation_normalization','empirical'),
             policy_extra_fields=list(MEMORY_FIELDS) if env.sensor_stop_enabled else [],
             critic_extra_fields=list(CRITIC_STATE_FIELDS) if env.reward_state_critic else []))
         write_json(output/'runtime.json',{name:importlib.metadata.version(name) for name in ('torch','rsl-rl-lib','numpy')})
