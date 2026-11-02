@@ -49,10 +49,15 @@ def main():
         parser.error('Command scale must be positive and finite')
     if args.headless and args.snapshot:
         os.environ.setdefault('MUJOCO_GL','egl')
-    from petbot_s2s.simulation import Simulation
+    restart = json.loads((args.policy/'manifest.json').read_text()).get('schema') == 'upright_restart_onnx_v1'
+    if restart:
+        from petbot_s2s.restart import RestartSimulation as Simulation
+    else:
+        from petbot_s2s.simulation import Simulation
     sim = Simulation(args.policy,args.model_dir,args.frame,args.transition_contract)
-    if args.forward_speed is None:args.forward_speed=.04 if args.headless else sim.controller.speed_limit
-    if args.turn_rate is None:args.turn_rate=.12 if args.headless else sim.controller.yaw_limit
+    recommended = sim.controller.manifest.get('recommended_keyboard', {}) if restart else {}
+    if args.forward_speed is None:args.forward_speed=.04 if args.headless else recommended.get('speed', sim.controller.speed_limit)
+    if args.turn_rate is None:args.turn_rate=.12 if args.headless else recommended.get('yaw', sim.controller.yaw_limit)
     limits = sim.controller.ordinary if args.headless else sim.controller
     for value,limit in ((args.forward_speed,limits.speed_limit),(args.turn_rate,limits.yaw_limit)):
         if not math.isfinite(value) or value<0 or value*args.command_scale>limit:
@@ -114,7 +119,8 @@ def main():
             balanced_at=None
     result = dict(policy=args.policy.name,checkpoint_sha256=c.manifest['checkpoint_sha256'],
         inference_backend='onnxruntime_cpu',network_sha256=c.manifest['networks'],
-        deployment_contract=('onnx_capability25_preview_v1' if c.capability_v25 else 'onnx_independent_ordinary_default_landing_v1'),
+        deployment_contract=('restart_single_actor_v1' if restart else
+                             'onnx_capability25_preview_v1' if c.capability_v25 else 'onnx_independent_ordinary_default_landing_v1'),
         transition_contract=c.transition_contract,development_intervention=args.transition_contract is not None,
         source_model_sha256=sim.model_sha256,mujoco_version=__import__('mujoco').__version__,
         scenario=args.scenario,forward_speed=args.forward_speed,turn_rate=args.turn_rate,takeover_yaw=args.takeover_yaw,command_scale=args.command_scale,frame=args.frame,wall_seconds=time.monotonic()-start,
@@ -123,12 +129,17 @@ def main():
         completed_cycles=c.cycles,interrupted_calls=c.interruptions,last_exit_code=c.last_exit_code,failure_code=c.failure_code,events=c.events,
         maximum_front_height=max(row['front_z'] for row in rows),
         final=rows[-1],interpretation='MuJoCo diagnostic, not an Isaac success-rate estimate')
-    if len(rows)>1:
+    if len(rows)>1 and not restart:
         from petbot_s2s.core.functional import score_trajectories
         functional_rows = [dict(t=r['time'],valid=[True],phase=[r['phase']],raw=[r['raw']],
             pos=[r['position']],heading=[r['yaw']],interval_motion=[r['interval_motion']]) for r in rows]
         result['functional'] = score_trajectories(functional_rows,
             dict(complete=[c.cycles>=args.cycles],failure=[bool(c.failure_code or c.interruptions)]))
+    if restart:
+        result['policy_period_s'] = c.dt
+        result['maximum_actual_wheel_rad_s'] = max(abs(x) for row in rows for x in row['wheel_measured'])
+        result['maximum_target_wheel_rad_s'] = max(abs(x) for row in rows for x in row['wheel_target'])
+        result['interpretation'] += '; legacy C58 functional scoring is not applied to the restart observation/control contract'
     (args.output/'summary.json').write_text(json.dumps(result,indent=2)+'\n')
     (args.output/'trace.jsonl').write_text(''.join(json.dumps(r)+'\n' for r in rows))
     if args.snapshot:

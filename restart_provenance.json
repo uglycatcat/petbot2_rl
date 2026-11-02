@@ -1,0 +1,22 @@
+{
+  "source_commit": "40e926d8c181473e181ed5069535247525786fc9",
+  "source_run": "upright_restart_round20_s102",
+  "files": {
+    "controller.py": "98febe9917ab5bf3160a848f557df9a5536c3917f1fc9f0c0977be3b549de19f",
+    "geometry.py": "aee4929f871833fccdf082638a0dddc989453283f0cad564bf7b00aa7b4855f6",
+    "runtime.py": "ca0febdada278d13ad94845d28b97d9766ff9d6ef9984343c5fe10b627b575af"
+  },
+  "extracted_methods": [
+    "Runtime.observation_stage_age",
+    "Runtime.observation"
+  ],
+  "note": "Only controller, geometry and inference observations are vendored; no PPO, critic, reward or curriculum runtime. Legacy C58 remains separate.",
+  "deployment_adaptations": {
+    "input": "External Space/WASD/QE/arrow commands replace training scenario scheduler; no automatic rise/land.",
+    "history": "Same first-frame replication and oldest-first order; cleared at every accepted rise.",
+    "timing": "2ms native source physics,15 substeps per30ms policy sample.",
+    "handoff": "Inherits measured motion and returns hip target0; new operator command takes ownership after handoff.",
+    "safety": "Independent MuJoCo body-contact/height guard exits call without adding contact to actor observations.",
+    "ordinary": "Source full wheel/hip targets independent of policy motion limits; trained source controller retained."
+  }
+}

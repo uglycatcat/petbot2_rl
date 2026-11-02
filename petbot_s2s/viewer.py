@@ -5,7 +5,7 @@ import glfw
 import mujoco
 
 
-PHASES = ['FOUR WHEELS','RISING','TWO WHEELS','LANDING','HANDOFF']
+PHASES = ['FOUR WHEELS','RISING','TWO WHEELS','LANDING','HANDOFF','CALL EXIT / ORDINARY']
 FAILURES = {1:'invalid state',2:'body too low',4:'overturned',8:'excessive speed',
             16:'excessive rotation',32:'takeover not ready',64:'rise timed out',128:'landing timed out',
             256:'travel boundary',512:'front wheels too low',1024:'rear support lost',

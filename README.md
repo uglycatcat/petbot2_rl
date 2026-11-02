@@ -2,6 +2,8 @@
 
 通过ONNX Runtime加载已训练策略，体验四轮行驶中起立、两轮遥控、前轮落地与普通控制交接。源模型从工作区 `robot_description/` 只读加载；本项目不包含训练代码。
 
+当前默认为**新系列第20轮seed102的1000更新终局**，单Actor从随机初始化训练，不依赖旧父网络。旧C58包完整保留供切换比较。默认窗口两轮幅度0.15m/s、0.5rad/s，可用方向键调整；普通四轮保持完整源范围。
+
 ## 启动
 
 在 PetBot 主仓库更新 `main`，然后物化这个独立项目：
@@ -35,15 +37,31 @@ uv run --locked run.py --forward-speed 0.15 --turn-rate 0.5
 
 `--frame 0.15`设置初始普通车架目标；所有策略包的普通车架范围均来自源模型[-1,1.2]rad。这个范围是控制器允许范围，不表示各角度均已通过起立验证。窗口显示原始操作者请求`Operator`、限幅/投影后目标`Target`、平滑及阶段处理后的实际策略指令`Command`、实测速度`Measured`和当前两轮上限。普通满幅请求可使Operator显示0.75，即使两轮Target只有0.15；判断响应应对照Command与Measured。
 
-**当前默认第23批C58仍可能在高速/较大车架角下起立失败。** 新包保留训练中的连续准备控制和8秒起立时限，允许策略在离地前减速、调整共同髋角；没有强制停车或回零脚本，宽范围鲁棒性尚未通过。普通控制完整范围与策略分开。要用与此前体验一致的手动输入幅度，可显式设置普通与两轮参数，物理能力与策略范围不变：
+**新第20轮seed102仍未证明双向0.75m/s和宽髋角起立能力。** 起立沿用该轮训练的12秒时限、单网络连续控制，允许必要减速/调髋，没有强制停车或回零脚本。普通控制完整范围与策略分开。要用与此前体验一致的手动输入幅度，可显式设置普通与两轮参数，物理能力与策略范围不变：
 
 ```bash
 uv run --locked run.py --forward-speed 0.15 --turn-rate 0.5 --ordinary-forward-speed 0.15 --ordinary-turn-rate 0.5
 ```
 
-## 第23批C58终局策略预览（2026-10-29）
+## 新系列第20轮seed102预览（2026-11-02）
 
-默认`cycle23_course_r58/model_999`来自第23批课程组seed58的1000更新终局，原始检查点SHA以`bb3bbb53`开头。使用外层、完整父反馈和内部反馈三张ONNX图，保留60/20/2ms时序，并同步v25两轮轮速端点映射、连续准备与默认髋位落地。默认选择从[selection.json](policies/selection.json)读取；模型包[manifest.json](policies/cycle23_course_r58/manifest.json)记录检查点与每张网络的SHA及导出校验。
+默认包`restart20_s102/update_001000`来自代码`40e926d`，训练独立run_id和检查点/网络SHA见[策略manifest](policies/restart20_s102/manifest.json)。只有一张`policy.onnx`，39维观测×5帧、3维动作；按原30ms策略周期、2ms物理步运行。旧C58的58×5观测和多网络控制不能用于这个新包，程序按manifest选择相应适配器。
+
+Isaac独立默认起立32/32、静止循环32/32、低速60秒完整/基本32/32、高范围29/32；满速请求下前/后实测约0.487/0.535m/s，尚未达到双向0.75m/s。包上限是可请求范围，不是已通过的稳定能力。新第21轮仍独立训练，本包不包含其中间权重。
+
+发布短测：MuJoCo3.16静止起立保持6秒后落地、0.15m/s与0.5rad/s混合遥控保持18秒后落地均完成；末端髋误差小于0.01rad。180组源码观测/目标逐项一致，27姿态轮间隙几何核对、普通双向全速、Q/E、Space历史重置、意外退出和4秒窗口加载通过。实测轮速峰值32.82rad/s仍有超调；这些是有限体验检查，尚未获得用户桌面验收，也不代表全范围sim2sim通过。见[检查记录](validation/20261102_restart20/review.json)。
+
+保留旧C58，可用同样参数对照：
+
+```bash
+uv run --locked run.py --policy policies/cycle23_course_r58 --forward-speed 0.15 --turn-rate 0.5
+```
+
+新包普通控制使用与该轮训练相同的源范围控制。正常落地只增加默认髋位，保留实测速度继承；交接后新操作者指令重新取得速度控制权。起立中再次按Space会锁存落地请求，进入两轮后执行。意外退出继续普通控制，必须重新按Space才会再次起立。
+
+## 历史第23批C58终局策略预览（2026-10-29）
+
+历史默认`cycle23_course_r58/model_999`来自第23批课程组seed58的1000更新终局，原始检查点SHA以`bb3bbb53`开头。使用外层、完整父反馈和内部反馈三张ONNX图，保留60/20/2ms时序，并同步v25两轮轮速端点映射、连续准备与默认髋位落地。该历史选择见[selection_cycle23.json](policies/selection_cycle23.json)；模型包[manifest.json](policies/cycle23_course_r58/manifest.json)记录检查点与每张网络的SHA及导出校验。
 
 同历史协议的Isaac低速180秒完整64/64、基本63/64；0.15m/s、0.5rad/s中速60秒完整62/64、基本48/64。高速、AW/DW高段差异、极端初态角仍有失败，不将包声明范围当作可靠能力范围。
 
@@ -61,7 +79,7 @@ uv run --locked run.py --policy policies/cycle21_parent_b_r42 --forward-speed 0.
 
 B在Isaac中速60秒原评估/新种子完整60/64、62/64，优于A的49/64、55/64；B全车架范围有退步，因此A也保留。两份终局包都包含完整父反馈网络，按原60/20/2ms控制时序执行，不能只替换旧外层网络。网络CUDA1024样本输出差0，35组观测与240子步目标对齐通过；这些工程检查不等于动作质量通过。
 
-窗口中`--forward-speed`、`--turn-rate`仅设置策略调用期间的速度/转向限幅；普通控制的幅度由独立`--ordinary-forward-speed`、`--ordinary-turn-rate`设置，默认使用源模型完整上限±0.75m/s、±15rad/s，与所选策略及其限幅无关。普通驱动不使用策略的命令加速度或轮速变化率；实际加速度仍受源执行器力矩和接触动力学约束。省略策略参数时使用对应包声明范围，该范围不等于已验证的可靠能力。组合命令按左右后轮±25rad/s联合可达域投影，速度和转向不能同时取得各自单轴最大值。
+窗口中`--forward-speed`、`--turn-rate`仅设置策略调用期间的速度/转向限幅；普通控制的幅度由独立`--ordinary-forward-speed`、`--ordinary-turn-rate`设置，默认使用源模型完整上限±0.75m/s、±15rad/s，与所选策略及其限幅无关。普通驱动不使用策略的命令加速度或轮速变化率；实际加速度仍受源执行器力矩和接触动力学约束。新包省略策略参数时采用推荐0.15/0.5；旧包沿用对应声明范围，该范围不等于已验证的可靠能力。组合命令按左右后轮±25rad/s联合可达域投影，速度和转向不能同时取得各自单轴最大值。
 
 无窗口脚本的`--forward-speed`、`--turn-rate`为场景请求幅度，默认0.04m/s、0.12rad/s；允许在源模型范围内设置，策略阶段再单独按包范围处理。`--ordinary-*`仅影响窗口按键幅度。日志分别保存原始操作者请求、有效命令和实测响应。
 
@@ -98,9 +116,10 @@ uv run --locked run.py --headless --scenario mixed --cycles 2 --seconds 65 --out
 ## 代码与控制契约
 
 - `run.py`：GUI / 固定诊断场景入口。
-- `petbot_s2s/controller.py`：58×5 观测、历史、外部模式请求与反复接管；`simulation.py`：MuJoCo 状态/接触力翻译与电机接口；`viewer.py`：按键按下/释放和显示。
+- `petbot_s2s/restart.py`与`restart_core/`：新系列单ONNX适配器及固定控制/观测源码，来源见`restart_provenance.json`；30ms/2ms时序，运行时不依赖训练checkout。
+- `petbot_s2s/controller.py`：历史C58的58×5 观测、历史、外部模式请求与反复接管；`simulation.py`：MuJoCo 状态/接触力翻译与电机接口；`viewer.py`：按键按下/释放和显示。
 - `petbot_s2s/core/`：固定训练源码的纯张量阶段/控制逻辑。`provenance.json`记录来源和部署扩展；普通控制在`ordinary.py`独立实现，`controller.py`负责输入所有权及默认落地目标。不依赖当前demo checkout随后如何修改。
-- `policies/`：CPU ONNX网络及来源。运行时只加载manifest列出的`.onnx`，不回退到`.pt`；保留TorchScript文件仅供转换与审计。外层、内部反馈及其base输出、完整父网络均已转换。控制链仍为60ms策略、20ms冻结平衡反馈、2ms转向反馈；张量状态/控制计算仍用PyTorch，神经网络推理全部由ONNX Runtime执行。物理限位、力矩限幅和源模型不变。
+- `policies/`：CPU ONNX网络及来源。运行时只加载manifest列出的`.onnx`，不回退到`.pt`；保留TorchScript文件仅供转换与审计。外层、内部反馈及其base输出、完整父网络均已转换。历史控制链为60ms策略、20ms冻结平衡反馈、2ms转向反馈；新系列只含单网络30ms控制；张量状态/控制计算仍用PyTorch，神经网络推理全部由ONNX Runtime执行。物理限位、力矩限幅和源模型不变。
 - `checks/export_onnx.py`：用`uv run --locked --group export python checks/export_onnx.py`重建ONNX并逐输出检查。manifest保留源文件SHA、ONNX SHA及数值容差；图转换不等于闭环验收。
 - `checks/operator_controls.py`：真实MuJoCo普通满幅、Q/E、输入所有权和禁止PT运行加载检查。
 - `checks/validate_port.py`：开发时对照固定源码、观测、接触力、方向和按键。例：`uv run checks/validate_port.py --source ../../demo_project/upright_rl_demo --output outputs/port_check.json`。源码更新后需使用 provenance 指定的提交；不应为让检查通过而改来源 SHA。
@@ -127,4 +146,4 @@ uv run python run.py --policy policies/correction20_gate_r42
 
 历史策略包保持其原合同。新版控制端已完成MuJoCo前轮回落/翻倒的状态故障注入与源码对齐检查，接口通过不等于学习策略已能在全范围稳定工作；训练候选和实际闭环证据见主仓库`docs/upright_cycle_v21.md`。
 
-历史工程候选通过`--policy policies/full_range21_gate_r42`显式选择；当前默认已改为上方第23批正式终局C58策略。无窗口诊断可用`--forward-speed`和`--turn-rate`设置幅度；取值须在该包声明范围内，控制器仍施加联合轮速限幅。`summary.json`分别记录正常完成与`interrupted_calls`，脚本不会在中断后把原定落地请求变成新起立。该候选全范围稳定性尚未通过。
+历史工程候选通过`--policy policies/full_range21_gate_r42`显式选择；当前默认已改为上方新系列第20轮seed102策略。无窗口诊断可用`--forward-speed`和`--turn-rate`设置幅度；取值须在该包声明范围内，控制器仍施加联合轮速限幅。`summary.json`分别记录正常完成与`interrupted_calls`，脚本不会在中断后把原定落地请求变成新起立。该候选全范围稳定性尚未通过。

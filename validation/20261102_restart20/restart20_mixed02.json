@@ -1,0 +1,156 @@
+{
+  "policy": "restart20_s102",
+  "checkpoint_sha256": "19af9aa1faae970de1cc360fc312bffb116ad1fda565d60773249057702db035",
+  "inference_backend": "onnxruntime_cpu",
+  "network_sha256": {
+    "policy": {
+      "file": "policy.onnx",
+      "sha256": "20e928cd45b4333f8213b12acf5193fbfaa597f04986606c78f960952fa5d60f"
+    }
+  },
+  "deployment_contract": "restart_single_actor_v1",
+  "transition_contract": "restart_single_actor",
+  "development_intervention": false,
+  "source_model_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+  "mujoco_version": "3.16.0",
+  "scenario": "mixed",
+  "forward_speed": 0.15,
+  "turn_rate": 0.5,
+  "takeover_yaw": 0.0,
+  "command_scale": 1.0,
+  "frame": 0.0,
+  "wall_seconds": 5.150711445137858,
+  "simulated_seconds": 22.649999999998325,
+  "entered_balance": true,
+  "requested_cycles": 1,
+  "completed_cycles": 1,
+  "interrupted_calls": 0,
+  "last_exit_code": 0,
+  "failure_code": 0,
+  "events": [
+    {
+      "time": 3.029999999999888,
+      "event": "rise_requested"
+    },
+    {
+      "time": 3.5699999999998284,
+      "event": "balance_entered"
+    },
+    {
+      "time": 21.599999999998907,
+      "event": "land_requested"
+    },
+    {
+      "time": 22.649999999998325,
+      "event": "ordinary_handoff_complete"
+    }
+  ],
+  "maximum_front_height": 0.20568898026878596,
+  "final": {
+    "time": 22.649999999998325,
+    "phase": 0,
+    "phase_time": 0.6299998760223389,
+    "armed": false,
+    "failure_code": 0,
+    "cycles": 1,
+    "interruptions": 0,
+    "last_exit_code": 0,
+    "inference_backend": "onnxruntime_cpu",
+    "operator_request": [
+      0.15000000596046448,
+      0.0
+    ],
+    "ordinary_control": true,
+    "ordinary_frame_target": 0.0,
+    "manual_frame_allowed": true,
+    "policy_motion_limits": [
+      0.75,
+      0.5
+    ],
+    "position": [
+      0.9307276185875474,
+      -0.7007258345235463,
+      0.08378511516965063
+    ],
+    "gravity": [
+      0.00024824662250466645,
+      -0.00016985274851322174,
+      -0.9999999403953552
+    ],
+    "front_z": 0.04496225165529236,
+    "rear_z": 0.029625160809377514,
+    "rear_fraction": 1.0,
+    "four_fraction": 0.8666666666666667,
+    "raw": [
+      -0.3195837736129761,
+      0.11001181602478027
+    ],
+    "command": [
+      -0.3195837736129761,
+      0.11001181602478027
+    ],
+    "requested": [
+      -0.3195837736129761,
+      0.11001181602478027
+    ],
+    "control_reference": [
+      -0.3195837736129761,
+      0.11001181602478027
+    ],
+    "motion": [
+      -0.31034913659095764,
+      0.023008426651358604
+    ],
+    "interval_motion": [
+      -0.31034913659095764,
+      0.023008426651358604
+    ],
+    "yaw": 1.3961946964263916,
+    "instant": [
+      -0.31034913659095764,
+      0.023008426651358604
+    ],
+    "frame": [
+      -0.009253040887415409,
+      -0.009440271183848381
+    ],
+    "frame_target": [
+      0.0,
+      0.0
+    ],
+    "wheel_measured": [
+      -10.511619567871094,
+      -10.342697143554688
+    ],
+    "wheel_target": [
+      -10.836146354675293,
+      -10.469439506530762
+    ],
+    "actuator_force": [
+      -0.0008445674961261053,
+      0.007889776686075612,
+      0.008132228769316626,
+      0.036963474101231054,
+      0.03771211643039719,
+      -0.04666845434067768,
+      -0.014999070664062586
+    ],
+    "inference_count": 633
+  },
+  "interpretation": "MuJoCo diagnostic, not an Isaac success-rate estimate; legacy C58 functional scoring is not applied to the restart observation/control contract",
+  "policy_period_s": 0.03,
+  "maximum_actual_wheel_rad_s": 30.959856033325195,
+  "maximum_target_wheel_rad_s": 24.63050079345703,
+  "trace_sha256": "fdbe7fe97ac959d9c0ebe59f11a278a9969ed3287a3ec4882b0aebd5f822d293",
+  "physical_constraints": {
+    "source_unchanged": true,
+    "targets_and_effort_valid": true,
+    "actual_wheel_overshoot_retained": true,
+    "policy_timestamps_s": 0.03,
+    "final_hips_rad": [
+      -0.009253040887415409,
+      -0.009440271183848381
+    ],
+    "final_real_four_wheel_geometry": true
+  }
+}

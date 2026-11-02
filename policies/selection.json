@@ -1,55 +1,22 @@
 {
-  "selected": "cycle23_course_r58",
-  "checkpoint": "model_999.pt",
-  "batch": "upright_cycle_batch23",
-  "training_updates_this_batch": 1000,
-  "task_commit": "d7e35cbb8e5e6eadbba149ee86bb348699f08217",
-  "checkpoint_sha256": "bb3bbb538fb6118ce379604b3d987458126a2a55ec76a26617b7497aa1930e87",
+  "selected": "restart20_s102",
+  "checkpoint": "update_001000.pt",
+  "batch": "upright_restart_round20",
+  "seed": 102,
+  "training_updates": 1000,
+  "task_commit": "40e926d8c181473e181ed5069535247525786fc9",
+  "checkpoint_sha256": "19af9aa1faae970de1cc360fc312bffb116ad1fda565d60773249057702db035",
+  "previous_default": "cycle23_course_r58",
+  "previous_selection": "selection_cycle23.json",
+  "inference_backend": "onnxruntime_cpu",
   "status": "user_requested_preview_not_sim2sim_acceptance",
-  "criterion": "C58 preserves low/medium cycle stability and has stronger basic teleoperation and wide-frame performance than C59; no universal superiority claim.",
-  "comparison": "cycle21_parent_b_r42",
-  "previous_default": "cycle21_parent_b_r42",
-  "previous_selection": "selection_cycle21.json",
-  "source_results": "docs/upright_cycle_batch23_results.md",
-  "retention_comparison": "docs/upright_cycle23_retention_comparison.md",
-  "native_medium": {
-    "count": 64,
-    "complete": 62,
-    "basic": 46,
-    "seed": 20261163
-  },
-  "historical_protocol_medium": {
-    "count": 64,
-    "complete": 62,
-    "basic": 48,
-    "seed": 20261020
-  },
-  "historical_protocol_low180": {
-    "count": 64,
-    "complete": 64,
-    "basic": 63,
-    "seed": 20261020
-  },
-  "native_frame_full": {
-    "count": 64,
-    "complete": 47,
-    "basic": 40
-  },
-  "limits": {
-    "forward_mps": 0.75,
-    "yaw_radps": 15,
-    "frame_rad": [
-      -1,
-      1.2
-    ],
-    "rear_wheel_target_radps": 25
-  },
+  "criterion": "Round20 seed102 completes low32/32 and high29/32; seed101 fails landing. This is the better seed from the requested round, not a claim of improvement over every earlier policy.",
   "recommended_keyboard": {
     "forward_mps": 0.15,
     "yaw_radps": 0.5
   },
-  "limitation": "Both-direction0.75 acceleration, higher-speed mirrored arcs and extreme initial hip angles remain unreliable. Full-range native/heldout completion0/64. Source range is not a validated stable envelope.",
-  "mujoco_evidence": "validation/20261029_cycle23/review.json",
-  "mujoco_status": "Two short fixed previews complete: mixed0.15/0.5 hold18s passes basic teleoperation; stationary+0.15rad hold12s completes, no mixed coverage. Q/E/full ordinary/ONNX-only/exit/GUI checks pass. User desktop acceptance pending.",
-  "inference_backend": "onnxruntime_cpu"
+  "source_results": "docs/upright_restart_round20_results.md",
+  "limitations": "Bidirectional0.75m/s, mirror symmetry, broad initial hips and actual wheel overspeed unresolved.",
+  "mujoco_evidence": "validation/20261102_restart20/review.json",
+  "mujoco_status": "Stationary hold6s and mixed0.15/0.5 hold18s complete. Port/ordinary/QE/exit/history/GUI checks pass. Actual wheel overshoot retained; user acceptance pending."
 }

@@ -1,0 +1,46 @@
+{
+  "source_run": "upright_restart_round20_s102",
+  "checkpoint": "update_001000.pt",
+  "updates": 1000,
+  "initialization": "random",
+  "inference": "one ONNX graph, no PT or historical parent runtime",
+  "source_model_unchanged": true,
+  "onnx_numeric_max_abs_error": 8.344650268554688e-07,
+  "source_control_observation_port": "port.json",
+  "mujoco_version": "3.16.0",
+  "scenarios": [
+    {
+      "file": "stationary",
+      "complete": 1,
+      "interruptions": 0,
+      "actual_wheel_peak": 32.817626953125
+    },
+    {
+      "file": "mixed",
+      "complete": 1,
+      "interruptions": 0,
+      "actual_wheel_peak": 30.959856033325195
+    }
+  ],
+  "gui_smoke": {
+    "seconds": 4,
+    "exit_code": 0,
+    "renderer": "Xvfb software OpenGL; desktop user acceptance still required"
+  },
+  "development_failures": [
+    "First export destination was read-only inside training container; no artifact was written there. Exported into runs then copied to sim2sim.",
+    "First adapter smoke tests failed before physics from a missing Phase import in the observation extraction; corrected and reran with new output directories.",
+    "Initial geometry assertion omitted the source front/rear nominal height difference 0.01372m; corrected expected clearance. Controller/model unchanged."
+  ],
+  "status": "preview_checks_complete_not_full_capability_or_user_acceptance",
+  "limitations": [
+    "Two fixed short scenarios do not establish arbitrary starting angles, continuous full-range speed, mirrored motion or long-duration stability.",
+    "Actual wheel speed peaks32.82rad/s remain despite25rad/s target cap.",
+    "No claims about MuJoCo full0.75m/s capability; native Isaac also remains under target."
+  ],
+  "legacy_C58_regression": {
+    "explicit_bundle_load": true,
+    "ordinary_physics_seconds": 0.3,
+    "exit_code": 0
+  }
+}

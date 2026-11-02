@@ -1,0 +1,558 @@
+{
+  "schema": "upright_restart_onnx_v1",
+  "model": "policy.onnx",
+  "metadata": {
+    "run_id": "5c085c17-bf77-4e7a-86d1-2f265ed90a08",
+    "checkpoint": "update_001000.pt",
+    "updates_completed": 1000,
+    "code_sha256": "f00d51fdc9f35e775d4d2eade1c361c3dc7d57dc2c2b20fef5f1b6ac748bdccd",
+    "model_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f"
+  },
+  "observation_fields": [
+    [
+      "gravity_body",
+      3
+    ],
+    [
+      "gyro_body",
+      3
+    ],
+    [
+      "estimated_motion",
+      2
+    ],
+    [
+      "position_joints",
+      5
+    ],
+    [
+      "joint_rates_scaled",
+      5
+    ],
+    [
+      "wheel_rates_scaled",
+      2
+    ],
+    [
+      "control_reference",
+      2
+    ],
+    [
+      "transition_motion",
+      2
+    ],
+    [
+      "executed_targets_scaled",
+      3
+    ],
+    [
+      "phase_one_hot",
+      6
+    ],
+    [
+      "transition_heading_sin_cos",
+      2
+    ],
+    [
+      "phase_age_scaled",
+      1
+    ],
+    [
+      "estimated_front_clearance",
+      2
+    ],
+    [
+      "ordinary_hip_target",
+      1
+    ]
+  ],
+  "frame_dim": 39,
+  "history": 5,
+  "history_order": "Isaac observation group: oldest frame first, current frame last",
+  "quaternion_order": "xyzw",
+  "control_period_s": 0.03,
+  "action_order": [
+    "common_hip_normalized",
+    "common_wheel_normalized",
+    "differential_wheel_normalized"
+  ],
+  "action_range": [
+    -1,
+    1
+  ],
+  "control_config": {
+    "schema": "upright_restart_round01_v1",
+    "series": "upright_restart_20261030",
+    "round": 20,
+    "seed": 102,
+    "iterations": 1000,
+    "num_envs": 2048,
+    "decimation": 15,
+    "history": 5,
+    "rollout_steps": 64,
+    "learning_rate": 0.0003,
+    "gae_lambda": 0.9746794344808963,
+    "beta_shape_cap": 512.0,
+    "critic_task_state": true,
+    "checkpoint_interval": 100,
+    "probe_interval": 25,
+    "bootstrap_probe_interval": 25,
+    "capability_stages": [
+      [
+        0.1,
+        0.3,
+        0.1,
+        0.1
+      ],
+      [
+        0.2,
+        0.5,
+        0.1,
+        0.1
+      ],
+      [
+        0.2,
+        0.5,
+        0.1,
+        0.2
+      ],
+      [
+        0.35,
+        0.5,
+        0.2,
+        0.2
+      ],
+      [
+        0.5,
+        0.5,
+        0.3,
+        0.2
+      ],
+      [
+        0.6,
+        0.5,
+        0.3,
+        0.2
+      ],
+      [
+        0.75,
+        0.5,
+        0.3,
+        0.2
+      ]
+    ],
+    "probe_count": 32,
+    "curriculum_pass_rate": 0.8,
+    "curriculum_consecutive": 2,
+    "low_speed": 0.1,
+    "low_yaw": 0.3,
+    "initial_hip": 0.1,
+    "baseline_fraction": 0.2,
+    "boundary_command_fraction": 0.25,
+    "reversal_episode_fraction": 0.5,
+    "warmup_s": 1.5,
+    "warmup_timeout_s": 4.0,
+    "rise_timeout_s": 12.0,
+    "support_enter_s": 0.3,
+    "lifted_confirm_s": 0.06,
+    "return_confirm_s": 0.12,
+    "ground_confirm_s": 0.18,
+    "hold_s": 2.0,
+    "balance_train_s": 30.0,
+    "short_cycle_fraction": 0.5,
+    "short_balance_min_s": 4.0,
+    "short_balance_max_s": 8.0,
+    "balance_eval_s": 60.0,
+    "balance_observation_age_cap_s": 2.0,
+    "landing_timeout_s": 4.0,
+    "handoff_hold_s": 0.6,
+    "handoff_timeout_s": 3.0,
+    "handoff_blend_s": 0.3,
+    "lift_gap_m": 0.025,
+    "support_gap_m": 0.075,
+    "ground_gap_m": 0.012,
+    "hip_slew_rad_s": 6.0,
+    "wheel_slew_rad_s2": 150.0,
+    "rise_hip_slew_rad_s": 40.0,
+    "rise_wheel_slew_rad_s2": 1000.0,
+    "rise_prepare_weight": 0.2,
+    "rise_partial_lift_weight": 0.5,
+    "rise_support_weight": 2.0,
+    "rise_prepare_decay_s": 2.0,
+    "rise_front_return_penalty": 0.5,
+    "balance_velocity_cost": 2.0,
+    "balance_velocity_cost_cap": 1.5,
+    "balance_velocity_coarse_weight": 0.0,
+    "balance_velocity_coarse_scale_m_s": 0.3,
+    "balance_velocity_cost_tail": "rational",
+    "balance_velocity_tracking_scale_m_s": 0.1,
+    "balance_velocity_error_tau_s": 0.3,
+    "balance_velocity_error_scale_m_s": 0.05,
+    "landing_velocity_cost": 0.0,
+    "landing_velocity_error_scale_m_s": 0.2,
+    "balance_linear_accel_m_s2": 0.5,
+    "balance_yaw_accel_rad_s2": 1.5,
+    "balance_yaw_feedforward": 1.0,
+    "balance_yaw_feedback": 8.0,
+    "balance_yaw_correction_limit_rad_s": 4.0,
+    "heading_kp": 1.0,
+    "heading_kd": 0.1,
+    "heading_wheel_correction_rad_s": 2.0,
+    "yaw_quality_rad": 0.35,
+    "imu_noise_std": 0.0,
+    "joint_noise_std": 0.0
+  },
+  "numeric_max_abs_error": 8.344650268554688e-07,
+  "simulation_validated": false,
+  "compatible_with_legacy_C58_runtime": false,
+  "source_model": {
+    "source_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+    "joints": {
+      "head": {
+        "axis": [
+          0.45399,
+          0.0,
+          0.89101
+        ],
+        "range": [
+          -1.3,
+          1.3
+        ],
+        "default": 0.0,
+        "damping": 0.048,
+        "armature": 9.6e-05,
+        "friction": 0.025
+      },
+      "left_ear": {
+        "axis": [
+          0.0,
+          0.9563,
+          0.29237
+        ],
+        "range": [
+          -1.0,
+          3.0
+        ],
+        "default": 0.0,
+        "damping": 0.01,
+        "armature": 9.6e-05,
+        "friction": 0.008
+      },
+      "right_ear": {
+        "axis": [
+          0.0,
+          0.9563,
+          -0.29237
+        ],
+        "range": [
+          -1.0,
+          3.0
+        ],
+        "default": 0.0,
+        "damping": 0.01,
+        "armature": 9.6e-05,
+        "friction": 0.008
+      },
+      "left_frame": {
+        "axis": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "range": [
+          -1.0,
+          1.2
+        ],
+        "default": 0.0,
+        "damping": 0.072,
+        "armature": 9.6e-05,
+        "friction": 0.04
+      },
+      "left_front_wheel": {
+        "axis": [
+          0.0,
+          0.99619,
+          0.08716
+        ],
+        "range": null,
+        "default": 0.0,
+        "damping": 0.0005,
+        "armature": 2.4e-05,
+        "friction": 0.004
+      },
+      "left_rear_wheel": {
+        "axis": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "range": null,
+        "default": 0.0,
+        "damping": 0.0005,
+        "armature": 2.4e-05,
+        "friction": 0.012
+      },
+      "right_frame": {
+        "axis": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "range": [
+          -1.0,
+          1.2
+        ],
+        "default": 0.0,
+        "damping": 0.072,
+        "armature": 9.6e-05,
+        "friction": 0.04
+      },
+      "right_front_wheel": {
+        "axis": [
+          0.0,
+          0.99619,
+          -0.08716
+        ],
+        "range": null,
+        "default": 0.0,
+        "damping": 0.0005,
+        "armature": 2.4e-05,
+        "friction": 0.004
+      },
+      "right_rear_wheel": {
+        "axis": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "range": null,
+        "default": 0.0,
+        "damping": 0.0005,
+        "armature": 2.4e-05,
+        "friction": 0.012
+      }
+    },
+    "actuators": {
+      "head": {
+        "type": "motor",
+        "effort": 0.72,
+        "control_range": [
+          -0.72,
+          0.72
+        ],
+        "kv": 0.0
+      },
+      "left_ear": {
+        "type": "motor",
+        "effort": 0.1,
+        "control_range": [
+          -0.1,
+          0.1
+        ],
+        "kv": 0.0
+      },
+      "right_ear": {
+        "type": "motor",
+        "effort": 0.1,
+        "control_range": [
+          -0.1,
+          0.1
+        ],
+        "kv": 0.0
+      },
+      "left_frame": {
+        "type": "motor",
+        "effort": 1.2,
+        "control_range": [
+          -1.2,
+          1.2
+        ],
+        "kv": 0.0
+      },
+      "right_frame": {
+        "type": "motor",
+        "effort": 1.2,
+        "control_range": [
+          -1.2,
+          1.2
+        ],
+        "kv": 0.0
+      },
+      "left_rear_wheel": {
+        "type": "velocity",
+        "effort": 0.38,
+        "control_range": [
+          -25.0,
+          25.0
+        ],
+        "kv": 0.14
+      },
+      "right_rear_wheel": {
+        "type": "velocity",
+        "effort": 0.38,
+        "control_range": [
+          -25.0,
+          25.0
+        ],
+        "kv": 0.14
+      }
+    },
+    "mass": 1.6525400000000003,
+    "root_position": [
+      0.0,
+      0.0,
+      0.08481
+    ],
+    "physics_dt": 0.002
+  },
+  "wheel_geometry": {
+    "left_hip": [
+      0.01,
+      0.05152,
+      -0.00807
+    ],
+    "left_front": [
+      0.10021,
+      0.01052,
+      -0.03166
+    ],
+    "left_rear": [
+      -0.07979,
+      -0.00152,
+      -0.04538
+    ],
+    "right_hip": [
+      0.01,
+      -0.05152,
+      -0.00807
+    ],
+    "right_front": [
+      0.10021,
+      -0.01052,
+      -0.03166
+    ],
+    "right_rear": [
+      -0.07979,
+      0.00152,
+      -0.04538
+    ]
+  },
+  "policy_limits": {
+    "speed": 0.75,
+    "yaw": 0.5
+  },
+  "checkpoint_sha256": "19af9aa1faae970de1cc360fc312bffb116ad1fda565d60773249057702db035",
+  "networks": {
+    "policy": {
+      "file": "policy.onnx",
+      "sha256": "20e928cd45b4333f8213b12acf5193fbfaa597f04986606c78f960952fa5d60f"
+    }
+  },
+  "actuation": {
+    "position_joints": [
+      "head",
+      "left_ear",
+      "right_ear",
+      "left_frame",
+      "right_frame"
+    ],
+    "velocity_joints": [
+      "left_rear_wheel",
+      "right_rear_wheel"
+    ],
+    "position_kp": {
+      "head": 3.0,
+      "left_ear": 1.5,
+      "right_ear": 1.5,
+      "left_frame": 4.0,
+      "right_frame": 4.0
+    },
+    "position_kd": {
+      "head": 0.1,
+      "left_ear": 0.035,
+      "right_ear": 0.035,
+      "left_frame": 0.12,
+      "right_frame": 0.12
+    },
+    "drives": {
+      "head": {
+        "type": "motor",
+        "effort": 0.72,
+        "control_range": [
+          -0.72,
+          0.72
+        ],
+        "kv": 0.0
+      },
+      "left_ear": {
+        "type": "motor",
+        "effort": 0.1,
+        "control_range": [
+          -0.1,
+          0.1
+        ],
+        "kv": 0.0
+      },
+      "right_ear": {
+        "type": "motor",
+        "effort": 0.1,
+        "control_range": [
+          -0.1,
+          0.1
+        ],
+        "kv": 0.0
+      },
+      "left_frame": {
+        "type": "motor",
+        "effort": 1.2,
+        "control_range": [
+          -1.2,
+          1.2
+        ],
+        "kv": 0.0
+      },
+      "right_frame": {
+        "type": "motor",
+        "effort": 1.2,
+        "control_range": [
+          -1.2,
+          1.2
+        ],
+        "kv": 0.0
+      },
+      "left_rear_wheel": {
+        "type": "velocity",
+        "effort": 0.38,
+        "control_range": [
+          -25.0,
+          25.0
+        ],
+        "kv": 0.14
+      },
+      "right_rear_wheel": {
+        "type": "velocity",
+        "effort": 0.38,
+        "control_range": [
+          -25.0,
+          25.0
+        ],
+        "kv": 0.14
+      }
+    }
+  },
+  "source_commit": "40e926d8c181473e181ed5069535247525786fc9",
+  "source_run": "upright_restart_round20_s102",
+  "initialization": "random",
+  "historical_models": [],
+  "desktop_accepted": false,
+  "recommended_keyboard": {
+    "speed": 0.15,
+    "yaw": 0.5
+  },
+  "preview_validation": "validation/20261102_restart20/review.json",
+  "mujoco_preview": {
+    "fixed_cases_completed": 2,
+    "full_capability_passed": false,
+    "user_desktop_accepted": false
+  }
+}
