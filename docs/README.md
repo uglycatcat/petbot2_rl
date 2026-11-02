@@ -1,6 +1,6 @@
 # 项目文档索引
 
-- Step独立训练：[第16轮终局](step_round16_results.md)、[第17轮执行](step_round17_execution.md)。第16轮提前停车和重复抬轮仍0完整；第17轮单次抬轮约束及缩小零轮区间通过134项容器与8项仿真，GPU0/1各512×500从零运行。
+- Step独立训练：[第17轮终局](step_round17_results.md)、[第18轮执行](step_round18_execution.md)。第17轮0完整、主要失败为落顶后再次离地；第18轮增加lower_body世界俯仰软代价，141项容器/8项仿真有效，GPU0/1各512×500从零运行。
 
 - 最新upright桌面反馈：基本流程与约0.6m/s体验获认可；允许较慢、更多调整以改善起立泛化，零输入交接后退已修复、两轮微漂仍待训练。见[反馈与修复](upright_restart20_desktop_feedback_20261102.md)。
 

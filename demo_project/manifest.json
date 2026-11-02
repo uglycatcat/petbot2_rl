@@ -66,22 +66,22 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/step_rl_demo",
-      "verified_commit": "204dc7a97a324985f461b419c0a0c3e277853302",
+      "verified_commit": "ddafc026f281e3dd2582004829958b329250bebd",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "round17_running_gpu0_gpu1_random_single_flight_narrow_zero",
-      "local_validation": "Round16 valid2x500,0/64both;required-drive1/0,premature zero59seed71,repeated liftoffs64each. Round17 physical4mm20ms departure/20ms landing,ground-return/repeat failure5;once-and-top acceptance;zero-action domain5%,29sensor-only inputs.134container tests,8guarded jobs,128x4to8resume,512x4,reloads0/16;128old-action negatives rejected with exact physics,static64no false flight. Actual distinct random initial.pt/PPO/GPU0/1 verified;512x500,no historical weights.",
+      "status": "round18_running_gpu0_gpu1_random_world_pitch_cost",
+      "local_validation": "Round17 valid2x500,0/64both;fourtop47/0,home43/0,drive0/0;post-top relifts56/59;world pitch peak14.880/14.775rad/s. Round18 adds2ms integrated world body pitch-rate and excess-angle soft costs;29sensor inputs,controls,model and full acceptance unchanged.141container tests,8guarded jobs,128x4to8resume,512x4,reloads0/16;128real actions+64static exact physics/acceptance,independent scalar costs and reward delta pass. Actual distinct random initial.pt/PPO/GPU0/1 verified;512x500,no historical weights.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "step_round17_seed70@gpu0",
-        "step_round17_seed71@gpu1"
+        "step_round18_seed70@gpu0",
+        "step_round18_seed71@gpu1"
       ],
-      "active_training_commit": "8a780339b85a8a3f9c558ffbe70e323d56e18368",
-      "next_iteration_requirement": "Audit physical per-wheel flight/landing events, premature stop or missed stop, sensor cue timing, real support/alignment/short-drive/hold and requested/executed/measured joints. Single-flight requirement implemented; full capability still unproven.",
-      "pending_body_pitch_requirement": "From next batch after round17: reduce IMU-bearing lower_body world-referenced pitch rate and excessive pitch excursions, retaining necessary hip-driven lift. Soft objective; numerical weights/margins pending physical trajectory review. Not joint-angle/rate proxy; retain complete single-flight and stop task. Documentation only; frozen round17 runtime unchanged."
+      "active_training_commit": "ddafc026f281e3dd2582004829958b329250bebd",
+      "next_iteration_requirement": "Audit full task stages, per-wheel flight events, requested/executed/measured joints, contact, sensor stop cue versus true short drive, true/estimated world pitch rate and angles. Check idle/early-stop regressions; no complete capability established.",
+      "body_pitch_requirement_status": "Implemented in round18: soft world pitch-rate and large-angle costs, engineering weights0.1/2 and soft margin0.35rad; not user limits or hard failure. Necessary hip action allowed."
     },
     {
       "name": "recovery_rl_demo",
