@@ -58,7 +58,9 @@
         "upright_restart_round26_s102@gpu3"
       ],
       "active_training_commit": "8bdd13e8c655b6bac06a7ca20b90cfe3cd348d90",
-      "pending_design_review": "docs/upright_restart_landing_motion_20261102.md"
+      "pending_design_review": null,
+      "latest_result_document": "docs/upright_restart_round25_results.md",
+      "active_execution_document": "docs/upright_restart_round26_execution.md"
     },
     {
       "name": "step_rl_demo",
