@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round25_engineering_pending",
-  "training_enabled": false,
+  "phase": "round25_ready",
+  "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round24 reviewed; retain landing quality/live ordinary transfer, add expanded initial boundary and sustained straight sampling. No policy acceptance.",
+  "reason": "143CPU;fresh4to8same-run recovery,reload,default2048;fixed native1056frames physics/actions/rewards/scoring exact;real boundary/steady sampler and separate20sheld-speed validation audited. Oldactor development only;no policy acceptance.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -15,11 +15,11 @@
     "series": "upright_restart_20261030",
     "round": 25,
     "name": "upright_restart_round25",
-    "status": "engineering_pending"
+    "status": "ready_random_initialization"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": false,
+  "engineering_validated": true,
   "implementation_review": "docs/round01_implementation.md",
   "cpu_contract_tests_passed": 143,
   "allowed_host_gpus": [
