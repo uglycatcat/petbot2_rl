@@ -32,6 +32,15 @@ def wheel_mix(common, differential, limit):
     return pair / (pair.abs().amax(-1, keepdim=True)/limit).clamp_min(1.)
 
 
+def centered_common_action(action, center):
+    """Move zero toward the command without losing either physical endpoint.
+
+    Continuous, monotone and odd under simultaneous action/command reflection.
+    Unlike adding then clipping feedforward, -1 and +1 retain full authority.
+    """
+    return center + action*torch.where(action >= 0, 1-center, 1+center)
+
+
 class Controller:
     def __init__(self, n, device, dt, cfg, model, track):
         self.cfg, self.dt, self.n = cfg, dt, n
@@ -178,7 +187,12 @@ class Controller:
         transition = (self.phase == Phase.RISE) | (self.phase == Phase.LAND)
         self.effective_command.copy_(torch.where(transition[:, None], self.transition_motion, reference))
         hip = self.lo + (action[:, 0]+1)*.5*(self.hi-self.lo)
-        common = action[:, 1]*self.limit
+        common_action = action[:, 1]
+        if self.cfg.balance_common_center_fraction:
+            center = (reference[:, 0]/(.03*self.limit)).clamp(-1, 1)*self.cfg.balance_common_center_fraction
+            center = torch.where(self.phase == Phase.BALANCE, center, 0.)
+            common_action = centered_common_action(common_action, center)
+        common = common_action*self.limit
         differential = action[:, 2]*self.limit
         # Deterministic command/measurement feedback, not a parent policy. The
         # one scratch actor still controls the hips, common drive and residual.

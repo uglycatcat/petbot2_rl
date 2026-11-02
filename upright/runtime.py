@@ -39,6 +39,7 @@ class Runtime:
         self.balance_elapsed = z(); self.balance_seen = z().bool(); self.invoked = z().bool()
         self.episode_goal = z().bool(); self.true_cycle = z().bool(); self.failure = z().bool()
         self.balance_velocity_error = z()
+        self.landing_quality_min = torch.ones(n, device=device)
         self.balance_duration = torch.full((n,), cfg.balance_train_s, device=device)
         self.short_cycle = z().bool()
         self.reversal_episode = z().bool(); self.reversal_speed = z()
@@ -116,6 +117,7 @@ class Runtime:
 
     def reset(self, ids):
         self.control.reset(ids)
+        self.landing_quality_min[ids] = 1.
         self.landing_case[ids] = -1
         self.post_handoff_elapsed[ids] = 0
         for name in ('episode_age', 'command_age', 'true_hold', 'longest_hold', 'peak_rise',
@@ -400,9 +402,18 @@ class Runtime:
         quality = self.landing_motion_quality(s)
         approaching_ground = ((.10-s['gap'].amax(-1))/.10).clamp(0, 1)
         landing_quality_cost = self.dt*self.cfg.landing_quality_cost*approaching_ground*(1-quality)*landing
-        landing_quality_bonus = self.cfg.landing_quality_bonus*quality*m['entered_handoff']*safe
+        bonus_quality = quality
+        if self.cfg.landing_quality_window:
+            # Remember near-ground motion until transfer. Final braking alone
+            # cannot erase an earlier slide; airborne preparation stays free.
+            near_ground = landing & (s['gap'].amax(-1) <= .025)
+            self.landing_quality_min.copy_(torch.where(near_ground,
+                torch.minimum(self.landing_quality_min, quality), self.landing_quality_min))
+            bonus_quality = self.landing_quality_min
+        landing_quality_bonus = self.cfg.landing_quality_bonus*bonus_quality*m['entered_handoff']*safe
         reward += landing_quality_bonus-landing_quality_cost
         m['landing_motion_quality'] = quality
+        m['landing_quality_min'] = self.landing_quality_min.clone()
         m['landing_quality_cost'] = landing_quality_cost
         m['landing_quality_bonus'] = landing_quality_bonus
         balance_cost, land_cost = self.velocity_costs(s, balancing, landing)
@@ -453,6 +464,8 @@ class Runtime:
         if cfg.steady_nonreversal_fraction:
             # Two private sampler fields help value learning; actor stays 195D.
             values += (self.steady_episode.float(), self.steady_speed/.75)
+        if cfg.landing_quality_window:
+            values += (self.landing_quality_min,)
         return torch.stack(values, -1).clamp(-1., 1.)
 
     def observation(self, s):

@@ -84,12 +84,14 @@ class Config:
     balance_velocity_error_scale_m_s: float = 0.05
     live_ordinary_command: bool = False  # preserve live request on HANDOFF/EXIT; never drive from measured velocity
     landing_quality_cost: float = 0.0  # bounded late-LAND cost/second, permits same-direction deceleration
+    landing_quality_window: bool = False  # near-ground minimum quality, private reward memory
     landing_quality_bonus: float = 0.0  # once at transfer, before ordinary drives
     landing_scenario_fraction: float = 0.0  # training-only long moving episodes: signed/zero closing requests
     landing_velocity_cost: float = 0.0
     landing_velocity_error_scale_m_s: float = 0.2
     balance_linear_accel_m_s2: float = 0.0  # zero disables reference slew for legacy configs
     balance_yaw_accel_rad_s2: float = 0.0
+    balance_common_center_fraction: float = 0.0  # bounded command-centered action, BALANCE only
     balance_yaw_feedforward: float = 0.0
     balance_yaw_feedback: float = 0.0
     balance_yaw_correction_limit_rad_s: float = 4.0
@@ -133,6 +135,10 @@ class Config:
                 raise ValueError('Invalid training mixture: '+key)
         if type(self.takeover_expansion_scale) not in (int,float) or not 1 <= self.takeover_expansion_scale <= 2:
             raise ValueError('Takeover scale must be within[1,2]')
+        if type(self.landing_quality_window) is not bool:
+            raise ValueError('landing_quality_window must be boolean')
+        if type(self.balance_common_center_fraction) not in (int, float) or not 0 <= self.balance_common_center_fraction <= .8:
+            raise ValueError('Common action center must be within [0,.8]')
         if type(self.live_ordinary_command) is not bool:
             raise ValueError('live_ordinary_command must be boolean')
         if not 0 <= self.landing_scenario_fraction < 1:
@@ -202,7 +208,7 @@ class Config:
 
 
 def load_config(path=None, **overrides):
-    data = json.loads(Path(path or ROOT/'configs/round25.json').read_text())
+    data = json.loads(Path(path or ROOT/'configs/round26.json').read_text())
     unknown = data.keys() - {f.name for f in fields(Config)}
     if unknown:
         raise ValueError(f'Unknown configuration keys: {sorted(unknown)}')
