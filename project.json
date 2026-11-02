@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round23_engineering",
-  "training_enabled": false,
+  "phase": "round23_ready",
+  "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round22 high completion62/64 but basic53/64, full speed unmet. Joint trial: wider training takeover mixture, gentler rise reward and reversal/stop sampling; no historical training weights.",
+  "reason": "Joint takeover/rise/stop-reverse engineering accepted:127 CPU;128env4-to8 same-run recovery/reload;default2048x2;fixed native1056-frame physics/control/observations and scoring exact;real expanded-training and wide-evaluation branches verified.No policy/full capability claim.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -15,11 +15,11 @@
     "series": "upright_restart_20261030",
     "round": 23,
     "name": "upright_restart_round23",
-    "status": "engineering_pending"
+    "status": "ready_random_initialization"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": false,
+  "engineering_validated": true,
   "implementation_review": "docs/round01_implementation.md",
   "cpu_contract_tests_passed": 127,
   "allowed_host_gpus": [

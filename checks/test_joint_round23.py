@@ -56,7 +56,7 @@ class JointRound23(unittest.TestCase):
             if phase==Phase.RISE:
                 self.assertGreater(float(rewards[1][0]),float(rewards[0][0]))
                 self.assertLess(float(rewards[1][1]),float(rewards[1][0]));self.assertEqual(float(rewards[1][1]),float(rewards[1][2]))
-                self.assertLess(float(rewards[1][0]),0.) # grounded idle never pays
+                self.assertLess(float(rewards[1][0]),0.) # flat grounded idle never pays
             else:torch.testing.assert_close(rewards[0],rewards[1])
 
     def test_invalid_mixture_and_nonfinite_reward_config_rejected(self):
