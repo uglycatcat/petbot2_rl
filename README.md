@@ -75,7 +75,7 @@ python3 tools/run_guard.py --workdir /workspace/runs/step_run_example/source \
   -m step_demo train --run-dir ../train --asset-dir ../asset --model-dir ../../../robot_description
 ```
 
-默认使用第17轮：保留29维自身传感短行/停车记忆，新增双前轮各一次真实离地、直接落顶的子步判据；试抬回原地面或再次抬轮判失败。轮请求为`25*clamp((action+0.9)/1.9,0,1)`，零速可采样区间缩为动作域5%，保持完整0–25rad/s。512环境、500次更新，详见[第17轮](docs/round17.md)。工程检查使用 `--training-config configs/round17_gate.json`（128环境、8更新）；加 `--stop-after 4`验证在更新边界中断，再以相同入口和 `--resume`完成剩余预算。恢复时不改配置，不指定外来检查点；若进程意外退出，恢复最近一次完整保存的更新，当前未保存rollout丢弃。日志使用新名字。
+默认使用第18轮：新增IMU所在lower_body世界俯仰变化率及过大角度软代价，2ms积分；保留29维自身传感短行/停车记忆，保留双前轮各一次真实离地、直接落顶的子步判据；试抬回原地面或再次抬轮判失败。轮请求为`25*clamp((action+0.9)/1.9,0,1)`，零速可采样区间保持动作域5%，保持完整0–25rad/s。512环境、500次更新，详见[第18轮](docs/round18.md)。工程检查使用 `--training-config configs/round18_gate.json`（128环境、8更新）；加 `--stop-after 4`验证在更新边界中断，再以相同入口和 `--resume`完成剩余预算。恢复时不改配置，不指定外来检查点；若进程意外退出，恢复最近一次完整保存的更新，当前未保存rollout丢弃。日志使用新名字。
 
 独立进程重载评估，把上述监督参数的日志/状态改为新路径，执行：
 

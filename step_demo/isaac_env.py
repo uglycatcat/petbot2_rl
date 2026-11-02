@@ -21,6 +21,7 @@ from .rewards import (edge_potential, potential_difference, progress_increment, 
 from .progress import drive_memory
 from .stop_memory import SensorStopMemory, wheel_request
 from .front_motion import FrontMotion
+from .body_pitch import world_pitch_state, sensor_pitch_state, pitch_costs
 from .contacts import forbidden_front_contact, early_top_contact
 from .terrain import convex_edges, wheel_terrain_clearance, rear_airborne
 from .critic_state import CRITIC_STATE_FIELDS, reward_state
@@ -48,16 +49,17 @@ class StepEnv(DirectRLEnv):
         self.task = task
         self.training = training
         self.reward_state_critic = training.get('critic_observation', 'policy') == 'reward_state_v11'
-        self.smooth_braking = training.get('reward_version') in ('brake_v10','brake_v13','home_v15','stop_v16','clean_v17')
-        self.brake_weight = 4. if training.get('reward_version') in ('brake_v13','home_v15','stop_v16','clean_v17') else 1.
-        self.touch_reward = training.get('reward_version') in ('touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17')
-        self.settle_reward = training.get('reward_version') in ('settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17')
-        self.stage_reward = training.get('reward_version') in ('stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17')
-        self.progress_reward = training.get('reward_version') in ('progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17')
-        self.edge_reward = training.get('reward_version','legacy') in ('edge_v3','progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17')
-        self.home_pose_reward = training.get('reward_version') in ('home_v15','stop_v16','clean_v17')
-        self.stop_reward_memory = training.get('reward_version') in ('stop_v16','clean_v17')
-        self.single_lift = training.get('reward_version') == 'clean_v17'
+        self.smooth_braking = training.get('reward_version') in ('brake_v10','brake_v13','home_v15','stop_v16','clean_v17','pitch_v18')
+        self.brake_weight = 4. if training.get('reward_version') in ('brake_v13','home_v15','stop_v16','clean_v17','pitch_v18') else 1.
+        self.touch_reward = training.get('reward_version') in ('touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17','pitch_v18')
+        self.settle_reward = training.get('reward_version') in ('settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17','pitch_v18')
+        self.stage_reward = training.get('reward_version') in ('stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17','pitch_v18')
+        self.progress_reward = training.get('reward_version') in ('progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17','pitch_v18')
+        self.edge_reward = training.get('reward_version','legacy') in ('edge_v3','progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17','pitch_v18')
+        self.home_pose_reward = training.get('reward_version') in ('home_v15','stop_v16','clean_v17','pitch_v18')
+        self.stop_reward_memory = training.get('reward_version') in ('stop_v16','clean_v17','pitch_v18')
+        self.single_lift = training.get('reward_version') in ('clean_v17','pitch_v18')
+        self.body_pitch_reward = training.get('reward_version') == 'pitch_v18'
         self.sensor_stop_enabled = training.get('task_memory', 'none') == 'sensor_stop_v16'
         self.wheel_mapping = training.get('wheel_mapping', 'affine')
         self.asset_dir = asset_dir.resolve()
@@ -131,6 +133,9 @@ class StepEnv(DirectRLEnv):
         self.ascent_rewarded = torch.zeros(n, dtype=torch.bool, device=d)
         self.four_top_seen = torch.zeros(n, dtype=torch.bool, device=d)
         self.home_pose_cost = torch.zeros(n, device=d)
+        self.body_pitch = torch.zeros(n, device=d); self.body_pitch_rate = torch.zeros(n, device=d)
+        self.estimated_body_pitch = torch.zeros(n, device=d); self.estimated_body_pitch_rate = torch.zeros(n, device=d)
+        self.body_pitch_rate_cost = torch.zeros(n, device=d); self.body_pitch_angle_cost = torch.zeros(n, device=d)
         self.top_contact_age = torch.full((n,4),1.,device=d)
         self.trace_ids = None; self.trace_writer = None; self.episode_writer = None
         self._capture_counter = self._sim_step_counter
@@ -218,6 +223,7 @@ class StepEnv(DirectRLEnv):
         self.landing_cost.zero_()
         self.motion_cost.zero_()
         self.touch_impact_cost.zero_(); self.touch_motion_cost.zero_()
+        self.body_pitch_rate_cost.zero_(); self.body_pitch_angle_cost.zero_()
 
     def _apply_action(self):
         self._capture(self._sim_step_counter - 1)
@@ -250,6 +256,13 @@ class StepEnv(DirectRLEnv):
         body_q = tensor(self.robot.data.body_link_quat_w)
         body_p = tensor(self.robot.data.body_link_pos_w)
         self.yaw = heading(body_q[:, self.lower_body])
+        if self.body_pitch_reward:
+            self.body_pitch, self.body_pitch_rate = world_pitch_state(body_q[:, self.lower_body],
+                tensor(self.robot.data.body_link_ang_vel_w)[:, self.lower_body])
+            self.estimated_body_pitch, self.estimated_body_pitch_rate = sensor_pitch_state(
+                self.estimator.q, tensor(self.imu.data.ang_vel_b))
+            rate_cost, angle_cost = pitch_costs(self.body_pitch, self.body_pitch_rate, dt)
+            self.body_pitch_rate_cost += rate_cost; self.body_pitch_angle_cost += angle_cost
         for i, body in enumerate(self.wheel_bodies):
             verts = self.vertices[i]
             basis = torch.eye(3,device=self.device)[None].expand(self.num_envs,-1,-1)
@@ -436,6 +449,7 @@ class StepEnv(DirectRLEnv):
             self.task.acceptance.hip_tolerance_rad,self.step_dt) if self.home_pose_reward
             else torch.zeros_like(self.home_pose_cost))
         reward -= self.home_pose_cost
+        reward -= self.body_pitch_rate_cost + self.body_pitch_angle_cost
         self.last_reward = reward.clone()
         if self.trace_ids is not None:
             self.last_trace=self.trace(self.trace_ids)
@@ -505,7 +519,9 @@ class StepEnv(DirectRLEnv):
             for name in ('front_lifted','front_cleared','front_landed','front_touched','front_hit','rear_air_s','rear_clearance','failure','phase',
                          'stop_time','completed','supported_top','max_lift_fraction','previous_forward','wheel_speed_peak','ascent_rewarded',
                          'previous_potential','best_progress','motion_cost','stage_credit','drive_support_gap','near_top','relift_cost','home_hold',
-                         'touch_impact_cost','touch_motion_cost','four_top_seen','home_pose_cost'):
+                         'touch_impact_cost','touch_motion_cost','four_top_seen','home_pose_cost',
+                         'body_pitch','body_pitch_rate','estimated_body_pitch','estimated_body_pitch_rate',
+                         'body_pitch_rate_cost','body_pitch_angle_cost'):
                 getattr(self,name)[env_ids] = 0
             self.drive_start[env_ids]=float('nan')
             self.top_contact_age[env_ids]=1.
@@ -535,6 +551,9 @@ class StepEnv(DirectRLEnv):
             stage_credit=self.stage_credit[ids].tolist(),relift_cost=self.relift_cost[ids].tolist(),
             landing_cost=self.landing_cost[ids].tolist(),front_touched=self.front_touched[ids].tolist(),
             touch_impact_cost=self.touch_impact_cost[ids].tolist(),touch_motion_cost=self.touch_motion_cost[ids].tolist(),
+            body_pitch=self.body_pitch[ids].tolist(),body_pitch_rate=self.body_pitch_rate[ids].tolist(),
+            estimated_body_pitch=self.estimated_body_pitch[ids].tolist(),estimated_body_pitch_rate=self.estimated_body_pitch_rate[ids].tolist(),
+            body_pitch_rate_cost=self.body_pitch_rate_cost[ids].tolist(),body_pitch_angle_cost=self.body_pitch_angle_cost[ids].tolist(),
             home_hold=self.home_hold[ids].tolist(),
             four_top_seen=self.four_top_seen[ids].tolist(),home_pose_cost=self.home_pose_cost[ids].tolist(),
             sensor_stop_memory=self.sensor_stop.observation()[ids].tolist() if self.sensor_stop_enabled else [],

@@ -22,7 +22,7 @@ def records(path):
 def support_memory_seconds(training):
     """Keep the independent tracker aligned with every staged-distance version."""
     staged = ('stage_v5', 'settle_v6', 'touch_v8', 'brake_v10',
-              'brake_v13', 'home_v15', 'stop_v16', 'clean_v17')
+              'brake_v13', 'home_v15', 'stop_v16', 'clean_v17', 'pitch_v18')
     return .06 if training.get('reward_version') in staged else 0.
 
 
@@ -82,8 +82,8 @@ def summarize(run, evaluation):
                 tuple(q[j] for j in hips),tuple(row['front_cleared'][local]),all(row['supported_top'][local]),
                 row['front_hit'][local],failure==2,failure==3,failure==4,
                 row.get('near_top',[False]*len(layout['trace_ids']))[local],
-                front_motion_valid=(row['front_motion_complete'][local] if origin['training'].get('reward_version')=='clean_v17' else True),
-                front_motion_invalid=(row['front_motion_invalid'][local] if origin['training'].get('reward_version')=='clean_v17' else False))
+                front_motion_valid=(row['front_motion_complete'][local] if origin['training'].get('reward_version') in ('clean_v17','pitch_v18') else True),
+                front_motion_invalid=(row['front_motion_invalid'][local] if origin['training'].get('reward_version') in ('clean_v17','pitch_v18') else False))
             stage=trackers[i].update(sample)
             timed_out=row['elapsed'][local]+1e-5>=config.acceptance.timeout_s
             if failure or completed or timed_out:

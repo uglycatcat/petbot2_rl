@@ -34,8 +34,8 @@ def load_training(path):
         raise ValueError('Unknown wheel action mapping')
     if t.get('reward_version') == 'stop_v16' and (t.get('task_memory') != 'sensor_stop_v16' or t.get('wheel_mapping') != 'zero_centered'):
         raise ValueError('stop_v16 requires the sensor-memory and zero-centered action contract')
-    if t.get('reward_version') == 'clean_v17' and (t.get('task_memory') != 'sensor_stop_v16' or t.get('wheel_mapping') != 'zero_margin'):
-        raise ValueError('clean_v17 requires sensor memory and the narrow zero-speed margin')
+    if t.get('reward_version') in ('clean_v17','pitch_v18') and (t.get('task_memory') != 'sensor_stop_v16' or t.get('wheel_mapping') != 'zero_margin'):
+        raise ValueError('Single-flight tasks require sensor memory and the narrow zero-speed margin')
     if t.get('policy_distribution','gaussian') not in ('gaussian','beta'):raise ValueError('Unknown policy distribution')
     if t.get('critic_observation', 'policy') not in ('policy', 'reward_state_v11'):
         raise ValueError('Unknown critic observation')
@@ -52,9 +52,9 @@ def load_training(path):
         if 'wheel_final_std' in s and (not isinstance(s['wheel_final_std'],(int,float))
                 or not .005<=s['wheel_final_std']<=.577):
             raise ValueError('Invalid wheel variance ceiling')
-    if t.get('reward_version','legacy') not in ('legacy','edge_v3','progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17'):raise ValueError('Unknown reward version')
+    if t.get('reward_version','legacy') not in ('legacy','edge_v3','progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17','pitch_v18'):raise ValueError('Unknown reward version')
     if not 0<t.get('discount_gamma',.99)<=1:raise ValueError('Invalid discount gamma')
-    if t.get('reward_version') in ('progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17') and t.get('discount_gamma')!=1.:
+    if t.get('reward_version') in ('progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17','pitch_v18') and t.get('discount_gamma')!=1.:
         raise ValueError('Progress rewards require undiscounted finite-episode returns')
     if t['initialization']!='random' or t['pretrained_models']: raise ValueError('Only random initialization is allowed')
     for name in ('num_envs','iterations','save_interval','decimation','num_steps_per_env','num_learning_epochs','num_mini_batches'):
@@ -74,7 +74,7 @@ def main(argv):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command',choices=('train','evaluate'))
     parser.add_argument('--config',type=Path,default=DEFAULT_CONFIG)
-    parser.add_argument('--training-config',type=Path,default=PROJECT_ROOT/'configs/round17_seed70.json')
+    parser.add_argument('--training-config',type=Path,default=PROJECT_ROOT/'configs/round18_seed70.json')
     parser.add_argument('--model-dir',type=Path)
     parser.add_argument('--asset-dir',type=Path,default=PROJECT_ROOT/'artifacts/robot')
     parser.add_argument('--run-dir',type=Path,required=True)
