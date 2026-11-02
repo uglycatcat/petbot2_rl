@@ -33,6 +33,8 @@ def map_action(action: tuple[float, float], limits: ModelLimits,
         speed = (wheel + 1) * .5 * limits.rear_speed_max_rad_s
     elif wheel_mapping == 'zero_centered':
         speed = max(0., wheel) * limits.rear_speed_max_rad_s
+    elif wheel_mapping == 'zero_margin':
+        speed = min(1., max(0., (wheel+.9)/1.9))*limits.rear_speed_max_rad_s
     else:
         raise ValueError('Unknown wheel action mapping')
     return ActuatorTargets((target, target), (speed, speed),

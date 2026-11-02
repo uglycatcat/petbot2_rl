@@ -52,4 +52,6 @@ def wheel_request(action, mapping='affine'):
         return (action+1.)*12.5
     if mapping == 'zero_centered':
         return action.clamp_min(0.)*25.
+    if mapping == 'zero_margin':
+        return ((action+.9)/1.9).clamp(0., 1.)*25.
     raise ValueError('Unknown wheel action mapping')

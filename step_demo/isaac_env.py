@@ -20,6 +20,7 @@ from .rewards import (edge_potential, potential_difference, progress_increment, 
                       post_top_home_cost)
 from .progress import drive_memory
 from .stop_memory import SensorStopMemory, wheel_request
+from .front_motion import FrontMotion
 from .contacts import forbidden_front_contact, early_top_contact
 from .terrain import convex_edges, wheel_terrain_clearance, rear_airborne
 from .critic_state import CRITIC_STATE_FIELDS, reward_state
@@ -47,15 +48,16 @@ class StepEnv(DirectRLEnv):
         self.task = task
         self.training = training
         self.reward_state_critic = training.get('critic_observation', 'policy') == 'reward_state_v11'
-        self.smooth_braking = training.get('reward_version') in ('brake_v10','brake_v13','home_v15','stop_v16')
-        self.brake_weight = 4. if training.get('reward_version') in ('brake_v13','home_v15','stop_v16') else 1.
-        self.touch_reward = training.get('reward_version') in ('touch_v8','brake_v10','brake_v13','home_v15','stop_v16')
-        self.settle_reward = training.get('reward_version') in ('settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16')
-        self.stage_reward = training.get('reward_version') in ('stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16')
-        self.progress_reward = training.get('reward_version') in ('progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16')
-        self.edge_reward = training.get('reward_version','legacy') in ('edge_v3','progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16')
-        self.home_pose_reward = training.get('reward_version') in ('home_v15','stop_v16')
-        self.stop_reward_memory = training.get('reward_version') == 'stop_v16'
+        self.smooth_braking = training.get('reward_version') in ('brake_v10','brake_v13','home_v15','stop_v16','clean_v17')
+        self.brake_weight = 4. if training.get('reward_version') in ('brake_v13','home_v15','stop_v16','clean_v17') else 1.
+        self.touch_reward = training.get('reward_version') in ('touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17')
+        self.settle_reward = training.get('reward_version') in ('settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17')
+        self.stage_reward = training.get('reward_version') in ('stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17')
+        self.progress_reward = training.get('reward_version') in ('progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17')
+        self.edge_reward = training.get('reward_version','legacy') in ('edge_v3','progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17')
+        self.home_pose_reward = training.get('reward_version') in ('home_v15','stop_v16','clean_v17')
+        self.stop_reward_memory = training.get('reward_version') in ('stop_v16','clean_v17')
+        self.single_lift = training.get('reward_version') == 'clean_v17'
         self.sensor_stop_enabled = training.get('task_memory', 'none') == 'sensor_stop_v16'
         self.wheel_mapping = training.get('wheel_mapping', 'affine')
         self.asset_dir = asset_dir.resolve()
@@ -81,6 +83,7 @@ class StepEnv(DirectRLEnv):
         self.rear_edges = [torch.tensor(convex_edges(self.asset['wheel_vertices'][name]),
                                        dtype=torch.long, device=self.device) for name in self.wheel_names[2:]]
         n = self.num_envs; d = self.device
+        self.front_motion = FrontMotion(n, d)
         self.sensor_stop = SensorStopMemory(n, d, task.acceptance.post_climb_distance_m, task.acceptance.hip_tolerance_rad)
         self.reward_stop_intent = torch.zeros(n, dtype=torch.bool, device=d)
         self.actions = torch.zeros(n, 2, device=d); self.actions[:, 1] = -1
@@ -133,7 +136,7 @@ class StepEnv(DirectRLEnv):
         self._capture_counter = self._sim_step_counter
         self.captured_substeps = 0
         self.episode_serial = torch.zeros(n, dtype=torch.long, device=d)
-        self.totals = dict(episodes=0, successes=0, front_collisions=0, rear_air=0, falls=0, timeouts=0)
+        self.totals = dict(episodes=0, successes=0, front_collisions=0, rear_air=0, falls=0, timeouts=0, front_motion_invalid=0)
         self.terminal_records = []
         self.attempt_id = 'probe'
 
@@ -282,6 +285,8 @@ class StepEnv(DirectRLEnv):
         self.landing_cost += (first_landing*(.5*wheel_vz.square()+.002*normal[:,:2,2].clamp_min(0))).sum(-1)
         self.new_landing += (landed & ~self.front_landed).sum(-1)
         self.front_landed |= landed
+        if self.single_lift:
+            self.front_motion.update(self.minimum[:,:2], force[:,:2], normal[:,:2], self.edge_x, height, dt)
         self.top_contact_age = torch.where(top_contact,0.,self.top_contact_age+dt)
         self.supported_top = ((self.top_contact_age <= .02) & (z_min >= height-.002)
                               & (z_min <= height+.004) & (x_min > self.edge_x[:,None]+.0005))
@@ -300,6 +305,8 @@ class StepEnv(DirectRLEnv):
         failure = torch.where((gravity_z < .4) | body_hit, 3, failure)
         failure = torch.where((self.com[:,0]-self.origin_com[:,0] < -.05)
                               | ((self.com[:,1]-self.origin_com[:,1]).abs() > .15), 4, failure)
+        if self.single_lift:
+            failure = torch.where((failure == 0) & self.front_motion.invalid, 5, failure)
         self.failure = torch.where(self.failure == 0, failure, self.failure)
         self.force_peak = torch.maximum(self.force_peak, force.norm(dim=-1).amax(-1))
         self.platform_normal=normal;self.platform_contact_x=contact_x
@@ -322,6 +329,8 @@ class StepEnv(DirectRLEnv):
         aligned = ((self.com[:,1]-self.origin_com[:,1]).abs() <= a.line_tolerance_m) & (self.yaw.abs() <= a.heading_tolerance_rad)
         hip_home = tensor(self.robot.data.joint_pos)[:,self.hips].abs().amax(-1) <= a.hip_tolerance_rad
         ready = self.supported_top.all(-1) & self.front_landed.all(-1) & aligned & hip_home & (self.failure==0)
+        if self.single_lift:
+            ready &= self.front_motion.complete
         # Reward-only milestone; no actor input, action override or acceptance change.
         self.four_top_seen |= self.supported_top.all(-1) & self.front_landed.all(-1) & (self.failure==0)
         h = self.task.terrain.height_m
@@ -469,12 +478,14 @@ class StepEnv(DirectRLEnv):
                     failure=int(self.failure[i]), timeout=bool(self.reset_time_outs[i]), phase=int(self.phase[i]),
                     front_lifted=self.front_lifted[i].tolist(), front_cleared=self.front_cleared[i].tolist(),
                     front_landed=self.front_landed[i].tolist(),
+                    front_liftoff_count=self.front_motion.count[i].tolist(),
+                    front_motion_invalid=bool(self.front_motion.invalid[i]),
                     actual_wheel_peak=float(self.wheel_speed_peak[i]), estimator_error_m=float(
                         (self.estimator.com_position[i]-(self.com[i]-self.origin_com[i])).norm()))
                 self.terminal_records.append(record)
                 if self.episode_writer: self.episode_writer.write(json.dumps(record)+'\n')
                 self.totals['episodes']+=1; self.totals['successes']+=int(record['success'])
-                for key,code in [('front_collisions',1),('rear_air',2),('falls',3)]:self.totals[key]+=int(record['failure']==code)
+                for key,code in [('front_collisions',1),('rear_air',2),('falls',3),('front_motion_invalid',5)]:self.totals[key]+=int(record['failure']==code)
                 self.totals['timeouts']+=int(record['timeout'])
             self.terminal_records = self.terminal_records[-4096:]
             self.extras['log']={f'Step/{k}':float(v) for k,v in self.totals.items()}
@@ -489,6 +500,7 @@ class StepEnv(DirectRLEnv):
         self.robot.write_joint_velocity_to_sim_index(velocity=torch.zeros_like(joints),env_ids=env_ids)
         if hasattr(self,'failure'):
             self.estimator.reset(env_ids)
+            self.front_motion.reset(env_ids)
             self.sensor_stop.reset(env_ids); self.reward_stop_intent[env_ids] = False
             for name in ('front_lifted','front_cleared','front_landed','front_touched','front_hit','rear_air_s','rear_clearance','failure','phase',
                          'stop_time','completed','supported_top','max_lift_fraction','previous_forward','wheel_speed_peak','ascent_rewarded',
@@ -534,6 +546,10 @@ class StepEnv(DirectRLEnv):
             platform_normal=self.platform_normal[ids].tolist(),platform_contact_x=self.platform_contact_x[ids].tolist(),
             wheel_contact_force=self.wheel_contact_force[ids].tolist(),rear_air_s=self.rear_air_s[ids].tolist(),
             rear_clearance=self.rear_clearance[ids].tolist(),
+            front_liftoff_count=self.front_motion.count[ids].tolist(),
+            front_in_air=self.front_motion.air[ids].tolist(),front_returned_floor=self.front_motion.returned_floor[ids].tolist(),
+            front_top_confirmed=self.front_motion.landed_top[ids].tolist(),
+            front_motion_invalid=self.front_motion.invalid[ids].tolist(),front_motion_complete=self.front_motion.complete[ids].tolist(),
             front_hit=self.front_hit[ids].tolist(),front_lifted=self.front_lifted[ids].tolist(),
             front_cleared=self.front_cleared[ids].tolist(),front_landed=self.front_landed[ids].tolist(),
             supported_top=self.supported_top[ids].tolist(),force_peak=self.force_peak[ids].tolist())
