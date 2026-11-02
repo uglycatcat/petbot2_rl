@@ -2,18 +2,25 @@
 import numpy as np
 
 
+def cross3(a,b):
+    """The estimator uses only 3-vectors; avoid NumPy's general axis dispatch."""
+    return np.array([a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],
+                     a[0]*b[1]-a[1]*b[0]],dtype=np.result_type(a,b))
+
+
 def quat_mul(a, b):
-    return np.concatenate((a[3]*b[:3]+b[3]*a[:3]+np.cross(a[:3],b[:3]),
+    return np.concatenate((a[3]*b[:3]+b[3]*a[:3]+cross3(a[:3],b[:3]),
                            np.array([a[3]*b[3]-np.dot(a[:3],b[:3])],dtype=np.float32)))
 
 
 def rotate(q,v):
-    uv=np.cross(q[:3],v)
-    return v+2*(q[3]*uv+np.cross(q[:3],uv))
+    uv=cross3(q[:3],v)
+    return v+2*(q[3]*uv+cross3(q[:3],uv))
 
 
 def inverse_rotate(q,v):
-    return rotate(np.r_[-q[:3],q[3]],v)
+    conjugate=q.copy();conjugate[:3]*=-1
+    return rotate(conjugate,v)
 
 
 def rotation_step(omega,dt):
@@ -64,7 +71,7 @@ class Estimator:
                     and abs(np.linalg.norm(acceleration)-9.81)<.4)
         if stationary:
             up=inverse_rotate(self.q,-self.gravity/9.81)
-            gyro+=np.cross(acceleration/max(np.linalg.norm(acceleration),1e-6),up)*2
+            gyro+=cross3(acceleration/max(np.linalg.norm(acceleration),1e-6),up)*2
         self.q=quat_mul(self.q,rotation_step(gyro,dt));self.q/=max(np.linalg.norm(self.q),1e-9)
         new_velocity=self.velocity+(rotate(self.q,acceleration)+self.gravity)*dt
         offset=rotate(self.q,self.com_offset(joint_pos));rear_offset=rotate(self.q,self.rear_offset)

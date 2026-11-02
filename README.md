@@ -2,7 +2,9 @@
 
 启动后机器人以默认姿态静止显示。按 **Space** 执行策略，按 **R** 重置机器人、策略输入、惯性估计、目标和任务记录。鼠标左键旋转视角，右键平移，滚轮缩放，Esc退出。
 
-当前默认是已完成训练的第14轮seed71终局ONNX；第13轮seed71保留作对照。**目前没有通过完整上台、归髋、短行、停车的sim2sim验收。** 默认候选在MuJoCo中可以抬前轮越沿、落顶，约1.04秒记录到后轮离地；程序会继续展示策略运动，并显示`TASK FAILED`。这是策略预览，不是成功演示，也没有规则停车或手写登台动作。
+2026-11-02显示修复：物理/策略计算与窗口绘制分开，窗口默认目标60 FPS（可用`--render-fps`调整），画面显示实际FPS和仿真速度。仍按2ms物理、20ms策略周期执行，不跳过物理步；默认关闭阴影和反射以减少绘制负担。窗口卡顿与策略上台后不停属于两个独立问题。
+
+当前默认是已完成训练的第14轮seed71终局ONNX；第13轮seed71保留作对照。**目前没有通过完整上台、归髋、短行、停车的sim2sim验收。** 默认候选在MuJoCo中可以抬前轮越沿、落顶，约1.04秒记录到后轮离地；程序会继续展示策略运动，并显示`TASK FAILED`。这是策略预览，不是成功演示，也没有规则停车或手写登台动作。用户桌面反馈确认能完成登台运动，但上台后不停、存在两次抬头（第一次无效）；下一轮训练需加入单次真实离地约束，当前策略包尚未修复这些动作缺陷。
 
 ## 安装与运行
 
@@ -49,3 +51,5 @@ python3 -m venv .venv
 维护工具：`tools/export_policy.py`在训练容器CPU上从已完成且已独立评估的运行导出；`tools/validate_port.py`对照对应冻结源码；`tools/check_runtime.py`检查真实物理与重置；`tools/check_gui.py`用独立Xvfb和实际X11按键验证GUI（验证端另需`python-xlib`）。日常运行不需要这些验证依赖。MuJoCo接口依据[官方Python文档](https://mujoco.readthedocs.io/en/stable/python.html)和[传感器说明](https://mujoco.readthedocs.io/en/stable/XMLreference.html#sensor-accelerometer)。
 
 本项目通过repo管理，分支`rlproj/std_s2s_step_project`。`std_train_step_project`只保留repo空分支，训练仍由独立step demo维护。
+
+显示修复验证见`validation/display_20261102.json`：1200步传感/复位计算与旧版逐项一致，1500个物理子步对应的150帧完整记录及异步窗口轨迹前缀逐项一致，模型物理、空格/R和真实窗口均通过。共享服务器Xvfb软件渲染从约1.60提高到10.68 FPS，新的仿真循环6.03秒墙钟推进5.90秒物理；这些是同机有限对照，不能保证桌面60 FPS。实际帧率由机器、图形驱动和窗口负载决定。

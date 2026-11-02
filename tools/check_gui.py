@@ -43,7 +43,7 @@ def main():
         geo=window.get_geometry();shot=window.get_image(0,0,geo.width,geo.height,X.ZPixmap,0xffffffff)
         raw=np.frombuffer(shot.data,np.uint8).reshape(geo.height,geo.width,4);png(out/'x11.png',raw[:,:,[2,1,0]].tobytes(),geo.width,geo.height)
         time.sleep(1.);press('r');time.sleep(.5);press('space');time.sleep(1.5);press('r');time.sleep(.3);press('Escape')
-        proc.wait(timeout=10);assert proc.returncode==0
+        proc.wait(timeout=30);assert proc.returncode==0
         result=json.loads((out/'runtime/result.json').read_text());events=result['keyboard_events'];assert [e['key'] for e in events]==[32,82,32,82],events
         for e in [events[0],events[2]]:assert e['after']['state']=='RUNNING' and e['after']['time']==0 and e['after']['packet_count']==1
         for e in [events[1],events[3]]:assert e['after']['state']=='IDLE' and e['after']['time']==0 and e['after']['policy_calls']==0 and e['after']['packet_count']==0

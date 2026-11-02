@@ -1,0 +1,305 @@
+{
+  "status": "passed",
+  "change": "Decouple GUI from simulation via coherent MjData copies; equivalent vector math and contiguous mesh reductions; disable visual shadows/reflections.",
+  "policy_unchanged": true,
+  "source_unchanged": true,
+  "physics_dt": 0.002,
+  "policy_dt": 0.02,
+  "render_target_fps": 60,
+  "performance": {
+    "before": {
+      "frames": 10,
+      "wall_seconds": 7.048485184088349,
+      "render_fps": 1.5973659785457568,
+      "frame_interval_median_ms": 624.5889337733388,
+      "frame_interval_p95_ms": 667.9281266406178,
+      "simulation_seconds": 0.9200000000000007,
+      "simulation_to_wall": 0.13052449937425717,
+      "physics_steps": 460,
+      "policy_calls": 46,
+      "viewer": null,
+      "backend": "Mesa software Xvfb, shared server; desktop performance not inferred"
+    },
+    "after": {
+      "frames": 62,
+      "wall_seconds": 6.855286775156856,
+      "render_fps": 10.684908605409474,
+      "frame_interval_median_ms": 68.41135211288929,
+      "frame_interval_p95_ms": 184.85780898481607,
+      "simulation_seconds": 5.899999999999572,
+      "simulation_to_wall": 0.8606496261222528,
+      "physics_steps": 2950,
+      "policy_calls": 295,
+      "viewer": {
+        "frames": 62,
+        "wall_seconds": 6.02647318597883,
+        "render_fps": 10.690282938886767,
+        "physics_control_steps": 295,
+        "physics_compute_seconds": 5.806895048357546,
+        "physics_seconds": 5.9,
+        "target_render_fps": 60.0
+      },
+      "backend": "Mesa software Xvfb, shared server; desktop performance not inferred"
+    },
+    "fps_ratio": 6.689079865803216,
+    "desktop_fps_not_verified": true
+  },
+  "equivalence": {
+    "status": "passed",
+    "random_sensor_steps": 1200,
+    "includes_reset_and_stationary": true,
+    "sensor_arrays_exact": true,
+    "physical_control_frames": 150,
+    "physical_substeps": 1500,
+    "all_recorded_fields_exact": true,
+    "worker_trace_prefix_exact": true,
+    "source_unchanged": "de1862d58f9989ae7eb0de5b20188e2ffc7052d2b9d5588446eef4b166b5f53f"
+  },
+  "gui": {
+    "status": "passed",
+    "actual_x11_key_sequence": [
+      "Space",
+      "R",
+      "Space",
+      "R"
+    ],
+    "policy_executed": true,
+    "reset_twice": true,
+    "software_rendering": true,
+    "screenshot": "running.png",
+    "rendered_frames": {
+      "running": {
+        "nonblack_pixels": 792000,
+        "pixel_std": 48.08824870110118,
+        "simulation_time": 0.22000000000000017
+      },
+      "idle": {
+        "nonblack_pixels": 792000,
+        "pixel_std": 48.00860471061489,
+        "simulation_time": 0.0
+      }
+    },
+    "final_state": "IDLE"
+  },
+  "runtime": {
+    "status": "passed",
+    "physics_arrays_exact": [
+      "body_mass",
+      "body_inertia",
+      "body_ipos",
+      "body_iquat",
+      "body_pos",
+      "body_quat",
+      "jnt_type",
+      "jnt_pos",
+      "jnt_axis",
+      "jnt_range",
+      "dof_damping",
+      "dof_armature",
+      "dof_frictionloss",
+      "actuator_ctrlrange",
+      "actuator_forcerange",
+      "actuator_gainprm",
+      "actuator_biasprm",
+      "actuator_gear"
+    ],
+    "robot_geometry_arrays_exact": true,
+    "source_fingerprint": "de1862d58f9989ae7eb0de5b20188e2ffc7052d2b9d5588446eef4b166b5f53f",
+    "idle_no_inference_or_motion": true,
+    "space_only_starts_once": true,
+    "reset_clears_estimator_targets_monitor_and_packet": true,
+    "repeat_frames": 52,
+    "repeated_rollout_maxabs": 0.0,
+    "runtime_does_not_import_torch": true,
+    "engine": "3.8.1",
+    "policy_id": "step_round14_20261102_seed71_u500",
+    "outcomes": [
+      {
+        "state": "FAILED",
+        "time": 1.0400000000000007,
+        "phase": 1,
+        "failure": 2,
+        "completed": false,
+        "policy_calls": 52,
+        "packet_count": 1,
+        "com": [
+          0.3977263024413833,
+          0.012757066307142583,
+          0.023286595323683074
+        ],
+        "velocity": [
+          0.379312819271765,
+          -0.0015877620712067958,
+          -0.1818493852579534
+        ],
+        "estimated_com": [
+          0.34566664695739746,
+          0.009494468569755554,
+          0.011399968527257442
+        ],
+        "estimated_velocity": [
+          0.4377777874469757,
+          -0.015230696648359299,
+          -0.3221961557865143
+        ],
+        "action": [
+          -0.059221863746643066,
+          0.8418318033218384
+        ],
+        "executed": [
+          -0.059221863746643066,
+          0.8418318033218384
+        ],
+        "hip_target": -0.059221863746643066,
+        "wheel_target": 23.022897720336914,
+        "joint_position": [
+          0.001312551903538406,
+          -0.14352397620677948,
+          -0.1437055915594101,
+          -0.003113930579274893,
+          -0.0025676898658275604,
+          4.252333641052246,
+          11.975554466247559,
+          4.000203609466553,
+          11.980423927307129
+        ],
+        "joint_velocity": [
+          -0.005263515282422304,
+          2.7269322872161865,
+          2.4707140922546387,
+          0.022532477974891663,
+          0.020190922543406487,
+          1.1089482307434082,
+          10.223653793334961,
+          1.149812936782837,
+          25.42145347595215
+        ],
+        "front_lifted": [
+          true,
+          true
+        ],
+        "front_cleared": [
+          true,
+          true
+        ],
+        "front_landed": [
+          true,
+          true
+        ],
+        "supported_top": [
+          false,
+          false,
+          false,
+          false
+        ],
+        "rear_clearance": [
+          0.004837172276733011,
+          0.004155584798245105
+        ],
+        "rear_air": [
+          0.03600000000000002,
+          0.03800000000000002
+        ],
+        "ever_fourtop": false,
+        "ever_home": false,
+        "ever_drive": false,
+        "max_actual_wheel_speed": 29.926753997802734,
+        "peak_contact_force": 46.51263708584627
+      },
+      {
+        "state": "FAILED",
+        "time": 1.0400000000000007,
+        "phase": 1,
+        "failure": 2,
+        "completed": false,
+        "policy_calls": 52,
+        "packet_count": 1,
+        "com": [
+          0.3977263024413833,
+          0.012757066307142583,
+          0.023286595323683074
+        ],
+        "velocity": [
+          0.379312819271765,
+          -0.0015877620712067958,
+          -0.1818493852579534
+        ],
+        "estimated_com": [
+          0.34566664695739746,
+          0.009494468569755554,
+          0.011399968527257442
+        ],
+        "estimated_velocity": [
+          0.4377777874469757,
+          -0.015230696648359299,
+          -0.3221961557865143
+        ],
+        "action": [
+          -0.059221863746643066,
+          0.8418318033218384
+        ],
+        "executed": [
+          -0.059221863746643066,
+          0.8418318033218384
+        ],
+        "hip_target": -0.059221863746643066,
+        "wheel_target": 23.022897720336914,
+        "joint_position": [
+          0.001312551903538406,
+          -0.14352397620677948,
+          -0.1437055915594101,
+          -0.003113930579274893,
+          -0.0025676898658275604,
+          4.252333641052246,
+          11.975554466247559,
+          4.000203609466553,
+          11.980423927307129
+        ],
+        "joint_velocity": [
+          -0.005263515282422304,
+          2.7269322872161865,
+          2.4707140922546387,
+          0.022532477974891663,
+          0.020190922543406487,
+          1.1089482307434082,
+          10.223653793334961,
+          1.149812936782837,
+          25.42145347595215
+        ],
+        "front_lifted": [
+          true,
+          true
+        ],
+        "front_cleared": [
+          true,
+          true
+        ],
+        "front_landed": [
+          true,
+          true
+        ],
+        "supported_top": [
+          false,
+          false,
+          false,
+          false
+        ],
+        "rear_clearance": [
+          0.004837172276733011,
+          0.004155584798245105
+        ],
+        "rear_air": [
+          0.03600000000000002,
+          0.03800000000000002
+        ],
+        "ever_fourtop": false,
+        "ever_home": false,
+        "ever_drive": false,
+        "max_actual_wheel_speed": 29.926753997802734,
+        "peak_contact_force": 46.51263708584627
+      }
+    ]
+  },
+  "retained_failed_validation": "First concurrent software-render GUI key check timed out; isolated final actual X11 sequence passed. Intermediate concurrent performance sample excluded.",
+  "user_feedback": "Desktop can traverse step, but has redundant first front lift and no stop; next training must require one genuine liftoff per wheel. This display patch does not fix learned behavior."
+}

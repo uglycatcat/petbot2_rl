@@ -31,6 +31,7 @@ class Preview:
         self.gids=[self.model.geom(n).id for n in WHEELS];self.bids=[self.model.body(n).id for n in WHEELS]
         self.ground=self.model.geom('floor').id;self.platform=self.model.geom('step_platform').id
         self.vertices=[np.asarray(m['asset']['wheel_vertices'][n]) for n in WHEELS]
+        self.vertices_transposed=[np.ascontiguousarray(v.T) for v in self.vertices]
         self.edges=[np.asarray(m['asset']['rear_edges'][n],int) for n in WHEELS[2:]]
         self.jac=np.zeros((3,self.model.nv));self.bodyvel=np.zeros(6)
         self.estimator=Estimator(m['asset']['source_bodies'],self.names);self.controller=Controller(m['training']);self.monitor=Monitor(m,self.edge)
@@ -65,10 +66,13 @@ class Preview:
         for name in ['left_rear_wheel','right_rear_wheel']:self.data.ctrl[self.model.actuator(name).id]=w
 
     def _geometry(self):
-        points=[v@self.data.xmat[b].reshape(3,3).T+self.data.xpos[b] for v,b in zip(self.vertices,self.bids)]
-        self.minimum=np.array([x.min(0)-.0001 for x in points]);self.maximum=np.array([x.max(0)+.0001 for x in points])
+        # Coordinates contiguous by axis make reductions over detailed front
+        # meshes inexpensive; every source vertex still participates.
+        points=[self.data.xmat[b].reshape(3,3)@v+self.data.xpos[b,None].T
+                for v,b in zip(self.vertices_transposed,self.bids)]
+        self.minimum=np.array([x.min(1)-.0001 for x in points]);self.maximum=np.array([x.max(1)+.0001 for x in points])
         t=self.metadata['task']['terrain']
-        self.clearance=np.array([terrain_clearance(x,e,self.edge,t['height_m'],t['platform_length_m'],t['platform_width_m']/2) for x,e in zip(points[2:],self.edges)])
+        self.clearance=np.array([terrain_clearance(x.T,e,self.edge,t['height_m'],t['platform_length_m'],t['platform_width_m']/2) for x,e in zip(points[2:],self.edges)])
         self.com=self.data.subtree_com[self.root].copy()-self.origin
         mujoco.mj_jacSubtreeCom(self.model,self.data,self.jac,self.root);self.velocity=self.jac@self.data.qvel
 
