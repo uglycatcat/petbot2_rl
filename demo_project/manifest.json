@@ -44,20 +44,19 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "a8d0d8118bd033b09d5d91cc3dab0cbd6f74bb71",
+      "verified_commit": "550497970253b3f34d8ff53fac12662c23225fb4",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round25_running_gpu2_gpu3_random_boundary_steady",
-      "local_validation": "Round24 valid2x1000/12eval,noOOM/recovery;highcomplete63/64,wide35/64,landinghandoffnearzero but8cmfirst-groundslip,fullspeed.45-.50m/s. Round25 143CPU,4to8same-run,reload0/32,default2048x2;native1056framesphysics/actions/reward/scoringexact;actualedge/steady sampler29/32,separate20sheld-speed evaluated. Targets/effortsvalid,actualoverspeedretained,noOOM/runtimefailures. TwoGPU2/3fresh2048x1000actualPPO and distinctrandomactorsverified;newpolicy/sim2simnotaccepted,desktop20+618081eunchanged.",
+      "status": "restart_round26_engineering_pending_round25_reviewed",
+      "local_validation": "Round25 valid2x1000/14eval,no missing/OOM/recovery;wide64entered63complete,high60complete49basic;5BALANCEfrontreturns. Steadyfullspeed.47-.54m/s;zero landing14cm first-ground movement. Round26 149CPU,bounded command center and LAND quality memory,GPUgate pending,no formal training yet. Desktop20+618081e unchanged;no policy/sim2sim pass.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round25_s101@gpu2",
-        "upright_restart_round25_s102@gpu3"
+        "upright_restart_round26_gate01@gpu2_gpu3"
       ],
-      "active_training_commit": "a8d0d8118bd033b09d5d91cc3dab0cbd6f74bb71",
+      "active_training_commit": null,
       "pending_design_review": "docs/upright_restart_landing_motion_20261102.md"
     },
     {
