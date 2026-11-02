@@ -1,0 +1,54 @@
+{
+  "default": "round14_seed71",
+  "selected_at": "2026-11-02",
+  "basis": "MuJoCo preview selection among reviewed recent candidates: round14 seed71 legally lifts/clears/lands both front wheels before a rear-support failure at1.04s; round13 seed71 front-edge failure at.82s,round13 seed70 at.50s. Round13 seed71 remains better in Isaac full-task progression. All strict MuJoCo trials fail; no claim of complete capability. Round15 not terminal/evaluated at selection time.",
+  "candidates": [
+    {
+      "round": 13,
+      "seed": 71,
+      "ever_fourtop": 64,
+      "required_drive": 62,
+      "complete": 0
+    },
+    {
+      "round": 13,
+      "seed": 70,
+      "ever_fourtop": 64,
+      "required_drive": 49,
+      "complete": 0
+    },
+    {
+      "round": 14,
+      "seed": 71,
+      "ever_fourtop": 61,
+      "required_drive": 60,
+      "complete": 0
+    },
+    {
+      "round": 14,
+      "seed": 70,
+      "ever_fourtop": 63,
+      "required_drive": 9,
+      "complete": 0
+    }
+  ],
+  "isaac_best_reference": "round13_seed71",
+  "mujoco_comparison": [
+    {
+      "policy": "round13_seed71",
+      "first_failure": "front_edge_contact",
+      "time": 0.82
+    },
+    {
+      "policy": "round13_seed70",
+      "first_failure": "front_edge_contact",
+      "time": 0.5
+    },
+    {
+      "policy": "round14_seed71",
+      "first_failure": "rear_support_lost",
+      "time": 1.04,
+      "front_lift_clear_land": true
+    }
+  ]
+}

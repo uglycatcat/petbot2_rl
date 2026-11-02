@@ -1,0 +1,94 @@
+{
+  "date": "2026-11-02",
+  "engineering_checks": "passed",
+  "task_capability": "failed; preview only, no complete sim2sim result",
+  "default_policy": "round14_seed71",
+  "reference_policy": "round13_seed71",
+  "checks": {
+    "onnx": "onnx.json",
+    "source_numpy_port": "port.json",
+    "mujoco_physics_and_reset": "runtime.json",
+    "actual_gui_events_and_framebuffer": "gui.json"
+  },
+  "continued_physical_rollouts": {
+    "round13_seed71": {
+      "seconds": 5.999999999999561,
+      "failure": 1,
+      "completed": false,
+      "front_lifted": [
+        true,
+        true
+      ],
+      "front_cleared": [
+        true,
+        true
+      ],
+      "front_landed": [
+        true,
+        true
+      ],
+      "frames_all_four_top": 120,
+      "final_com": [
+        2.9609992526873126,
+        0.0002301204516334843,
+        -0.009181513059757132
+      ],
+      "final_wheel_target": 15.456740379333496
+    },
+    "round14_seed71": {
+      "seconds": 5.999999999999561,
+      "failure": 2,
+      "completed": false,
+      "front_lifted": [
+        true,
+        true
+      ],
+      "front_cleared": [
+        true,
+        true
+      ],
+      "front_landed": [
+        true,
+        true
+      ],
+      "frames_all_four_top": 140,
+      "final_com": [
+        3.3117804869807865,
+        0.0553091470521841,
+        -0.0011800902754950798
+      ],
+      "final_wheel_target": 16.62837028503418
+    }
+  },
+  "source_model_sha256": "de1862d58f9989ae7eb0de5b20188e2ffc7052d2b9d5588446eef4b166b5f53f",
+  "scope": {
+    "training_changed": false,
+    "source_robot_changed": false,
+    "runtime": "ONNX Runtime CPU + NumPy + MuJoCo 3.8.1",
+    "idle": "physics paused at exact initial pose; no inference",
+    "space": "start once",
+    "reset": "robot, estimator, packet, controller, monitor, trace state",
+    "perception": "once at Space; no subsequent terrain truth fed to actor",
+    "truth": "monitoring only",
+    "scripted_finish": false
+  },
+  "retained_debug_findings": [
+    "Initial GUI font enum typo corrected before delivery.",
+    "Initial target accumulators used float64; corrected to float32 and 48000 source target cases now match exactly.",
+    "Xvfb XGetImage captured black GLX surface; actual MuJoCo framebuffer is captured and asserted nonblank in final GUI check."
+  ],
+  "source_files_sha256": {
+    "run.py": "a88cc4aabc82f66870647224436aeaba63a8cc6b65c2320451c412a30917cb96",
+    "step_s2s/__init__.py": "c7cb0a972a547329a89800480a3b046b292ad8049cf77b1271ed00a2444b58f8",
+    "step_s2s/app.py": "fefa7fd85f6d982756599d4698ff736538c64369afdeee37c4c7aee05ec9f402",
+    "step_s2s/control.py": "3fa9fc9f4614741af20fd13b637e270b37157c879c5030365fe30a002ef597e3",
+    "step_s2s/estimator.py": "ab6592b233f50be54f1ccec610e94645b9d6b3e119fd0517aee6a156408a6acc",
+    "step_s2s/monitor.py": "52c129f70c106f32efe877311fac1fdd74004007d8052e5d371c9bd35d121310",
+    "step_s2s/runtime.py": "954661e214cc2bf1f8ef833825b40f856c24968f310941f931f6bab91c3a2ccf",
+    "step_s2s/scene.py": "cfad9713d064e3c9513865c3bb19804a6f5ca70c6cd35ac044186db0781a253b",
+    "tools/check_gui.py": "520aa26e606a13b949decf578962312aed1867527f2d02548b68c3adcccef3c1",
+    "tools/check_runtime.py": "0e49ba5881a27d1dbb0714cfb5db784fd76694ba72fd4ca4eaa52ae7eef9e27c",
+    "tools/export_policy.py": "0fa82b1ceb3be5f449a437d5c14c97c1f3efea347f0d360cdaf7187b2402473c",
+    "tools/validate_port.py": "cfffa4ac8d95a9cd487e42a52ed1b124bbdbc560039ac0378e81f175498cf00f"
+  }
+}
