@@ -39,3 +39,7 @@ seed101低速6例基本未通过均因+.05请求几乎不前进，7个窗口均�
 第23轮联合试验：第4级起20%训练初态扩大原速度/共同髋范围两倍，最高±.6m/s、±.4rad，保留原范围与低课程；放松起立时间/速度调整成本、延长有界准备信用，增加实际过快pitch成本；正反长回合增加25%停车换令，停后仍保留下一反向方向，同时保留边界、连续、转向和弧线。控制/源物理/原评估阈值不变，新增宽初态独立评估单列。多项联合改变不能分离贡献，需工程门槛后GPU2/3各1000从零检验，不继承权重。见[第23轮执行](upright_restart_round23_execution.md)。
 
 证据目录`demo_project/runs/_upright_restart_round22/`：acceptance、process_audit、checkpoint_audit、trajectory_analysis、physical_constraint_audit、settled_velocity_audit、settled_actuator_audit、basic_response_audit、development_failure_audit。无周期定时器/goal，不重复启动。
+
+## 2026-11-02补充：落地质量不等于完整计数
+
+按用户桌面反馈重新读取本轮六份静止/低速/高范围轨迹，发现静止两路虽原定义完整32/32，交接完成终帧平均仍−.549/−.528m/s；低速持续+.05弧线请求时终帧均值−.472/−.506m/s。LAND策略产生后退，普通控制又锁存着地实测速度。原完整/基本计数保持原定义，但不能用于证明落地方向、静止停车或普通控制实时输入通过。代码/奖励/验收缺口与下一轮修改见[落地专项审查](upright_restart_landing_motion_20261102.md)，证据`runs/_upright_restart_round22/landing_motion_followup_20261102.json`。这是既有数据补评审，没有新评估队列，也不改变第23轮固定运行。
