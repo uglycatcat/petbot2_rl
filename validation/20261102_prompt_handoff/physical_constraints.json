@@ -1,0 +1,41 @@
+{
+  "forward_release": {
+    "force_abs_max": {
+      "head": 0.11256702199405563,
+      "left_ear": 0.01762587721415748,
+      "right_ear": 0.036218921753682846,
+      "left_frame": 1.2,
+      "right_frame": 1.2,
+      "left_rear_wheel": 0.38,
+      "right_rear_wheel": 0.38
+    },
+    "target_constraints_pass": true,
+    "actual_wheel_abs_peak": 32.817626953125
+  },
+  "reverse_release": {
+    "force_abs_max": {
+      "head": 0.07277652923238598,
+      "left_ear": 0.026528402705977824,
+      "right_ear": 0.01859572382503155,
+      "left_frame": 1.2,
+      "right_frame": 1.2,
+      "left_rear_wheel": 0.38,
+      "right_rear_wheel": 0.38
+    },
+    "target_constraints_pass": true,
+    "actual_wheel_abs_peak": 32.817626953125
+  },
+  "stationary": {
+    "force_abs_max": {
+      "head": 0.02860472010312507,
+      "left_ear": 0.01762587721415748,
+      "right_ear": 0.01859572382503155,
+      "left_frame": 1.2,
+      "right_frame": 1.2,
+      "left_rear_wheel": 0.38,
+      "right_rear_wheel": 0.38
+    },
+    "target_constraints_pass": true,
+    "actual_wheel_abs_peak": 32.817626953125
+  }
+}

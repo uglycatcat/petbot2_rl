@@ -1,0 +1,80 @@
+{
+  "stationary": {
+    "zero_ordinary_pass": true,
+    "balance_drift_m_s": -0.010673256793272183,
+    "landing": {
+      "first_four_contact": 23.84999999999766,
+      "handoff": 23.999999999997577,
+      "stopped": 24.329999999997394,
+      "contact_to_stop_s": 0.479999999999734,
+      "handoff_to_stop_s": 0.3299999999998171,
+      "backward_travel_m": 0.13317141339182853,
+      "peak_backward_m_s": 0.5316750407218933,
+      "complete": 24.629999999997228
+    },
+    "unchanged_through_handoff_entry_frames": 800,
+    "first_ordinary_targets_inherited": true,
+    "before": {
+      "first_four_contact": 23.84999999999766,
+      "handoff": 23.999999999997577,
+      "stopped": 24.959999999997045,
+      "contact_to_stop_s": 1.1099999999993848,
+      "handoff_to_stop_s": 0.959999999999468,
+      "backward_travel_m": 0.30954281950369483,
+      "peak_backward_m_s": 0.5667774081230164,
+      "complete": 24.629999999997228
+    }
+  },
+  "forward_release": {
+    "zero_ordinary_pass": true,
+    "balance_drift_m_s": -0.010499715532981948,
+    "landing": {
+      "first_four_contact": 23.84999999999766,
+      "handoff": 23.999999999997577,
+      "stopped": 24.329999999997394,
+      "contact_to_stop_s": 0.479999999999734,
+      "handoff_to_stop_s": 0.3299999999998171,
+      "backward_travel_m": 0.13951425067149104,
+      "peak_backward_m_s": 0.6068060398101807,
+      "complete": 24.629999999997228
+    },
+    "unchanged_through_handoff_entry_frames": 800,
+    "first_ordinary_targets_inherited": true,
+    "before": {
+      "first_four_contact": 23.84999999999766,
+      "handoff": 23.999999999997577,
+      "stopped": 24.959999999997045,
+      "contact_to_stop_s": 1.1099999999993848,
+      "handoff_to_stop_s": 0.959999999999468,
+      "backward_travel_m": 0.367300233123824,
+      "peak_backward_m_s": 0.5835486054420471,
+      "complete": 24.629999999997228
+    }
+  },
+  "reverse_release": {
+    "zero_ordinary_pass": true,
+    "balance_drift_m_s": -0.010644402965373091,
+    "landing": {
+      "first_four_contact": 23.819999999997677,
+      "handoff": 23.999999999997577,
+      "stopped": 24.329999999997394,
+      "contact_to_stop_s": 0.5099999999997173,
+      "handoff_to_stop_s": 0.3299999999998171,
+      "backward_travel_m": 0.11734264835715294,
+      "peak_backward_m_s": 0.5257377624511719,
+      "complete": 24.65999999999721
+    },
+    "unchanged_through_handoff_entry_frames": 800,
+    "first_ordinary_targets_inherited": true,
+    "before": {
+      "first_four_contact": 23.819999999997677,
+      "handoff": 23.999999999997577,
+      "stopped": 24.98999999999703,
+      "contact_to_stop_s": 1.1699999999993516,
+      "handoff_to_stop_s": 0.9899999999994513,
+      "backward_travel_m": 0.2863192940130829,
+      "peak_backward_m_s": 0.5858295559883118,
+      "complete": 24.65999999999721
+    }
+  }
+}

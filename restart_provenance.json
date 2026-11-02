@@ -15,7 +15,7 @@
     "input": "External Space/WASD/QE/arrow commands replace training scenario scheduler; no automatic rise/land.",
     "history": "Same first-frame replication and oldest-first order; cleared at every accepted rise.",
     "timing": "2ms native source physics,15 substeps per30ms policy sample.",
-    "handoff": "LAND/HANDOFF inherit measured motion and return hip0 unchanged; after completion blend to current operator input including unchanged zero over source handoff_blend_s (0.3s). EXIT uses pinned target blending with live operator input.",
+    "handoff": "LAND unchanged. At confirmed ground HANDOFF entry, live operator input immediately owns the ordinary command while pinned executed wheel targets blend over existing0.3s; hip0/ground confirmation do not defer input. No extra blend at success. EXIT uses the same pinned blend and live input.",
     "safety": "Independent MuJoCo body-contact/height guard exits call without adding contact to actor observations.",
     "ordinary": "Source full wheel/hip targets independent of policy motion limits; trained source controller retained."
   }

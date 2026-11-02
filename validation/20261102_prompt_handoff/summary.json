@@ -1,0 +1,182 @@
+{
+  "stationary": {
+    "balanced_at": 3.5699999999998284,
+    "completed_at": 24.629999999997228,
+    "cycles": 1,
+    "interruptions": 0,
+    "events": [
+      {
+        "time": 3.029999999999888,
+        "event": "rise_requested"
+      },
+      {
+        "time": 3.5699999999998284,
+        "event": "balance_entered"
+      },
+      {
+        "time": 23.57999999999781,
+        "event": "land_requested"
+      },
+      {
+        "time": 24.629999999997228,
+        "event": "ordinary_handoff_complete"
+      }
+    ],
+    "zero_balance": {
+      "n": 267,
+      "v_mean": -0.010673256793272183,
+      "v_min": -0.012843409553170204,
+      "v_max": -0.008209802210330963,
+      "operator_max": 0.0,
+      "raw_mean": 0.0,
+      "reference_mean": 0.0,
+      "wheel_mean": -0.4032344998938314,
+      "phase": [
+        2
+      ]
+    },
+    "zero_ordinary": {
+      "n": 513,
+      "v_mean": 1.1093619361611196e-05,
+      "v_min": -0.00011668189108604565,
+      "v_max": 0.0001481262588640675,
+      "operator_max": 0.0,
+      "raw_mean": 0.0,
+      "reference_mean": 0.0,
+      "wheel_mean": 0.0,
+      "phase": [
+        0
+      ]
+    },
+    "source_model": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+    "network": {
+      "policy": {
+        "file": "policy.onnx",
+        "sha256": "20e928cd45b4333f8213b12acf5193fbfaa597f04986606c78f960952fa5d60f"
+      }
+    },
+    "max_target": 24.650602340698242,
+    "max_measured": 32.817626953125,
+    "trace_sha256": "8e4a647ec97dc4a132e7db32e351bdbb85c1c6bc13501bbebf07e0b93a220f60"
+  },
+  "forward_release": {
+    "balanced_at": 3.5699999999998284,
+    "completed_at": 24.629999999997228,
+    "cycles": 1,
+    "interruptions": 0,
+    "events": [
+      {
+        "time": 3.029999999999888,
+        "event": "rise_requested"
+      },
+      {
+        "time": 3.5699999999998284,
+        "event": "balance_entered"
+      },
+      {
+        "time": 23.57999999999781,
+        "event": "land_requested"
+      },
+      {
+        "time": 24.629999999997228,
+        "event": "ordinary_handoff_complete"
+      }
+    ],
+    "zero_balance": {
+      "n": 267,
+      "v_mean": -0.010499715532981948,
+      "v_min": -0.012873224914073944,
+      "v_max": -0.007820707745850086,
+      "operator_max": 0.0,
+      "raw_mean": 0.0,
+      "reference_mean": 0.0,
+      "wheel_mean": -0.3955065080065852,
+      "phase": [
+        2
+      ]
+    },
+    "zero_ordinary": {
+      "n": 513,
+      "v_mean": -5.7728778239323986e-06,
+      "v_min": -0.0001438802428310737,
+      "v_max": 0.0001223966828547418,
+      "operator_max": 0.0,
+      "raw_mean": 0.0,
+      "reference_mean": 0.0,
+      "wheel_mean": 0.0,
+      "phase": [
+        0
+      ]
+    },
+    "source_model": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+    "network": {
+      "policy": {
+        "file": "policy.onnx",
+        "sha256": "20e928cd45b4333f8213b12acf5193fbfaa597f04986606c78f960952fa5d60f"
+      }
+    },
+    "max_target": 24.650602340698242,
+    "max_measured": 32.817626953125,
+    "trace_sha256": "b250c53e1333768092d2ca374efdd0c9cc057a54704420eadf491d31f7dc1587"
+  },
+  "reverse_release": {
+    "balanced_at": 3.5699999999998284,
+    "completed_at": 24.65999999999721,
+    "cycles": 1,
+    "interruptions": 0,
+    "events": [
+      {
+        "time": 3.029999999999888,
+        "event": "rise_requested"
+      },
+      {
+        "time": 3.5699999999998284,
+        "event": "balance_entered"
+      },
+      {
+        "time": 23.57999999999781,
+        "event": "land_requested"
+      },
+      {
+        "time": 24.65999999999721,
+        "event": "ordinary_handoff_complete"
+      }
+    ],
+    "zero_balance": {
+      "n": 267,
+      "v_mean": -0.010644402965373091,
+      "v_min": -0.012903810478746891,
+      "v_max": -0.008538068272173405,
+      "operator_max": 0.0,
+      "raw_mean": 0.0,
+      "reference_mean": 0.0,
+      "wheel_mean": -0.40235895722099907,
+      "phase": [
+        2
+      ]
+    },
+    "zero_ordinary": {
+      "n": 512,
+      "v_mean": 3.5701914906649534e-06,
+      "v_min": -0.00012911352678202093,
+      "v_max": 0.0001242182042915374,
+      "operator_max": 0.0,
+      "raw_mean": 0.0,
+      "reference_mean": 0.0,
+      "wheel_mean": 0.0,
+      "phase": [
+        0
+      ]
+    },
+    "source_model": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+    "network": {
+      "policy": {
+        "file": "policy.onnx",
+        "sha256": "20e928cd45b4333f8213b12acf5193fbfaa597f04986606c78f960952fa5d60f"
+      }
+    },
+    "max_target": 24.650602340698242,
+    "max_measured": 32.817626953125,
+    "trace_sha256": "ccd65ee44bccac782080b8aca4977cac87b81e980751b0daf6c2289832e4f972"
+  }
+}

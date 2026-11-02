@@ -30,8 +30,34 @@ assert all(abs(r['raw'][0]-.15)<1e-6 for r in held)
 assert np.mean([r['motion'][0] for r in held])>.1
 assert all(r['raw']==[0.,0.] for r in idle)
 assert max(abs(r['motion'][0]) for r in idle)<.005
+handoff=[r for r in rows if r['phase']==Phase.HANDOFF and r['phase_time']>0]
+assert handoff and all(abs(r['raw'][0]-.15)<1e-6 for r in handoff)
 result['held_command']={'cycles':c.cycles,'held_measured_mean':float(np.mean([r['motion'][0] for r in held])),
-                        'released_speed_max':max(abs(r['motion'][0]) for r in idle),'unchanged_input_owned_after_transfer':True}
+                        'released_speed_max':max(abs(r['motion'][0]) for r in idle),'unchanged_input_owned_during_transfer':True}
+# Release while the hips/ground are still being confirmed, not after success.
+sim=RestartSimulation(ROOT/'policies/restart20_s102');c=sim.controller
+arm=land=False;balance=handoff_at=released=None;rows=[]
+while sim.data.time<16:
+    t=float(sim.data.time)
+    release=handoff_at is not None and t>=handoff_at+.12
+    c.set_command(0. if release else .15,0.)
+    if release and released is None:released=t
+    if t>=3 and not arm:c.toggle();arm=True
+    if int(c.control.phase[0])==Phase.BALANCE and balance is None:balance=t
+    if balance is not None and t-balance>=6 and not land:c.toggle();land=True
+    if int(c.control.phase[0])==Phase.HANDOFF and handoff_at is None:handoff_at=t
+    sim.step();rows.append(sim.record())
+assert c.cycles==1 and c.interruptions==0,c.events
+after=[r for r in rows if r['time']>released+.001]
+assert after and all(r['raw']==[0.,0.] for r in after)
+assert any(r['phase']==Phase.HANDOFF for r in after)
+# At the 0.30s float32 blend boundary the last sample may retain ~2e-6
+# rad/s. Require numerical zero there and exact zero one control tick later.
+assert max(abs(x) for r in after if r['time']>handoff_at+.33 for x in r['wheel_target'])<1e-5
+assert all(r['wheel_target']==[0.,0.] for r in after if r['time']>handoff_at+.36)
+assert max(abs(r['motion'][0]) for r in after if r['time']>handoff_at+.65)<.005
+result['release_during_handoff']={'cycles':c.cycles,'release_at':released,'handoff_at':handoff_at,
+                                 'zero_owned_before_success':True,'no_deferred_command':True}
 # Exercise the adapter's unexpected-exit branch, explicitly a synthetic event,
 # then use real MuJoCo steps to verify initial continuity and zero-speed ownership.
 sim=RestartSimulation(ROOT/'policies/restart20_s102');c=sim.controller

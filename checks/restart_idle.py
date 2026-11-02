@@ -1,4 +1,4 @@
-"""Reproduce zero-input BALANCE drift and verify ordinary ownership after landing.
+"""Reproduce zero-input drift and check braking from contact, not just completion.
 
 No GUI, no training or state resets within a call. --verify-only checks saved traces.
 """
@@ -57,13 +57,35 @@ for name,case in result.items():
     rows=[json.loads(line) for line in (out/(name+'.jsonl')).read_text().splitlines()]
     assert hashlib.sha256((out/(name+'.jsonl')).read_bytes()).hexdigest()==case['trace_sha256']
     checks[name]={'zero_ordinary_pass':True,'balance_drift_m_s':case['zero_balance']['v_mean']}
+    def landing_metrics(trace):
+        land=next(r for r in trace if r['phase']==Phase.LAND)
+        contact=next(r for r in trace if r['time']>=land['time'] and r['four_fraction']>0)
+        handoff=next(r for r in trace if r['phase']==Phase.HANDOFF)
+        after=[r for r in trace if r['time']>=contact['time']]
+        last=max(i for i,r in enumerate(after) if abs(r['motion'][0])>.01)
+        stop=after[last+1]
+        return dict(first_four_contact=contact['time'],handoff=handoff['time'],stopped=stop['time'],
+                    contact_to_stop_s=stop['time']-contact['time'],handoff_to_stop_s=stop['time']-handoff['time'],
+                    backward_travel_m=sum(max(0.,-r['motion'][0])*.03 for r in after[:last+1]),
+                    peak_backward_m_s=-min(r['motion'][0] for r in after),
+                    complete=next(r['time'] for r in trace if r['cycles']))
+    metrics=landing_metrics(rows)
+    checks[name]['landing']=metrics
+    # The transition record still captures actual velocity; the next control
+    # step must use the current request, including an unchanged zero.
+    during=[r for r in rows if r['phase']==Phase.HANDOFF and r['time']>metrics['handoff']+.001]
+    assert during and all(r['raw']==[0.,0.] for r in during),name
+    settled=[r for r in during if r['time']>metrics['handoff']+.33]
+    assert settled and all(r['wheel_target']==[0.,0.] for r in settled),name
+    assert metrics['handoff_to_stop_s']<.65 and metrics['stopped']<metrics['complete'],(name,metrics)
     if args.reference:
         old=[json.loads(line) for line in (args.reference/(name+'.jsonl')).read_text().splitlines()]
-        through=[i for i,r in enumerate(rows) if r['time']<=case['completed_at']]
+        through=[i for i,r in enumerate(rows) if r['time']<=metrics['handoff']]
         assert all(rows[i]==old[i] for i in through), name
         first=rows[len(through)]
         assert first['wheel_target']==old[len(through)]['wheel_target'],name
-        checks[name]['unchanged_through_complete_frames']=len(through)
+        checks[name]['unchanged_through_handoff_entry_frames']=len(through)
         checks[name]['first_ordinary_targets_inherited']=True
+        checks[name]['before']=landing_metrics(old)
 (out/'verification.json').write_text(json.dumps(checks,indent=2)+'\n')
 print(json.dumps(checks,indent=2))

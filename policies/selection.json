@@ -18,6 +18,6 @@
   "source_results": "docs/upright_restart_round20_results.md",
   "limitations": "Bidirectional0.75m/s, mirror symmetry, broad initial hips and actual wheel overspeed unresolved.",
   "mujoco_evidence": "validation/20261102_restart20/review.json",
-  "mujoco_status": "User reports basic flow and approximately0.6m/s stable desktop experience. Zero-input post-landing latch fixed and paired real MuJoCo verified;~0.01m/s true BALANCE drift remains. Wide initial states and full0.75 range unproven.",
-  "latest_runtime_validation": "validation/20261102_idle_fix/review.json"
+  "mujoco_status": "User reports improved basic flow and~0.6m/s desktop motion. HANDOFF now uses live input; zero-input contact-to-stop reduced1.1s to~0.5s. Residual12\u201314cm backward landing travel and~.01m/s BALANCE drift remain; stationary touchdown and full range NOT accepted.",
+  "latest_runtime_validation": "validation/20261102_prompt_handoff/review.json"
 }

@@ -1,0 +1,21 @@
+{
+  "held_command": {
+    "cycles": 1,
+    "held_measured_mean": 0.14435821320071365,
+    "released_speed_max": 0.00016542358207516372,
+    "unchanged_input_owned_during_transfer": true
+  },
+  "release_during_handoff": {
+    "cycles": 1,
+    "release_at": 10.110000000000046,
+    "handoff_at": 9.990000000000006,
+    "zero_owned_before_success": true,
+    "no_deferred_command": true
+  },
+  "injected_exit": {
+    "first_wheel_targets_inherited": true,
+    "zero_request_owned": true,
+    "no_auto_rise": true,
+    "final_speed": -5.567380867432803e-05
+  }
+}

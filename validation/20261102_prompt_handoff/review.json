@@ -1,0 +1,29 @@
+{
+  "policy": "restart20_s102/update_001000",
+  "adapter_before": "2d73de67ed33c3076c3fef041fafde0dc25e953f",
+  "diagnosis": "Previous fix only released velocity after HANDOFF success. During ground/hip confirmation it still commanded captured negative landing velocity despite unchanged zero operator request.",
+  "fix": "Use live operator request from HANDOFF entry. Preserve pinned first-target inheritance and existing0.3s target blend, hip return and phase confirmation. Remove duplicate command blend after success.",
+  "model_and_onnx_unchanged": true,
+  "pinned_controller_unchanged": true,
+  "validation": [
+    "Three paired42s real MuJoCo runs, first800 frames through HANDOFF entry exactly equal; first HANDOFF wheel targets inherited.",
+    "First four-wheel contact to persistent abs(v)<.01m/s:1.11/1.11/1.17s before to.48/.48/.51s after (stationary,forward release,reverse release).",
+    "Backward travel, integral of negative body longitudinal speed after contact:.310/.367/.286m before to.133/.140/.117m after.",
+    "Live zero begins on first HANDOFF control step; stop at HANDOFF+.33s, before ground/hip confirmation succeeds.",
+    "Held+.15m/s and release during HANDOFF both respected without new key-value event; injected EXIT remains continuous and exits without auto-rise.",
+    "180 source observation/target comparisons exact;27geometric poses; ordinary full range,Q/E,history,ONNX-only pass; forces and target limits pass."
+  ],
+  "residuals": [
+    "Residual12\u201314cm backward travel and~0.5s stop after first contact remain. Landing actor still commands reverse wheels during landing/contact confirmation, followed by smooth braking. This does NOT satisfy stationary zero-input touchdown.",
+    "Peak body backward speed does not uniformly improve (.584 to.607m/s in forward-release case). This is an ownership-delay fix, not landing motion-quality acceptance.",
+    "True BALANCE zero input drift~-.0105 to-.0107m/s unchanged. Actual wheel peak32.818rad/s unchanged despite targets<=25."
+  ],
+  "development_failures": [
+    "Release-during-HANDOFF test initially required exact zero at float32 blend boundary; observed-1.907e-6rad/s at.33s and exact zero at.36s. Corrected test to1e-5rad/s boundary tolerance plus exact zero next tick; production control not changed for the test."
+  ],
+  "raw_traces": [
+    "outputs/idle_after_20261102",
+    "outputs/idle_prompt_handoff_20261102"
+  ],
+  "status": "handoff_delay_fixed_residual_landing_motion_not_accepted"
+}
