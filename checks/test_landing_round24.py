@@ -69,7 +69,8 @@ class LandingRound24(unittest.TestCase):
 
     def test_fixed_three_way_probe_commands_before_and_after_transfer(self):
         p=Runtime(3,'cpu',.06,CFG,MODEL);p.probe_level=8;p.probe_landing=True;p.probe_duration=12
-        p.reset(torch.arange(3));p.invoked[:]=True;p.control.phase[:]=Phase.BALANCE
+        # Isaac passes int32 indices; plain torch.arange defaults to int64.
+        p.reset(torch.arange(3,dtype=torch.int32));p.invoked[:]=True;p.control.phase[:]=Phase.BALANCE
         p.balance_elapsed[:]=11;p.before_action(state(3))
         expected=torch.tensor([[0.,0.],[.75,0.],[-.75,0.]])
         torch.testing.assert_close(p.control.command,expected)

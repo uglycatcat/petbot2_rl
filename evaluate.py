@@ -40,6 +40,7 @@ def main():
     if not 1 <= args.takeover_scale <= 2 or (args.takeover_scale != 1 and args.scenario != 'capability_cycle'):
         raise ValueError('Takeover scale requires a capability scenario and range[1,2]')
     app = env = None
+    code = 0
     try:
         from isaaclab.app import AppLauncher
         app = AppLauncher(headless=True, device=args.device).app
@@ -78,10 +79,20 @@ def main():
                       trained_course_level=trained_level, outside_trained_course=level > trained_level)
         atomic_json(args.output/'result.json', result)
         print(json.dumps(result, indent=2))
+    except BaseException:
+        # Record the original exception before Isaac cleanup can replace it
+        # with SystemExit(0). The supervisor must never accept a missing result.
+        traceback.print_exc()
+        code = 82
     finally:
-        if env is not None: env.close()
-        if app is not None: app.close()
-    return 0
+        try:
+            if env is not None: env.close()
+            if app is not None: app.close()
+        except BaseException as exc:
+            if not (isinstance(exc, SystemExit) and exc.code in (None, 0)):
+                traceback.print_exc()
+                code = code or 82
+    return code
 
 
 if __name__ == '__main__':

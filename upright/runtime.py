@@ -159,7 +159,7 @@ class Runtime:
             self.short_cycle[moving_ids] = short
         self.sample_reversal_episodes(ids)
         if self.probe_landing:
-            self.landing_case[ids] = ids % 3  # zero, forward, reverse; separate fixed evaluation
+            self.landing_case[ids] = (ids % 3).long()  # Isaac reset indices can be int32
         elif self.probe_level is None and self.cfg.landing_scenario_fraction:
             eligible = ids[(self.level[ids] >= 2) & ~self.short_cycle[ids]]
             chosen = eligible[self.uniform(len(eligible))[:, 0] < self.cfg.landing_scenario_fraction]
