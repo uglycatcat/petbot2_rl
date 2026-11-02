@@ -26,8 +26,14 @@ def code_digest():
 def load_training(path):
     defaults=json.loads((PROJECT_ROOT/'configs/train_v1.json').read_text())
     t=json.loads(Path(path).read_text())
-    optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling','critic_observation'}
+    optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling','critic_observation','task_memory','wheel_mapping'}
     if set(t)-optional!=set(defaults) or t['schema']!='petbot_step_ppo_v1': raise ValueError('Unknown training schema/fields')
+    if t.get('task_memory','none') not in ('none','sensor_stop_v16'):
+        raise ValueError('Unknown deployable task memory')
+    if t.get('wheel_mapping','affine') not in ('affine','zero_centered'):
+        raise ValueError('Unknown wheel action mapping')
+    if t.get('reward_version') == 'stop_v16' and (t.get('task_memory') != 'sensor_stop_v16' or t.get('wheel_mapping') != 'zero_centered'):
+        raise ValueError('stop_v16 requires the sensor-memory and zero-centered action contract')
     if t.get('policy_distribution','gaussian') not in ('gaussian','beta'):raise ValueError('Unknown policy distribution')
     if t.get('critic_observation', 'policy') not in ('policy', 'reward_state_v11'):
         raise ValueError('Unknown critic observation')
@@ -44,9 +50,9 @@ def load_training(path):
         if 'wheel_final_std' in s and (not isinstance(s['wheel_final_std'],(int,float))
                 or not .005<=s['wheel_final_std']<=.577):
             raise ValueError('Invalid wheel variance ceiling')
-    if t.get('reward_version','legacy') not in ('legacy','edge_v3','progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15'):raise ValueError('Unknown reward version')
+    if t.get('reward_version','legacy') not in ('legacy','edge_v3','progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16'):raise ValueError('Unknown reward version')
     if not 0<t.get('discount_gamma',.99)<=1:raise ValueError('Invalid discount gamma')
-    if t.get('reward_version') in ('progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15') and t.get('discount_gamma')!=1.:
+    if t.get('reward_version') in ('progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16') and t.get('discount_gamma')!=1.:
         raise ValueError('Progress rewards require undiscounted finite-episode returns')
     if t['initialization']!='random' or t['pretrained_models']: raise ValueError('Only random initialization is allowed')
     for name in ('num_envs','iterations','save_interval','decimation','num_steps_per_env','num_learning_epochs','num_mini_batches'):
@@ -66,7 +72,7 @@ def main(argv):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command',choices=('train','evaluate'))
     parser.add_argument('--config',type=Path,default=DEFAULT_CONFIG)
-    parser.add_argument('--training-config',type=Path,default=PROJECT_ROOT/'configs/round15_seed70.json')
+    parser.add_argument('--training-config',type=Path,default=PROJECT_ROOT/'configs/round16_seed70.json')
     parser.add_argument('--model-dir',type=Path)
     parser.add_argument('--asset-dir',type=Path,default=PROJECT_ROOT/'artifacts/robot')
     parser.add_argument('--run-dir',type=Path,required=True)
@@ -114,6 +120,7 @@ def main(argv):
         from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper
         from .isaac_env import StepEnv
         from .critic_state import CRITIC_STATE_FIELDS
+        from .stop_memory import MEMORY_FIELDS
         actual=t.copy()
         if args.command=='evaluate': actual['num_envs']=args.eval_envs
         env=StepEnv(task,actual,args.asset_dir,args.device)
@@ -127,7 +134,10 @@ def main(argv):
         runner=StepRunner(wrapped,runner_config(t),origin,str(run) if args.command=='train' else None,args.device)
         write_json(output/'layout.json',dict(joints=env.robot.joint_names,hips=env.hips,rear_wheels=env.wheels,
             trace_ids=env.trace_ids,step_dt=env.step_dt,source_code_sha256=origin['code_sha256'],
-            actor_observation_dim=26, critic_observation_dim=48 if env.reward_state_critic else 26,
+            actor_observation_dim=env.cfg.observation_space,
+            critic_observation_dim=env.cfg.observation_space+(len(CRITIC_STATE_FIELDS) if env.reward_state_critic else 0),
+            wheel_mapping=env.wheel_mapping,task_memory=t.get('task_memory','none'),
+            policy_extra_fields=list(MEMORY_FIELDS) if env.sensor_stop_enabled else [],
             critic_extra_fields=list(CRITIC_STATE_FIELDS) if env.reward_state_critic else []))
         write_json(output/'runtime.json',{name:importlib.metadata.version(name) for name in ('torch','rsl-rl-lib','numpy')})
         if args.resume or args.command=='evaluate':

@@ -19,6 +19,7 @@ from .rewards import (edge_potential, potential_difference, progress_increment, 
                       staged_progress, component_increment, settled_progress, touch_costs,
                       post_top_home_cost)
 from .progress import drive_memory
+from .stop_memory import SensorStopMemory, wheel_request
 from .contacts import forbidden_front_contact, early_top_contact
 from .terrain import convex_edges, wheel_terrain_clearance, rear_airborne
 from .critic_state import CRITIC_STATE_FIELDS, reward_state
@@ -46,17 +47,21 @@ class StepEnv(DirectRLEnv):
         self.task = task
         self.training = training
         self.reward_state_critic = training.get('critic_observation', 'policy') == 'reward_state_v11'
-        self.smooth_braking = training.get('reward_version') in ('brake_v10','brake_v13','home_v15')
-        self.brake_weight = 4. if training.get('reward_version') in ('brake_v13','home_v15') else 1.
-        self.touch_reward = training.get('reward_version') in ('touch_v8','brake_v10','brake_v13','home_v15')
-        self.settle_reward = training.get('reward_version') in ('settle_v6','touch_v8','brake_v10','brake_v13','home_v15')
-        self.stage_reward = training.get('reward_version') in ('stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15')
-        self.progress_reward = training.get('reward_version') in ('progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15')
-        self.edge_reward = training.get('reward_version','legacy') in ('edge_v3','progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15')
-        self.home_pose_reward = training.get('reward_version') == 'home_v15'
+        self.smooth_braking = training.get('reward_version') in ('brake_v10','brake_v13','home_v15','stop_v16')
+        self.brake_weight = 4. if training.get('reward_version') in ('brake_v13','home_v15','stop_v16') else 1.
+        self.touch_reward = training.get('reward_version') in ('touch_v8','brake_v10','brake_v13','home_v15','stop_v16')
+        self.settle_reward = training.get('reward_version') in ('settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16')
+        self.stage_reward = training.get('reward_version') in ('stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16')
+        self.progress_reward = training.get('reward_version') in ('progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16')
+        self.edge_reward = training.get('reward_version','legacy') in ('edge_v3','progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16')
+        self.home_pose_reward = training.get('reward_version') in ('home_v15','stop_v16')
+        self.stop_reward_memory = training.get('reward_version') == 'stop_v16'
+        self.sensor_stop_enabled = training.get('task_memory', 'none') == 'sensor_stop_v16'
+        self.wheel_mapping = training.get('wheel_mapping', 'affine')
         self.asset_dir = asset_dir.resolve()
         self.asset = json.loads((asset_dir / 'asset.json').read_text())
         cfg = StepEnvCfg()
+        cfg.observation_space = 29 if self.sensor_stop_enabled else 26
         cfg.state_space = len(CRITIC_STATE_FIELDS) if self.reward_state_critic else 0
         cfg.seed = training['seed']; cfg.scene.num_envs = training['num_envs']
         cfg.decimation = training['decimation']; cfg.sim.render_interval = cfg.decimation
@@ -76,6 +81,8 @@ class StepEnv(DirectRLEnv):
         self.rear_edges = [torch.tensor(convex_edges(self.asset['wheel_vertices'][name]),
                                        dtype=torch.long, device=self.device) for name in self.wheel_names[2:]]
         n = self.num_envs; d = self.device
+        self.sensor_stop = SensorStopMemory(n, d, task.acceptance.post_climb_distance_m, task.acceptance.hip_tolerance_rad)
+        self.reward_stop_intent = torch.zeros(n, dtype=torch.bool, device=d)
         self.actions = torch.zeros(n, 2, device=d); self.actions[:, 1] = -1
         self.raw_actions = self.actions.clone(); self.last_actions = self.actions.clone()
         self.executed = self.actions.clone()
@@ -212,7 +219,7 @@ class StepEnv(DirectRLEnv):
     def _apply_action(self):
         self._capture(self._sim_step_counter - 1)
         desired_hip = torch.where(self.actions[:, 0] >= 0, 1.2*self.actions[:, 0], self.actions[:, 0])
-        desired_wheel = (self.actions[:, 1]+1.) * 12.5
+        desired_wheel = wheel_request(self.actions[:, 1], self.wheel_mapping)
         self.hip_target += (desired_hip-self.hip_target).clamp(
             -self.training['hip_target_rate_rad_s']*self.physics_dt, self.training['hip_target_rate_rad_s']*self.physics_dt)
         self.wheel_target += (desired_wheel-self.wheel_target).clamp(
@@ -335,6 +342,12 @@ class StepEnv(DirectRLEnv):
         else:
             self.drive_start = torch.where(~ready, float('nan'), torch.where(entering, forward, self.drive_start))
         drove = ready & (forward-self.drive_start >= a.post_climb_distance_m)
+        self.reward_stop_intent |= drove
+        if self.sensor_stop_enabled:
+            estimated_rear = (self.estimator.position + self.estimator.previous_rear_offset
+                              - self.estimator.initial_offset)
+            self.sensor_stop.update(self.packet, self.estimator.com_position, estimated_rear,
+                                    tensor(self.robot.data.joint_pos)[:, self.hips], self.step_dt)
         # Reward-only dwell; the task's phase and completion contract is unchanged.
         quiet_home = tensor(self.robot.data.joint_vel)[:,self.hips].abs().amax(-1) <= .5
         self.home_hold = torch.where(ready & quiet_home, self.home_hold+self.step_dt, 0.)
@@ -391,7 +404,9 @@ class StepEnv(DirectRLEnv):
                         stable_top=self.supported_top.all(-1) & self.front_landed.all(-1) & aligned
                         parts=settled_progress(parts,pos[:,self.hips].abs().amax(-1),
                             tensor(self.robot.data.joint_vel)[:,self.hips].abs().amax(-1),
-                            self.home_hold,stable_top,self.phase>=3,self.com_vel.norm(dim=-1),
+                            self.home_hold,stable_top,
+                            (self.reward_stop_intent & self.near_top) if self.stop_reward_memory else self.phase>=3,
+                            self.com_vel.norm(dim=-1),
                             smooth_braking=self.smooth_braking,brake_weight=self.brake_weight)
                     gain,self.stage_credit=component_increment(self.stage_credit,parts,failed)
                     self.best_progress=self.stage_credit.sum(-1)
@@ -422,6 +437,8 @@ class StepEnv(DirectRLEnv):
     def _get_observations(self):
         obs = self.estimator.observation(self.packet, tensor(self.robot.data.joint_pos),
             tensor(self.robot.data.joint_vel), self.hips, self.wheels, tensor(self.imu.data.ang_vel_b), self.executed)
+        if self.sensor_stop_enabled:
+            obs = torch.cat((obs, self.sensor_stop.observation()), dim=-1)
         if not torch.isfinite(obs).all():
             raise RuntimeError('Nonfinite sensor observation')
         observations = {'policy':obs.clamp(-100.,100.)}
@@ -472,6 +489,7 @@ class StepEnv(DirectRLEnv):
         self.robot.write_joint_velocity_to_sim_index(velocity=torch.zeros_like(joints),env_ids=env_ids)
         if hasattr(self,'failure'):
             self.estimator.reset(env_ids)
+            self.sensor_stop.reset(env_ids); self.reward_stop_intent[env_ids] = False
             for name in ('front_lifted','front_cleared','front_landed','front_touched','front_hit','rear_air_s','rear_clearance','failure','phase',
                          'stop_time','completed','supported_top','max_lift_fraction','previous_forward','wheel_speed_peak','ascent_rewarded',
                          'previous_potential','best_progress','motion_cost','stage_credit','drive_support_gap','near_top','relift_cost','home_hold',
@@ -507,6 +525,9 @@ class StepEnv(DirectRLEnv):
             touch_impact_cost=self.touch_impact_cost[ids].tolist(),touch_motion_cost=self.touch_motion_cost[ids].tolist(),
             home_hold=self.home_hold[ids].tolist(),
             four_top_seen=self.four_top_seen[ids].tolist(),home_pose_cost=self.home_pose_cost[ids].tolist(),
+            sensor_stop_memory=self.sensor_stop.observation()[ids].tolist() if self.sensor_stop_enabled else [],
+            sensor_stop_anchor=self.sensor_stop.anchor[ids].tolist() if self.sensor_stop_enabled else [],
+            reward_stop_intent=self.reward_stop_intent[ids].tolist(),
             drive_start=self.drive_start[ids].tolist(),drive_support_gap=self.drive_support_gap[ids].tolist(),near_top=self.near_top[ids].tolist(),
             yaw=self.yaw[ids].tolist(),yaw_rate=tensor(self.robot.data.body_link_ang_vel_w)[ids,self.lower_body,2].tolist(),
             wheel_min=self.minimum[ids].tolist(),wheel_max=self.maximum[ids].tolist(),

@@ -75,7 +75,7 @@ python3 tools/run_guard.py --workdir /workspace/runs/step_run_example/source \
   -m step_demo train --run-dir ../train --asset-dir ../asset --model-dir ../../../robot_description
 ```
 
-默认使用第15轮：恢复第13轮轮/髋最终探索上限均0.02，仅新增四轮登台后偏离原默认髋角容差的持续成本；actor/critic仍26维自身观测，控制、物理和验收保持。512环境、500次更新，详见[第15轮](docs/round15.md)。工程检查使用 `--training-config configs/round15_gate.json`（128环境、8更新）；加 `--stop-after 4`验证在更新边界中断，再以相同入口和 `--resume`完成剩余预算。恢复时不改配置，不指定外来检查点；若进程意外退出，恢复最近一次完整保存的更新，当前未保存rollout丢弃。日志使用新名字。
+默认使用第16轮：保留第15轮归髋成本，新增3维自身传感估计的短行/停车记忆，actor/critic各29维；轮请求为`25*max(action,0)`，零目标具有可采样区间。合法短行完成后的减速学习意图保留，严格任务完成条件、模型、PD和物理限幅保持。512环境、500次更新，详见[第16轮](docs/round16.md)。工程检查使用 `--training-config configs/round16_gate.json`（128环境、8更新）；加 `--stop-after 4`验证在更新边界中断，再以相同入口和 `--resume`完成剩余预算。恢复时不改配置，不指定外来检查点；若进程意外退出，恢复最近一次完整保存的更新，当前未保存rollout丢弃。日志使用新名字。
 
 独立进程重载评估，把上述监督参数的日志/状态改为新路径，执行：
 
