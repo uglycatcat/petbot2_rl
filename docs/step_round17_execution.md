@@ -11,3 +11,9 @@
 两项修改联合试验，不能分离因果；原估计停车提示仍有提前/缺失风险，未用真值或停车规则掩盖。后续事件必须查每侧真实离地/落地次数和时刻、失败5、请求/执行/实测、实际接触/归髋/沿线短行、提示时机和零轮请求持续时间；无完整成功不得发布为通过。默认桌面策略保持原版本。
 
 同一campaign enabled=true、active指向本轮；第16轮事件已handled，新轮单路/整批完成或异常继续原事件链，无周期定时器/goal。证据：`demo_project/runs/step_round17_gate_20261102/agent_review.json`、`checkpoint_audit.json`、`control_acceptance_audit.json`及各guard；正式目录`revision.json`、`plan.json`、`startup_verification.json`、`actual_initial_checkpoint_audit.json`、各路origin/initialization/progress。耗时：本次工程与分析约20分钟，正式训练另计。首次源码推送连接超时，重试成功且远端ref核验一致，不计为仿真失败。
+
+## 下一批新增机体俯仰要求
+
+**2026-11-02用户新增，下批生效：** 约束IMU所在`lower_body`相对世界坐标系的pitch变化速度，并抑制过大的后仰/低头；允许必要的髋关节发力和机体姿态变化，不能用关节相对角度替代。先审查第17轮真实轨迹，再选择平顺性/过大俯仰软代价及工程权重；用户未指定角度或角速度硬上限。保留单次抬轮、后轮支撑和完整短行停车，检查不动/提前停车等退化。当前第17轮固定实现不改，从下一批经工程门槛后从零引入；当前批次`agent_review.json`及demo任务契约已登记。
+
+测量与验证针对`lower_body`世界姿态的pitch及其时间导数。IMU安装轴、符号、单位和姿态变换需要核对；机体系陀螺Y或世界角速度Y通常不能直接等同pitch变化率。分别记录估计/真值、前后俯仰极值、变化率峰值/均方根、阶段轨迹与髋请求/执行/实测，允许必要倾斜，不要求世界pitch恒为零。头/耳关节仍保持默认，源机器人和既有物理参数不变。

@@ -64,7 +64,7 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/step_rl_demo",
-      "verified_commit": "8a780339b85a8a3f9c558ffbe70e323d56e18368",
+      "verified_commit": "204dc7a97a324985f461b419c0a0c3e277853302",
       "groups": [
         "demo"
       ],
@@ -78,7 +78,8 @@
         "step_round17_seed71@gpu1"
       ],
       "active_training_commit": "8a780339b85a8a3f9c558ffbe70e323d56e18368",
-      "next_iteration_requirement": "Audit physical per-wheel flight/landing events, premature stop or missed stop, sensor cue timing, real support/alignment/short-drive/hold and requested/executed/measured joints. Single-flight requirement implemented; full capability still unproven."
+      "next_iteration_requirement": "Audit physical per-wheel flight/landing events, premature stop or missed stop, sensor cue timing, real support/alignment/short-drive/hold and requested/executed/measured joints. Single-flight requirement implemented; full capability still unproven.",
+      "pending_body_pitch_requirement": "From next batch after round17: reduce IMU-bearing lower_body world-referenced pitch rate and excessive pitch excursions, retaining necessary hip-driven lift. Soft objective; numerical weights/margins pending physical trajectory review. Not joint-angle/rate proxy; retain complete single-flight and stop task. Documentation only; frozen round17 runtime unchanged."
     },
     {
       "name": "recovery_rl_demo",
