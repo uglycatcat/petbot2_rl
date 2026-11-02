@@ -1,0 +1,20 @@
+{
+  "stationary": {
+    "zero_ordinary_pass": true,
+    "balance_drift_m_s": -0.010673256793272183,
+    "unchanged_through_complete_frames": 821,
+    "first_ordinary_targets_inherited": true
+  },
+  "forward_release": {
+    "zero_ordinary_pass": true,
+    "balance_drift_m_s": -0.010499715532981948,
+    "unchanged_through_complete_frames": 821,
+    "first_ordinary_targets_inherited": true
+  },
+  "reverse_release": {
+    "zero_ordinary_pass": true,
+    "balance_drift_m_s": -0.010644402965373091,
+    "unchanged_through_complete_frames": 822,
+    "first_ordinary_targets_inherited": true
+  }
+}

@@ -9,7 +9,7 @@
   "previous_default": "cycle23_course_r58",
   "previous_selection": "selection_cycle23.json",
   "inference_backend": "onnxruntime_cpu",
-  "status": "user_requested_preview_not_sim2sim_acceptance",
+  "status": "user_reports_basic_flow_and_improved_motion_full_capability_pending",
   "criterion": "Round20 seed102 completes low32/32 and high29/32; seed101 fails landing. This is the better seed from the requested round, not a claim of improvement over every earlier policy.",
   "recommended_keyboard": {
     "forward_mps": 0.15,
@@ -18,5 +18,6 @@
   "source_results": "docs/upright_restart_round20_results.md",
   "limitations": "Bidirectional0.75m/s, mirror symmetry, broad initial hips and actual wheel overspeed unresolved.",
   "mujoco_evidence": "validation/20261102_restart20/review.json",
-  "mujoco_status": "Stationary hold6s and mixed0.15/0.5 hold18s complete. Port/ordinary/QE/exit/history/GUI checks pass. Actual wheel overshoot retained; user acceptance pending."
+  "mujoco_status": "User reports basic flow and approximately0.6m/s stable desktop experience. Zero-input post-landing latch fixed and paired real MuJoCo verified;~0.01m/s true BALANCE drift remains. Wide initial states and full0.75 range unproven.",
+  "latest_runtime_validation": "validation/20261102_idle_fix/review.json"
 }

@@ -1,0 +1,28 @@
+{
+  "policy": "restart20_s102/update_001000",
+  "adapter_before": "3695300",
+  "model_and_weights_unchanged": true,
+  "inference": "onnxruntime_cpu",
+  "diagnosis": "Adapter latched measured landing motion until operator input changed value; repeated zero never released it.",
+  "fix": "LAND/HANDOFF unchanged; completed handoff blends inherited command to live operator command over existing0.3s. EXIT uses existing wheel-target blend toward live input. No physical-state reset.",
+  "validation": [
+    "3 paired42sMuJoCo traces; initial full cycles and first ordinary wheel targets identical before/after (821/821/822 frames through complete).",
+    "Zero-input ordinary mean-0.283/-0.367/-0.259m/s before, absolute speed<0.00014m/s after, exact zero command and wheel target.",
+    "Held+.15m/s owns ordinary control without new key event (measured+.1444), release stops.",
+    "Synthetic failure notification followed by real physics: first wheel targets continuous, no auto-rise, repeated zero stops.",
+    "180 source observation/target comparisons exact;27geometry poses; ordinary full speed,QE,history,exit and ONNX-only passed."
+  ],
+  "residuals": [
+    "True BALANCE zero input/reference produces approximately-0.0105 to-0.0107m/s drift; unchanged by adapter fix, remains training issue. Larger intermittent BALANCE drift from user report is not fully reproduced.",
+    "Actual wheel peak32.82rad/s unchanged; wide starting states and full continuous bidirectional0.75m/s unproven."
+  ],
+  "user_feedback": "User reports complete flow and much better motion, approximately0.6m/s stable in desktop experience. This is user evidence, not a paired or complete-range acceptance measurement.",
+  "development_failures": [
+    "Initial synthetic EXIT check incorrectly expected hip target to remain fixed too; source contract slews hips immediately while inheriting first wheel targets. Corrected the check to wheel continuity; controller was not changed to satisfy it."
+  ],
+  "raw_traces": [
+    "outputs/idle_before_20261102",
+    "outputs/idle_after_20261102"
+  ],
+  "status": "adapter_fix_verified_balance_drift_remains"
+}

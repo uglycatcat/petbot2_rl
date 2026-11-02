@@ -49,7 +49,7 @@ class RestartController:
         self.raw = self.operator_command.clone()
         self.armed = False
         self.pending_rise = self.pending_land = False
-        self.inherit_motion = False
+        self.ordinary_blend_start = None
         self.cycles = self.interruptions = self.last_exit_code = 0
         self.events = []
         self.elapsed = 0.
@@ -88,8 +88,6 @@ class RestartController:
                    ((speed, self.ordinary.speed_limit), (yaw, self.ordinary.yaw_limit))):
             raise ValueError('Operator command outside source range')
         command = torch.tensor([[speed, yaw]], dtype=torch.float32)
-        if not torch.equal(command, self.operator_command):
-            self.inherit_motion = False
         self.operator_command.copy_(command)
 
     def set_frame_input(self, direction):
@@ -102,7 +100,7 @@ class RestartController:
             self.pending_rise = self.armed = False
         elif self.manual_frame_allowed:
             self.pending_rise = self.armed = True
-            self.inherit_motion = False
+            self.ordinary_blend_start = None
             self.frame_input = 0.
         elif int(self.control.phase[0]) in (Phase.RISE, Phase.BALANCE):
             self.pending_land = True  # latch during RISE, apply when BALANCE starts
@@ -120,8 +118,19 @@ class RestartController:
             c.request_land(state, torch.tensor([0]))
             self.pending_land = False
             self.events.append(dict(time=self.elapsed, event='land_requested'))
-        if self.ordinary_control:
-            command = c.command if self.inherit_motion or int(c.phase[0]) == Phase.HANDOFF else self.operator_command
+        if int(c.phase[0]) == Phase.HANDOFF:
+            # Preserve the trained landing/hip alignment and measured-motion transfer.
+            command = c.command
+        elif self.ordinary_control:
+            command = self.operator_command
+            if self.ordinary_blend_start is not None:
+                # Inherited motion is the initial condition, never a latched user request.
+                # Repeated zero input must stop just as a changed command would.
+                alpha = min(1., self.ordinary_blend_age / self.cfg.handoff_blend_s)
+                command = self.ordinary_blend_start + alpha * (command-self.ordinary_blend_start)
+                self.ordinary_blend_age += self.dt
+                if alpha >= 1.:
+                    self.ordinary_blend_start = None
         else:
             command = torch.maximum(torch.minimum(self.operator_command, self.policy_motion_limits), -self.policy_motion_limits)
         self.raw.copy_(command)
@@ -163,15 +172,18 @@ class RestartController:
             self.balance_seen = True
             self.events.append(dict(time=time, event='balance_entered'))
         if bool(result['entered_handoff'][0]) or bool(result['failure'][0]):
-            self.inherit_motion = True
             self.frame = float(c.ordinary_hip[0])
         if bool(result['failure'][0]):
+            # EXIT already blends from executed targets in the pinned controller.
+            self.ordinary_blend_start = None
             self.interruptions += 1
             self.last_exit_code = int(c.reason[0])
             self.armed = self.pending_land = False
             self.frame_input = 0.
             self.events.append(dict(time=time, event='call_interrupted', reason=Reason(self.last_exit_code).name))
         elif bool(result['success'][0]):
+            self.ordinary_blend_start = c.command.clone()
+            self.ordinary_blend_age = 0.
             self.cycles += 1
             self.armed = self.pending_land = False
             self.frame = 0.
