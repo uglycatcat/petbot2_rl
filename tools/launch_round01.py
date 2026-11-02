@@ -141,6 +141,16 @@ def main():
                 with mutex:
                     status[variant['name']+'_eval_landing_transfer']=dict(state='skipped',reason='Native higher-course evaluation unavailable; analyze first')
                     save(out/'eval_status.json',status)
+            if plan.get('steady_cycle') and 'capability_cycle' in results:
+                good,evidence=step(variant,work,'eval_steady_cycle',['evaluate.py','--run-dir','outputs/train',
+                    '--checkpoint',checkpoint,'--output','outputs/eval_steady_cycle','--scenario','steady_cycle',
+                    '--duration','20','--count','32','--device','cuda:0'])
+                if not good: raise RuntimeError('Steady motion evaluation execution failed')
+                results['steady_cycle']=json.loads((work/'outputs/eval_steady_cycle/result.json').read_text())
+            elif plan.get('steady_cycle'):
+                with mutex:
+                    status[variant['name']+'_eval_steady_cycle']=dict(state='skipped',reason='Native higher-course evaluation unavailable; analyze first')
+                    save(out/'eval_status.json',status)
             with mutex:
                 state['variants'][variant['name']]['state']='execution_finished_acceptance_pending'
                 save(out/'launch_status.json',state)

@@ -63,4 +63,13 @@ class CapabilitySampling25(unittest.TestCase):
         self.assertFalse(b.steady_episode.any());self.assertFalse(b.steady_speed.any())
         torch.testing.assert_close(a.observation(state(32)),b.observation(state(32)))
 
+    def test_independent_held_velocity_has_both_signs_and_interior(self):
+        p=Runtime(8,'cpu',.06,CFG,MODEL);p.probe_level=8;p.probe_moving=False;p.probe_steady=True
+        p.reset(torch.arange(8,dtype=torch.int32));p.invoked[:]=True;p.control.phase[:]=Phase.BALANCE
+        for age in [4.,8.,12.]:
+            p.balance_elapsed[:]=age;p.command_age[:]=4.;p.before_action(state(8))
+            torch.testing.assert_close(p.control.command[:,0],torch.tensor([.75,-.75,.375,-.375]*2))
+            self.assertFalse(p.control.command[:,1].any())
+        self.assertFalse((p.landing_case>=0).any())
+
 if __name__=='__main__':unittest.main()

@@ -47,6 +47,7 @@ class Runtime:
         self.landing_case = torch.full((n,), -1, dtype=torch.long, device=device)
         self.post_handoff_elapsed = z()
         self.probe_landing = False
+        self.probe_steady = False
         self.post_handoff_observe_s = 0.  # evaluation-only ordinary-controller observation
         self.probe_level = None
         self.probe_duration = None
@@ -185,6 +186,12 @@ class Runtime:
             self.steady_speed[selected] = direction*magnitude*self.stage_ranges[self.level[selected], 0]
 
 
+        if self.probe_steady:
+            # Independent validation: both directions at full and intermediate speeds.
+            factors = self.steady_speed.new_tensor([1., -1., .5, -.5])
+            self.steady_episode[ids] = True
+            self.steady_speed[ids] = factors[ids.long()%4]*self.stage_ranges[self.level[ids], 0]
+
     def before_action(self, s):
         c = self.control
         ready = (c.phase == Phase.ORDINARY) & ~self.invoked & ~self.failure & (self.episode_age >= self.cfg.warmup_s)
@@ -212,6 +219,9 @@ class Runtime:
                 index = (self.balance_elapsed[ids]/self.stage_dwell[self.level[ids]]).long() % len(table)
                 command = table[index]*self.stage_ranges[self.level[ids], :2]
                 command[:, 1] *= torch.where(ids % 2 == 0, 1., -1.)
+            steady = self.steady_episode[ids]
+            command[steady, 0] = self.steady_speed[ids[steady]]
+            command[steady, 1] = 0.
             c.set_command(command, ids=ids); self.command_age[ids] = 0
         closing_ids = closing.nonzero().flatten()
         if len(closing_ids):
