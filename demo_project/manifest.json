@@ -44,19 +44,20 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "2945344620351899f4dd7a6c4e1ae7f2c694cd1a",
+      "verified_commit": "cb5b37c0f00e5d647f0dac1c18f7b0920f0223c9",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round24_engineering_pending_round23_reviewed",
-      "local_validation": "Round23 2x1000/10 independent evaluations valid;no missing/OOM/resume. High complete30each/basic30,29;wide complete21,19 with all20 positive0.6m/s rise failures. Full speed and landing quality unresolved. Round24 candidate live ordinary command,bounded direction-aware landing quality,three-way closing sampler and ordinary-only observation;135 CPU pass. GPU gate pending,formal training not started;no policy acceptance.",
+      "status": "restart_round24_running_gpu2_gpu3_random_landing_transfer",
+      "local_validation": "Round23 2x1000/10eval valid,noOOM/recovery;lowbasic63/64,highbasic59/64 buthighcomplete60/64,wide40/64;positive0.6rise20/20failed,fullspeed/landingunmet. Round24 135CPU and correctedGPUgate:4to8same-run recovery,reload0/32,default2048x2;native31750environmentframes physics/action/observationexact;32three-wayordinarytransfersvalid. Initial int32 probe failure with masked exit0 rejected;fixed dtype/cleanup,negative actual shell exit1;python.sh normalization audited;allfailure recordsretained,noOOM. Fixed2x2048x1000random actualPPOstartupverified,oldactorengineeringonly;no policy/sim2sim acceptance. Desktop20+618081e unchanged.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round24_gate01@gpu2_gpu3"
+        "upright_restart_round24_s101@gpu2",
+        "upright_restart_round24_s102@gpu3"
       ],
-      "active_training_commit": null,
+      "active_training_commit": "cb5b37c0f00e5d647f0dac1c18f7b0920f0223c9",
       "pending_design_review": "docs/upright_restart_landing_motion_20261102.md"
     },
     {
