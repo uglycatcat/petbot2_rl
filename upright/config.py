@@ -35,6 +35,7 @@ class Config:
     baseline_fraction: float = 0.2
     boundary_command_fraction: float = 0.0  # training only, moving levels >= 3
     reversal_episode_fraction: float = 0.0  # fraction of eligible long training episodes
+    long_command_hold_extra_s: float = 0.0  # training only, moving levels >=3, long episodes
     warmup_s: float = 1.5
     warmup_timeout_s: float = 4.0
     rise_timeout_s: float = 12.0
@@ -154,6 +155,10 @@ class Config:
         if (type(self.reversal_episode_fraction) not in (int, float)
                 or not 0 <= self.reversal_episode_fraction < 1):
             raise ValueError('Reversal mixture must retain random mixed-control long episodes')
+        if (type(self.long_command_hold_extra_s) not in (int, float)
+                or not __import__('math').isfinite(self.long_command_hold_extra_s)
+                or self.long_command_hold_extra_s < 0):
+            raise ValueError('Long training command hold must be finite and nonnegative')
         if self.short_cycle_fraction and not (self.hold_s <= self.short_balance_min_s <= self.short_balance_max_s < self.balance_train_s):
             raise ValueError('Short-cycle duration must retain genuine support and be below the long duration')
         if not 0 <= self.low_speed <= .75 or not 0 <= self.initial_hip <= 1:
@@ -173,7 +178,7 @@ class Config:
 
 
 def load_config(path=None, **overrides):
-    data = json.loads(Path(path or ROOT/'configs/round20.json').read_text())
+    data = json.loads(Path(path or ROOT/'configs/round21.json').read_text())
     unknown = data.keys() - {f.name for f in fields(Config)}
     if unknown:
         raise ValueError(f'Unknown configuration keys: {sorted(unknown)}')

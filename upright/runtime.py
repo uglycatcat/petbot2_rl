@@ -73,6 +73,14 @@ class Runtime:
         self.reversal_speed[ids[paired]] *= -1
         return command
 
+    def command_dwell(self):
+        """Per-episode training timing; fixed probes retain the original protocol."""
+        base = self.stage_dwell[self.level]
+        if self.probe_level is not None or not self.cfg.long_command_hold_extra_s:
+            return base
+        long_moving = (self.level >= 3) & ~self.short_cycle
+        return base + long_moving*self.cfg.long_command_hold_extra_s
+
     def sample_reversal_episodes(self, ids):
         # Train transitions that independent command draws rarely expose. Keep
         # low courses, short cycles and deterministic validation exactly intact.
@@ -80,7 +88,7 @@ class Runtime:
         if self.probe_level is not None or not self.cfg.reversal_episode_fraction:
             return
         eligible = ids[(self.level[ids] >= 3) & ~self.short_cycle[ids]
-                       & (self.balance_duration[ids] >= 2*self.stage_dwell[self.level[ids]]+1.)]
+                       & (self.balance_duration[ids] >= 2*self.command_dwell()[ids]+1.)]
         if not len(eligible):
             return
         selected = eligible[self.uniform(len(eligible))[:, 0] < self.cfg.reversal_episode_fraction]
@@ -144,7 +152,7 @@ class Runtime:
             self.invoked[ids] = True
         balance = c.phase == Phase.BALANCE
         self.command_age += balance*self.dt
-        change = balance & (self.level >= 2) & (self.command_age >= self.stage_dwell[self.level])
+        change = balance & (self.level >= 2) & (self.command_age >= self.command_dwell())
         ids = change.nonzero().flatten()
         if len(ids):
             if self.probe_level is None:
@@ -338,7 +346,7 @@ class Runtime:
         hold_limit = torch.where(self.level == 0, cfg.hold_s, duration)
         yaw_limit = max(1e-6, *(r[1] for r in cfg.motion_stages()))
         values = (self.episode_age/horizon, c.age/phase_limit, self.balance_elapsed/duration,
-                  duration/longest, self.command_age/self.stage_dwell[self.level],
+                  duration/longest, self.command_age/self.command_dwell(),
                   self.true_hold/hold_limit, self.peak_rise/1.25, self.peak_land,
                   self.balance_velocity_error/.75, self.takeover_motion[:, 0]/.75,
                   c.support_run/cfg.support_enter_s, c.return_run/cfg.return_confirm_s,
