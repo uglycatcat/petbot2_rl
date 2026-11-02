@@ -44,19 +44,20 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "d60a04b341864b6e356f1a838e23e59f6f9ceb22",
+      "verified_commit": "a8d0d8118bd033b09d5d91cc3dab0cbd6f74bb71",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round25_engineering_pending_round24_reviewed",
-      "local_validation": "Round24 2x1000/12independent eval valid,no missing/OOM/recovery;highcomplete63/64,basic44/64,wide35/64 with20positive0.6rise failures. Zero-request handoff -.006/-.038m/s but first geometric ground still8cm travel;fullspeed .45-.50m/s. Round25 143CPU,expanded boundary+steady long straight sampling;actor195,critic221;GPU gate pending,formal training not started. No policy/sim2sim acceptance.",
+      "status": "restart_round25_running_gpu2_gpu3_random_boundary_steady",
+      "local_validation": "Round24 valid2x1000/12eval,noOOM/recovery;highcomplete63/64,wide35/64,landinghandoffnearzero but8cmfirst-groundslip,fullspeed.45-.50m/s. Round25 143CPU,4to8same-run,reload0/32,default2048x2;native1056framesphysics/actions/reward/scoringexact;actualedge/steady sampler29/32,separate20sheld-speed evaluated. Targets/effortsvalid,actualoverspeedretained,noOOM/runtimefailures. TwoGPU2/3fresh2048x1000actualPPO and distinctrandomactorsverified;newpolicy/sim2simnotaccepted,desktop20+618081eunchanged.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round25_gate01@gpu2_gpu3"
+        "upright_restart_round25_s101@gpu2",
+        "upright_restart_round25_s102@gpu3"
       ],
-      "active_training_commit": null,
+      "active_training_commit": "a8d0d8118bd033b09d5d91cc3dab0cbd6f74bb71",
       "pending_design_review": "docs/upright_restart_landing_motion_20261102.md"
     },
     {
