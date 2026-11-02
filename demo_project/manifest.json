@@ -66,20 +66,22 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/step_rl_demo",
-      "verified_commit": "ddafc026f281e3dd2582004829958b329250bebd",
+      "verified_commit": "ec0ce9c3f73b591a443242603bf0adb896b28607",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "round18_complete_seed70_reviewed_whole_batch_pending",
-      "local_validation": "Round17 valid2x500,0/64both;fourtop47/0,home43/0,drive0/0;post-top relifts56/59;world pitch peak14.880/14.775rad/s. Round18 adds2ms integrated world body pitch-rate and excess-angle soft costs;29sensor inputs,controls,model and full acceptance unchanged.141container tests,8guarded jobs,128x4to8resume,512x4,reloads0/16;128real actions+64static exact physics/acceptance,independent scalar costs and reward delta pass. Actual distinct random initial.pt/PPO/GPU0/1 verified;512x500,no historical weights.",
+      "status": "round19_running_gpu0_gpu1_random_pitch_curriculum",
+      "local_validation": "Round18 valid2x500,0/64both and0legal front landings;52/33edge collisions,12/31post-top relifts. Round19 only positive training pitch cost schedule0.1through100,to1at300,final200updates and every independent eval full original cost.148tests/9guarded jobs;midpoint0.55resume and full1eval verified;128real actions+64static exact physics/acceptance and scalar reward delta. Actual fresh initial.pt/PPO/GPU0/1 verified.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [],
-      "active_training_commit": "ddafc026f281e3dd2582004829958b329250bebd",
-      "next_iteration_requirement": "Review seed71 then choose next batch. Retain world body smoothness and original full task; investigate approach-speed/clearance timing and learning-stage cost balance. Do not equate lower averages on truncated failed episodes with better complete behavior.",
-      "body_pitch_requirement_status": "Implemented in round18: soft world pitch-rate and large-angle costs, engineering weights0.1/2 and soft margin0.35rad; not user limits or hard failure. Necessary hip action allowed.",
-      "latest_lane_review": "Round18 seed70 valid500updates,0/64complete,52front-edge collisions/12post-top relifts;legal clearance/landing/fourtop/home/drive0. Exact520substep replay and independent counters/pitch-costs verified. Early body tilt reduced but approach faster and0.4-0.58s pitch-rate RMS increased. Seed71 review and whole-batch decision pending; no round19 started."
+      "active_tasks": [
+        "step_round19_seed70@gpu0",
+        "step_round19_seed71@gpu1"
+      ],
+      "active_training_commit": "ec0ce9c3f73b591a443242603bf0adb896b28607",
+      "next_iteration_requirement": "Review stage counts across0-100,100-300,300-500updates and final full-cost independent evaluation. Check curriculum regression, world body motion, one-flight, contacts, requested/executed/measured joints and complete drive-stop; no capability established.",
+      "body_pitch_requirement_status": "World lower_body objective retained; round19 learning scale ramps0.1to1,final200updates/evaluation original full cost. No new user angle/rate hard limits."
     },
     {
       "name": "recovery_rl_demo",
