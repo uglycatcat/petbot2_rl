@@ -36,6 +36,12 @@ class Config:
     boundary_command_fraction: float = 0.0  # training only, moving levels >= 3
     reversal_episode_fraction: float = 0.0  # fraction of eligible long training episodes
     long_command_hold_extra_s: float = 0.0  # training only, moving levels >=3, long episodes
+    takeover_expansion_fraction: float = 0.0  # training only, levels>=4; keep original initial states too
+    takeover_expansion_scale: float = 2.0
+    reversal_stop_probability: float = 0.0  # insert zero before the next signed reversal
+    rise_time_cost: float = .1
+    rise_adjustment_cost: float = .02
+    rise_pitch_rate_cost: float = 0.0  # bounded cost for actual pitch rate above2rad/s
     warmup_s: float = 1.5
     warmup_timeout_s: float = 4.0
     rise_timeout_s: float = 12.0
@@ -115,6 +121,12 @@ class Config:
             raise ValueError('GAE lambda must be finite and within [0, 1]')
         if self.bootstrap_probe_interval and self.probe_interval % self.bootstrap_probe_interval:
             raise ValueError('Bootstrap probe interval must divide motion probe interval')
+        for key in ('takeover_expansion_fraction', 'reversal_stop_probability'):
+            value=getattr(self,key)
+            if type(value) not in (int,float) or not 0 <= value < 1:
+                raise ValueError('Invalid training mixture: '+key)
+        if type(self.takeover_expansion_scale) not in (int,float) or not 1 <= self.takeover_expansion_scale <= 2:
+            raise ValueError('Takeover scale must be within[1,2]')
         previous = None
         for stage in self.motion_stages():
             if len(stage) != 4 or any(type(v) not in (int, float) or not __import__('math').isfinite(v) or v < 0 for v in stage):
@@ -178,7 +190,7 @@ class Config:
 
 
 def load_config(path=None, **overrides):
-    data = json.loads(Path(path or ROOT/'configs/round22.json').read_text())
+    data = json.loads(Path(path or ROOT/'configs/round23.json').read_text())
     unknown = data.keys() - {f.name for f in fields(Config)}
     if unknown:
         raise ValueError(f'Unknown configuration keys: {sorted(unknown)}')

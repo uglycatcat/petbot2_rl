@@ -121,6 +121,16 @@ def main():
                     '--count','32','--device','cuda:0'])
                 if not good: raise RuntimeError('Evaluation failed: '+scenario)
                 results[scenario]=json.loads((work/('outputs/eval_'+scenario)/'result.json').read_text())
+            if plan.get('wide_takeover_scale') and 'capability_cycle' in results:
+                good,evidence=step(variant,work,'eval_wide_takeover',['evaluate.py','--run-dir','outputs/train',
+                    '--checkpoint',checkpoint,'--output','outputs/eval_wide_takeover','--scenario','capability_cycle',
+                    '--takeover-scale',str(plan['wide_takeover_scale']),'--count','32','--device','cuda:0'])
+                if not good: raise RuntimeError('Wide takeover evaluation execution failed')
+                results['wide_takeover']=json.loads((work/'outputs/eval_wide_takeover/result.json').read_text())
+            elif plan.get('wide_takeover_scale'):
+                with mutex:
+                    status[variant['name']+'_eval_wide_takeover']=dict(state='skipped',reason='Native higher-course evaluation unavailable; analyze first')
+                    save(out/'eval_status.json',status)
             with mutex:
                 state['variants'][variant['name']]['state']='execution_finished_acceptance_pending'
                 save(out/'launch_status.json',state)

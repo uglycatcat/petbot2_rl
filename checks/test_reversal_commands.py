@@ -2,12 +2,12 @@
 from dataclasses import replace
 import unittest
 import torch
-from upright.config import load_config
+from upright.config import load_config,ROOT
 from upright.runtime import Runtime
 from upright.controller import Phase
 from test_contracts import MODEL, state
 
-CFG = load_config()
+CFG = load_config(ROOT/"configs/round22.json")
 
 class ReversalCommands(unittest.TestCase):
     def test_long_only_mixture_has_symmetric_continuous_and_boundary_amplitudes(self):

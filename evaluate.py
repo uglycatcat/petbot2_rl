@@ -17,6 +17,7 @@ def main():
     parser.add_argument('--scenario', choices=('rise', 'static_cycle', 'low_cycle', 'capability_cycle'), required=True)
     parser.add_argument('--level', type=int, help='Explicit capability level; default is reached training course')
     parser.add_argument('--duration', type=float, help='Two-wheel verification duration, without changing training identity')
+    parser.add_argument('--takeover-scale',type=float,default=1.,help='Separate validation: multiply initial velocity/hip ranges only (1..2)')
     parser.add_argument('--count', type=int, default=32)
     parser.add_argument('--device', default='cuda:0')
     args = parser.parse_args()
@@ -36,6 +37,8 @@ def main():
         raise ValueError('Explicit level requires a configured moving capability scenario')
     if args.duration is not None and (not __import__('math').isfinite(args.duration) or args.duration <= 0):
         raise ValueError('Duration must be positive and finite')
+    if not 1 <= args.takeover_scale <= 2 or (args.takeover_scale != 1 and args.scenario != 'capability_cycle'):
+        raise ValueError('Takeover scale requires a capability scenario and range[1,2]')
     app = env = None
     try:
         from isaaclab.app import AppLauncher
@@ -60,9 +63,13 @@ def main():
             level = args.level if args.level is not None else max(2, trained_level)
         else:
             level = {'rise': 0, 'static_cycle': 1, 'low_cycle': 2}[args.scenario]
+        if args.takeover_scale != 1.:
+            runtime = env.upright_runtime
+            runtime.stage_ranges[:,2] = (runtime.stage_ranges[:,2]*args.takeover_scale).clamp_max(.75)
+            runtime.stage_ranges[:,3] = (runtime.stage_ranges[:,3]*args.takeover_scale).clamp_max(1.)
         result = evaluate(env, runner.get_inference_policy(device=args.device), level, args.count,
                           duration=args.duration if args.duration is not None else cfg.balance_eval_s, output=args.output)
-        result.update(run_id=manifest['run_id'], checkpoint=args.checkpoint.name,
+        result.update(takeover_scale=args.takeover_scale, separate_takeover_validation=args.takeover_scale != 1., run_id=manifest['run_id'], checkpoint=args.checkpoint.name,
                       updates_completed=saved['restart']['updates_completed'], scenario=args.scenario,
                       trained_course_level=trained_level, outside_trained_course=level > trained_level)
         atomic_json(args.output/'result.json', result)

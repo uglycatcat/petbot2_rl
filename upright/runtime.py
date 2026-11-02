@@ -68,9 +68,15 @@ class Runtime:
         command[category == 1, 1] = 0  # straight
         command[category == 2, 0] = 0  # pure turn
         paired = self.reversal_episode[ids]
-        command[paired, 0] = self.reversal_speed[ids[paired]]
+        paired_ids = ids[paired]
+        stopped = torch.zeros(len(paired_ids), dtype=torch.bool, device=ids.device)
+        if self.cfg.reversal_stop_probability and len(paired_ids):
+            stopped = self.uniform(len(paired_ids))[:, 0] < self.cfg.reversal_stop_probability
+        command[paired, 0] = torch.where(stopped, 0., self.reversal_speed[paired_ids])
         command[paired, 1] = 0.
-        self.reversal_speed[ids[paired]] *= -1
+        # A stop does not consume the pending reverse direction. The next moving
+        # request still reverses; actor never sees the random future choice.
+        self.reversal_speed[paired_ids[~stopped]] *= -1
         return command
 
     def command_dwell(self):
@@ -121,6 +127,12 @@ class Runtime:
         if self.probe_level is None:
             velocity = (2*self.uniform(len(ids))[:, 0]-1)*ranges[:, 2]
             hip = (2*self.uniform(len(ids))[:, 0]-1)*ranges[:, 3]
+            eligible = (self.level[ids] >= 4).nonzero().flatten()
+            if self.cfg.takeover_expansion_fraction and len(eligible):
+                expanded = eligible[self.uniform(len(eligible))[:, 0] < self.cfg.takeover_expansion_fraction]
+                scale = self.cfg.takeover_expansion_scale
+                velocity[expanded] *= (ranges[expanded, 2]*scale).clamp_max(.75)/ranges[expanded, 2].clamp_min(1e-6)
+                hip[expanded] *= (ranges[expanded, 3]*scale).clamp_max(1.)/ranges[expanded, 3].clamp_min(1e-6)
         else:
             # Deterministic paired initial states, independent of training random draws.
             velocity = (((ids//2) % 3).float()-1)*ranges[:, 2]
@@ -297,9 +309,13 @@ class Runtime:
         reward += self.dt*bridge
         reward += 5*m['entered_balance']*m['support_truth']*safe
         reward += 10*m['goal']*safe + 30*m['complete']*safe
-        reward += self.dt*((2+2*tracking)*balancing - .1*transition
+        # Keep LAND unchanged; allow preparation without rewarding endless waiting.
+        pitch_rate_excess = ((s['gyro'][:, 1].abs()-2.).clamp_min(0)/4.).square().clamp_max(1.)
+        reward += self.dt*((2+2*tracking)*balancing - .1*landing - self.cfg.rise_time_cost*rising
                            - .15*transition*heading_error.square()
-                           - .02*rising*adjustment - .002*target_change.square().sum(-1)*self.invoked)
+                           - self.cfg.rise_adjustment_cost*rising*adjustment
+                           - self.cfg.rise_pitch_rate_cost*rising*pitch_rate_excess
+                           - .002*target_change.square().sum(-1)*self.invoked)
         # The first unsuccessful lift still ends this invocation immediately.
         # A large early terminal penalty was cheaper to postpone until timeout,
         # suppressing exploration just below the lift detector. Grade only an

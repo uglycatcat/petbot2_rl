@@ -51,7 +51,7 @@ class ExplorationBound(unittest.TestCase):
         self.assertFalse(result['simulation_validated'])
 
     def test_default_and_legacy_configs(self):
-        self.assertEqual(load_config().round,22)
+        self.assertEqual(load_config().round,23)
         self.assertEqual(load_config().beta_shape_cap,512.)
         self.assertEqual(Config().beta_shape_cap,128.)
         for cap in (0.,float('nan'),256.,True):
