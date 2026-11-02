@@ -42,6 +42,7 @@ class Runtime:
         self.balance_duration = torch.full((n,), cfg.balance_train_s, device=device)
         self.short_cycle = z().bool()
         self.reversal_episode = z().bool(); self.reversal_speed = z()
+        self.steady_episode = z().bool(); self.steady_speed = z()
         self.initial_hip = z(); self.takeover_motion = torch.zeros(n, 2, device=device)
         self.landing_case = torch.full((n,), -1, dtype=torch.long, device=device)
         self.post_handoff_elapsed = z()
@@ -81,6 +82,9 @@ class Runtime:
         # A stop does not consume the pending reverse direction. The next moving
         # request still reverses; actor never sees the random future choice.
         self.reversal_speed[paired_ids[~stopped]] *= -1
+        steady = self.steady_episode[ids]
+        command[steady, 0] = self.steady_speed[ids[steady]]
+        command[steady, 1] = 0.
         return command
 
     def command_dwell(self):
@@ -116,7 +120,7 @@ class Runtime:
         for name in ('episode_age', 'command_age', 'true_hold', 'longest_hold', 'peak_rise',
                      'peak_land', 'balance_elapsed', 'balance_seen', 'invoked', 'episode_goal',
                      'true_cycle', 'failure', 'initial_hip', 'takeover_motion', 'balance_velocity_error', 'short_cycle',
-                     'reversal_episode', 'reversal_speed'):
+                     'reversal_episode', 'reversal_speed', 'steady_episode', 'steady_speed'):
             getattr(self, name)[ids] = 0
         level = self.course.level if self.probe_level is None else self.probe_level
         self.level[ids] = level
@@ -139,6 +143,13 @@ class Runtime:
                 scale = self.cfg.takeover_expansion_scale
                 velocity[expanded] *= (ranges[expanded, 2]*scale).clamp_max(.75)/ranges[expanded, 2].clamp_min(1e-6)
                 hip[expanded] *= (ranges[expanded, 3]*scale).clamp_max(1.)/ranges[expanded, 3].clamp_min(1e-6)
+                if self.cfg.takeover_boundary_fraction and len(expanded):
+                    # Independent axis/sign sampling; keep the remaining uniform interior.
+                    edge = self.uniform(len(expanded), 2) < self.cfg.takeover_boundary_fraction
+                    vlim = (ranges[expanded, 2]*scale).clamp_max(.75)
+                    hlim = (ranges[expanded, 3]*scale).clamp_max(1.)
+                    velocity[expanded] = torch.where(edge[:, 0], torch.where(velocity[expanded]>=0, vlim, -vlim), velocity[expanded])
+                    hip[expanded] = torch.where(edge[:, 1], torch.where(hip[expanded]>=0, hlim, -hlim), hip[expanded])
         else:
             # Deterministic paired initial states, independent of training random draws.
             velocity = (((ids//2) % 3).float()-1)*ranges[:, 2]
@@ -164,6 +175,15 @@ class Runtime:
             eligible = ids[(self.level[ids] >= 2) & ~self.short_cycle[ids]]
             chosen = eligible[self.uniform(len(eligible))[:, 0] < self.cfg.landing_scenario_fraction]
             self.landing_case[chosen] = (self.uniform(len(chosen))[:, 0]*3).long()
+        if self.probe_level is None and self.cfg.steady_nonreversal_fraction:
+            eligible = ids[(self.level[ids] >= 3) & ~self.short_cycle[ids] & ~self.reversal_episode[ids]]
+            selected = eligible[self.uniform(len(eligible))[:, 0] < self.cfg.steady_nonreversal_fraction]
+            draws = self.uniform(len(selected), 3)
+            magnitude = torch.where(draws[:, 2] < self.cfg.boundary_command_fraction, 1., .5+.5*draws[:, 0])
+            direction = torch.where(draws[:, 1] < .5, -1., 1.)
+            self.steady_episode[selected] = True
+            self.steady_speed[selected] = direction*magnitude*self.stage_ranges[self.level[selected], 0]
+
 
     def before_action(self, s):
         c = self.control
@@ -253,6 +273,8 @@ class Runtime:
         result['balance_required_s'] = self.balance_duration.clone()
         result['short_cycle'] = self.short_cycle.clone()
         result['reversal_episode'] = self.reversal_episode.clone()
+        result['steady_episode'] = self.steady_episode.clone()
+        result['steady_speed'] = self.steady_speed.clone()
         result['perception_mismatch'] = result['support_estimate'] != physical_support
         result['reason'] = c.reason.clone()
         result['reward'] = self.reward(s, truth, result, rear_near)
@@ -418,6 +440,9 @@ class Runtime:
                   self.invoked.float(), self.short_cycle.float(), self.reversal_episode.float(),
                   self.level.float()/cfg.max_course_level, c.command[:, 0]/.75,
                   c.command[:, 1]/yaw_limit, self.reversal_speed/.75)
+        if cfg.steady_nonreversal_fraction:
+            # Two private sampler fields help value learning; actor stays 195D.
+            values += (self.steady_episode.float(), self.steady_speed/.75)
         return torch.stack(values, -1).clamp(-1., 1.)
 
     def observation(self, s):

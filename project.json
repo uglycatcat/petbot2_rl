@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round24_ready",
-  "training_enabled": true,
+  "phase": "round25_engineering_pending",
+  "training_enabled": false,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Landing quality/live ordinary ownership engineering accepted:135 CPU,corrected fixed GPU gate,4-to8 same-run recovery,reload,default2048x2,three-way transfer32/32. First probe int32 failure and masked exit0 retained;fixed dtype and fast-shutdown exit; first cleanup negative test still exited0 and final actual shell exit1 (python.sh normalizes nonzero). Native physics prefix exact. No new policy or sim2sim acceptance.",
+  "reason": "Round24 reviewed; retain landing quality/live ordinary transfer, add expanded initial boundary and sustained straight sampling. No policy acceptance.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -13,15 +13,15 @@
   "batch26_resume_allowed": false,
   "next_experiment": {
     "series": "upright_restart_20261030",
-    "round": 24,
-    "name": "upright_restart_round24",
-    "status": "ready_random_initialization"
+    "round": 25,
+    "name": "upright_restart_round25",
+    "status": "engineering_pending"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": true,
+  "engineering_validated": false,
   "implementation_review": "docs/round01_implementation.md",
-  "cpu_contract_tests_passed": 135,
+  "cpu_contract_tests_passed": 142,
   "allowed_host_gpus": [
     2,
     3

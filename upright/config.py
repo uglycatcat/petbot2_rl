@@ -36,6 +36,8 @@ class Config:
     boundary_command_fraction: float = 0.0  # training only, moving levels >= 3
     reversal_episode_fraction: float = 0.0  # fraction of eligible long training episodes
     long_command_hold_extra_s: float = 0.0  # training only, moving levels >=3, long episodes
+    takeover_boundary_fraction: float = 0.0  # per axis, inside expanded training initial states only
+    steady_nonreversal_fraction: float = 0.0  # eligible long non-reversal episodes, private to training
     takeover_expansion_fraction: float = 0.0  # training only, levels>=4; keep original initial states too
     takeover_expansion_scale: float = 2.0
     reversal_stop_probability: float = 0.0  # insert zero before the next signed reversal
@@ -125,7 +127,7 @@ class Config:
             raise ValueError('GAE lambda must be finite and within [0, 1]')
         if self.bootstrap_probe_interval and self.probe_interval % self.bootstrap_probe_interval:
             raise ValueError('Bootstrap probe interval must divide motion probe interval')
-        for key in ('takeover_expansion_fraction', 'reversal_stop_probability'):
+        for key in ('takeover_expansion_fraction', 'reversal_stop_probability', 'takeover_boundary_fraction', 'steady_nonreversal_fraction'):
             value=getattr(self,key)
             if type(value) not in (int,float) or not 0 <= value < 1:
                 raise ValueError('Invalid training mixture: '+key)
@@ -200,7 +202,7 @@ class Config:
 
 
 def load_config(path=None, **overrides):
-    data = json.loads(Path(path or ROOT/'configs/round24.json').read_text())
+    data = json.loads(Path(path or ROOT/'configs/round25.json').read_text())
     unknown = data.keys() - {f.name for f in fields(Config)}
     if unknown:
         raise ValueError(f'Unknown configuration keys: {sorted(unknown)}')
