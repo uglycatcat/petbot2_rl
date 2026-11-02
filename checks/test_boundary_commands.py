@@ -18,7 +18,7 @@ class BoundaryCommands(unittest.TestCase):
         for axis in range(2):
             edge = cmd[:, axis].abs() == limits[axis]
             interior = (cmd[:, axis].abs() > 0) & ~edge
-            self.assertTrue(.11 < float(edge.float().mean()) < .19)
+            self.assertAlmostEqual(float(edge.float().mean()), .6*CFG.boundary_command_fraction, delta=.04)
             self.assertGreater(int(interior.sum()), 1000)
             self.assertGreater(int((cmd[:, axis] == limits[axis]).sum()), 200)
             self.assertGreater(int((cmd[:, axis] == -limits[axis]).sum()), 200)

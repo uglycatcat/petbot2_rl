@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round21_ready",
-  "training_enabled": true,
+  "phase": "round22_engineering",
+  "training_enabled": false,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round21 long command hold accepted:119 CPU, fixed-round18 native physics/reward/scoring equality, actual30s training-command PhysX branch,128env4-to8 recovery/reload/default2048 scale.60ms restored. Fresh1000-update capability trials required.",
+  "reason": "Round21 long hold failed cross-seed high stability and speed. Round22 restores round18 timing and tests boundary-command fraction25-to50 percent; continuous interior,category/sign sampling,low course,control,reward and evaluation unchanged. Engineering pending.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -13,15 +13,15 @@
   "batch26_resume_allowed": false,
   "next_experiment": {
     "series": "upright_restart_20261030",
-    "round": 21,
-    "name": "upright_restart_round21",
-    "status": "ready_random_initialization"
+    "round": 22,
+    "name": "upright_restart_round22",
+    "status": "engineering_pending"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": true,
+  "engineering_validated": false,
   "implementation_review": "docs/round01_implementation.md",
-  "cpu_contract_tests_passed": 119,
+  "cpu_contract_tests_passed": 122,
   "allowed_host_gpus": [
     2,
     3

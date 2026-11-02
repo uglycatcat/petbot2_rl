@@ -18,7 +18,7 @@ class ReversalCommands(unittest.TestCase):
         self.assertTrue(.44<float(paired.sum()/eligible.sum())<.56)
         speed=p.reversal_speed[paired];limit=p.stage_ranges[p.level[paired],0]
         self.assertTrue(((speed.abs()>=.5*limit)&(speed.abs()<=limit)).all())
-        self.assertTrue(.2<float((speed.abs()==limit).float().mean())<.3)
+        self.assertAlmostEqual(float((speed.abs()==limit).float().mean()), CFG.boundary_command_fraction, delta=.05)
         self.assertTrue(.44<float((speed>0).float().mean())<.56)
         self.assertGreater(len(speed.unique()),200)
         self.assertTrue(((p.level>=3)&~paired&~p.short_cycle).any())
