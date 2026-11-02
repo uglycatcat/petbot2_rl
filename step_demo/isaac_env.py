@@ -136,6 +136,8 @@ class StepEnv(DirectRLEnv):
         self.body_pitch = torch.zeros(n, device=d); self.body_pitch_rate = torch.zeros(n, device=d)
         self.estimated_body_pitch = torch.zeros(n, device=d); self.estimated_body_pitch_rate = torch.zeros(n, device=d)
         self.body_pitch_rate_cost = torch.zeros(n, device=d); self.body_pitch_angle_cost = torch.zeros(n, device=d)
+        self.body_pitch_cost_scale = 1.
+        self.body_pitch_applied_cost = torch.zeros(n, device=d)
         self.top_contact_age = torch.full((n,4),1.,device=d)
         self.trace_ids = None; self.trace_writer = None; self.episode_writer = None
         self._capture_counter = self._sim_step_counter
@@ -449,7 +451,8 @@ class StepEnv(DirectRLEnv):
             self.task.acceptance.hip_tolerance_rad,self.step_dt) if self.home_pose_reward
             else torch.zeros_like(self.home_pose_cost))
         reward -= self.home_pose_cost
-        reward -= self.body_pitch_rate_cost + self.body_pitch_angle_cost
+        self.body_pitch_applied_cost = self.body_pitch_cost_scale*(self.body_pitch_rate_cost+self.body_pitch_angle_cost)
+        reward -= self.body_pitch_applied_cost
         self.last_reward = reward.clone()
         if self.trace_ids is not None:
             self.last_trace=self.trace(self.trace_ids)
@@ -521,7 +524,7 @@ class StepEnv(DirectRLEnv):
                          'previous_potential','best_progress','motion_cost','stage_credit','drive_support_gap','near_top','relift_cost','home_hold',
                          'touch_impact_cost','touch_motion_cost','four_top_seen','home_pose_cost',
                          'body_pitch','body_pitch_rate','estimated_body_pitch','estimated_body_pitch_rate',
-                         'body_pitch_rate_cost','body_pitch_angle_cost'):
+                         'body_pitch_rate_cost','body_pitch_angle_cost','body_pitch_applied_cost'):
                 getattr(self,name)[env_ids] = 0
             self.drive_start[env_ids]=float('nan')
             self.top_contact_age[env_ids]=1.
@@ -554,6 +557,7 @@ class StepEnv(DirectRLEnv):
             body_pitch=self.body_pitch[ids].tolist(),body_pitch_rate=self.body_pitch_rate[ids].tolist(),
             estimated_body_pitch=self.estimated_body_pitch[ids].tolist(),estimated_body_pitch_rate=self.estimated_body_pitch_rate[ids].tolist(),
             body_pitch_rate_cost=self.body_pitch_rate_cost[ids].tolist(),body_pitch_angle_cost=self.body_pitch_angle_cost[ids].tolist(),
+            body_pitch_cost_scale=self.body_pitch_cost_scale,body_pitch_applied_cost=self.body_pitch_applied_cost[ids].tolist(),
             home_hold=self.home_hold[ids].tolist(),
             four_top_seen=self.four_top_seen[ids].tolist(),home_pose_cost=self.home_pose_cost[ids].tolist(),
             sensor_stop_memory=self.sensor_stop.observation()[ids].tolist() if self.sensor_stop_enabled else [],

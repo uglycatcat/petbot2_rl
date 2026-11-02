@@ -10,6 +10,7 @@ import torch
 from rsl_rl.runners import OnPolicyRunner
 from rsl_rl.modules import BetaDistribution
 from .distributions import CeilingBetaDistribution, std_ceiling_at
+from .body_pitch import pitch_cost_scale_at
 
 
 def runner_config(t):
@@ -67,6 +68,7 @@ class StepRunner(OnPolicyRunner):
         self.origin = origin
         super().__init__(env, deepcopy(cfg), log_dir, device)
         self._set_std_ceiling(0)
+        self._set_pitch_cost_scale(0, training=True)
         if log_dir:
             original_log=self.logger.log
             def log_progress(**values):
@@ -75,12 +77,14 @@ class StepRunner(OnPolicyRunner):
                 original_log(**values)
                 record=dict(completed_updates=values['it']+1,losses=losses,
                     learning_rate=values['learning_rate'],collect_s=values['collect_time'],learn_s=values['learn_time'],
-                    totals=env.unwrapped.totals.copy(),distribution=distribution_metrics(self.alg.actor.distribution))
+                    totals=env.unwrapped.totals.copy(),distribution=distribution_metrics(self.alg.actor.distribution),
+                    body_pitch_cost_scale=env.unwrapped.body_pitch_cost_scale)
                 write_json(Path(log_dir)/'progress.json',record)
                 with (Path(log_dir)/'updates.jsonl').open('a') as file: file.write(json.dumps(record)+'\n')
                 # Change only after PPO has consumed this rollout's log-probs.
                 # Checkpoints now contain the ceiling for the next collection.
                 self._set_std_ceiling(values['it']+1)
+                self._set_pitch_cost_scale(values['it']+1, training=True)
             self.logger.log=log_progress
 
     def _set_std_ceiling(self, completed_updates):
@@ -88,11 +92,16 @@ class StepRunner(OnPolicyRunner):
         if schedule is not None:
             self.alg.actor.distribution.set_std_ceiling(std_ceiling_at(schedule,completed_updates))
 
+    def _set_pitch_cost_scale(self, completed_updates, *, training):
+        schedule = self.origin['training'].get('body_pitch_curriculum')
+        self.env.unwrapped.body_pitch_cost_scale = pitch_cost_scale_at(schedule, completed_updates) if training else 1.
+
     def save(self, path, infos=None):
         data = self.alg.save()
         data.update(origin=self.origin, iter=self.current_learning_iteration,
             completed_updates=self.current_learning_iteration+1, infos=infos,
             learning_rate=self.alg.learning_rate,
+            body_pitch_cost_scale=self.env.unwrapped.body_pitch_cost_scale,
             rng=dict(torch=torch.get_rng_state(),cuda=torch.cuda.get_rng_state_all(),
                      python=random.getstate(),numpy=np.random.get_state()),
             totals=self.env.unwrapped.totals,
@@ -108,9 +117,15 @@ class StepRunner(OnPolicyRunner):
             raise ValueError('Checkpoint origin/config/source differs: transfer learning is forbidden')
         if data.get('completed_updates') != data['iter']+1:
             raise ValueError('Invalid checkpoint iteration accounting')
+        pitch_schedule = self.origin['training'].get('body_pitch_curriculum')
+        if pitch_schedule is not None:
+            expected = pitch_cost_scale_at(pitch_schedule, data['completed_updates'])
+            if not math.isclose(data.get('body_pitch_cost_scale', float('nan')), expected, abs_tol=1e-9):
+                raise ValueError('Checkpoint body pitch curriculum is inconsistent')
         self.alg.load(data, None, strict=True)
         self.alg.learning_rate = data['learning_rate']
         self.current_learning_iteration = data['completed_updates']
+        self._set_pitch_cost_scale(data['completed_updates'], training=training)
         schedule=self.origin['training'].get('beta_std_ceiling')
         if schedule is not None:
             actual=self.alg.actor.distribution.std_ceiling
@@ -129,4 +144,5 @@ class StepRunner(OnPolicyRunner):
             critic_sha256=state_digest(self.alg.critic.state_dict()),
             optimizer_states=len(self.alg.optimizer.state),
             learning_rate=self.alg.learning_rate,
+            body_pitch_cost_scale=self.env.unwrapped.body_pitch_cost_scale,
             physics_episodes_restarted=True)

@@ -6,6 +6,19 @@ These functions do not modify observations, actions, physics or termination.
 import torch
 
 
+def pitch_cost_scale_at(schedule, completed_updates):
+    """Training curriculum only; evaluation always uses the full objective.
+
+    Completed update counts select the next rollout's scale. No physical state
+    or episode reset changes this global learning schedule.
+    """
+    if schedule is None:
+        return 1.
+    fraction = max(0., min(1., (completed_updates-schedule['start_update']) /
+                           (schedule['end_update']-schedule['start_update'])))
+    return schedule['initial_scale']+(1.-schedule['initial_scale'])*fraction
+
+
 def _angles(q):
     x, y, z, w = q.unbind(-1)
     roll = torch.atan2(2*(w*x+y*z), 1-2*(x.square()+y.square()))

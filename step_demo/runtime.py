@@ -26,7 +26,7 @@ def code_digest():
 def load_training(path):
     defaults=json.loads((PROJECT_ROOT/'configs/train_v1.json').read_text())
     t=json.loads(Path(path).read_text())
-    optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling','critic_observation','task_memory','wheel_mapping'}
+    optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling','critic_observation','task_memory','wheel_mapping','body_pitch_curriculum'}
     if set(t)-optional!=set(defaults) or t['schema']!='petbot_step_ppo_v1': raise ValueError('Unknown training schema/fields')
     if t.get('task_memory','none') not in ('none','sensor_stop_v16'):
         raise ValueError('Unknown deployable task memory')
@@ -40,6 +40,15 @@ def load_training(path):
     if t.get('critic_observation', 'policy') not in ('policy', 'reward_state_v11'):
         raise ValueError('Unknown critic observation')
     if t.get('learning_rate_schedule','adaptive') not in ('adaptive','fixed'):raise ValueError('Unknown learning rate schedule')
+    if 'body_pitch_curriculum' in t:
+        s=t['body_pitch_curriculum']
+        if (t.get('reward_version')!='pitch_v18' or not isinstance(s,dict)
+                or set(s)!={'start_update','end_update','initial_scale'}
+                or type(s['start_update']) is not int or type(s['end_update']) is not int
+                or not 0<=s['start_update']<s['end_update']<t['iterations']
+                or type(s['initial_scale']) not in (int,float) or not math.isfinite(s['initial_scale'])
+                or not 0<s['initial_scale']<=1):
+            raise ValueError('Invalid body pitch curriculum')
     if 'beta_std_ceiling' in t:
         s=t['beta_std_ceiling']
         if (t.get('policy_distribution')!='beta' or not isinstance(s,dict)
@@ -74,7 +83,7 @@ def main(argv):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command',choices=('train','evaluate'))
     parser.add_argument('--config',type=Path,default=DEFAULT_CONFIG)
-    parser.add_argument('--training-config',type=Path,default=PROJECT_ROOT/'configs/round18_seed70.json')
+    parser.add_argument('--training-config',type=Path,default=PROJECT_ROOT/'configs/round19_seed70.json')
     parser.add_argument('--model-dir',type=Path)
     parser.add_argument('--asset-dir',type=Path,default=PROJECT_ROOT/'artifacts/robot')
     parser.add_argument('--run-dir',type=Path,required=True)
@@ -154,7 +163,8 @@ def main(argv):
             torch.save(initial,run/'initial.pt')
             write_json(run/'initialization.json',dict(initialization='random',pretrained_models=[],
                 actor_sha256=state_digest(initial['actor_state_dict']),
-                critic_sha256=state_digest(initial['critic_state_dict']),optimizer_states=0,frozen_parameters=0))
+                critic_sha256=state_digest(initial['critic_state_dict']),optimizer_states=0,frozen_parameters=0,
+                body_pitch_cost_scale=env.body_pitch_cost_scale))
         if args.command=='train':
             remaining=t['iterations']-runner.current_learning_iteration
             if remaining<=0: raise ValueError('This run has exhausted its update budget')
