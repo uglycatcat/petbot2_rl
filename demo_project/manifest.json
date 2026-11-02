@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-30",
+  "updated_at": "2026-11-02",
   "purpose": "PetBot experimental training projects. Code is versioned on dedicated demoproj branches; checkouts are managed by default.xml.",
   "repositories": [
     {
@@ -64,16 +64,21 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/step_rl_demo",
-      "verified_commit": "8c86d8d406becec397f9704845e8392c264f910e",
+      "verified_commit": "8a780339b85a8a3f9c558ffbe70e323d56e18368",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "registered_placeholder_readme_only",
-      "local_validation": "Task goal only: lift the front wheels onto a 0\u20133cm step below rear-wheel radius, then accelerate to climb. No implementation or training. See README.md.",
+      "status": "round17_running_gpu0_gpu1_random_single_flight_narrow_zero",
+      "local_validation": "Round16 valid2x500,0/64both;required-drive1/0,premature zero59seed71,repeated liftoffs64each. Round17 physical4mm20ms departure/20ms landing,ground-return/repeat failure5;once-and-top acceptance;zero-action domain5%,29sensor-only inputs.134container tests,8guarded jobs,128x4to8resume,512x4,reloads0/16;128old-action negatives rejected with exact physics,static64no false flight. Actual distinct random initial.pt/PPO/GPU0/1 verified;512x500,no historical weights.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": []
+      "active_tasks": [
+        "step_round17_seed70@gpu0",
+        "step_round17_seed71@gpu1"
+      ],
+      "active_training_commit": "8a780339b85a8a3f9c558ffbe70e323d56e18368",
+      "next_iteration_requirement": "Audit physical per-wheel flight/landing events, premature stop or missed stop, sensor cue timing, real support/alignment/short-drive/hold and requested/executed/measured joints. Single-flight requirement implemented; full capability still unproven."
     },
     {
       "name": "recovery_rl_demo",
