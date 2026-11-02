@@ -1,10 +1,10 @@
-# 当前交接：upright第19轮已验收但退步，第20轮30ms策略已从零启动
+# 当前交接：upright第20轮已验收，第21轮60ms长指令保持已从零启动
 
 更新：2026-11-02。先读AGENTS.md，再读本页。upright按最新GPU2/3从零训练授权执行，旧第26批不恢复；完成事件先核查实际状态再分析迭代。
 
 ## 最新指令与执行边界
 
-用户持续授权单Actor–Critic从零训练、评估和事件迭代，仅GPU2/3。第19轮两份1000更新与8独立评估有效，无缺失/OOM/恢复；低速完整64/64、基本58/64，高范围完整/基本55/64，9次两轮回落，较第18轮退步。前.466–.471/后.530–.543m/s、轮速峰值90.782rad/s，双向满速未达。第20轮固定40e926d回退新增大误差成本，拒绝无收益的两项速度反馈干预；改30ms策略周期、64步rollout维持1.92秒物理时长，折扣/GAE按时间等价缩放，五帧历史覆盖缩短、样本数翻倍已明确。113项CPU和GPU短训恢复/重载/默认规模有效，GPU2/3各2048×1000已从零进入PPO。见[第19轮终局](upright_restart_round19_results.md)、[第20轮执行](upright_restart_round20_execution.md)。无历史训练权重、周期定时器/goal。
+用户持续授权单Actor–Critic从零训练、评估和事件迭代，仅GPU2/3。第20轮两份1000更新/7独立评估有效，另1按计划跳过，无缺失/OOM/恢复；seed101卡在静止落地课程，静止/低速0，seed102低速32/32、高范围29/32，前.487/后.535m/s、实际轮峰128.801rad/s。30ms没有保持跨种子流程，不保留。第21轮固定3c1bd5e恢复第18轮60ms/32步/GAE .95，仅对第3级起长训练回合增加2秒指令保持，最高4→6秒；短回合/低课程/原评估保持。119项CPU、固定原评估逐帧一致、实际训练采样分支及短训恢复/重载/默认规模有效，GPU2/3各2048×1000已从零进入PPO。见[第20轮终局](upright_restart_round20_results.md)、[第21轮执行](upright_restart_round21_execution.md)。无历史训练权重、周期定时器/goal。
 
 用户最新纠正：需求与期望效果已明确，早期已实现基本起立、两轮与落地，应核查并复用有效代码和经验，重点是训练代码迭代效率，不必全部重新设计。此前将整个旧实现永久排除的解释范围过大，已纠正；完整封存仍保留；已选择性复用静止v5资产/分布代码并实现独立完整循环。新训练仍禁止历史权重和冻结父依赖。
 
@@ -19,13 +19,13 @@
 
 ## 当前工程实际状态
 
-`demo_project/upright_rl_demo`当前配置configs/round20.json。恢复第18轮精细奖励/Beta512/actor195/critic219，coarse权重0；未采用共同速度反馈。物理仍2ms、策略30ms、rollout64，gamma及GAE按物理时间保持；五帧间隔30ms、最旧帧滞后120ms、每次更新样本翻倍。113项CPU及GPU128环境4→8恢复、32例重载、默认2048环境2更新和固定旧actor开发物理检查有效。固定旧actor只作开发干预，不进入PPO，不等于新策略能力。以后轨迹审查从时间戳读取30ms，不沿用旧脚本硬编码60ms。
+`demo_project/upright_rl_demo`当前配置configs/round21.json。恢复60ms/32步/GAE .95和原五帧时间跨度，精细奖励/Beta512/actor195/critic219保持。long_command_hold_extra_s=2只影响第3级起长训练回合，最高4→6秒；短回合、低课程和全部评估原协议保持，实际遥控接口仍按原周期接收新指令。critic指令年龄按实际保持时间归一化，日志/轨迹增加command_dwell_s。119项CPU、固定第18轮原评估物理/奖励/评分逐帧一致、实际训练采样分支、128环境4→8恢复/重载及默认2048×2有效。工程不等于新策略能力；轨迹按实际时间戳分析，本轮恢复60ms。
 
 入口见[demo README](../demo_project/upright_rl_demo/README.md)、[需求基线](current_scope.md)、[重建计划](../demo_project/upright_rl_demo/docs/rebuild_plan.md)、[架构边界](../demo_project/upright_rl_demo/docs/architecture.md)。重整验收见[upright_reorganization_20261030.md](upright_reorganization_20261030.md)。
 
 ## 后续工作顺序
 
-**新编号：** 系列upright_restart_20261030，当前upright_restart_round20；控制`demo_project/runs/_upright_restart_round20`，运行`upright_restart_round20_s101`/`upright_restart_round20_s102`。实际PPO、随机初始化、空历史模型列表、独立run_id及工程指纹已核验；运行中无eval_finished正常。第19轮已handled；两项反馈诊断和工程进程均已退出，不重复启动。
+**新编号：** 系列upright_restart_20261030，当前upright_restart_round21；控制`demo_project/runs/_upright_restart_round21`，运行`upright_restart_round21_s101`/`upright_restart_round21_s102`。实际PPO、随机初始化、空历史模型列表、独立run_id及工程指纹均已核验；无eval_finished属于运行未完成。第20轮已handled，旧队列与全部工程进程已退出，不重复启动。
 
 用户最新明确：需求已经清晰，历史实现的筛选和设计由agent判断；优先以较短、多批次demo训练快速验证实现。1000更新不是最终交付上限，正式从零流程可按收敛和验收需要使用10000或更多更新。本次为预算与职责澄清，未重新启动已取消队列。
 
