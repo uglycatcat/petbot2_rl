@@ -81,12 +81,15 @@ def main():
         print(json.dumps(result, indent=2))
     except BaseException:
         # Record the original exception before Isaac cleanup can replace it
-        # with SystemExit(0). The supervisor must never accept a missing result.
+        # with a fast process exit(0). The supervisor must never accept a missing result.
         traceback.print_exc()
         code = 82
     finally:
         try:
             if env is not None: env.close()
+            if code:
+                # Kit fast shutdown may call _exit(0), bypassing Python handlers.
+                sys.stdout.flush(); sys.stderr.flush(); os._exit(code)
             if app is not None: app.close()
         except BaseException as exc:
             if not (isinstance(exc, SystemExit) and exc.code in (None, 0)):
