@@ -44,20 +44,19 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "acc4045bca409154181a5fbeeeca2e5102774fc8",
+      "verified_commit": "2945344620351899f4dd7a6c4e1ae7f2c694cd1a",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round23_running_gpu2_gpu3_random_joint_takeover_motion",
-      "local_validation": "Round22 valid2x1000/8eval,no missing/OOM/recovery;low complete32both/basic26,32;high complete31both/basic22,31;two BALANCE front returns;full-speed+0.491/+0.448 and-0.497/-0.506,actualwheel90.224rad/s. Round23 joint20percent wider initial states,relaxed rise preparation with bounded fast-pitch cost,25percent paired stop commands;continuous,boundary,yaw/arc and regression retained.127 CPU,1056-frame original physics/control/observations and scoring exact,7GPU jobs including4-to8same-run resume/reload/default2048 and actual sampler/widebranches accepted. Engineering oldactor wide8/32,shortreload0/32,not policy acceptance. TwoGPU2/3 fresh2048x1000 actualPPO/random states verified;no historical weights,timers/goals;desktop20+idlefix unchanged. Latest checkout changes requirement spec/docs only:landing direction and ordinary ownership after transfer clarified;project.py check passes. Runtime/config and active round23 snapshots unchanged. Next landing behavior awaits engineering validation;round22 terminal drift means completion is not landing-quality acceptance.",
+      "status": "restart_round24_engineering_pending_round23_reviewed",
+      "local_validation": "Round23 2x1000/10 independent evaluations valid;no missing/OOM/resume. High complete30each/basic30,29;wide complete21,19 with all20 positive0.6m/s rise failures. Full speed and landing quality unresolved. Round24 candidate live ordinary command,bounded direction-aware landing quality,three-way closing sampler and ordinary-only observation;135 CPU pass. GPU gate pending,formal training not started;no policy acceptance.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round23_s101@gpu2",
-        "upright_restart_round23_s102@gpu3"
+        "upright_restart_round24_gate01@gpu2_gpu3"
       ],
-      "active_training_commit": "099d4e8518fba7e981884ca47ae8a7bcc425dc91",
+      "active_training_commit": null,
       "pending_design_review": "docs/upright_restart_landing_motion_20261102.md"
     },
     {
