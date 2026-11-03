@@ -5,7 +5,7 @@
 | 项目 | 职责 |
 |---|---|
 | `std_train_upright_project/` | 正式训练项目预留，保持空；用户亲自确认sim2sim可以通过后，再讨论从demo迁移。 |
-| `std_s2s_upright_project/` | ONNX Runtime、WASD/Space/QE、方向键两轮调速及普通完整源范围。按用户要求默认新第26轮seed102/update_001000，保留第20轮可切换；60ms控制与训练映射一致。MuJoCo有限循环/交接有效，零输入落地后退12.1–17.0cm及运动后两轮零令漂移仍在，不作为全面升级；见[项目README](std_s2s_upright_project/README.md)与[发布记录](../docs/upright_restart26_sim2sim.md)。 |
+| `std_s2s_upright_project/` | ONNX Runtime、WASD/Space/QE、方向键两轮调速及普通完整源范围。按用户要求默认恢复第20轮seed102原ONNX＋正常交接修正，30ms周期不变；后退降至2.6–3.6cm，仍未通过停车或全能力。见[项目README](std_s2s_upright_project/README.md)与[发布记录](../docs/upright_round20_handoff_sim2sim.md)。 |
 
 在仓库根目录执行 `repo sync rl_project/std_train_upright_project rl_project/std_s2s_upright_project`。已有本地修改先提交，不对运行固定副本执行同步。现有训练源码仍在 `demo_project/upright_rl_demo/`；`demo_project/runs/` 仍保留有效产物与运行依赖。根目录 `history/` 仅用于后续归档，不进版本管理；归档前必须保留策略来源与依赖索引。
 

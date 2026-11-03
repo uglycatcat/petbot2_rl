@@ -12,6 +12,8 @@
 
 ## 最新指令与执行边界
 
+**2026-11-03最新桌面发布授权已执行：sim2sim默认恢复第20轮seed102原ONNX＋正常交接修正版773836e。** 正常HANDOFF取消旧RL轮目标渐变，原时点/髋/异常EXIT/起立两轮保持；三组后退3.15/3.59/2.60cm与开发结果一致，仍未过停车。180组源码/27姿态、持令/松令/EXIT及窗口有效，网络未变；当前21r1训练不受影响。见[发布与桌面更新](upright_round20_handoff_sim2sim.md)。此前sim2sim保持不动的限制已由本次明确同步要求替代。
+
 **2026-11-03最新：旧新系列21–26轮已按用户要求标为无效优化轮次，27取消，已从认可的新第20轮重开21r1。** 固定839fc6c，GPU2/3各2048环境×1000更新、种子101/102从随机初始化，禁止旧权重。正常交接取消旧轮目标继承，固定20策略18条MuJoCo/96例PhysX开发回归保持原流程与运动计数，后退13.32/13.95/11.73降至3.15/3.59/2.60cm，仍未过停车；新训练只加LAND临近触地同方向减速区间成本，起立/两轮控制和奖励保持。120项检查及短训/重载门槛有效；首个schema配置失败已保留，无OOM。运动保留和落地质量必须同时验收，不自动更新sim2sim。无周期定时器/goal，废弃轮完成事件不得恢复。见[废弃登记](upright_restart_discarded_rounds_20261103.md)、[21r1执行](upright_restart_round21r1_execution.md)。
 
 以下第27轮启动及第26轮发布为此前状态，执行授权以上述回退为准。
@@ -42,7 +44,7 @@
 
 ## 当前工程实际状态
 
-`demo_project/upright_rl_demo`已从40e926d恢复并固定839fc6c，21r1两份从零1000更新正在GPU2/3运行；实际状态见runs/_upright_restart_round21r1，不恢复废弃21–26或取消27。接口v1的18条MuJoCo全完成且首次HANDOFF前逐帧一致，PhysX静止32/低速32/高范围29（各32）保留原计数；后退仍2.6–3.6cm，故新增仅LAND临近触地成本，不能宣称停车或新策略能力通过。120项容器检查、128环境4→8恢复及新2048环境2更新/32例重载有效；初次配置schema失败82已保留，未进入PPO，无OOM。源码/检查点及ONNX输出确认认可包是新20 seed102；sim2sim2ba0bac保持未改。见[执行与证据](upright_restart_round21r1_execution.md)。
+`demo_project/upright_rl_demo`已从40e926d恢复并固定839fc6c，21r1两份从零1000更新正在GPU2/3运行；实际状态见runs/_upright_restart_round21r1，不恢复废弃21–26或取消27。接口v1的18条MuJoCo全完成且首次HANDOFF前逐帧一致，PhysX静止32/低速32/高范围29（各32）保留原计数；后退仍2.6–3.6cm，故新增仅LAND临近触地成本，不能宣称停车或新策略能力通过。120项容器检查、128环境4→8恢复及新2048环境2更新/32例重载有效；初次配置schema失败82已保留，未进入PPO，无OOM。源码/检查点及ONNX输出确认认可包是新20 seed102；sim2sim已按最新明确要求发布773836e，第20轮原ONNX＋正常交接修正；训练副本不受影响。见[执行与证据](upright_restart_round21r1_execution.md)。
 
 入口见[demo README](../demo_project/upright_rl_demo/README.md)、[需求基线](current_scope.md)、[重建计划](../demo_project/upright_rl_demo/docs/rebuild_plan.md)、[架构边界](../demo_project/upright_rl_demo/docs/architecture.md)。重整验收见[upright_reorganization_20261030.md](upright_reorganization_20261030.md)。
 
