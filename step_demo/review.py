@@ -35,7 +35,11 @@ def summarize(run, evaluation):
     layout=read(evaluation/'layout.json'); hips=layout['hips'];wheels=layout['rear_wheels']
     config=load_config()
     support_memory=.06 if origin['training'].get('reward_version') in ('stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','restart14_staged') else 0.
-    trackers={i:CompletionTracker(config.acceptance,support_memory) for i in range(result['num_envs'])}
+    full_discounted=origin['training'].get('full_objective')=='discounted_staged'
+    extra_hold=result.get('hold_after_success_s',0.)
+    trackers={i:CompletionTracker(config.acceptance,support_memory,extra_hold,full_discounted)
+              for i in range(result['num_envs'])}
+    base_stop_seen=set();milestones={name:set() for name in ('front_landed','four_top','hip_home','legal_drive')}
     terminals={r['env']:r for r in result['episodes']}
     if len(terminals)!=result['num_envs']: raise ValueError('Missing or duplicate first-episode evaluations')
     seen=set();phases=Counter();examples={};frames=0;counts=Counter()
@@ -77,8 +81,16 @@ def summarize(run, evaluation):
             sample=EvaluationSample(layout['step_dt'],com[0],com[1],row['yaw'][local],speed,row['yaw_rate'][local],
                 tuple(q[j] for j in hips),tuple(row['front_cleared'][local]),all(row['supported_top'][local]),
                 row['front_hit'][local],failure==2,failure==3,failure==4,
-                row.get('near_top',[False]*len(layout['trace_ids']))[local])
+                row.get('near_top',[False]*len(layout['trace_ids']))[local],quality_failure=failure==5)
             stage=trackers[i].update(sample)
+            if all(row['front_landed'][local]):milestones['front_landed'].add(i)
+            if all(row['supported_top'][local]):milestones['four_top'].add(i)
+            if all(row['supported_top'][local]) and max(abs(q[j]) for j in hips)<=config.acceptance.hip_tolerance_rad:
+                milestones['hip_home'].add(i)
+            if stage in (Stage.STOPPING,Stage.COMPLETE):milestones['legal_drive'].add(i)
+            if trackers[i].stopped_s+1e-7 >= config.acceptance.stop_hold_s:base_stop_seen.add(i)
+            if full_discounted and not failure and abs(trackers[i].stopped_s-row['stop_time'][local])>1e-4:
+                raise ValueError(f'Full-task physical hold timer disagreement for env {i}')
             timed_out=row['elapsed'][local]+1e-5>=config.acceptance.timeout_s
             if failure or completed or timed_out:
                 seen.add(i)
@@ -111,6 +123,8 @@ def summarize(run, evaluation):
         evaluation=dict(episodes=result['num_envs'],successes=result['successes'],outcomes=dict(counts),
             phases=dict(phases),peaks=peaks,substep_actual_wheel_peak_rad_s=max(r['actual_wheel_peak'] for r in terminals.values()),
             scalar_completion_agrees=True,frames=frames,examples=examples,scene_randomization=False,
+            base_stop_count=len(base_stop_seen),extra_physics_hold_s=extra_hold,
+            milestones={name:len(ids) for name,ids in milestones.items()},
             raw_action_outside_fraction=action_outside_count/max(action_count,1)),
         training=dict(checkpoint_accounted_totals=status['totals'],recorded_episode_outcomes=dict(train_counts),
             recorded_both_front_lift=first_lift,recorded_both_front_landing=front_landing,

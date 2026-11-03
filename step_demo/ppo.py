@@ -20,6 +20,9 @@ def runner_config(t):
     if t.get('policy_distribution') == 'stop_gaussian':
         distribution = dict(class_name='step_demo.distributions:StopCenteredGaussianDistribution',
                             init_std=t['initial_std'])
+    if t.get('policy_distribution') == 'full_step_gaussian':
+        distribution = dict(class_name='step_demo.distributions:FullStepGaussianDistribution',
+                            init_std=t['initial_std'])
     if 'beta_std_ceiling' in t:
         name = ('ActionwiseCeilingBetaDistribution' if 'wheel_final_std' in t['beta_std_ceiling']
                 else 'CeilingBetaDistribution')
@@ -44,7 +47,7 @@ def distribution_metrics(distribution):
         raise RuntimeError('Bounded policy distribution violated its action range')
     result=dict(kind=kind,mean_abs_max=float(mean.abs().max()),std_min=float(std.min()),std_max=float(std.max()))
     if isinstance(distribution, StopCenteredGaussianDistribution):
-        if std.min() < .005-1e-6 or std.max() > .05+1e-6:
+        if std.min() < distribution.std_range[0]-1e-6 or std.max() > distribution.std_range[1]+1e-6:
             raise RuntimeError('STOP Gaussian exploration left its finite std range')
         result['raw_sample_density'] = True
         result['std_range'] = list(distribution.std_range)

@@ -112,6 +112,14 @@
       "outcomes": "both0/64 and no0.5sstop;seed70 exits63 timeout1;seed71 flight11 exits23 timeout30;validphysics/noresume",
       "full_task_passed": false,
       "evidence": "docs/restart17_result.json"
+    },
+    {
+      "label": "restart18",
+      "source_commit": "19b359292de00670b2e888c4758685245728a07f",
+      "task": "platform_stop_aux",
+      "outcomes": "both64/64 original stop plus real extra2s; every initial speed group16/16; valid physics; no interruption",
+      "full_task_passed": false,
+      "evidence": "docs/restart18_result.json"
     }
   ]
 }

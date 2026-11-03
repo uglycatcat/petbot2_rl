@@ -7,6 +7,7 @@ sequencing; they do not establish contact detection or climbing ability.
 from dataclasses import dataclass
 from enum import Enum
 import math
+import struct
 
 from .config import AcceptanceConfig
 
@@ -27,6 +28,7 @@ class EvaluationSample:
     body_collision_or_fall: bool
     deliberate_reverse: bool  # target violation, separate from measured rollback
     near_top_during_contact_gap: bool = False  # bounded geometry envelope, not verified support
+    quality_failure: bool = False
 
 
 class Stage(str, Enum):
@@ -38,9 +40,14 @@ class Stage(str, Enum):
 
 
 class CompletionTracker:
-    def __init__(self, config: AcceptanceConfig, support_memory_s: float = 0.):
+    def __init__(self, config: AcceptanceConfig, support_memory_s: float = 0.,
+                 hold_after_success_s: float = 0., float32_timer: bool = False):
         self.config = config
         self.support_memory_s = support_memory_s
+        self.hold_after_success_s = hold_after_success_s
+        self.float32_timer = float32_timer
+        if hold_after_success_s < 0 or not math.isfinite(hold_after_success_s):
+            raise ValueError('Invalid extra physical hold')
         self.reset()
 
     def reset(self):
@@ -67,6 +74,7 @@ class CompletionTracker:
             (s.rear_support_lost, "rear_support_lost"),
             (s.body_collision_or_fall, "body_collision_or_fall"),
             (s.deliberate_reverse, "deliberate_reverse"),
+            (s.quality_failure, "single_flight_violation"),
             (self.elapsed_s + 1e-9 >= self.config.timeout_s, "timeout"),
         ):
             if failure:
@@ -96,6 +104,12 @@ class CompletionTracker:
         stopped = (s.speed_m_s <= self.config.stop_speed_m_s
                    and abs(s.yaw_rate_rad_s) <= self.config.stop_yaw_rate_rad_s)
         self.stopped_s = self.stopped_s + s.dt_s if stopped else 0.
-        if self.stopped_s + 1e-12 >= self.config.stop_hold_s:
+        target = self.config.stop_hold_s+self.hold_after_success_s
+        reached = self.stopped_s + 1e-12 >= target
+        if self.float32_timer:
+            f32 = lambda x: struct.unpack('f',struct.pack('f',x))[0]
+            self.stopped_s = f32(self.stopped_s)
+            reached = f32(self.stopped_s+f32(1e-7)) >= f32(target)
+        if reached:
             self.stage = Stage.COMPLETE
         return self.stage

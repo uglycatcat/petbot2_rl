@@ -29,6 +29,20 @@ class StopCenteredGaussianDistribution(GaussianDistribution):
             head.bias[1] = -1.  # Existing map: normalized -1 is wheel target 0.
 
 
+class FullStepGaussianDistribution(StopCenteredGaussianDistribution):
+    """Same zero-speed-accessible mean, with bounded exploration for climbing.
+
+    This fresh full-task actor has no phase switch or auxiliary parameters.
+    Wider initial noise allows nonzero wheel and lifting requests. PPO may
+    learn every mean and standard deviation, within a finite noise range.
+    """
+    def __init__(self, output_dim, init_std=.35):
+        if output_dim != 2 or not .05 <= init_std <= .5:
+            raise ValueError('Full-step Gaussian requires two actions and climbing exploration')
+        GaussianDistribution.__init__(self, output_dim, init_std=init_std,
+                                      std_type='log', std_range=(.005, .5))
+
+
 def std_ceiling_at(schedule, completed_updates):
     """Update-boundary curriculum, independent of terrain truth or episode stage."""
     start, end = schedule['start_update'], schedule['end_update']

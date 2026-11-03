@@ -27,9 +27,9 @@ def load_training(path):
     defaults=json.loads((PROJECT_ROOT/'configs/train_v1.json').read_text())
     t=json.loads(Path(path).read_text())
     optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling','critic_observation','task_variant',
-              'auxiliary_precision_cost','terminate_auxiliary_flight','entropy_coef','auxiliary_objective'}
+              'auxiliary_precision_cost','terminate_auxiliary_flight','entropy_coef','auxiliary_objective','full_objective'}
     if set(t)-optional!=set(defaults) or t['schema']!='petbot_step_ppo_v1': raise ValueError('Unknown training schema/fields')
-    if t.get('policy_distribution','gaussian') not in ('gaussian','beta','stop_gaussian'):raise ValueError('Unknown policy distribution')
+    if t.get('policy_distribution','gaussian') not in ('gaussian','beta','stop_gaussian','full_step_gaussian'):raise ValueError('Unknown policy distribution')
     if t.get('critic_observation', 'policy') not in ('policy', 'reward_state_v11'):
         raise ValueError('Unknown critic observation')
     if t.get('learning_rate_schedule','adaptive') not in ('adaptive','fixed'):raise ValueError('Unknown learning rate schedule')
@@ -48,6 +48,15 @@ def load_training(path):
     if t.get('reward_version','legacy') not in ('legacy','edge_v3','progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','restart14_staged'):raise ValueError('Unknown reward version')
     if not 0<t.get('discount_gamma',.99)<=1:raise ValueError('Invalid discount gamma')
     continuing = t.get('auxiliary_objective') == 'continuous_stop'
+    full_discounted = t.get('full_objective') == 'discounted_staged'
+    if 'full_objective' in t and (not full_discounted or t.get('task_variant') != 'full'
+            or t.get('reward_version') != 'restart14_staged' or t.get('discount_gamma') != .99
+            or t.get('policy_distribution') != 'full_step_gaussian' or t.get('entropy_coef') != 0.
+            or 'auxiliary_objective' in t):
+        raise ValueError('Discounted full task requires its explicit independent configuration')
+    if t.get('policy_distribution') == 'full_step_gaussian' and (not full_discounted
+            or not .05 <= t['initial_std'] <= .5):
+        raise ValueError('Full-step Gaussian requires discounted full task and finite climbing exploration')
     if 'auxiliary_objective' in t and (not continuing or t.get('task_variant') != 'platform_stop_aux'
             or t.get('reward_version') != 'restart14_staged' or not 0<t.get('discount_gamma',1)<1
             or not t.get('terminate_auxiliary_flight')):
@@ -55,7 +64,7 @@ def load_training(path):
     if t.get('policy_distribution') == 'stop_gaussian' and (not continuing
             or not .005 <= t['initial_std'] <= .05 or t.get('entropy_coef') != 0.):
         raise ValueError('STOP-centered Gaussian is restricted to continuing auxiliary STOP with local noise and zero entropy bonus')
-    if t.get('reward_version') in ('progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','restart14_staged') and t.get('discount_gamma')!=1. and not continuing:
+    if t.get('reward_version') in ('progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','restart14_staged') and t.get('discount_gamma')!=1. and not (continuing or full_discounted):
         raise ValueError('Progress rewards require undiscounted finite-episode returns')
     if t.get('task_variant','full') not in ('full','platform_stop_aux'):
         raise ValueError('Unknown task variant')
@@ -140,7 +149,8 @@ def main(argv):
             actual['num_envs']=args.eval_envs
             actual['hold_after_success_s']=args.hold_after_success
             actual['_evaluation']=True
-        if args.hold_after_success and not actual.get('task_variant') == 'platform_stop_aux':
+        if args.hold_after_success and not (actual.get('task_variant') == 'platform_stop_aux'
+                or actual.get('full_objective') == 'discounted_staged'):
             raise ValueError('Extra hold currently supported only by isolated platform STOP diagnostic')
         env=StepEnv(task,actual,args.asset_dir,args.device)
         env.trace_ids=list(range(min(actual['num_envs'],8))) if args.command=='train' else list(range(actual['num_envs']))
