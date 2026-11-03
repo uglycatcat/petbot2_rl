@@ -1,7 +1,7 @@
 {
-  "default": "round14_seed71",
+  "default": "round20_seed71",
   "selected_at": "2026-11-03",
-  "basis": "User explicitly requested rollback after behavior regression. Restore the known round14 seed71 desktop baseline. Current training and automatic iteration are paused. Latest-progress viewing preference is unchanged; this is an explicit rollback. Round14 still does not stop and is not full task acceptance. Round20/13 packages retained for traceability.",
+  "basis": "User clarified: keep sim2sim on the latest completed round20 result for observation; only training implementation rolls back to round14, training remains paused. Desktop feedback: one lift during approach, front-edge collision, then renewed lift on the platform and no stop. No acceptance claim or policy override.",
   "candidates": [
     {
       "round": 13,
@@ -74,8 +74,8 @@
       "front_lift_clear_land": false
     }
   ],
-  "previous_default": "round20_seed71",
+  "previous_default": "round14_seed71",
   "historical_isaac_reference": "round13_seed71",
   "comparison_limit": "Rounds17+ add single-flight constraint; old and new full-task scores are not directly comparable.",
-  "selection_mode": "user_requested_round14_rollback"
+  "selection_mode": "latest_completed_preview_training_rollback_only"
 }
