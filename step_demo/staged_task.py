@@ -34,7 +34,7 @@ def costs(intent, wheel_request, hip_request, hip_position, hip_velocity,
                   + (yaw.abs()/.5).clamp_max(1.))
     turning = .25 * (yaw_rate.abs()/1.).clamp_max(1.) * stop
     if precision_stop:
-        # Auxiliary-only diagnostic: retain half the coarse gradient, and add
+        # Acceptance-scale costs: retain half the coarse gradient, and add
         # a bounded term sensitive at the ORIGINAL acceptance scale. No dead
         # zone, target override or relaxed physical success condition.
         def fine(x, scale):
@@ -72,8 +72,8 @@ def body_pitch(quaternion, angular_velocity_world):
 class FrontFlight:
     """20 ms debounced physical flight; contact gaps alone do not count.
 
-    A quality violation stays latched. Full-task physics does not end early;
-    auxiliary diagnostics may explicitly terminate with the full failure cost.
+    A quality violation stays latched. The selected task objective decides
+    whether training ends early; independent full evaluation rejects it.
     Full success additionally requires exactly one legal flight per wheel.
     """
     def __init__(self, n, device):

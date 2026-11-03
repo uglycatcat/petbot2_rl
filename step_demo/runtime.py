@@ -29,7 +29,7 @@ def load_training(path):
     optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling','critic_observation','task_variant',
               'auxiliary_precision_cost','terminate_auxiliary_flight','entropy_coef','auxiliary_objective','full_objective'}
     if set(t)-optional!=set(defaults) or t['schema']!='petbot_step_ppo_v1': raise ValueError('Unknown training schema/fields')
-    if t.get('policy_distribution','gaussian') not in ('gaussian','beta','stop_gaussian','full_step_gaussian'):raise ValueError('Unknown policy distribution')
+    if t.get('policy_distribution','gaussian') not in ('gaussian','beta','stop_gaussian','full_step_gaussian','finite_step_gaussian'):raise ValueError('Unknown policy distribution')
     if t.get('critic_observation', 'policy') not in ('policy', 'reward_state_v11'):
         raise ValueError('Unknown critic observation')
     if t.get('learning_rate_schedule','adaptive') not in ('adaptive','fixed'):raise ValueError('Unknown learning rate schedule')
@@ -49,11 +49,21 @@ def load_training(path):
     if not 0<t.get('discount_gamma',.99)<=1:raise ValueError('Invalid discount gamma')
     continuing = t.get('auxiliary_objective') == 'continuous_stop'
     full_discounted = t.get('full_objective') == 'discounted_staged'
-    if 'full_objective' in t and (not full_discounted or t.get('task_variant') != 'full'
+    full_finite = t.get('full_objective') == 'finite_staged'
+    if 'full_objective' in t and not (full_discounted or full_finite):
+        raise ValueError('Unknown full objective')
+    if full_discounted and (t.get('task_variant') != 'full'
             or t.get('reward_version') != 'restart14_staged' or t.get('discount_gamma') != .99
             or t.get('policy_distribution') != 'full_step_gaussian' or t.get('entropy_coef') != 0.
             or 'auxiliary_objective' in t):
         raise ValueError('Discounted full task requires its explicit independent configuration')
+    if full_finite and (t.get('task_variant') != 'full' or t.get('reward_version') != 'restart14_staged'
+            or t.get('discount_gamma') != 1. or t.get('policy_distribution') != 'finite_step_gaussian'
+            or t.get('entropy_coef') != 0. or 'auxiliary_objective' in t):
+        raise ValueError('Finite full task requires undiscounted independent configuration')
+    if t.get('policy_distribution') == 'finite_step_gaussian' and (not full_finite
+            or not .05 <= t['initial_std'] <= .5):
+        raise ValueError('Finite-step Gaussian requires finite full task and bounded exploration')
     if t.get('policy_distribution') == 'full_step_gaussian' and (not full_discounted
             or not .05 <= t['initial_std'] <= .5):
         raise ValueError('Full-step Gaussian requires discounted full task and finite climbing exploration')
@@ -150,7 +160,7 @@ def main(argv):
             actual['hold_after_success_s']=args.hold_after_success
             actual['_evaluation']=True
         if args.hold_after_success and not (actual.get('task_variant') == 'platform_stop_aux'
-                or actual.get('full_objective') == 'discounted_staged'):
+                or actual.get('full_objective') in ('discounted_staged','finite_staged')):
             raise ValueError('Extra hold currently supported only by isolated platform STOP diagnostic')
         env=StepEnv(task,actual,args.asset_dir,args.device)
         env.trace_ids=list(range(min(actual['num_envs'],8))) if args.command=='train' else list(range(actual['num_envs']))

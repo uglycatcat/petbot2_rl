@@ -43,6 +43,23 @@ class FullStepGaussianDistribution(StopCenteredGaussianDistribution):
                                       std_type='log', std_range=(.005, .5))
 
 
+class FiniteStepGaussianDistribution(FullStepGaussianDistribution):
+    """Fresh full-task exploration starts with modest forward motion.
+
+    The -0.5 wheel mean maps to 6.25 rad/s; it is only an initialization.
+    There is no phase-dependent controller, frozen head, or auxiliary state.
+    Raw Gaussian means can still reach/past -1 for exact zero wheel requests.
+    """
+    def __init__(self, output_dim, init_std=.2):
+        super().__init__(output_dim, init_std)
+
+    def init_mlp_weights(self, mlp):
+        super().init_mlp_weights(mlp)
+        head = [layer for layer in mlp.modules() if isinstance(layer, torch.nn.Linear)][-1]
+        with torch.no_grad():
+            head.bias[1] = -.5
+
+
 def std_ceiling_at(schedule, completed_updates):
     """Update-boundary curriculum, independent of terrain truth or episode stage."""
     start, end = schedule['start_update'], schedule['end_update']

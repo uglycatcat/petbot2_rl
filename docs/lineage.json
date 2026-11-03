@@ -3,7 +3,7 @@
   "baseline_round": 14,
   "baseline_commit": "30fd5886271f7d70ed23a923647f824feb7c1f5f",
   "series": "step_restart14_20261103",
-  "next_round_label": "restart18",
+  "next_round_label": "restart20",
   "priority": [
     "single clean front-wheel flight",
     "stop after original valid platform drive"
@@ -121,5 +121,7 @@
       "full_task_passed": false,
       "evidence": "docs/restart18_result.json"
     }
-  ]
+  ],
+  "restart19_result": "restart19_result.json",
+  "restart20_plan": "restart20.md"
 }

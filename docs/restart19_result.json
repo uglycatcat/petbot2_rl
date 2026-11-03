@@ -1,0 +1,62 @@
+{
+  "schema": "step_restart19_result_v1",
+  "source_commit": "71f87675a3d458f5182f074a0c4797c272950cbc",
+  "engineering_valid": true,
+  "full_task_passed": false,
+  "from_scratch": true,
+  "seeds": {
+    "seed70": {
+      "updates": 1000,
+      "successes": 0,
+      "episodes": 64,
+      "outcomes": {
+        "failure_4": 34,
+        "timeout": 30
+      },
+      "milestones": {
+        "front_landed": 0,
+        "four_top": 0,
+        "hip_home": 0,
+        "legal_drive": 0
+      },
+      "coverage": {
+        "stop_entries": 0,
+        "stop_seconds": 0.0,
+        "low_request_stop_frames": 0,
+        "eligible_stop_seconds": 0.0,
+        "disqualified_stop_seconds": 0.0,
+        "physical_hold_0_5_seconds": 0.0,
+        "physical_hold_2_5_seconds": 0.0
+      },
+      "actor_replay_max_error": 2.1457672119140625e-06,
+      "training_front_landings": 0
+    },
+    "seed71": {
+      "updates": 1000,
+      "successes": 0,
+      "episodes": 64,
+      "outcomes": {
+        "failure_4": 24,
+        "timeout": 40
+      },
+      "milestones": {
+        "front_landed": 0,
+        "four_top": 0,
+        "hip_home": 0,
+        "legal_drive": 0
+      },
+      "coverage": {
+        "stop_entries": 0,
+        "stop_seconds": 0.0,
+        "low_request_stop_frames": 0,
+        "eligible_stop_seconds": 0.0,
+        "disqualified_stop_seconds": 0.0,
+        "physical_hold_0_5_seconds": 0.0,
+        "physical_hold_2_5_seconds": 0.0
+      },
+      "actor_replay_max_error": 1.3113021850585938e-06,
+      "training_front_landings": 0
+    }
+  },
+  "decision": "Reject full-task candidate; inspect undiscounted full-task exploration and restore original movement costs. Auxiliary result does not transfer capability."
+}

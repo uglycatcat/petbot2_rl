@@ -23,6 +23,9 @@ def runner_config(t):
     if t.get('policy_distribution') == 'full_step_gaussian':
         distribution = dict(class_name='step_demo.distributions:FullStepGaussianDistribution',
                             init_std=t['initial_std'])
+    if t.get('policy_distribution') == 'finite_step_gaussian':
+        distribution = dict(class_name='step_demo.distributions:FiniteStepGaussianDistribution',
+                            init_std=t['initial_std'])
     if 'beta_std_ceiling' in t:
         name = ('ActionwiseCeilingBetaDistribution' if 'wheel_final_std' in t['beta_std_ceiling']
                 else 'CeilingBetaDistribution')
