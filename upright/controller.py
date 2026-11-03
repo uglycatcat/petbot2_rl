@@ -149,8 +149,11 @@ class Controller:
         self.phase[handoff] = Phase.HANDOFF; self.age[handoff] = 0
         transferring = handoff | failure
         self.handoff_start[transferring] = self.executed[transferring]
-        # Take over the real motion, not the former remote setpoint or zero speed.
-        self.command[transferring] = s['motion'][transferring]
+        # LAND inherits actual entry motion via transition_motion. After normal
+        # landing, ordinary control must instead own the current operator request.
+        # Preserve the legacy abnormal-exit transfer independently.
+        capture_motion = failure if self.cfg.normal_handoff_live_drive else transferring
+        self.command[capture_motion] = s['motion'][capture_motion]
         self.ordinary_hip[handoff] = 0
         self.ordinary_hip[failure] = s['q'][failure, 3:].mean(-1).clamp(self.lo, self.hi)
         good_handoff = (before == Phase.HANDOFF) & ground & (s['q'][:, 3:].abs().amax(-1) < .1)
@@ -199,9 +202,11 @@ class Controller:
         drive = wheel_mix(self.command[:, 0]/.03, self.command[:, 1]*self.track/(2*.03), self.limit)
         ordinary_hip = self.ordinary_hip
         transferring = (self.phase == Phase.HANDOFF) | (self.phase == Phase.EXIT)
-        # First ordinary sample inherits the executed targets; subsequent samples blend.
+        # A normal landing must not keep driving an obsolete RL wheel target.
+        # Hip return and abnormal EXIT retain their original slew/blend behavior.
+        blend_drive = (self.phase == Phase.EXIT) if self.cfg.normal_handoff_live_drive else transferring
         alpha = (self.age/self.cfg.handoff_blend_s).clamp(0, 1)
-        drive = torch.where(transferring[:, None], self.handoff_start[:, 1:] + alpha[:, None]*(drive-self.handoff_start[:, 1:]), drive)
+        drive = torch.where(blend_drive[:, None], self.handoff_start[:, 1:] + alpha[:, None]*(drive-self.handoff_start[:, 1:]), drive)
         ordinary_hip = torch.where(transferring, slew(self.executed[:, 0], ordinary_hip, self.cfg.hip_slew_rad_s*self.dt), ordinary_hip)
         self.executed[:, 0].copy_(torch.where(policy, hip, ordinary_hip).clamp(self.lo, self.hi))
         self.executed[:, 1:].copy_(torch.where(policy[:, None], wheels, drive).clamp(-self.limit, self.limit))

@@ -53,6 +53,7 @@ class Config:
     handoff_hold_s: float = 0.6
     handoff_timeout_s: float = 3.0
     handoff_blend_s: float = 0.3
+    normal_handoff_live_drive: bool = False  # legacy configs retain exact round20 behavior
     lift_gap_m: float = 0.025
     support_gap_m: float = 0.075
     ground_gap_m: float = 0.012

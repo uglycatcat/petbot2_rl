@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round20_restored_landing_diagnosis",
+  "phase": "round20_handoff_v1_engineering",
   "training_enabled": false,
-  "automatic_iteration_enabled": false,
+  "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "User rollback to accepted round20; first analyze/fix stationary landing. No round27 resume or new full batch before targeted engineering review.",
+  "reason": "User authorized restarting changes from round20; rounds21-26 invalid for optimization,27cancelled. Fixed-policy handoff engineering precedes any new scratch PPO.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -13,14 +13,14 @@
   "batch26_resume_allowed": false,
   "next_experiment": {
     "series": "upright_restart_20261030",
-    "name": "round20_landing_diagnostic",
-    "status": "diagnostic_only_no_ppo"
+    "name": "round20_handoff_v1",
+    "status": "engineering_before_new_scratch_training"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
   "engineering_validated": false,
   "implementation_review": "docs/round01_implementation.md",
-  "cpu_contract_tests_passed": 113,
+  "cpu_contract_tests_passed": 116,
   "allowed_host_gpus": [
     2,
     3
