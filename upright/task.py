@@ -140,6 +140,7 @@ def metrics(env):
             'Cycle/balance_velocity_cost': result['balance_velocity_cost'].mean(),
             'Cycle/balance_velocity_coarse_cost': result['balance_velocity_coarse_cost'].mean(),
             'Cycle/landing_velocity_cost': result['landing_velocity_cost'].mean(),
+            'Cycle/landing_approach_motion_cost': result['landing_approach_motion_cost'].mean(),
             'Cycle/phase_balance_fraction': (result['phase_before'] == 2).float().mean(),
             'Cycle/phase_land_fraction': (result['phase_before'] == 3).float().mean(),
             'Cycle/short_episode_occupancy': p.short_cycle.float().mean(),

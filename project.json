@@ -1,6 +1,6 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round20_handoff_v1_engineering",
+  "phase": "round21r1_landing_approach_engineering",
   "training_enabled": false,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
@@ -13,14 +13,14 @@
   "batch26_resume_allowed": false,
   "next_experiment": {
     "series": "upright_restart_20261030",
-    "name": "round20_handoff_v1",
-    "status": "engineering_before_new_scratch_training"
+    "name": "upright_restart_round21r1",
+    "status": "new_round20_based_engineering_not_discarded_round21"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
   "engineering_validated": false,
   "implementation_review": "docs/round01_implementation.md",
-  "cpu_contract_tests_passed": 116,
+  "cpu_contract_tests_passed": 119,
   "allowed_host_gpus": [
     2,
     3

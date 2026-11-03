@@ -76,6 +76,9 @@ class Config:
     balance_velocity_error_scale_m_s: float = 0.05
     landing_velocity_cost: float = 0.0
     landing_velocity_error_scale_m_s: float = 0.2
+    landing_approach_motion_cost: float = 0.0  # bounded cost/second, only near physical landing
+    landing_motion_slack_m_s: float = 0.03
+    landing_motion_scale_m_s: float = 0.1
     balance_linear_accel_m_s2: float = 0.0  # zero disables reference slew for legacy configs
     balance_yaw_accel_rad_s2: float = 0.0
     balance_yaw_feedforward: float = 0.0
@@ -164,7 +167,8 @@ class Config:
                 raise ValueError(f'Invalid numeric configuration: {key}')
         for key in ('hold_s', 'rise_timeout_s', 'landing_timeout_s', 'support_enter_s',
                     'handoff_blend_s', 'yaw_quality_rad', 'learning_rate', 'rise_prepare_decay_s',
-                    'balance_velocity_error_tau_s', 'balance_velocity_error_scale_m_s', 'landing_velocity_error_scale_m_s'):
+                    'balance_velocity_error_tau_s', 'balance_velocity_error_scale_m_s', 'landing_velocity_error_scale_m_s',
+                    'landing_motion_scale_m_s'):
             if getattr(self, key) <= 0:
                 raise ValueError(f'{key} must be positive')
         return self

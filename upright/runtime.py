@@ -255,6 +255,18 @@ class Runtime:
         rate = self.cfg.balance_velocity_coarse_weight*(-torch.expm1(-scaled.square()))
         return self.dt*rate*balancing
 
+    def landing_approach_cost(self, s, truth, landing, rear_near):
+        # Ground truth shapes training credit only; it is not a controller input
+        # or an early handoff trigger. Allow any same-direction deceleration.
+        entry = self.control.transition_motion[:, 0]
+        low = entry.clamp_max(0.)-self.cfg.landing_motion_slack_m_s
+        high = entry.clamp_min(0.)+self.cfg.landing_motion_slack_m_s
+        speed = s['motion'][:, 0]
+        excess = (low-speed).clamp_min(0.)+(speed-high).clamp_min(0.)
+        scaled = (excess/self.cfg.landing_motion_scale_m_s).square()
+        near = ((.10-truth['front_z'].amax(-1))/.055).clamp(0., 1.)*rear_near
+        return self.dt*self.cfg.landing_approach_motion_cost*(scaled/(1.+scaled))*near*landing
+
     def reward(self, s, truth, m, rear_near):
         c = self.control; before = m['phase_before']
         safe = ~m['failure']; rising = (before == Phase.RISE) & safe
@@ -304,11 +316,13 @@ class Runtime:
         penalty = torch.where(early_return, self.cfg.rise_front_return_penalty, 5.)*m['failure']
         balance_cost, land_cost = self.velocity_costs(s, balancing, landing)
         coarse_cost = self.coarse_balance_velocity_cost(balancing)
-        reward -= penalty+balance_cost+land_cost+coarse_cost
+        approach_cost = self.landing_approach_cost(s, truth, landing, rear_near)
+        reward -= penalty+balance_cost+land_cost+coarse_cost+approach_cost
         m['balance_velocity_error_mean'] = self.balance_velocity_error.clone()
         m['balance_velocity_cost'] = balance_cost
         m['balance_velocity_coarse_cost'] = coarse_cost
         m['landing_velocity_cost'] = land_cost
+        m['landing_approach_motion_cost'] = approach_cost
         m['failure_penalty'] = penalty
         m['early_front_return'] = early_return
         m['rise_bridge_reward'] = self.dt*bridge
