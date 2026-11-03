@@ -68,22 +68,21 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/step_rl_demo",
-      "verified_commit": "a983e893b8864f9efaf71fd04290a1332e562c5f",
+      "verified_commit": "83a73a496b95877984c11c7d15b2499c54e3803f",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "round21_running_gpu0_gpu1_random_post_drive_stop_cost",
-      "local_validation": "Round20 valid2x500,complete0both,land21/60,home0/45,drive0/36;exact2ms/count/contact/worldpitch. Finite wheelzero0success,wheelzero+home31physicalsuccess,5contact/distance failures retained. Round21 only post-drive command/motion running cost;161tests/10guardedjobs,4to8resume/fullreload/512x4,256action-scenario replays exactphysics/acceptance,newcost scalarverified. Actual randominitial/PPO/GPU0/1verified.",
+      "status": "paused_by_user_round14_implementation_restored",
+      "local_validation": "Round21 cancelled by user at148/131updates,no final eval;enabled=false,training/controller processes exited.110 executable/config/tool/test files byte-identical to round14;107 container CPU checks pass.No new training. Historical frozen runs preserved.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [
-        "step_round21_seed70@gpu0",
-        "step_round21_seed71@gpu1"
-      ],
-      "active_training_commit": "a983e893b8864f9efaf71fd04290a1332e562c5f",
-      "next_iteration_requirement": "Inspect post-drive wheel request/execution/actual speed and hip coordination,full0.5sstop; separately review earlyrelifts,worldpitch and contact/distance retention. No relaxed standards or scripted overrides.",
-      "body_pitch_requirement_status": "Full worldpitch objective and0.1to1 learning curriculum retained;final200updates/evalfullcost. Round20 pitch/rate remain excessive;new stop cost does not directly resolve earlybodymotion."
+      "active_tasks": [],
+      "active_training_commit": null,
+      "next_iteration_requirement": "Await explicit user resume. Keep stop,single-flight and world lower_body pitch goals; do not auto-reapply reverted changes or load historical weights into new training.",
+      "body_pitch_requirement_status": "Requirement retained but round14 implementation predates added pitch/flight costs. Not implemented or accepted by rollback.",
+      "baseline_commit": "30fd5886271f7d70ed23a923647f824feb7c1f5f",
+      "archive_branch": "archive/step_pre_rollback14_20261103"
     },
     {
       "name": "recovery_rl_demo",

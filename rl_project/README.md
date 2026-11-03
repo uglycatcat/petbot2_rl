@@ -11,4 +11,4 @@
 
 任务与验证边界见 [MuJoCo 方案](../docs/upright_sim2sim_20261027.md)。
 
-Step独立项目：[std_s2s_step_project](std_s2s_step_project/README.md)提供ONNX/MuJoCo预览，启动静止、Space执行、R重置；默认第20轮seed71，保留第14/13轮对照。29维传感记忆、轮映射和单次离地监测已同步并验证，MuJoCo0.56s碰沿、15s仍不停，不能视为动作通过。见[发布与实测](../docs/step_round20_sim2sim.md)。窗口保持独立绘制、目标60FPS，实际性能取决于设备。`std_train_step_project/`保持空目录，训练仍在step demo；两正式项目由同名`rlproj/`分支版本化，执行`repo sync rl_project/std_s2s_step_project rl_project/std_train_step_project`同步。
+Step独立项目：[std_s2s_step_project](std_s2s_step_project/README.md)按用户要求默认恢复第14轮seed71 ONNX，启动静止、Space执行、R重置及独立绘制保持。训练与自动迭代已暂停，源码/配置同时回退第14轮；已有登台能力保留，停车和动作质量仍未通过。第20/13轮策略保留，见[回退与验证](../docs/step_rollback14_20261103.md)。`std_train_step_project/`保持空，两正式项目仍由同名`rlproj/`分支管理。

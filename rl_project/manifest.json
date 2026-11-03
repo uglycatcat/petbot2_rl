@@ -32,16 +32,16 @@
       "remote": "ours",
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "branch": "rlproj/std_s2s_step_project",
-      "verified_commit": "167191ff6020e9a0031c48b0017230c298e281f7",
-      "status": "Latest completed Step round20 seed71 ONNX preview,29D sensor-memory contract. MuJoCo front-edge contact at0.56s and no stop in15s. Not task acceptance; round14/13 retained.",
+      "verified_commit": "071c42504a8de9ed1c3e474aed758c68149fc51f",
+      "status": "User-requested round14 baseline rollback;training paused. Original ONNX and display worker retained. Can traverse but stop/quality incomplete.",
       "usage": "README.md",
-      "validation": "validation/round20_20261103/review.json",
+      "validation": "validation/rollback14_20261103/review.json",
       "inference_backend": "onnxruntime_cpu",
-      "default_policy": "round20_seed71",
+      "default_policy": "round14_seed71",
       "reference_policy": "round13_seed71",
-      "local_validation": "12355 ONNX cases maxabs5.96e-7;10304 memory/target cases aligned;103040 flight-substep flags exact;robot physics unchanged;28-frame reset replay exact;legacy14 300frames exact;actual X11 Space/R passed. CPU software GUI only,desktop performance unmeasured.",
+      "local_validation": "Original round14 ONNX hash unchanged;robot physics unchanged,idle/Space/R pass,52frame strict reset replay exact. Existing unchanged-runtime300frame legacy comparison exact. First rear support failure1.04s;not full acceptance.",
       "display_validation": "validation/display_20261102.json",
-      "previous_policy": "round14_seed71"
+      "previous_policy": "round20_seed71"
     },
     {
       "name": "std_train_step_project",

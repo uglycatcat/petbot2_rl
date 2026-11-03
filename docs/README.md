@@ -1,10 +1,10 @@
 # 项目文档索引
 
-- Step独立训练：[第20轮终局与停车诊断](step_round20_results.md)、[第21轮执行](step_round21_execution.md)。第20轮seed71已有36例规定短行但不停车；第21轮仅增加短行后轮请求/运动代价，工程门槛通过，GPU0/1从零运行。
+- Step独立训练：用户已暂停，第21轮148/131更新取消，enabled=false，源码/配置精确回退第14轮；未经明确恢复不训练。见[回退证据](step_rollback14_20261103.md)，历史[第20轮终局](step_round20_results.md)、[第21轮执行](step_round21_execution.md)保留。
 
 - 最新upright桌面反馈：基本流程与约0.6m/s体验获认可；允许较慢、更多调整以改善起立泛化，零输入交接后退已修复、两轮微漂仍待训练。见[反馈与修复](upright_restart20_desktop_feedback_20261102.md)。
 
-- Step桌面预览：[第20轮ONNX同步与MuJoCo实测](step_round20_sim2sim.md)。默认第20轮seed71，29维接口/窗口/复位通过，MuJoCo0.56s碰沿、15s仍不停；旧第14/13轮保留，正式训练项目空。
+- Step桌面预览：[暂停与第14轮回退](step_rollback14_20261103.md)。默认恢复第14轮seed71，保留显示修复和Space/R；已知能登台但不停，完整目标未通过。
 
 - 桌面体验：upright默认改为新第20轮seed102单ONNX，旧C58保留；见[sim2sim发布记录](upright_restart20_sim2sim.md)。
 
