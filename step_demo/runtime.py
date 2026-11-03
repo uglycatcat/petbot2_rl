@@ -26,7 +26,7 @@ def code_digest():
 def load_training(path):
     defaults=json.loads((PROJECT_ROOT/'configs/train_v1.json').read_text())
     t=json.loads(Path(path).read_text())
-    optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling','critic_observation'}
+    optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling','critic_observation','task_variant'}
     if set(t)-optional!=set(defaults) or t['schema']!='petbot_step_ppo_v1': raise ValueError('Unknown training schema/fields')
     if t.get('policy_distribution','gaussian') not in ('gaussian','beta'):raise ValueError('Unknown policy distribution')
     if t.get('critic_observation', 'policy') not in ('policy', 'reward_state_v11'):
@@ -44,10 +44,14 @@ def load_training(path):
         if 'wheel_final_std' in s and (not isinstance(s['wheel_final_std'],(int,float))
                 or not .005<=s['wheel_final_std']<=.577):
             raise ValueError('Invalid wheel variance ceiling')
-    if t.get('reward_version','legacy') not in ('legacy','edge_v3','progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13'):raise ValueError('Unknown reward version')
+    if t.get('reward_version','legacy') not in ('legacy','edge_v3','progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','restart14_staged'):raise ValueError('Unknown reward version')
     if not 0<t.get('discount_gamma',.99)<=1:raise ValueError('Invalid discount gamma')
-    if t.get('reward_version') in ('progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13') and t.get('discount_gamma')!=1.:
+    if t.get('reward_version') in ('progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','restart14_staged') and t.get('discount_gamma')!=1.:
         raise ValueError('Progress rewards require undiscounted finite-episode returns')
+    if t.get('task_variant','full') not in ('full','platform_stop_aux'):
+        raise ValueError('Unknown task variant')
+    if t.get('task_variant') == 'platform_stop_aux' and t.get('reward_version') != 'restart14_staged':
+        raise ValueError('Auxiliary stopping requires the explicit restarted objective')
     if t['initialization']!='random' or t['pretrained_models']: raise ValueError('Only random initialization is allowed')
     for name in ('num_envs','iterations','save_interval','decimation','num_steps_per_env','num_learning_epochs','num_mini_batches'):
         if type(t[name]) is not int or t[name]<=0: raise ValueError(f'Invalid {name}')
@@ -75,12 +79,14 @@ def main(argv):
     parser.add_argument('--stop-after',type=int,help='Stop after this many new PPO updates, preserving the total budget')
     parser.add_argument('--output',type=Path,help='Fresh evaluation output directory')
     parser.add_argument('--eval-envs',type=int,default=32)
+    parser.add_argument('--hold-after-success',type=float,default=0.)
     AppLauncher.add_app_launcher_args(parser)
     args=parser.parse_args(argv)
     from .ppo import write_json, state_digest, runner_config, StepRunner
     task=load_config(args.config,args.model_dir)
     if json.loads((args.asset_dir/'asset.json').read_text())['source_sha256']!=source_fingerprint(task.model_dir):
         raise ValueError('Derived asset does not match read-only source model')
+    if args.hold_after_success < 0 or (args.command != 'evaluate' and args.hold_after_success): parser.error('Extra hold is evaluation-only')
     if args.command=='evaluate' and (args.resume or args.stop_after): parser.error('Evaluation cannot resume training')
     if args.command=='train' and args.checkpoint and not args.resume: parser.error('Fresh training cannot load checkpoints')
     if args.stop_after is not None and args.stop_after<=0: parser.error('stop-after must be positive')
@@ -115,7 +121,11 @@ def main(argv):
         from .isaac_env import StepEnv
         from .critic_state import CRITIC_STATE_FIELDS
         actual=t.copy()
-        if args.command=='evaluate': actual['num_envs']=args.eval_envs
+        if args.command=='evaluate':
+            actual['num_envs']=args.eval_envs
+            actual['hold_after_success_s']=args.hold_after_success
+        if args.hold_after_success and not actual.get('task_variant') == 'platform_stop_aux':
+            raise ValueError('Extra hold currently supported only by isolated platform STOP diagnostic')
         env=StepEnv(task,actual,args.asset_dir,args.device)
         env.trace_ids=list(range(min(actual['num_envs'],8))) if args.command=='train' else list(range(actual['num_envs']))
         attempt=uuid.uuid4().hex[:12]
@@ -167,7 +177,7 @@ def main(argv):
             if len(records)!=actual['num_envs']: raise RuntimeError('Evaluation did not terminate every initial episode')
             write_json(output/'result.json',dict(status='complete',episodes=list(records.values()),
                 successes=sum(r['success'] for r in records.values()),num_envs=actual['num_envs'],
-                completed_updates=runner.current_learning_iteration,scene='fixed_default_2cm_30cm_90deg',
+                completed_updates=runner.current_learning_iteration,scene=t.get('task_variant','full'),hold_after_success_s=args.hold_after_success,
                 independent_randomization=False))
             write_json(output/'status.json',dict(status='complete',command='evaluate'))
         trace_file.close();episode_file.close()

@@ -1,0 +1,91 @@
+{
+  "schema": "step_lineage_disposition_v1",
+  "baseline_round": 14,
+  "baseline_commit": "30fd5886271f7d70ed23a923647f824feb7c1f5f",
+  "series": "step_restart14_20261103",
+  "next_round_label": "restart15",
+  "priority": [
+    "single clean front-wheel flight",
+    "stop after original valid platform drive"
+  ],
+  "invalidated_rounds": [
+    {
+      "round": 15,
+      "directory": "step_round15_20261102",
+      "disposition": "invalidated_by_user",
+      "eligible_as_optimization_baseline": false,
+      "eligible_as_new_training_source": false,
+      "original_evidence_preserved": true,
+      "reason": "2026-11-03 user discarded rounds after14 and restarted development from round14; single front flight and platform stopping are the two priorities.",
+      "empirical_status": "completed_experiment_rejected_as_optimization_direction",
+      "physics_validity": "Not changed by this disposition; consult original engineering reports."
+    },
+    {
+      "round": 16,
+      "directory": "step_round16_20261102",
+      "disposition": "invalidated_by_user",
+      "eligible_as_optimization_baseline": false,
+      "eligible_as_new_training_source": false,
+      "original_evidence_preserved": true,
+      "reason": "2026-11-03 user discarded rounds after14 and restarted development from round14; single front flight and platform stopping are the two priorities.",
+      "empirical_status": "completed_experiment_rejected_as_optimization_direction",
+      "physics_validity": "Not changed by this disposition; consult original engineering reports."
+    },
+    {
+      "round": 17,
+      "directory": "step_round17_20261102",
+      "disposition": "invalidated_by_user",
+      "eligible_as_optimization_baseline": false,
+      "eligible_as_new_training_source": false,
+      "original_evidence_preserved": true,
+      "reason": "2026-11-03 user discarded rounds after14 and restarted development from round14; single front flight and platform stopping are the two priorities.",
+      "empirical_status": "completed_experiment_rejected_as_optimization_direction",
+      "physics_validity": "Not changed by this disposition; consult original engineering reports."
+    },
+    {
+      "round": 18,
+      "directory": "step_round18_20261102",
+      "disposition": "invalidated_by_user",
+      "eligible_as_optimization_baseline": false,
+      "eligible_as_new_training_source": false,
+      "original_evidence_preserved": true,
+      "reason": "2026-11-03 user discarded rounds after14 and restarted development from round14; single front flight and platform stopping are the two priorities.",
+      "empirical_status": "completed_experiment_rejected_as_optimization_direction",
+      "physics_validity": "Not changed by this disposition; consult original engineering reports."
+    },
+    {
+      "round": 19,
+      "directory": "step_round19_20261103",
+      "disposition": "invalidated_by_user",
+      "eligible_as_optimization_baseline": false,
+      "eligible_as_new_training_source": false,
+      "original_evidence_preserved": true,
+      "reason": "2026-11-03 user discarded rounds after14 and restarted development from round14; single front flight and platform stopping are the two priorities.",
+      "empirical_status": "completed_experiment_rejected_as_optimization_direction",
+      "physics_validity": "Not changed by this disposition; consult original engineering reports."
+    },
+    {
+      "round": 20,
+      "directory": "step_round20_20261103",
+      "disposition": "invalidated_by_user",
+      "eligible_as_optimization_baseline": false,
+      "eligible_as_new_training_source": false,
+      "original_evidence_preserved": true,
+      "reason": "2026-11-03 user discarded rounds after14 and restarted development from round14; single front flight and platform stopping are the two priorities.",
+      "empirical_status": "completed_experiment_rejected_as_optimization_direction",
+      "physics_validity": "Not changed by this disposition; consult original engineering reports."
+    },
+    {
+      "round": 21,
+      "directory": "step_round21_20261103",
+      "disposition": "invalidated_by_user",
+      "eligible_as_optimization_baseline": false,
+      "eligible_as_new_training_source": false,
+      "original_evidence_preserved": true,
+      "reason": "2026-11-03 user discarded rounds after14 and restarted development from round14; single front flight and platform stopping are the two priorities.",
+      "empirical_status": "cancelled_incomplete_no_terminal_conclusion",
+      "physics_validity": "Not changed by this disposition; consult original engineering reports."
+    }
+  ],
+  "preview_policy": "round20_seed71 preserved for user inspection; not selected as new optimization baseline"
+}

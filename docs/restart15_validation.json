@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "cpu_checks": 114,
+  "full_short_successes": 0,
+  "aux_short_successes": 0,
+  "evaluation_size_each": 16,
+  "capability_passed": false,
+  "diagnostic_ready": true,
+  "full_formal_training_ready": false,
+  "guarded_jobs": 7,
+  "maximum_gpu_peak_mib": 17538.0,
+  "source_baseline": "30fd5886271f7d70ed23a923647f824feb7c1f5f"
+}

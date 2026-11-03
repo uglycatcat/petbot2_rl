@@ -21,6 +21,9 @@ def records(path):
 
 def summarize(run, evaluation):
     run=Path(run);evaluation=Path(evaluation)
+    if read(run/'origin.json')['training'].get('task_variant') == 'platform_stop_aux':
+        from .stop_review import summarize_auxiliary
+        return summarize_auxiliary(run,evaluation)
     origin=read(run/'origin.json');initial=read(run/'initialization.json')
     status=read(run/'status.json');latest=read(run/'latest.json');result=read(evaluation/'result.json')
     if origin['initialization']!='random' or origin['pretrained_models'] or initial['optimizer_states']!=0 or initial['frozen_parameters']!=0:
@@ -31,7 +34,7 @@ def summarize(run, evaluation):
         raise ValueError('Evaluation must reload the completed final model')
     layout=read(evaluation/'layout.json'); hips=layout['hips'];wheels=layout['rear_wheels']
     config=load_config()
-    support_memory=.06 if origin['training'].get('reward_version') in ('stage_v5','settle_v6','touch_v8','brake_v10') else 0.
+    support_memory=.06 if origin['training'].get('reward_version') in ('stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','restart14_staged') else 0.
     trackers={i:CompletionTracker(config.acceptance,support_memory) for i in range(result['num_envs'])}
     terminals={r['env']:r for r in result['episodes']}
     if len(terminals)!=result['num_envs']: raise ValueError('Missing or duplicate first-episode evaluations')
@@ -79,7 +82,11 @@ def summarize(run, evaluation):
             timed_out=row['elapsed'][local]+1e-5>=config.acceptance.timeout_s
             if failure or completed or timed_out:
                 seen.add(i)
-                if bool(completed)!=(stage==Stage.COMPLETE): raise ValueError(f'Completion disagreement for env {i}')
+                scalar_success = stage == Stage.COMPLETE
+                if origin['training'].get('reward_version') == 'restart14_staged':
+                    scalar_success &= (row['front_flight_count'][local] == [1,1] and not row['flight_invalid'][local]
+                                       and not any(row['front_flight_air'][local]))
+                if bool(completed)!=scalar_success: raise ValueError(f'Completion disagreement for env {i}')
                 if bool(completed)!=terminals[i]['success']: raise ValueError(f'Terminal artifact disagrees for env {i}')
                 category='success' if completed else ('timeout' if timed_out and not failure else f'failure_{failure}')
                 counts[category]+=1

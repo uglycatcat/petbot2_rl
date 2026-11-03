@@ -34,7 +34,7 @@ def safe_relative(base,value):
 
 
 def validate_plan(plan,folder):
-    if plan.get('schema')!='step_batch_v1' or plan.get('kind') not in ('engineering','formal'):
+    if plan.get('schema')!='step_batch_v1' or plan.get('kind') not in ('engineering','formal','diagnostic'):
         raise ValueError('Unknown plan schema/kind')
     if not plan.get('hypothesis') or not plan.get('jobs'): raise ValueError('A plan needs a hypothesis and jobs')
     ids=set();gpus=set()
@@ -43,7 +43,9 @@ def validate_plan(plan,folder):
         if job['gpu'] in gpus or job['id'] in ids:raise ValueError('One job per GPU and unique job IDs required')
         gpus.add(job['gpu']);ids.add(job['id']);safe_relative(folder,job['id'])
         config=safe_relative(Path(folder)/'source',job['training_config'])
-        load_training(config)
+        training=load_training(config)
+        if training.get('task_variant') == 'platform_stop_aux' and (plan['kind'] != 'diagnostic' or job.get('hold_after_success_s') != 2.):
+            raise ValueError('Auxiliary STOP requires diagnostic label and real extra 2s evaluation')
         if type(job['eval_envs']) is not int or not 1<=job['eval_envs']<=512:raise ValueError('Invalid evaluation size')
     if plan.get('round_number',0)>1:
         if not plan.get('previous_review') or not plan.get('decision'):
@@ -127,6 +129,8 @@ def job_run(job,folder,control):
                 evaluation.rename(job_dir/f'evaluation_failed_{count:02}')
             command=['-m','step_demo','evaluate','--run-dir',f'../{job["id"]}/train',
                 '--output',f'../{job["id"]}/evaluation','--eval-envs',str(job['eval_envs']),*common]
+            if job.get('hold_after_success_s'):
+                command += ['--hold-after-success',str(job['hold_after_success_s'])]
             guarded('evaluating',command,evaluation/'status.json')
         state.update(status='analyzing',updated_at=stamp());write(state_path,state)
         report=summarize(train,evaluation);write(job_dir/'analysis.json',report)
@@ -141,6 +145,8 @@ def run(folder,control):
     folder=Path(folder).resolve();control=Path(control).resolve();cfg=read(control)
     if cfg.get('project')!='step' or cfg.get('allowed_gpus')!=[0,1]:raise ValueError('Invalid campaign scope')
     if not enabled(control):raise ValueError('Campaign disabled')
+    if (folder/'disposition.json').exists() and read(folder/'disposition.json').get('disposition') == 'invalidated_by_user':
+        raise ValueError('Discarded rounds cannot be restarted')
     plan=read(folder/'plan.json');validate_plan(plan,folder)
     lock=(control.parent/'active.lock').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     write(control.parent/'active.json',dict(round=str(folder),pid=os.getpid(),started_at=stamp(),status='running'))
@@ -163,7 +169,7 @@ def run(folder,control):
         if not enabled(control):state['status']='cancelled_by_user'
         write(folder/'batch_status.json',state)
         if enabled(control):
-            event_kind='工程检查完成' if plan['kind']=='engineering' else '正式批次完成/异常'
+            event_kind={'engineering':'工程检查完成','diagnostic':'独立停车诊断完成/异常','formal':'正式批次完成/异常'}[plan['kind']]
             message=(f'[step自动迭代事件：{event_kind}] 固定目录 {folder}；控制文件 {control}。'
                 f'先核对{control.parent}/active.json、enabled、agent_review.json（若有）、batch_status.json、每路analysis.json、日志和实际进程。'
                 '若事件属于已处理的旧轮次且更新批次已运行，只补记接收，不重复发批或中止新训练。'
@@ -171,6 +177,7 @@ def run(folder,control):
                 '检查真实阶段、请求/执行/实测关节、接触、运动和成功/失败轨迹，记录结论与下一轮修改假设；'
                 '任何无效物理或失败工程不得作策略结论。新配置/源码先过容器门槛、提交推送、冻结，再启动下一批并延续同一事件链。'
                 '不得加载历史权重、修改源机器人、使用其它GPU、启动sim2sim或其它项目。'
+                '新系列从第14轮源码重建，旧15–21轮已废弃不可恢复。若是platform_stop_aux，分速度组审查原停稳加真实2s保持；两种子门槛通过前不得启动全程训练，诊断权重/状态不得迁移。'
                 '若本事件为工程连通性测试且正式批次已经启动，只核对并记录接收，不重复发批。')
             queue_event(control,folder/'continuation_event.json',message)
     except Exception:

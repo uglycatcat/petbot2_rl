@@ -75,7 +75,7 @@ class StepRunner(OnPolicyRunner):
                 original_log(**values)
                 record=dict(completed_updates=values['it']+1,losses=losses,
                     learning_rate=values['learning_rate'],collect_s=values['collect_time'],learn_s=values['learn_time'],
-                    totals=env.unwrapped.totals.copy(),distribution=distribution_metrics(self.alg.actor.distribution))
+                    totals=env.unwrapped.totals.copy(),coverage=env.unwrapped.learning_coverage.copy(),distribution=distribution_metrics(self.alg.actor.distribution))
                 write_json(Path(log_dir)/'progress.json',record)
                 with (Path(log_dir)/'updates.jsonl').open('a') as file: file.write(json.dumps(record)+'\n')
                 # Change only after PPO has consumed this rollout's log-probs.
@@ -96,6 +96,7 @@ class StepRunner(OnPolicyRunner):
             rng=dict(torch=torch.get_rng_state(),cuda=torch.cuda.get_rng_state_all(),
                      python=random.getstate(),numpy=np.random.get_state()),
             totals=self.env.unwrapped.totals,
+            coverage=self.env.unwrapped.learning_coverage,
             logger=dict(tot_timesteps=self.logger.tot_timesteps,tot_time=self.logger.tot_time))
         path = Path(path); temp = path.with_suffix('.pt.tmp')
         torch.save(data, temp); temp.replace(path)
@@ -123,6 +124,7 @@ class StepRunner(OnPolicyRunner):
             torch.cuda.set_rng_state_all([v.cpu() for v in data['rng']['cuda']])
             random.setstate(data['rng']['python']); np.random.set_state(data['rng']['numpy'])
             self.env.unwrapped.totals = data['totals'].copy()
+            if 'coverage' in data: self.env.unwrapped.learning_coverage = data['coverage'].copy()
             for key,value in data['logger'].items(): setattr(self.logger,key,value)
         return dict(completed_updates=data['completed_updates'],
             actor_sha256=state_digest(self.alg.actor.state_dict()),
