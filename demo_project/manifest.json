@@ -44,20 +44,33 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "55558555e11fe200f6542e7bc5eb8509bd19ccc2",
+      "verified_commit": "839fc6ce37db803d77e9f876900e13910ea093c5",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "round20_restored_landing_stop_diagnosis_round27_cancelled_by_user",
-      "local_validation": "Round27 user-cancelled at725each,exit143,noOOM/runtimefail,all jobs/watcher exited,no resume. Round20 behavior21files byte-exact,113containerCPU pass;GPU2fixed reload32/32 and trace byte-identical.20fixed MuJoCo intervention cases complete with source limits;removing delayed handoff+blend cuts reverse but retains.23-2.02cm total slide,not requirement pass. No new PPO,21-27archived bce7793,sim2sim unchanged.",
+      "status": "round21r1_scratch_training_from_round20_old21to26_invalid_27_cancelled",
+      "local_validation": "120 container checks; fixed20 handoff PhysX32/32/29 of32 and18 MuJoCo cases/20 cycles complete,pre-handoff MuJoCo traces exact;reverse2.6-3.6cm remains.128env4to8 same-run recovery;2048env2updates random/reload0of32 rise timeout;initial schema preflight82 preserved,noOOM. New LAND cost only,raw model unchanged. Two fresh1000updates GPU2/3,not policy pass.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [],
-      "active_training_commit": null,
-      "pending_design_review": "docs/upright_round20_rollback_landing.md",
-      "latest_result_document": "docs/upright_restart_round26_results.md",
-      "active_execution_document": "docs/upright_round20_rollback_landing.md"
+      "active_tasks": [
+        "upright_restart_round21r1_s101",
+        "upright_restart_round21r1_s102"
+      ],
+      "active_training_commit": "839fc6ce37db803d77e9f876900e13910ea093c5",
+      "latest_result_document": "docs/upright_round20_handoff_v1.md",
+      "active_execution_document": "docs/upright_restart_round21r1_execution.md",
+      "invalidated_rounds": [
+        21,
+        22,
+        23,
+        24,
+        25,
+        26
+      ],
+      "cancelled_rounds": [
+        27
+      ]
     },
     {
       "name": "step_rl_demo",

@@ -4,7 +4,7 @@
 
 | 项目 | 职责 | 当前开发状态 |
 |---|---|---|
-| [upright_rl_demo](upright_rl_demo/README.md) | 从随机初始化完成起落与两轮遥控；不依赖历史权重。 | 用户要求恢复认可的第20轮，21个行为文件和原生重载轨迹一致；第27轮725更新取消，禁止恢复。最高优先落地停车，先固定策略归因/修正，sim2sim不动。见[回退与诊断](../docs/upright_round20_rollback_landing.md)。 |
+| [upright_rl_demo](upright_rl_demo/README.md) | 从随机初始化完成起落与两轮遥控；不依赖历史权重。 | 新21–26作废、27取消；从认可20重开21r1，仅正常交接及LAND近地运动成本。工程有效，GPU2/3各1000从零运行；后退仍未通过，运动保留必须验证。见[执行](../docs/upright_restart_round21r1_execution.md)。 |
 | [step_rl_demo](step_rl_demo/README.md) | 固定2cm/30cm、对称髋/轮控制；优先单次抬轮与归髋短行后停稳。 | 用户已恢复从第14轮迭代，旧15–21废弃；restart15两种子128×200独立停车诊断在GPU0/1从零运行，辅助权重不迁移。见[当前实施](../docs/step_restart15_20261103.md)。 |
 | [recovery_rl_demo](recovery_rl_demo/README.md) | 重新设计分阶段跌倒恢复。 | 仅登记与需求说明，尚无训练代码。 |
 | [recovery_agile_01](recovery_agile_01/PETBOT.md) | 基于AGILE的早期恢复原型。 | 历史实验，不能直接作为新恢复任务的设计或成功基线。 |

@@ -67,3 +67,6 @@
 - [upright新第26轮ONNX体验预览](upright_restart26_sim2sim.md)：用户请求同步、控制/时序对齐、MuJoCo残余落地与零输入漂移、第20轮切换。
 
 - [upright恢复第20轮与停车归因](upright_round20_rollback_landing.md)：第27轮取消、源码/原生轨迹恢复、固定策略交接对照及未解决残余。
+
+
+2026-11-03 upright重开入口：[新21–26废弃登记](upright_restart_discarded_rounds_20261103.md)、[第20轮交接v1](upright_round20_handoff_v1.md)、[21r1从零执行](upright_restart_round21r1_execution.md)。不恢复已取消27轮。
