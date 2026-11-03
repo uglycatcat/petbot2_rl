@@ -1,8 +1,8 @@
 # 项目文档索引
 
-- Step版本复核与停车重设计：[来源证据、分阶段方案与独立审查](step_redesign_review_20261103.md)。旧默认第14轮，当前预览第20轮；审查有条件认可方向，未实施、未恢复训练。
+- Step已恢复从第14轮重新迭代，优先单次抬轮和登台后停稳：[当前实施、旧15–21废弃标记与验证门槛](step_restart15_20261103.md)。先独立平台停车诊断；MuJoCo仍保留第20轮。
 
-- Step独立训练：用户已暂停，第21轮148/131更新取消，enabled=false，源码/配置精确回退第14轮；未经明确恢复不训练。见[回退证据](step_rollback14_20261103.md)，历史[第20轮终局](step_round20_results.md)、[第21轮执行](step_round21_execution.md)保留。
+- Step历史回退：[暂停/回退证据](step_rollback14_20261103.md)，[第20轮终局](step_round20_results.md)、[第21轮取消记录](step_round21_execution.md)保留追溯；旧15–21均已废弃，不再作为优化基线。
 
 - 最新upright桌面反馈：基本流程与约0.6m/s体验获认可；允许较慢、更多调整以改善起立泛化，零输入交接后退已修复、两轮微漂仍待训练。见[反馈与修复](upright_restart20_desktop_feedback_20261102.md)。
 

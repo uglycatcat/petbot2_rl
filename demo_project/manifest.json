@@ -65,21 +65,26 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/step_rl_demo",
-      "verified_commit": "972798cf63966774ed40073f9b11602ff62fc15d",
+      "verified_commit": "b760a17be4bebde0081be470b8087913ebb092fe",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "paused_by_user_round14_implementation_restored",
-      "local_validation": "Round21 cancelled by user at148/131updates,no final eval;enabled=false,training/controller processes exited.110 executable/config/tool/test files byte-identical to round14;107 container CPU checks pass.No new training. Historical frozen runs preserved.",
+      "status": "restart15_auxiliary_diagnostic_running",
+      "local_validation": "114container CPU checks and7guarded physics/short-train/resume/reload jobs passed;32env full and128env aux4to8updates,each16eval0success.No capability pass.2random seeds128x200aux diagnostic only,GPU0/1.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [],
-      "active_training_commit": null,
-      "next_iteration_requirement": "Await explicit user resume. Keep stop,single-flight and world lower_body pitch goals; do not auto-reapply reverted changes or load historical weights into new training.",
-      "body_pitch_requirement_status": "Requirement retained but round14 implementation predates added pitch/flight costs. Not implemented or accepted by rollback.",
+      "active_tasks": [
+        "restart15_aux_seed70",
+        "restart15_aux_seed71"
+      ],
+      "active_training_commit": "b760a17be4bebde0081be470b8087913ebb092fe",
+      "next_iteration_requirement": "Authorized continuous iteration from14;old15-21invalidated.Each auxiliary seed61/64 and each speedgroup15/16 with real actor+physics extra2s required before full-task execution review.No weight/state transfer;fullbudget/STOPcoverage/prefixnonregression gates remain.",
+      "body_pitch_requirement_status": "World lower_body pitch is a secondary full-episode soft objective;single flight and actual platform stopping are primary. Not yet capability accepted.",
       "baseline_commit": "30fd5886271f7d70ed23a923647f824feb7c1f5f",
-      "archive_branch": "archive/step_pre_rollback14_20261103"
+      "archive_branch": "archive/step_pre_rollback14_20261103",
+      "lineage": "docs/lineage.json",
+      "series": "step_restart14_20261103"
     },
     {
       "name": "recovery_rl_demo",
