@@ -4,7 +4,9 @@ import numpy as np
 
 class Controller:
     def __init__(self,training):
-        self.training=training;self.reset()
+        self.training=training;self.mapping=training.get('wheel_mapping','affine')
+        if self.mapping not in ('affine','zero_centered','zero_margin'):raise ValueError('Unknown wheel mapping')
+        self.reset()
 
     def reset(self):
         self.action=np.array([0.,-1.],np.float32);self.hip=np.float32(0.);self.wheel=np.float32(0.)
@@ -20,7 +22,9 @@ class Controller:
 
     def advance(self,dt):
         h=self.action[0]*np.float32(1.2 if self.action[0]>=0 else 1.)
-        w=(self.action[1]+np.float32(1.))*np.float32(12.5)
+        if self.mapping=='affine':w=(self.action[1]+np.float32(1.))*np.float32(12.5)
+        elif self.mapping=='zero_centered':w=max(self.action[1],np.float32(0.))*np.float32(25.)
+        else:w=np.clip((self.action[1]+np.float32(.9))/np.float32(1.9),0.,1.)*np.float32(25.)
         dh=np.float32(self.training['hip_target_rate_rad_s']*dt);dw=np.float32(self.training['wheel_target_accel_rad_s2']*dt)
         self.hip=np.float32(self.hip+np.clip(h-self.hip,-dh,dh))
         self.wheel=np.float32(self.wheel+np.clip(w-self.wheel,-dw,dw))

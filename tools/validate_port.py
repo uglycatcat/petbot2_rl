@@ -46,7 +46,7 @@ def main():
                 for _ in range(10):c.advance(.002)
                 target_error=max(target_error,abs(c.hip-r['hip_target'][i]),abs(c.wheel-r['wheel_target'][i]));count+=1
     d=dict(sensor_steps=1200,including_reset_and_stationary_correction=True,observation_maxabs=obs_error,state_maxabs=state_error,kinematic_com_maxabs=kinematics_error,
-        terrain_cases=60,terrain_maxabs=geometry_error,recorded_control_cases=count,target_maxabs=target_error)
+        terrain_cases=60,terrain_maxabs=float(geometry_error),recorded_control_cases=count,target_maxabs=float(target_error))
     a.output.write_text(json.dumps(d,indent=2)+'\n');print(d)
     assert obs_error<1e-4 and state_error<1e-4 and kinematics_error<1e-6 and geometry_error<1e-6 and target_error<2e-5,d
 

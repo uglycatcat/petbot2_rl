@@ -1,0 +1,26 @@
+{
+  "status": "passed",
+  "actual_x11_key_sequence": [
+    "Space",
+    "R",
+    "Space",
+    "R"
+  ],
+  "policy_executed": true,
+  "reset_twice": true,
+  "software_rendering": true,
+  "screenshot": "running.png",
+  "rendered_frames": {
+    "running": {
+      "nonblack_pixels": 792000,
+      "pixel_std": 48.05559657652898,
+      "simulation_time": 0.24000000000000019
+    },
+    "idle": {
+      "nonblack_pixels": 792000,
+      "pixel_std": 48.02472825333842,
+      "simulation_time": 0.0
+    }
+  },
+  "final_state": "IDLE"
+}

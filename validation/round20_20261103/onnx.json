@@ -1,0 +1,12 @@
+{
+  "cases": 12355,
+  "synthetic_cases": 2051,
+  "recorded_cases": 10304,
+  "observation_dim": 29,
+  "max_abs_error": 5.960464477539062e-07,
+  "recorded_max_abs_error": 4.76837158203125e-07,
+  "action_range": [
+    -0.9999769330024719,
+    0.9999589920043945
+  ]
+}

@@ -9,8 +9,8 @@ from step_s2s.scene import source_fingerprint
 
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--output',type=Path,required=True);args=p.parse_args()
-    model_dir=PROJECT.parents[1]/'robot_description';before=source_fingerprint(model_dir);s=Preview(continue_on_failure=False)
+    p=argparse.ArgumentParser();p.add_argument('--output',type=Path,required=True);p.add_argument('--policy',type=Path);args=p.parse_args()
+    model_dir=PROJECT.parents[1]/'robot_description';before=source_fingerprint(model_dir);s=Preview(args.policy,continue_on_failure=False)
     original=mujoco.MjModel.from_xml_path(str(model_dir/'mjcf/scene.xml'))
     fields=['body_mass','body_inertia','body_ipos','body_iquat','body_pos','body_quat','jnt_type','jnt_pos','jnt_axis','jnt_range',
         'dof_damping','dof_armature','dof_frictionloss','actuator_ctrlrange','actuator_forcerange','actuator_gainprm','actuator_biasprm','actuator_gear']
@@ -33,6 +33,7 @@ def main():
         sequences.append(np.array(seq));finals.append(s.snapshot());assert s.policy_calls>0 and s.packet_count==1
         s.key(ord('R'));assert s.state=='IDLE' and s.policy_calls==0 and s.packet_count==0 and s.substeps==0
         np.testing.assert_array_equal(q0,s.data.qpos);np.testing.assert_array_equal(s.estimator.com_position,np.zeros(3));assert not s.monitor.lifted.any()
+        np.testing.assert_array_equal(s.sensor_stop.observation(),np.zeros(3));assert not s.monitor.front_motion.count.any()
     np.testing.assert_array_equal(sequences[0],sequences[1])
     assert before==source_fingerprint(model_dir)
     d=dict(status='passed',physics_arrays_exact=fields,robot_geometry_arrays_exact=True,source_fingerprint=before,

@@ -1,0 +1,76 @@
+{
+  "status": "interface_and_runtime_passed_policy_behavior_failed",
+  "policy": "step_round20_20261103_seed71_u500",
+  "source_commit": "a6b85a9c7987bb4cb4fa4a1f0620041a3deffe3f",
+  "source_run_id": "d924b311-7502-44d9-945e-a8af4fbf9ce4",
+  "checkpoint": "model_499.pt",
+  "checkpoint_sha256": "03b3464bc67191bfd904987ef054c7463431fc6f3b4f60d11ec9439d4b1a7ffd",
+  "actor_sha256": "12d7ee88a633622e38cf4ecb81001aea9663380ad1c394cb98e4d488ea849b35",
+  "onnx_sha256": "5d5df29c9679450d13d9c0e7ef9355e8fa12e539fcfdfed94617262308356efc",
+  "source_model_sha256": "de1862d58f9989ae7eb0de5b20188e2ffc7052d2b9d5588446eef4b166b5f53f",
+  "input_contract": {
+    "dim": 29,
+    "empirically_normalized_sensor_fields": 26,
+    "raw_unit_memory_fields": 3,
+    "task_memory": "sensor_stop_v16",
+    "wheel_mapping": "zero_margin",
+    "memory_update": "after each complete 20ms policy interval; sensor-only",
+    "single_flight_monitor": "physical 2ms,20ms debounce; truth only"
+  },
+  "validation_files": [
+    "onnx.json",
+    "port.json",
+    "memory.json",
+    "runtime.json",
+    "legacy.json",
+    "gui.json",
+    "preview.json"
+  ],
+  "strict_outcome": {
+    "first_failure": 1,
+    "reason": "front_edge_contact",
+    "time": 0.5600000000000004,
+    "complete": false,
+    "repeat_frames": 28
+  },
+  "continuing_preview": {
+    "duration": 15,
+    "first_failure_latched": true,
+    "complete": false,
+    "final_com_x": 9.805811942310264,
+    "final_speed": 0.7256162218154916,
+    "final_wheel_target": 24.67933464050293,
+    "final_front_liftoff_count": [
+      18,
+      18
+    ],
+    "world_pitch_range_degrees": [
+      -62.00912045971712,
+      58.39897985839089
+    ],
+    "legal_front_land": [
+      false,
+      false
+    ]
+  },
+  "gui_viewer": {
+    "frames": 21,
+    "wall_seconds": 3.9326686058193445,
+    "render_fps": 5.479864848054933,
+    "physics_control_steps": 139,
+    "physics_compute_seconds": 2.9342178776860237,
+    "physics_active_wall_seconds": 2.9929567901417613,
+    "physics_seconds": 2.7800000000000002,
+    "target_render_fps": 60.0
+  },
+  "rendering_limit": "Shared-server CPU software rendering only; desktop refresh not measured. Existing independent worker unchanged.",
+  "rejected_validation_attempts": [
+    "Initial port report failed JSON serialization of a NumPy scalar; cast report field and rerun passed.",
+    "Initial physical replay checker treated edge-relative wheel_min_x as world coordinates; corrected checker coordinates, all103040 flags/counts exact. Runtime coordinate convention unchanged."
+  ],
+  "limitations": [
+    "Current policy still does not stop or respect single lift in strict task.",
+    "MuJoCo first edge contact occurs earlier than previous round14 preview; latest completed training policy is not best cross-engine behavior.",
+    "No scripted brake/hip override, no training change or historic weights used for new training."
+  ]
+}

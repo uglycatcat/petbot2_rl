@@ -1,5 +1,6 @@
 """Truth-only diagnostics. These values never enter the actor or estimator."""
 import numpy as np
+from .front_motion import FrontMotion
 
 WHEELS=('left_front_wheel','right_front_wheel','left_rear_wheel','right_rear_wheel')
 
@@ -25,9 +26,12 @@ def terrain_clearance(points,edges,edge,height,length,half_width):
 
 class Monitor:
     def __init__(self,metadata,edge):
-        self.task=metadata['task'];self.edge=edge;self.reset()
+        self.task=metadata['task'];self.edge=edge
+        self.single_lift=metadata['training'].get('reward_version') in ('clean_v17','pitch_v18')
+        self.front_motion=FrontMotion();self.reset()
 
     def reset(self):
+        self.front_motion.reset()
         self.lifted=np.zeros(2,bool);self.cleared=np.zeros(2,bool);self.landed=np.zeros(2,bool)
         self.contact_age=np.ones(4);self.supported=np.zeros(4,bool);self.rear_air=np.zeros(2)
         self.failure=0;self.phase=0;self.drive_start=None;self.gap=0.;self.stop_time=0.;self.completed=False
@@ -41,6 +45,7 @@ class Monitor:
         bad=((np.linalg.norm(platform_force[:2,:2],axis=-1)>.01)&(minimum[:2,0]<=self.edge+.0005))
         bad|=(np.linalg.norm(platform_force[:2],axis=-1)>.02)&(contact_x[:2]<=self.edge+.0005)
         self.landed|=self.cleared&top[:2]
+        if self.single_lift:self.front_motion.update(minimum[:2],forces[:2],platform_force[:2],self.edge,h,dt)
         self.contact_age=np.where(top,0.,self.contact_age+dt)
         self.supported=(self.contact_age<=.02+1e-12)&(minimum[:,2]>=h-.002)&(minimum[:,2]<=h+.004)&(minimum[:,0]>self.edge+.0005)
         rear=(clearance>.004)&(np.linalg.norm(forces[2:],axis=-1)<.02)
@@ -49,6 +54,7 @@ class Monitor:
         if (self.rear_air>.02).any():code=2
         if up_z<.4 or body_hit:code=3
         if com[0]<-.05 or abs(com[1])>.15:code=4
+        if not code and self.single_lift and self.front_motion.invalid:code=5
         if not self.failure:self.failure=code
         self.peak_wheel_speed=max(self.peak_wheel_speed,float(np.max(np.abs(wheel_speed))))
         self.peak_contact=max(self.peak_contact,float(np.linalg.norm(forces,axis=-1).max()))
@@ -58,6 +64,7 @@ class Monitor:
         aligned=abs(com[1])<=a['line_tolerance_m'] and abs(yaw)<=a['heading_tolerance_rad']
         pose=bool(self.landed.all() and aligned and np.max(np.abs(hips))<=a['hip_tolerance_rad'] and not self.failure)
         ready=bool(self.supported.all() and pose)
+        if self.single_lift:ready=ready and self.front_motion.complete
         near=bool(((minimum[:,2]>=t['height_m']-.003)&(minimum[:,2]<=t['height_m']+.004)
               &(minimum[:,0]>self.edge+.0005)&(maximum[:,0]<self.edge+t['platform_length_m'])
               &(np.abs(minimum[:,1])<t['platform_width_m']/2)&(np.abs(maximum[:,1])<t['platform_width_m']/2)).all())

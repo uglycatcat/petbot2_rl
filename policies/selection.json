@@ -1,7 +1,7 @@
 {
-  "default": "round14_seed71",
-  "selected_at": "2026-11-02",
-  "basis": "MuJoCo preview selection among reviewed recent candidates: round14 seed71 legally lifts/clears/lands both front wheels before a rear-support failure at1.04s; round13 seed71 front-edge failure at.82s,round13 seed70 at.50s. Round13 seed71 remains better in Isaac full-task progression. All strict MuJoCo trials fail; no claim of complete capability. Round15 not terminal/evaluated at selection time.",
+  "default": "round20_seed71",
+  "selected_at": "2026-11-03",
+  "basis": "User requested latest completed policy. Round20 seed71 is the stronger of the two reviewed final checkpoints: front land60, fourtop48, home45, required drive36, complete0 of64. This is a current-training preview, not the best MuJoCo behavior: strict MuJoCo first front-edge contact at0.56s; old round14 remains available. Round21 is still training and is not selected. No scripted braking.",
   "candidates": [
     {
       "round": 13,
@@ -30,9 +30,26 @@
       "ever_fourtop": 63,
       "required_drive": 9,
       "complete": 0
+    },
+    {
+      "round": 20,
+      "seed": 70,
+      "front_land": 21,
+      "ever_fourtop": 0,
+      "home": 0,
+      "required_drive": 0,
+      "complete": 0
+    },
+    {
+      "round": 20,
+      "seed": 71,
+      "front_land": 60,
+      "ever_fourtop": 48,
+      "home": 45,
+      "required_drive": 36,
+      "complete": 0
     }
   ],
-  "isaac_best_reference": "round13_seed71",
   "mujoco_comparison": [
     {
       "policy": "round13_seed71",
@@ -49,6 +66,15 @@
       "first_failure": "rear_support_lost",
       "time": 1.04,
       "front_lift_clear_land": true
+    },
+    {
+      "policy": "round20_seed71",
+      "first_failure": "front_edge_contact",
+      "time": 0.56,
+      "front_lift_clear_land": false
     }
-  ]
+  ],
+  "previous_default": "round14_seed71",
+  "historical_isaac_reference": "round13_seed71",
+  "comparison_limit": "Rounds17+ add single-flight constraint; old and new full-task scores are not directly comparable."
 }

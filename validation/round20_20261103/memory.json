@@ -1,0 +1,25 @@
+{
+  "synthetic_memory_steps": 400,
+  "memory_maxabs": 0.0,
+  "reset_and_all_memory_states": true,
+  "action_mapping_cases": 3012,
+  "action_mapping_maxabs": 9.5367431640625e-07,
+  "recorded_memory_steps": 10304,
+  "recorded_memory_maxabs": 5.960464477539063e-08,
+  "recorded_memory_states": [
+    [
+      0.0,
+      0.0
+    ],
+    [
+      1.0,
+      0.0
+    ],
+    [
+      1.0,
+      1.0
+    ]
+  ],
+  "physical_flight_steps": 103040,
+  "flight_count_and_flags_exact": true
+}

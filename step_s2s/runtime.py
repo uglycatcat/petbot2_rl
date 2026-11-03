@@ -6,6 +6,7 @@ import numpy as np
 import onnxruntime as ort
 from .control import Controller
 from .estimator import Estimator
+from .stop_memory import SensorStopMemory
 from .monitor import Monitor,WHEELS,terrain_clearance
 from .scene import load_scene
 
@@ -20,7 +21,11 @@ class Preview:
         if hashlib.sha256((policy/'policy.onnx').read_bytes()).hexdigest()!=m['onnx_sha256']:raise ValueError('ONNX hash mismatch')
         options=ort.SessionOptions();options.intra_op_num_threads=1;options.inter_op_num_threads=1
         self.session=ort.InferenceSession(str(policy/'policy.onnx'),sess_options=options,providers=['CPUExecutionProvider'])
-        if self.session.get_inputs()[0].shape[-1]!=26:raise ValueError('Expected 26-dimensional Step observation')
+        memory=m['training'].get('task_memory','none')
+        if memory not in ('none','sensor_stop_v16'):raise ValueError('Unknown policy task memory')
+        self.sensor_stop_enabled=memory=='sensor_stop_v16';self.observation_dim=29 if self.sensor_stop_enabled else 26
+        if m['observation_dim']!=self.observation_dim or self.session.get_inputs()[0].shape[-1]!=self.observation_dim:
+            raise ValueError('Policy observation contract mismatch')
         self.model,self.edge=load_scene(model_dir or PROJECT.parents[1]/'robot_description',m);self.data=mujoco.MjData(self.model)
         self.dt=float(self.model.opt.timestep);self.decimation=round(m['policy_dt']/self.dt)
         if abs(self.dt-m['physics_dt'])>1e-12 or abs(self.decimation*self.dt-m['policy_dt'])>1e-12:raise ValueError('Control timing mismatch')
@@ -35,13 +40,14 @@ class Preview:
         self.edges=[np.asarray(m['asset']['rear_edges'][n],int) for n in WHEELS[2:]]
         self.jac=np.zeros((3,self.model.nv));self.bodyvel=np.zeros(6)
         self.estimator=Estimator(m['asset']['source_bodies'],self.names);self.controller=Controller(m['training']);self.monitor=Monitor(m,self.edge)
+        a=m['task']['acceptance'];self.sensor_stop=SensorStopMemory(a['post_climb_distance_m'],a['hip_tolerance_rad'])
         self.continue_on_failure=continue_on_failure;self.reset()
 
     def reset(self):
         mujoco.mj_resetData(self.model,self.data);mujoco.mj_forward(self.model,self.data)
-        self.estimator.reset();self.controller.reset();self.monitor.reset()
+        self.estimator.reset();self.controller.reset();self.monitor.reset();self.sensor_stop.reset()
         self.packet=np.array([.02,.30,np.pi/2],np.float32);self.packet_count=0;self.policy_calls=0;self.state='IDLE'
-        self.substeps=0;self.last_observation=np.zeros(26,np.float32);self.failure_snapshot=None
+        self.substeps=0;self.last_observation=np.zeros(self.observation_dim,np.float32);self.failure_snapshot=None
         self.origin=np.asarray(self.metadata['asset']['initial_com']);self._geometry()
 
     def start(self):
@@ -95,6 +101,7 @@ class Preview:
         if self.state!='RUNNING':return self.snapshot()
         q,v=self.joints();gyro=self.data.sensor('imu_gyro').data.astype(np.float32).copy()
         self.last_observation=self.estimator.observation(self.packet,q,v,gyro,self.controller.executed)
+        if self.sensor_stop_enabled:self.last_observation=np.concatenate((self.last_observation,self.sensor_stop.observation()))
         action=self.session.run(['action'],{'observation':self.last_observation[None]})[0][0]
         self.controller.request(action);self.policy_calls+=1
         for _ in range(self.decimation):
@@ -108,6 +115,9 @@ class Preview:
         rotation=self.data.xmat[self.lower].reshape(3,3);yaw=np.arctan2(rotation[1,0],rotation[0,0])
         mujoco.mj_objectVelocity(self.model,self.data,mujoco.mjtObj.mjOBJ_BODY,self.lower,self.bodyvel,0)
         self.monitor.control_step(self.minimum,self.maximum,self.com,self.velocity,yaw,self.bodyvel[2],q[self.hips],self.metadata['policy_dt'])
+        if self.sensor_stop_enabled:
+            rear=self.estimator.position+self.estimator.previous_rear_offset-self.estimator.initial_offset
+            self.sensor_stop.update(self.packet,self.estimator.com_position,rear,q[self.hips],self.metadata['policy_dt'])
         if self.monitor.failure and not self.continue_on_failure:self.state='FAILED'
         elif self.monitor.completed:self.state='COMPLETE'
         elif self.data.time+1e-8>=self.metadata['task']['acceptance']['timeout_s']:self.state='TIMEOUT'
@@ -123,4 +133,8 @@ class Preview:
             front_lifted=mo.lifted.tolist(),front_cleared=mo.cleared.tolist(),front_landed=mo.landed.tolist(),
             supported_top=mo.supported.tolist(),rear_clearance=self.clearance.tolist(),rear_air=mo.rear_air.tolist(),
             ever_fourtop=mo.ever_fourtop,ever_home=mo.ever_home,ever_drive=mo.ever_drive,
+            sensor_stop_memory=self.sensor_stop.observation().tolist() if self.sensor_stop_enabled else [],
+            front_liftoff_count=mo.front_motion.count.tolist() if mo.single_lift else [],
+            front_motion_invalid=mo.front_motion.invalid if mo.single_lift else False,
+            body_pitch=float(np.arctan2(-self.data.xmat[self.lower].reshape(3,3)[2,0],np.hypot(*self.data.xmat[self.lower].reshape(3,3)[2,1:]))),
             max_actual_wheel_speed=mo.peak_wheel_speed,peak_contact_force=mo.peak_contact)

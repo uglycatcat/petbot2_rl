@@ -1,0 +1,7 @@
+{
+  "policy": "round14_seed71",
+  "frames_compared": 300,
+  "old_frames": 300,
+  "new_frames": 300,
+  "existing_fields_exact": true
+}
