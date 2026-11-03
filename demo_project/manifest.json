@@ -44,19 +44,20 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "5f5c7fcc49443bfc1ea1b3d9b47f724bfd3350ea",
+      "verified_commit": "bce7793e74a4dbe8876bc3a75304c96302a320b3",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round27_engineering_pending_round26_reviewed",
-      "local_validation": "Round26 valid2x1000/14eval,no missing/OOM/recovery;courses0.6/0.75,wide19/29of32,9RISE14BALANCEfailures;seed102fullspeed+.412/-.465,zeroland4.6/16.6cm. No consistent upgrade. Round27 only disable action center,retain LAND memory;149CPU,GPUgate pending,no formal launch. Desktop20+618081e unchanged,no policy/sim2sim acceptance.",
+      "status": "restart_round27_running_gpu2_gpu3_random_original_drive_landing_window",
+      "local_validation": "Round26 valid2x1000/14eval,noOOM/recovery;courses.6/.75,wide19/29of32,9RISE14BALANCEfailures,no consistent upgrade. Round27 only disable action center;149CPU,4to8same-run/reload,default2048x2;reference native/landing physics+actions+reward+scoring exact;default steady 22/32 development,9043 target frames verified. Targets/efforts valid,overspeed/failures retained,noOOM/runtimefailures. FreshGPU2/3actualPPO verified;no policy/sim2sim acceptance,desktop20+618081e unchanged.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round27_gate01@gpu2_gpu3"
+        "upright_restart_round27_s101@gpu2",
+        "upright_restart_round27_s102@gpu3"
       ],
-      "active_training_commit": null,
+      "active_training_commit": "bce7793e74a4dbe8876bc3a75304c96302a320b3",
       "pending_design_review": null,
       "latest_result_document": "docs/upright_restart_round26_results.md",
       "active_execution_document": "docs/upright_restart_round27_execution.md"
