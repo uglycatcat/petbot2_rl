@@ -1,0 +1,27 @@
+{
+  "status": "rollback_verified_runtime_passed_behavior_not_complete",
+  "policy_id": "step_round14_20261102_seed71_u500",
+  "onnx_sha256": "5764f94c587b5accb02478263ded4c588f83a76290b6f1d244006f2cae7dac1f",
+  "source_training_commit": "30fd5886271f7d70ed23a923647f824feb7c1f5f",
+  "reason": "User requested round14 rollback and training pause",
+  "policy_bytes_changed": false,
+  "runtime_code_changed": false,
+  "display_worker_changed": false,
+  "runtime_validation": "runtime.json",
+  "repeat_frames": 52,
+  "repeat_maxabs": 0.0,
+  "prior_unchanged_runtime_legacy_comparison": "legacy_before_selection.json",
+  "legacy_frames_exact": 300,
+  "source_model_sha256": "de1862d58f9989ae7eb0de5b20188e2ffc7052d2b9d5588446eef4b166b5f53f",
+  "first_failure": {
+    "code": 2,
+    "time": 1.0400000000000007
+  },
+  "complete": false,
+  "training_paused": true,
+  "remaining_requirements": [
+    "stop after required drive",
+    "single front-wheel flight",
+    "world lower_body pitch smoothness"
+  ]
+}

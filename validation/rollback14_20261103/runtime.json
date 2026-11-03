@@ -1,0 +1,227 @@
+{
+  "status": "passed",
+  "physics_arrays_exact": [
+    "body_mass",
+    "body_inertia",
+    "body_ipos",
+    "body_iquat",
+    "body_pos",
+    "body_quat",
+    "jnt_type",
+    "jnt_pos",
+    "jnt_axis",
+    "jnt_range",
+    "dof_damping",
+    "dof_armature",
+    "dof_frictionloss",
+    "actuator_ctrlrange",
+    "actuator_forcerange",
+    "actuator_gainprm",
+    "actuator_biasprm",
+    "actuator_gear"
+  ],
+  "robot_geometry_arrays_exact": true,
+  "source_fingerprint": "de1862d58f9989ae7eb0de5b20188e2ffc7052d2b9d5588446eef4b166b5f53f",
+  "idle_no_inference_or_motion": true,
+  "space_only_starts_once": true,
+  "reset_clears_estimator_targets_monitor_and_packet": true,
+  "repeat_frames": 52,
+  "repeated_rollout_maxabs": 0.0,
+  "runtime_does_not_import_torch": true,
+  "engine": "3.8.1",
+  "policy_id": "step_round14_20261102_seed71_u500",
+  "outcomes": [
+    {
+      "state": "FAILED",
+      "time": 1.0400000000000007,
+      "phase": 1,
+      "failure": 2,
+      "completed": false,
+      "policy_calls": 52,
+      "packet_count": 1,
+      "com": [
+        0.3977263024413833,
+        0.012757066307142583,
+        0.023286595323683074
+      ],
+      "velocity": [
+        0.379312819271765,
+        -0.0015877620712067958,
+        -0.1818493852579534
+      ],
+      "estimated_com": [
+        0.34566664695739746,
+        0.009494468569755554,
+        0.011399968527257442
+      ],
+      "estimated_velocity": [
+        0.4377777874469757,
+        -0.015230696648359299,
+        -0.3221961557865143
+      ],
+      "action": [
+        -0.059221863746643066,
+        0.8418318033218384
+      ],
+      "executed": [
+        -0.059221863746643066,
+        0.8418318033218384
+      ],
+      "hip_target": -0.059221863746643066,
+      "wheel_target": 23.022897720336914,
+      "joint_position": [
+        0.001312551903538406,
+        -0.14352397620677948,
+        -0.1437055915594101,
+        -0.003113930579274893,
+        -0.0025676898658275604,
+        4.252333641052246,
+        11.975554466247559,
+        4.000203609466553,
+        11.980423927307129
+      ],
+      "joint_velocity": [
+        -0.005263515282422304,
+        2.7269322872161865,
+        2.4707140922546387,
+        0.022532477974891663,
+        0.020190922543406487,
+        1.1089482307434082,
+        10.223653793334961,
+        1.149812936782837,
+        25.42145347595215
+      ],
+      "front_lifted": [
+        true,
+        true
+      ],
+      "front_cleared": [
+        true,
+        true
+      ],
+      "front_landed": [
+        true,
+        true
+      ],
+      "supported_top": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "rear_clearance": [
+        0.004837172276733011,
+        0.004155584798245105
+      ],
+      "rear_air": [
+        0.03600000000000002,
+        0.03800000000000002
+      ],
+      "ever_fourtop": false,
+      "ever_home": false,
+      "ever_drive": false,
+      "sensor_stop_memory": [],
+      "front_liftoff_count": [],
+      "front_motion_invalid": false,
+      "body_pitch": 0.12819115891711952,
+      "max_actual_wheel_speed": 29.926753997802734,
+      "peak_contact_force": 46.51263708584627
+    },
+    {
+      "state": "FAILED",
+      "time": 1.0400000000000007,
+      "phase": 1,
+      "failure": 2,
+      "completed": false,
+      "policy_calls": 52,
+      "packet_count": 1,
+      "com": [
+        0.3977263024413833,
+        0.012757066307142583,
+        0.023286595323683074
+      ],
+      "velocity": [
+        0.379312819271765,
+        -0.0015877620712067958,
+        -0.1818493852579534
+      ],
+      "estimated_com": [
+        0.34566664695739746,
+        0.009494468569755554,
+        0.011399968527257442
+      ],
+      "estimated_velocity": [
+        0.4377777874469757,
+        -0.015230696648359299,
+        -0.3221961557865143
+      ],
+      "action": [
+        -0.059221863746643066,
+        0.8418318033218384
+      ],
+      "executed": [
+        -0.059221863746643066,
+        0.8418318033218384
+      ],
+      "hip_target": -0.059221863746643066,
+      "wheel_target": 23.022897720336914,
+      "joint_position": [
+        0.001312551903538406,
+        -0.14352397620677948,
+        -0.1437055915594101,
+        -0.003113930579274893,
+        -0.0025676898658275604,
+        4.252333641052246,
+        11.975554466247559,
+        4.000203609466553,
+        11.980423927307129
+      ],
+      "joint_velocity": [
+        -0.005263515282422304,
+        2.7269322872161865,
+        2.4707140922546387,
+        0.022532477974891663,
+        0.020190922543406487,
+        1.1089482307434082,
+        10.223653793334961,
+        1.149812936782837,
+        25.42145347595215
+      ],
+      "front_lifted": [
+        true,
+        true
+      ],
+      "front_cleared": [
+        true,
+        true
+      ],
+      "front_landed": [
+        true,
+        true
+      ],
+      "supported_top": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "rear_clearance": [
+        0.004837172276733011,
+        0.004155584798245105
+      ],
+      "rear_air": [
+        0.03600000000000002,
+        0.03800000000000002
+      ],
+      "ever_fourtop": false,
+      "ever_home": false,
+      "ever_drive": false,
+      "sensor_stop_memory": [],
+      "front_liftoff_count": [],
+      "front_motion_invalid": false,
+      "body_pitch": 0.12819115891711952,
+      "max_actual_wheel_speed": 29.926753997802734,
+      "peak_contact_force": 46.51263708584627
+    }
+  ]
+}
