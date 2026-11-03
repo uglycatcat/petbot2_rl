@@ -27,8 +27,6 @@ class EvaluationSample:
     body_collision_or_fall: bool
     deliberate_reverse: bool  # target violation, separate from measured rollback
     near_top_during_contact_gap: bool = False  # bounded geometry envelope, not verified support
-    front_motion_valid: bool = True  # single confirmed flight and top landing when enabled
-    front_motion_invalid: bool = False  # ground return or second flight
 
 
 class Stage(str, Enum):
@@ -69,7 +67,6 @@ class CompletionTracker:
             (s.rear_support_lost, "rear_support_lost"),
             (s.body_collision_or_fall, "body_collision_or_fall"),
             (s.deliberate_reverse, "deliberate_reverse"),
-            (s.front_motion_invalid, "front_motion_invalid"),
             (self.elapsed_s + 1e-9 >= self.config.timeout_s, "timeout"),
         ):
             if failure:
@@ -79,7 +76,7 @@ class CompletionTracker:
         heading_error = math.atan2(math.sin(s.heading_rad), math.cos(s.heading_rad))
         aligned = (abs(s.lateral_m) <= self.config.line_tolerance_m
                    and abs(heading_error) <= self.config.heading_tolerance_rad)
-        pose_valid = s.front_motion_valid and all(self.front_clearance) and aligned and max(abs(x) for x in s.hip_error_rad) <= self.config.hip_tolerance_rad
+        pose_valid = all(self.front_clearance) and aligned and max(abs(x) for x in s.hip_error_rad) <= self.config.hip_tolerance_rad
         ready = s.four_wheels_on_top and pose_valid
         self.support_gap_s = 0. if ready else self.support_gap_s+s.dt_s
         if not ready:

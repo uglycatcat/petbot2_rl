@@ -26,38 +26,12 @@ def code_digest():
 def load_training(path):
     defaults=json.loads((PROJECT_ROOT/'configs/train_v1.json').read_text())
     t=json.loads(Path(path).read_text())
-    optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling','critic_observation','task_memory','wheel_mapping','body_pitch_curriculum','observation_normalization','post_drive_stop_cost'}
+    optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling','critic_observation'}
     if set(t)-optional!=set(defaults) or t['schema']!='petbot_step_ppo_v1': raise ValueError('Unknown training schema/fields')
-    if t.get('task_memory','none') not in ('none','sensor_stop_v16'):
-        raise ValueError('Unknown deployable task memory')
-    if t.get('observation_normalization','empirical') not in ('empirical','sensor_memory_unit_v20'):
-        raise ValueError('Unknown observation normalization')
-    if t.get('observation_normalization') == 'sensor_memory_unit_v20' and (
-            t.get('task_memory') != 'sensor_stop_v16' or t.get('critic_observation','policy') != 'policy'):
-        raise ValueError('Unit memory normalization requires 29 policy-only sensor-memory inputs')
-    if t.get('wheel_mapping','affine') not in ('affine','zero_centered','zero_margin'):
-        raise ValueError('Unknown wheel action mapping')
-    if t.get('reward_version') == 'stop_v16' and (t.get('task_memory') != 'sensor_stop_v16' or t.get('wheel_mapping') != 'zero_centered'):
-        raise ValueError('stop_v16 requires the sensor-memory and zero-centered action contract')
-    if t.get('reward_version') in ('clean_v17','pitch_v18') and (t.get('task_memory') != 'sensor_stop_v16' or t.get('wheel_mapping') != 'zero_margin'):
-        raise ValueError('Single-flight tasks require sensor memory and the narrow zero-speed margin')
-    if 'post_drive_stop_cost' in t and (t['post_drive_stop_cost'] != 'command_motion_v21'
-            or t.get('reward_version') != 'pitch_v18'
-            or t.get('task_memory') != 'sensor_stop_v16' or t.get('wheel_mapping') != 'zero_margin'):
-        raise ValueError('Post-drive stop cost requires the complete sensor-memory pitch task')
     if t.get('policy_distribution','gaussian') not in ('gaussian','beta'):raise ValueError('Unknown policy distribution')
     if t.get('critic_observation', 'policy') not in ('policy', 'reward_state_v11'):
         raise ValueError('Unknown critic observation')
     if t.get('learning_rate_schedule','adaptive') not in ('adaptive','fixed'):raise ValueError('Unknown learning rate schedule')
-    if 'body_pitch_curriculum' in t:
-        s=t['body_pitch_curriculum']
-        if (t.get('reward_version')!='pitch_v18' or not isinstance(s,dict)
-                or set(s)!={'start_update','end_update','initial_scale'}
-                or type(s['start_update']) is not int or type(s['end_update']) is not int
-                or not 0<=s['start_update']<s['end_update']<t['iterations']
-                or type(s['initial_scale']) not in (int,float) or not math.isfinite(s['initial_scale'])
-                or not 0<s['initial_scale']<=1):
-            raise ValueError('Invalid body pitch curriculum')
     if 'beta_std_ceiling' in t:
         s=t['beta_std_ceiling']
         if (t.get('policy_distribution')!='beta' or not isinstance(s,dict)
@@ -70,9 +44,9 @@ def load_training(path):
         if 'wheel_final_std' in s and (not isinstance(s['wheel_final_std'],(int,float))
                 or not .005<=s['wheel_final_std']<=.577):
             raise ValueError('Invalid wheel variance ceiling')
-    if t.get('reward_version','legacy') not in ('legacy','edge_v3','progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17','pitch_v18'):raise ValueError('Unknown reward version')
+    if t.get('reward_version','legacy') not in ('legacy','edge_v3','progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13'):raise ValueError('Unknown reward version')
     if not 0<t.get('discount_gamma',.99)<=1:raise ValueError('Invalid discount gamma')
-    if t.get('reward_version') in ('progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','home_v15','stop_v16','clean_v17','pitch_v18') and t.get('discount_gamma')!=1.:
+    if t.get('reward_version') in ('progress_v4','stage_v5','settle_v6','touch_v8','brake_v10','brake_v13') and t.get('discount_gamma')!=1.:
         raise ValueError('Progress rewards require undiscounted finite-episode returns')
     if t['initialization']!='random' or t['pretrained_models']: raise ValueError('Only random initialization is allowed')
     for name in ('num_envs','iterations','save_interval','decimation','num_steps_per_env','num_learning_epochs','num_mini_batches'):
@@ -92,7 +66,7 @@ def main(argv):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command',choices=('train','evaluate'))
     parser.add_argument('--config',type=Path,default=DEFAULT_CONFIG)
-    parser.add_argument('--training-config',type=Path,default=PROJECT_ROOT/'configs/round21_seed70.json')
+    parser.add_argument('--training-config',type=Path,default=PROJECT_ROOT/'configs/round14_seed70.json')
     parser.add_argument('--model-dir',type=Path)
     parser.add_argument('--asset-dir',type=Path,default=PROJECT_ROOT/'artifacts/robot')
     parser.add_argument('--run-dir',type=Path,required=True)
@@ -140,7 +114,6 @@ def main(argv):
         from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper
         from .isaac_env import StepEnv
         from .critic_state import CRITIC_STATE_FIELDS
-        from .stop_memory import MEMORY_FIELDS
         actual=t.copy()
         if args.command=='evaluate': actual['num_envs']=args.eval_envs
         env=StepEnv(task,actual,args.asset_dir,args.device)
@@ -154,11 +127,7 @@ def main(argv):
         runner=StepRunner(wrapped,runner_config(t),origin,str(run) if args.command=='train' else None,args.device)
         write_json(output/'layout.json',dict(joints=env.robot.joint_names,hips=env.hips,rear_wheels=env.wheels,
             trace_ids=env.trace_ids,step_dt=env.step_dt,source_code_sha256=origin['code_sha256'],
-            actor_observation_dim=env.cfg.observation_space,
-            critic_observation_dim=env.cfg.observation_space+(len(CRITIC_STATE_FIELDS) if env.reward_state_critic else 0),
-            wheel_mapping=env.wheel_mapping,task_memory=t.get('task_memory','none'),
-            observation_normalization=t.get('observation_normalization','empirical'),
-            policy_extra_fields=list(MEMORY_FIELDS) if env.sensor_stop_enabled else [],
+            actor_observation_dim=26, critic_observation_dim=48 if env.reward_state_critic else 26,
             critic_extra_fields=list(CRITIC_STATE_FIELDS) if env.reward_state_critic else []))
         write_json(output/'runtime.json',{name:importlib.metadata.version(name) for name in ('torch','rsl-rl-lib','numpy')})
         if args.resume or args.command=='evaluate':
@@ -173,8 +142,7 @@ def main(argv):
             torch.save(initial,run/'initial.pt')
             write_json(run/'initialization.json',dict(initialization='random',pretrained_models=[],
                 actor_sha256=state_digest(initial['actor_state_dict']),
-                critic_sha256=state_digest(initial['critic_state_dict']),optimizer_states=0,frozen_parameters=0,
-                body_pitch_cost_scale=env.body_pitch_cost_scale))
+                critic_sha256=state_digest(initial['critic_state_dict']),optimizer_states=0,frozen_parameters=0))
         if args.command=='train':
             remaining=t['iterations']-runner.current_learning_iteration
             if remaining<=0: raise ValueError('This run has exhausted its update budget')

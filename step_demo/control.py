@@ -15,7 +15,7 @@ class ActuatorTargets:
 
 
 def map_action(action: tuple[float, float], limits: ModelLimits,
-               control: ControlConfig, wheel_mapping: str = 'affine') -> ActuatorTargets:
+               control: ControlConfig) -> ActuatorTargets:
     """hip [-1, 0, 1] -> [min, default, max]; wheel [-1, 1] -> [0, max].
 
     This maps targets only. It does not implement a position servo, smoothing,
@@ -29,13 +29,6 @@ def map_action(action: tuple[float, float], limits: ModelLimits,
         raise ValueError("Default hip target outside source limits")
     target = home + hip * ((limits.hip_max_rad - home) if hip >= 0
                            else (home - limits.hip_min_rad))
-    if wheel_mapping == 'affine':
-        speed = (wheel + 1) * .5 * limits.rear_speed_max_rad_s
-    elif wheel_mapping == 'zero_centered':
-        speed = max(0., wheel) * limits.rear_speed_max_rad_s
-    elif wheel_mapping == 'zero_margin':
-        speed = min(1., max(0., (wheel+.9)/1.9))*limits.rear_speed_max_rad_s
-    else:
-        raise ValueError('Unknown wheel action mapping')
+    speed = (wheel + 1) * .5 * limits.rear_speed_max_rad_s
     return ActuatorTargets((target, target), (speed, speed),
                            (control.head_rad, control.left_ear_rad, control.right_ear_rad))
