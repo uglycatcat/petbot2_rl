@@ -1,16 +1,12 @@
-# 旧实现封存
+# 历史源码与产物
 
-用户于2026-10-30要求：保留已确认需求，停止沿用继承式训练之后的实现，重新整理工程。为避免再混入历史算法，本次将整个旧源码树封存，未挑选任何早期或后期代码作为新训练基础。
+重启前完整Git源码分支为`archive/upright_rl_demo_pre_rebuild_20261030`，固定b357dd720ae5cc42e0c630476a0df007fe7dbc3e；保留原提交历史。重建工作目录快照仍在`../runs/_upright_reorganization_20261030/checkout_before_rebuild/`，180份原跟踪文件SHA一致，含生成物和未跟踪文件。
 
-- 完整Git归档分支：`archive/upright_rl_demo_pre_rebuild_20261030`，已推送同一远端。
-- 固定源码：`b357dd720ae5cc42e0c630476a0df007fe7dbc3e`。分支保留此前完整提交历史。
-- 本地完整工作目录快照：`../runs/_upright_reorganization_20261030/checkout_before_rebuild/`；180份原跟踪文件的SHA256逐项一致，生成资产和未跟踪本地产物一并保留，见同目录的`archive_manifest.json`。
-- 全部固定实验副本、日志、检查点及原始轨迹保留在`../runs/`原位置，未改动运行代码。
-- 第26批为用户取消，两个训练退出143，非显存/运行故障；模型保存至各自`model_400.pt`，未完成1000更新，不得自动恢复或伪称完整终局。取消证据在`../runs/_upright_cycle_batch26/cancellation.json`。
+2026-11-03已将旧系列文档和运行记录移到服务器仓库的`history/upright/`，不进Git；按原路径加该前缀查找。例如旧第26批取消证据为`history/upright/demo_project/runs/_upright_cycle_batch26/cancellation.json`。该批未完成1000更新，不恢复。完整映射和原文快照见[归档说明](../../docs/upright_history.md)。
 
-后续澄清：封存并不等于全部代码无效。早期任务、模型接口、训练与评估源码可在核查依赖和有效性后复用；禁止历史权重初始化或冻结父网络依赖，旧成功率不直接成为新从零结果。环境配置、奖励和课程应核对适用性，不按批次编号盲目恢复。已有MuJoCo包保留原样，只记录用户曾认可的体验；不能加载进新训练，也不能把它的成功率记到新工程。
+2026-10-30后的新系列1—20及后续仍在原位置；原21—26无效、27取消，代码归档分支为`archive/upright_restart_through_round27_20261103`。当前执行以[交接](../../docs/current_handoff.md)为准。
 
-查看历史文件使用Git对象读取或独立历史目录，不切换当前重建工作区来恢复旧训练。例如：
+历史源码可在核查依赖与有效性后参考；历史权重、冻结父网络和教师不得作为新PPO初始化。查看旧源码用Git对象或独立目录，不切换当前工作区恢复废弃训练：
 
 ```bash
 git show archive/upright_rl_demo_pre_rebuild_20261030:README.md

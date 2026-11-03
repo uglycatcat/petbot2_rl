@@ -1,6 +1,6 @@
 # 当前模块职责
 
-新第1轮训练代码已实现，正在等待用户核对。CPU检查不能证明仿真或策略有效。
+以下为当前模块职责。执行状态见主仓库[当前交接](../../../docs/current_handoff.md)；CPU检查不能证明仿真或策略有效。
 
 | 模块 | 职责 |
 |---|---|
@@ -13,6 +13,6 @@
 | `experiment.py` | 固定身份、重复运行防护、暂停与同次恢复边界 |
 | `evaluation.py` / `export.py` | 首回合轨迹与结果、单网络ONNX及接口manifest |
 
-公开入口只有一个训练`train.py`，以及专用`evaluate.py`、`export_policy.py`与资产准备模块。它们不扫描历史runs或自动加载旧模型。源模型与固定历史实验只读，C58运行器不改动。
+公开入口只有一个训练`train.py`，以及专用`evaluate.py`、`export_policy.py`与资产准备模块。它们不扫描历史runs或自动加载旧模型。源模型与固定实验副本只读，新训练不依赖历史权重。
 
-[实现参数与待验收事项](round01_implementation.md)是本次核对入口；[源码取用](source_provenance.md)说明实际保留和剥离的历史部分。
+当前修订见[21r1设计](round21r1.md)；[第1轮实现](round01_implementation.md)仅作起点记录；[源码取用](source_provenance.md)说明实际保留和剥离的历史部分。
