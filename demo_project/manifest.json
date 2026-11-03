@@ -44,23 +44,20 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "bce7793e74a4dbe8876bc3a75304c96302a320b3",
+      "verified_commit": "55558555e11fe200f6542e7bc5eb8509bd19ccc2",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round27_running_gpu2_gpu3_random_original_drive_landing_window",
-      "local_validation": "Round26 valid2x1000/14eval,noOOM/recovery;courses.6/.75,wide19/29of32,9RISE14BALANCEfailures,no consistent upgrade. Round27 only disable action center;149CPU,4to8same-run/reload,default2048x2;reference native/landing physics+actions+reward+scoring exact;default steady 22/32 development,9043 target frames verified. Targets/efforts valid,overspeed/failures retained,noOOM/runtimefailures. FreshGPU2/3actualPPO verified;no policy/sim2sim acceptance,desktop20+618081e unchanged.",
+      "status": "round20_restored_landing_stop_diagnosis_round27_cancelled_by_user",
+      "local_validation": "Round27 user-cancelled at725each,exit143,noOOM/runtimefail,all jobs/watcher exited,no resume. Round20 behavior21files byte-exact,113containerCPU pass;GPU2fixed reload32/32 and trace byte-identical.20fixed MuJoCo intervention cases complete with source limits;removing delayed handoff+blend cuts reverse but retains.23-2.02cm total slide,not requirement pass. No new PPO,21-27archived bce7793,sim2sim unchanged.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [
-        "upright_restart_round27_s101@gpu2",
-        "upright_restart_round27_s102@gpu3"
-      ],
-      "active_training_commit": "bce7793e74a4dbe8876bc3a75304c96302a320b3",
-      "pending_design_review": null,
+      "active_tasks": [],
+      "active_training_commit": null,
+      "pending_design_review": "docs/upright_round20_rollback_landing.md",
       "latest_result_document": "docs/upright_restart_round26_results.md",
-      "active_execution_document": "docs/upright_restart_round27_execution.md"
+      "active_execution_document": "docs/upright_round20_rollback_landing.md"
     },
     {
       "name": "step_rl_demo",

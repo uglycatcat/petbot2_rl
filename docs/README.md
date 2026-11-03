@@ -63,3 +63,5 @@
 - [v25能力训练与第23批](upright_cycle_v25.md)：最少调整接管、双向满速、镜像与可恢复课程；正式每份1000更新。
 
 - [upright新第26轮ONNX体验预览](upright_restart26_sim2sim.md)：用户请求同步、控制/时序对齐、MuJoCo残余落地与零输入漂移、第20轮切换。
+
+- [upright恢复第20轮与停车归因](upright_round20_rollback_landing.md)：第27轮取消、源码/原生轨迹恢复、固定策略交接对照及未解决残余。
