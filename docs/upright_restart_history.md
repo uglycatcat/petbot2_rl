@@ -31,7 +31,8 @@
 | 25 | [执行](upright_restart_round25_execution.md) | [结果](upright_restart_round25_results.md)，原始记录；已退出当前优化路线 |
 | 26 | [执行](upright_restart_round26_execution.md) | [结果](upright_restart_round26_results.md)，原始记录；已退出当前优化路线 |
 | 27 | [执行](upright_restart_round27_execution.md) | 用户取消，不恢复，无1000更新终局 |
-| 21r1 | [执行](upright_restart_round21r1_execution.md) | 从第20轮控制基础重新随机初始化；LAND成本修正，待独立验收 |
+| 21r1 | [执行](upright_restart_round21r1_execution.md) | [终局](upright_restart_round21r1_results.md)：落地局部改善但高范围退步，拒绝升级 |
+| 21r2 | [执行](upright_restart_round21r2_execution.md) | 同种子从零对照交接修正与分阶段落地质量，各1000更新，待结果 |
 
 [编号与旧21—26废弃/27取消](upright_restart_discarded_rounds_20261103.md)。这些记录和固定运行副本保留，不能重启旧队列或作为新优化来源。
 

@@ -44,22 +44,22 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "5b9ffc90ce89dccb941639977c55c9763f8bd968",
+      "verified_commit": "32585047a8b70499b6c26eeb564083739e1f63d1",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "round21r1_scratch_training_from_round20_old21to26_invalid_27_cancelled",
-      "local_validation": "120 container checks; fixed20 handoff PhysX32/32/29 of32 and18 MuJoCo cases/20 cycles complete,pre-handoff MuJoCo traces exact;reverse2.6-3.6cm remains.128env4to8 same-run recovery;2048env2updates random/reload0of32 rise timeout;initial schema preflight82 preserved,noOOM. New LAND cost only,raw model unchanged. Two fresh1000updates GPU2/3,not policy pass.",
+      "status": "round21r1_rejected_high_range_regression;round21r2_paired_scratch_training_gpu2_3;desktop_round20_retained",
+      "local_validation": "124 container checks; 2048env2updates plus reload; 128env4to8 same-run planned interruption recovery optimizer80to160, noOOM. Both short reloads0/32 rise timeout. Fixed20 engineering32/32 static,171 physical/control frames exact;460LAND samples verify quality scales0,1/6,1/2,1. Target/effort pass, actual wheel overspeed remains. Two fresh seed102 paired1000updates; no historical initialization; policy not passed.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round21r1_s101",
-        "upright_restart_round21r1_s102"
+        "upright_restart_round21r2_control",
+        "upright_restart_round21r2_quality"
       ],
-      "active_training_commit": "839fc6ce37db803d77e9f876900e13910ea093c5",
-      "latest_result_document": "docs/upright_round20_handoff_v1.md",
-      "active_execution_document": "docs/upright_restart_round21r1_execution.md",
+      "active_training_commit": "32585047a8b70499b6c26eeb564083739e1f63d1",
+      "latest_result_document": "docs/upright_restart_round21r1_results.md",
+      "active_execution_document": "docs/upright_restart_round21r2_execution.md",
       "invalidated_rounds": [
         21,
         22,

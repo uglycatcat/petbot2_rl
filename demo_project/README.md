@@ -4,7 +4,7 @@
 
 | 项目 | 职责 | 当前开发状态 |
 |---|---|---|
-| [upright_rl_demo](upright_rl_demo/README.md) | 从随机初始化完成起落与两轮遥控；不依赖历史权重。 | 新21–26作废、27取消；从认可20重开21r1，仅正常交接及LAND近地运动成本。工程有效，GPU2/3各1000从零运行；后退仍未通过，运动保留必须验证。见[执行](../docs/upright_restart_round21r1_execution.md)。 |
+| [upright_rl_demo](upright_rl_demo/README.md) | 从随机初始化完成起落与两轮遥控；不依赖历史权重。 | 21r1落地局部改善但运动保留失败；21r2经工程门槛，在GPU2/3各2048×1000从零对照交接修正与分阶段质量成本。桌面保留20，见[当前执行](../docs/upright_restart_round21r2_execution.md)。 |
 | [step_rl_demo](step_rl_demo/README.md) | 固定2cm/30cm、对称髋/轮控制；优先单次抬轮与归髋短行后停稳。 | Restart15辅助持续停车未通过；Restart16经工程门槛，在GPU0/1各512×200从零修正停车学习，辅助不迁移。见[当前迭代](../docs/step_restart16_20261103.md)。 |
 | [recovery_rl_demo](recovery_rl_demo/README.md) | 重新设计分阶段跌倒恢复。 | 仅登记与需求说明，尚无训练代码。 |
 | [recovery_agile_01](recovery_agile_01/PETBOT.md) | 基于AGILE的早期恢复原型。 | 历史实验，不能直接作为新恢复任务的设计或成功基线。 |
@@ -23,4 +23,4 @@
 - 训练仅在专用容器内，源模型只读。正式发批前完成任务契约、GPU资源和检查点重载验收；按多批次迭代，批次划分、每批训练数量、时长、GPU分配与计算利用率由agent按评估结果和资源情况安排，不设固定利用率目标。整卡显存守护78%，避让其他用户。
 - 用户已取消周期定时续接；既有队列是否续接按当前交接与最新用户授权处理，勿重复启动。运行状态和下一步见[当前交接](../docs/current_handoff.md)，实验细节从[文档索引](../docs/README.md)按需查阅。
 
-旧upright系列文档与运行产物已迁入服务器`history/upright/`，不进Git；重启系列1—20及后续、当前21r1和第20轮依赖均保留原路径。查旧记录见[归档说明](../docs/upright_history.md)，新系列见[历程索引](../docs/upright_restart_history.md)。
+旧upright系列文档与运行产物已迁入服务器`history/upright/`，不进Git；重启系列1—20及后续、当前21r修订和第20轮依赖均保留原路径。查旧记录见[归档说明](../docs/upright_history.md)，新系列见[历程索引](../docs/upright_restart_history.md)。

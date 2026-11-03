@@ -1,0 +1,28 @@
+{
+  "name": "upright_restart_round21r2",
+  "initialization": "random",
+  "historical_models": [],
+  "commit": "32585047a8b70499b6c26eeb564083739e1f63d1",
+  "config": "configs/round21r2_control.json",
+  "execution_document": "docs/upright_restart_round21r2_execution.md",
+  "engineering_gate": "demo_project/runs/_round21r2_gate/acceptance.json",
+  "reserve_mib": 8000,
+  "variants": [
+    {
+      "name": "upright_restart_round21r2_control",
+      "gpu": 2,
+      "seed": 102,
+      "iterations": 1000,
+      "num_envs": 2048,
+      "config": "configs/round21r2_control.json"
+    },
+    {
+      "name": "upright_restart_round21r2_quality",
+      "gpu": 3,
+      "seed": 102,
+      "iterations": 1000,
+      "num_envs": 2048,
+      "config": "configs/round21r2_quality.json"
+    }
+  ]
+}
