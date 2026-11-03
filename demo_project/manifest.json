@@ -84,7 +84,7 @@
         "demo"
       ],
       "shallow": false,
-      "status": "restart18_auxiliary_diagnostic_ready",
+      "status": "restart18_auxiliary_diagnostic_running",
       "local_validation": "125container checks;fresh untrainedactor16/16 and512env8update independent16/16 original2.5shold.4to8 same-runrestore13optimizerstates,rawGaussian PPO/storage/logprob physicalprobe passed.No entropy runaway,std bounded.No weights/data transferred.Firstprobe inference-reset failurepreserved;offlinefloat32timer fixed with unchangedphysicalacceptance.2fresh512x200aux;not full-taskpass.",
       "task": null,
       "usage": "README.md",
