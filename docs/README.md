@@ -4,7 +4,7 @@
 
 - 最新upright桌面反馈：基本流程与约0.6m/s体验获认可；允许较慢、更多调整以改善起立泛化，零输入交接后退已修复、两轮微漂仍待训练。见[反馈与修复](upright_restart20_desktop_feedback_20261102.md)。
 
-- Step桌面预览：[暂停与第14轮回退](step_rollback14_20261103.md)。默认恢复第14轮seed71，保留显示修复和Space/R；已知能登台但不停，完整目标未通过。
+- Step桌面预览：[暂停与第14轮回退](step_rollback14_20261103.md)。用户澄清训练回退不包含sim2sim，默认保留第20轮seed71供观察；桌面仍碰沿、上台后再抬头且不停，完整目标未通过。
 
 - 桌面体验：upright默认改为新第20轮seed102单ONNX，旧C58保留；见[sim2sim发布记录](upright_restart20_sim2sim.md)。
 

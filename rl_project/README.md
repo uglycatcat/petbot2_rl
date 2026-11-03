@@ -11,4 +11,4 @@
 
 任务与验证边界见 [MuJoCo 方案](../docs/upright_sim2sim_20261027.md)。
 
-Step独立项目：[std_s2s_step_project](std_s2s_step_project/README.md)按用户要求默认恢复第14轮seed71 ONNX，启动静止、Space执行、R重置及独立绘制保持。训练与自动迭代已暂停，源码/配置同时回退第14轮；已有登台能力保留，停车和动作质量仍未通过。第20/13轮策略保留，见[回退与验证](../docs/step_rollback14_20261103.md)。`std_train_step_project/`保持空，两正式项目仍由同名`rlproj/`分支管理。
+Step独立项目：[std_s2s_step_project](std_s2s_step_project/README.md)按用户最新澄清保留第20轮seed71 ONNX供观察；训练代码回退第14轮且自动迭代暂停，不连带回退sim2sim。用户桌面观察到接近时一次抬头，但碰沿、上平台又抬头且不停，不能作完整通过。启动静止、Space/R及独立绘制保持，旧第14/13轮可显式选择。见[范围澄清与反馈](../docs/step_rollback14_20261103.md)。`std_train_step_project/`保持空，两正式项目仍由同名`rlproj/`分支管理。

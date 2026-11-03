@@ -32,16 +32,16 @@
       "remote": "ours",
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "branch": "rlproj/std_s2s_step_project",
-      "verified_commit": "071c42504a8de9ed1c3e474aed758c68149fc51f",
-      "status": "User-requested round14 baseline rollback;training paused. Original ONNX and display worker retained. Can traverse but stop/quality incomplete.",
+      "verified_commit": "93247c346ce9894daaac5500bff5ac7cc3c895a0",
+      "status": "User clarified training rollback excludes sim2sim: keep round20 preview. Desktop: one approach lift,but front-edge collision,renewed platform lift and no stop. Training remains paused at round14.",
       "usage": "README.md",
-      "validation": "validation/rollback14_20261103/review.json",
+      "validation": "validation/round20_20261103/review.json",
       "inference_backend": "onnxruntime_cpu",
-      "default_policy": "round14_seed71",
+      "default_policy": "round20_seed71",
       "reference_policy": "round13_seed71",
-      "local_validation": "Original round14 ONNX hash unchanged;robot physics unchanged,idle/Space/R pass,52frame strict reset replay exact. Existing unchanged-runtime300frame legacy comparison exact. First rear support failure1.04s;not full acceptance.",
+      "local_validation": "Original round20 ONNX/runtime unchanged;29D loading and stationary start checked. Prior12355 ONNX,10304memory/targets,103040flight samples and actual Space/R evidence retained. Front-edge failure0.56s,no stop;not acceptance.",
       "display_validation": "validation/display_20261102.json",
-      "previous_policy": "round20_seed71"
+      "previous_policy": "round14_seed71"
     },
     {
       "name": "std_train_step_project",
