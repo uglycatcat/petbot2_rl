@@ -81,6 +81,7 @@ class Config:
     landing_motion_scale_m_s: float = 0.1
     landing_quality_start_course: int = 0  # 0: legacy full cost; otherwise ramp after the basic-control gate
     landing_projection_start_gap_m: float = 0.0  # 0 disables LAND-only sensor-space target projection
+    landing_ground_brake_slew_rad_s2: float = 0.0  # only speed-target braking, after full LAND projection
     balance_linear_accel_m_s2: float = 0.0  # zero disables reference slew for legacy configs
     balance_yaw_accel_rad_s2: float = 0.0
     balance_yaw_feedforward: float = 0.0
@@ -102,6 +103,11 @@ class Config:
         return len(self.motion_stages())+1
 
     def validate(self):
+        rate = self.landing_ground_brake_slew_rad_s2
+        if (type(rate) not in (int, float) or not __import__('math').isfinite(rate)
+                or (rate != 0 and (not self.landing_projection_start_gap_m
+                    or not self.wheel_slew_rad_s2 <= rate <= 1000.))):
+            raise ValueError('Ground braking requires projection and a finite slew between normal and 1000 rad/s2')
         gap = self.landing_projection_start_gap_m
         if (type(gap) not in (int, float) or not __import__('math').isfinite(gap)
                 or (gap != 0 and not self.ground_gap_m < gap <= self.support_gap_m)):

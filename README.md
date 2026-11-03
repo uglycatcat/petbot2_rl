@@ -18,7 +18,7 @@
 
 ## 配置与执行
 
-当前候选为`configs/round21r3.json`，见[21r3设计](docs/round21r3.md)。21r2落地成本课程退步，当前改为仅LAND近地轮目标区间，使用原传感几何、保留变化率与普通交接；只有工程验收后才从零发批。原配置用于固定版本追溯，不能混用权重和控制契约。
+当前候选为`configs/round21r4.json`，见[21r4设计](docs/round21r4.md)。21r3落地改善但未停稳；本次只在LAND传感近地且轮目标正在回零时允许较快减速，其他阶段、源力矩及普通交接保持。只有工程验收后才从零发批。原配置用于固定版本追溯，不能混用权重和控制契约。
 
 demo每份1000更新、2048环境，物理GPU2/3内按明确计划运行；正式交付预算可提高。训练从默认起立、静止循环逐步扩展到移动/初态课程，同一次训练内按门槛晋级并保留低难度回归。双向连续0–0.75m/s是目标，不代表已有能力；普通四轮全能力不随课程缩小。源模型只读，轮目标±25rad/s，实测超调单列。
 
@@ -37,4 +37,4 @@ demo每份1000更新、2048环境，物理GPU2/3内按明确计划运行；正�
 
 ## 文档与历史
 
-实时状态仅维护在[当前交接](../../docs/current_handoff.md)和[21r3执行](../../docs/upright_restart_round21r3_execution.md)。重启系列历程见[按需索引](../../docs/upright_restart_history.md)，旧系列文档/运行产物在服务器`history/upright/`，不进Git，见[归档说明](../../docs/upright_history.md)。新工程运行不依赖这些归档。README不再逐轮追加结果。
+实时状态仅维护在[当前交接](../../docs/current_handoff.md)和[21r4执行](../../docs/upright_restart_round21r4_execution.md)。重启系列历程见[按需索引](../../docs/upright_restart_history.md)，旧系列文档/运行产物在服务器`history/upright/`，不进Git，见[归档说明](../../docs/upright_history.md)。新工程运行不依赖这些归档。README不再逐轮追加结果。

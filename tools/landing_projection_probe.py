@@ -6,13 +6,14 @@ def main():
     parser=argparse.ArgumentParser();parser.add_argument('--reference-run',type=Path,required=True)
     parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--scenario',choices=['static','low','high'],required=True)
+    parser.add_argument('--config',default='configs/round21r3.json')
     args=parser.parse_args();assert not args.output.exists()
     from upright.config import load_config,require_execution
     from upright.model import source_fingerprint,task_implementation_fingerprint
     from upright.experiment import check_identity,atomic_json
     require_execution('engineering')
     manifest=json.loads((args.reference_run/'run.json').read_text())
-    assert manifest['run_id']=='1aabd21b-7656-465d-8253-6b0173f2ca19' and manifest['model_sha256']==source_fingerprint()
+    assert manifest['model_sha256']==source_fingerprint()
     from isaaclab.app import AppLauncher
     app=AppLauncher(headless=True,device='cuda:0').app;env=None
     try:
@@ -21,7 +22,7 @@ def main():
         from upright.task import UprightEnvCfg
         from upright.export import make_actor
         from upright.evaluation import evaluate
-        cfg=load_config('configs/round21r3.json')
+        cfg=load_config(args.config)
         saved=torch.load(args.reference_run/'checkpoints/update_001000.pt',map_location='cpu',weights_only=False)
         check_identity(saved['restart'],manifest)
         actor=make_actor(cfg);actor.load_state_dict(saved['actor_state_dict'],strict=True);actor=actor.to('cuda:0').eval()

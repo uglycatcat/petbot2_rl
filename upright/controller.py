@@ -59,6 +59,7 @@ class Controller:
         self.effective_command = self.command.clone()
         self.landing_projection_weight = z()
         self.landing_projected_common = z()
+        self.landing_ground_brake_delta = self.command.clone()
 
     def reset(self, ids):
         for key, value in vars(self).items():
@@ -214,7 +215,21 @@ class Controller:
         hip_step = torch.where(rising, self.cfg.rise_hip_slew_rad_s, self.cfg.hip_slew_rad_s)*self.dt
         wheel_step = torch.where(rising, self.cfg.rise_wheel_slew_rad_s2, self.cfg.wheel_slew_rad_s2)*self.dt
         hip = slew(self.executed[:, 0], hip, hip_step)
+        raw_wheels = wheels
         wheels = slew(self.executed[:, 1:], wheels, wheel_step[:, None])
+        self.landing_ground_brake_delta.zero_()
+        if self.cfg.landing_ground_brake_slew_rad_s2:
+            # Only unwind a wheel target toward zero, after sensor geometry
+            # has fully projected LAND. No faster acceleration/sign reversal,
+            # no early handoff, and no change to physical motor effort limits.
+            previous_wheels = self.executed[:, 1:]
+            fast = slew(previous_wheels, raw_wheels, self.cfg.landing_ground_brake_slew_rad_s2*self.dt)
+            fast = torch.maximum(torch.minimum(fast, previous_wheels.clamp_min(0)), previous_wheels.clamp_max(0))
+            braking = ((self.phase == Phase.LAND) & (self.landing_projection_weight >= 1))[:, None]
+            braking = braking & (wheels.abs() < previous_wheels.abs()) & (fast.abs() < wheels.abs())
+            braked = torch.where(braking, fast, wheels)
+            self.landing_ground_brake_delta.copy_(braked-wheels)
+            wheels = braked
         drive = wheel_mix(self.command[:, 0]/.03, self.command[:, 1]*self.track/(2*.03), self.limit)
         ordinary_hip = self.ordinary_hip
         transferring = (self.phase == Phase.HANDOFF) | (self.phase == Phase.EXIT)

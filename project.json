@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round21r3_ready",
+  "phase": "round21r4_engineering",
   "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "21r2 cost curriculum rejected. LAND target projection passed physical prefix/retention, short training/recovery/reload; interface benefit only, new policy unvalidated.",
+  "reason": "21r3 native and isolated MuJoCo landing improved; full speed/zero-input landing not passed. Ground-only target braking candidate pending physical and short-training checks.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -13,12 +13,12 @@
   "batch26_resume_allowed": false,
   "next_experiment": {
     "series": "upright_restart_20261030",
-    "name": "upright_restart_round21r3",
-    "status": "engineering_accepted_ready"
+    "name": "upright_restart_round21r4",
+    "status": "engineering_pending"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": true,
+  "engineering_validated": false,
   "implementation_review": "docs/round01_implementation.md",
   "cpu_contract_tests_passed": 129,
   "allowed_host_gpus": [
