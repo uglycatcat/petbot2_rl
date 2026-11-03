@@ -57,6 +57,8 @@ class Controller:
         self.motion_reference = self.command.clone()
         self.executed_reference = self.command.clone()
         self.effective_command = self.command.clone()
+        self.landing_projection_weight = z()
+        self.landing_projected_common = z()
 
     def reset(self, ids):
         for key, value in vars(self).items():
@@ -179,6 +181,20 @@ class Controller:
         self.effective_command.copy_(torch.where(transition[:, None], self.transition_motion, reference))
         hip = self.lo + (action[:, 0]+1)*.5*(self.hi-self.lo)
         common = action[:, 1]*self.limit
+        self.landing_projection_weight.zero_()
+        if self.cfg.landing_projection_start_gap_m:
+            # Only LAND: retain free policy control while high, then remove
+            # common-wheel requests outside the inherited same-direction
+            # deceleration interval. This uses sensor geometry, never contacts
+            # or simulator truth; handoff timing and physical velocities stay intact.
+            start = self.cfg.landing_projection_start_gap_m
+            weight = ((start-s['gap'].abs().amax(-1))/(start-self.cfg.ground_gap_m)).clamp(0, 1)
+            weight *= self.phase == Phase.LAND
+            entry = (self.transition_motion[:, 0]/.03).clamp(-self.limit, self.limit)
+            projected = torch.minimum(torch.maximum(common, entry.clamp_max(0)), entry.clamp_min(0))
+            self.landing_projection_weight.copy_(weight)
+            common = common+(projected-common)*weight
+        self.landing_projected_common.copy_(common)
         differential = action[:, 2]*self.limit
         # Deterministic command/measurement feedback, not a parent policy. The
         # one scratch actor still controls the hips, common drive and residual.

@@ -56,6 +56,9 @@ def main():
         check_identity(saved.get('restart', {}), manifest)
         runner.alg.load(saved, load_cfg=dict(actor=True, critic=True, optimizer=False, iteration=False, rnd=False), strict=True)
         trained_level = saved['restart']['curriculum']['level']
+        # Reward-only schedules must reflect the checkpoint, even in explicit
+        # lower-level validation. The scenario and policy inputs remain explicit.
+        env.upright_runtime.course.load_state_dict(saved['restart']['curriculum'])
         if args.scenario == 'capability_cycle':
             level = args.level if args.level is not None else max(2, trained_level)
         else:

@@ -155,6 +155,8 @@ def metrics(env):
                 effective_command=p.control.effective_command,
                 control_reference=p.control.executed_reference,
                 requested_action=p.control.requested_action, executed_targets=p.control.executed,
+                landing_projection_weight=p.control.landing_projection_weight,
+                landing_projected_common=p.control.landing_projected_common,
                 balance_yaw_correction=p.control.yaw_correction,
                 stage_time=p.control.age, policy_stage_time=p.observation_stage_age(),
                 longest_hold=p.longest_hold, curriculum_level=p.level).items()}

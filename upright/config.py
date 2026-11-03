@@ -80,6 +80,7 @@ class Config:
     landing_motion_slack_m_s: float = 0.03
     landing_motion_scale_m_s: float = 0.1
     landing_quality_start_course: int = 0  # 0: legacy full cost; otherwise ramp after the basic-control gate
+    landing_projection_start_gap_m: float = 0.0  # 0 disables LAND-only sensor-space target projection
     balance_linear_accel_m_s2: float = 0.0  # zero disables reference slew for legacy configs
     balance_yaw_accel_rad_s2: float = 0.0
     balance_yaw_feedforward: float = 0.0
@@ -101,6 +102,10 @@ class Config:
         return len(self.motion_stages())+1
 
     def validate(self):
+        gap = self.landing_projection_start_gap_m
+        if (type(gap) not in (int, float) or not __import__('math').isfinite(gap)
+                or (gap != 0 and not self.ground_gap_m < gap <= self.support_gap_m)):
+            raise ValueError('Landing projection must be disabled or between ground and two-wheel clearances')
         if (type(self.landing_quality_start_course) is not int
                 or not 0 <= self.landing_quality_start_course <= self.max_course_level):
             raise ValueError('Landing quality start must be 0 or a configured course level')
