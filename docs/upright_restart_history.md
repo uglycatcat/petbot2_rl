@@ -34,7 +34,8 @@
 | 21r1 | [执行](upright_restart_round21r1_execution.md) | [终局](upright_restart_round21r1_results.md)：落地局部改善但高范围退步，拒绝升级 |
 | 21r2 | [执行](upright_restart_round21r2_execution.md) | [终局](upright_restart_round21r2_results.md)：无成本高范围29/32，成本组0/32，停止成本课程路线 |
 | 21r3 | [执行](upright_restart_round21r3_execution.md) | [终局](upright_restart_round21r3_results.md)：102高范围31/32、落地改善，MuJoCo残余与速度目标仍未过 |
-| 21r4 | [执行](upright_restart_round21r4_execution.md) | 仅LAND近地轮目标朝零减速；工程通过，种子102/103各2048×1000从零运行，仅GPU2/3，桌面20保持 |
+| 21r4 | [执行](upright_restart_round21r4_execution.md) | [终局](upright_restart_round21r4_results.md)：静止后退约1mm，低速/零令响应未保住，桌面20保持 |
+| 21r5 | [执行](upright_restart_round21r5_execution.md) | 只调整基础回归份额；工程通过，种子102/103各2048×1000从零训练，仅GPU2/3 |
 
 [编号与旧21—26废弃/27取消](upright_restart_discarded_rounds_20261103.md)。这些记录和固定运行副本保留，不能重启旧队列或作为新优化来源。
 
