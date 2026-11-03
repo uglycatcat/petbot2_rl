@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-03",
+  "updated_at": "2026-11-04",
   "purpose": "PetBot experimental training projects. Code is versioned on dedicated demoproj branches; checkouts are managed by default.xml.",
   "repositories": [
     {
@@ -44,22 +44,22 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "3a6cdf1f630fba9320f9e2d81f66280dcdf0a15f",
+      "verified_commit": "3a2eab42905ea68a1ac45b3660307b6022e05b7c",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "round21r2_cost_curriculum_rejected;round21r3_land_target_projection_scratch_gpu2_3;desktop20_retained",
-      "local_validation": "129 container checks; 2048env2updates/reload;128env4to8 planned same-run recovery, no unexpected/OOM failure. Short reloads0/32. Fixed control network independent static/60s low/high physical and prefix checks accepted, interface benefit only; actual wheel overspeed and zero-input landing still unresolved. Fresh seeds102/103 each1000; no historical initialization.",
+      "status": "round21r3_reviewed_not_passed;round21r4_scratch_training;desktop20_retained",
+      "local_validation": "21r3 two scratch1000/8eval valid, no OOM/resume:102 low32 high31;103 highest only0.5m/s25. Isolated MuJoCo10cases completed per policy, static reverse3.081to0.954cm, full speed/zero-input goals unmet.21r4 ground-only target braking engineering accepted:133 checks,8 supervised jobs,planned4to8 same-run recovery,reloads,static32/low32/high31 physical retention and exact pre-intervention prefixes;static reverse0.171cm. Fresh1000-update runs, no history initialization.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round21r3_s102",
-        "upright_restart_round21r3_s103"
+        "upright_restart_round21r4_s102",
+        "upright_restart_round21r4_s103"
       ],
-      "active_training_commit": "3a6cdf1f630fba9320f9e2d81f66280dcdf0a15f",
-      "latest_result_document": "docs/upright_restart_round21r2_results.md",
-      "active_execution_document": "docs/upright_restart_round21r3_execution.md",
+      "active_training_commit": "3a2eab42905ea68a1ac45b3660307b6022e05b7c",
+      "latest_result_document": "docs/upright_restart_round21r3_results.md",
+      "active_execution_document": "docs/upright_restart_round21r4_execution.md",
       "invalidated_rounds": [
         21,
         22,

@@ -31,3 +31,7 @@ LAND新增成本为0，原运动奖励/课程/网络和成功判据保持；阶�
 工程已接受。最终发布3a6cdf1仅补验收元数据、行为指纹保持`a26ad589…fe5c4b7`，按[固定计划](experiments/upright_restart_round21r3.json)发两份各1000更新。控制目录`demo_project/runs/_upright_restart_round21r3/`，副本`upright_restart_round21r3_s102/s103`，只用GPU2/3。保留全部失败，同次受迫中断可恢复完整状态，新实验不得载入历史权重。不重复21r2，不启用周期定时器或goal。结果不自动替换桌面，ONNX导出不等于sim2sim通过。
 
 未来若发布本轮候选，ONNX必须配套同版LAND动作接口，不能只替换网络文件。当前sim2sim代码、manifest与默认第20轮策略未修改。
+
+## 终局（2026-11-04）
+
+两份1000更新与八独立评估有效结束，无OOM/恢复/缺失；种子102低速完整/基本32/32，高范围31/31（各32），静止后退0.464cm；103低速32/32，最高仅±0.5阶段25/32。102隔离MuJoCo十场景完成且落地改善，但零输入触地后仍动、前进速度略降，双向0.75未达。详见[终局及跨引擎对照](upright_restart_round21r3_results.md)。本批不再启动，继续[21r4工程](upright_restart_round21r4_execution.md)，桌面20保持。
