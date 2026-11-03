@@ -1,0 +1,248 @@
+{
+  "status": "reviewed_engineering_passed_pending_publication",
+  "handled": true,
+  "engineering_gate_passed": true,
+  "ready_for_fresh_auxiliary_training": true,
+  "policy_capability_passed": false,
+  "cpu_checks": 119,
+  "guards": {
+    "short512": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "interrupted",
+      "gpu_peak_mib": 17728.0,
+      "elapsed_s": 146.43342473730445
+    },
+    "resume512": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "complete",
+      "gpu_peak_mib": 17728.0,
+      "elapsed_s": 142.21538066212088
+    },
+    "eval512": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "complete",
+      "gpu_peak_mib": 17506.0,
+      "elapsed_s": 115.50061108544469
+    },
+    "physics_b": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "passed",
+      "gpu_peak_mib": 16694.0,
+      "elapsed_s": 670.1344190090895
+    }
+  },
+  "learning_source": "step_restart17_gate_20261103_a",
+  "physics_source": "step_restart17_gate_20261103_b",
+  "learning_input_changes": [
+    "tools/regulation_probe.py"
+  ],
+  "checked_files": 107,
+  "checkpoint_audit": {
+    "initial_optimizer_empty": true,
+    "unique_run_id": "8023712e-fa31-46c5-9a8f-ad83b9323fcf",
+    "random_origin": true,
+    "discount_gamma": 0.99,
+    "completed_updates": 8,
+    "resumed_from": 4,
+    "actor_critic_restore_match": true,
+    "optimizer_states": 12,
+    "coverage_preserved": true,
+    "final_coverage": {
+      "stop_entries": 12127,
+      "stop_seconds": 5020.51999999995,
+      "low_request_stop_frames": 765,
+      "eligible_stop_seconds": 5020.51999999995,
+      "disqualified_stop_seconds": 0.0,
+      "physical_hold_0_5_seconds": 0.0,
+      "physical_hold_2_5_seconds": 0.0
+    },
+    "actor_changed": true
+  },
+  "independent_eval_outcomes": {
+    "failure_6": 16
+  },
+  "physics_audit": {
+    "valid": true,
+    "scalar_holding_timer_agrees": true,
+    "rewards_recomputed": true,
+    "source_limits_preserved": true,
+    "no_demonstration_data": true,
+    "metrics": {
+      "holding": {
+        "frames": 750,
+        "longest_hold_s": [
+          14.999999999999769,
+          14.539999999999779,
+          14.49999999999978,
+          14.49999999999978,
+          14.999999999999769,
+          14.559999999999778,
+          14.49999999999978,
+          9.919999999999877,
+          14.999999999999769,
+          14.539999999999779,
+          14.49999999999978,
+          14.49999999999978,
+          14.999999999999769,
+          14.539999999999779,
+          14.49999999999978,
+          14.49999999999978
+        ],
+        "code_frames": {},
+        "max_wheel_requested": 19.999998807907104,
+        "max_wheel_executed": 14.40000057220459,
+        "max_sampled_wheel_actual": 14.312948226928711,
+        "max_hip_requested": 0.0,
+        "max_hip_executed": 0.0,
+        "max_hip_actual": 0.014912884682416916,
+        "max_world_pitch": 0.015688519924879074
+      },
+      "quality": {
+        "frames": 3,
+        "longest_hold_s": null,
+        "code_frames": {
+          "5": 8
+        },
+        "max_wheel_requested": 0.0,
+        "max_wheel_executed": 0.0,
+        "max_sampled_wheel_actual": 0.9663009643554688,
+        "max_hip_requested": 1.2,
+        "max_hip_executed": 1.1999999284744263,
+        "max_hip_actual": 0.5875028967857361,
+        "max_world_pitch": 0.5015004277229309
+      },
+      "exit": {
+        "frames": 327,
+        "longest_hold_s": null,
+        "code_frames": {
+          "6": 16
+        },
+        "max_wheel_requested": 7.999999821186066,
+        "max_wheel_executed": 8.0,
+        "max_sampled_wheel_actual": 13.994026184082031,
+        "max_hip_requested": 0.0,
+        "max_hip_executed": 0.0,
+        "max_hip_actual": 0.01577582396566868,
+        "max_world_pitch": 0.015310113318264484
+      }
+    },
+    "wrapper_probe": {
+      "status": "passed",
+      "probe_only": true,
+      "no_training_data": true,
+      "train_continues_after_first_stop": true,
+      "timeout_is_bootstrapped": true,
+      "real_failures_never_bootstrapped": true,
+      "final_hold_at_timeout_s": [
+        15.000153541564941,
+        14.540143013000488,
+        14.500142097473145,
+        14.500142097473145,
+        15.000153541564941,
+        14.56014347076416,
+        14.500142097473145,
+        3.8399970531463623,
+        15.000153541564941,
+        14.540143013000488,
+        14.500142097473145,
+        14.500142097473145,
+        15.000153541564941,
+        14.540143013000488,
+        14.500142097473145,
+        14.500142097473145
+      ],
+      "longest_hold_s": [
+        15.000153541564941,
+        14.540143013000488,
+        14.500142097473145,
+        14.500142097473145,
+        15.000153541564941,
+        14.56014347076416,
+        14.500142097473145,
+        9.920037269592285,
+        15.000153541564941,
+        14.540143013000488,
+        14.500142097473145,
+        14.500142097473145,
+        15.000153541564941,
+        14.540143013000488,
+        14.500142097473145,
+        14.500142097473145
+      ],
+      "late_hold_breaks": [
+        {
+          "env": 7,
+          "elapsed": 10.4399995803833,
+          "previous_hold_s": 9.920037269592285,
+          "support": [
+            false,
+            true,
+            true,
+            true
+          ],
+          "velocity": [
+            -0.0021021917928010225,
+            0.00014363763330038637,
+            -0.00017130524793174118
+          ]
+        }
+      ],
+      "real_quality_failure_cases": 8,
+      "real_platform_exit_cases": 16,
+      "discounted_failure_cost": 14.99999999999999,
+      "exit_elapsed_s": {
+        "3": 9.920000076293945,
+        "7": 9.920000076293945,
+        "11": 9.920000076293945,
+        "15": 9.920000076293945,
+        "2": 10.09999942779541,
+        "10": 10.09999942779541,
+        "14": 10.09999942779541,
+        "6": 10.119999885559082,
+        "1": 10.319999694824219,
+        "5": 10.319999694824219,
+        "9": 10.319999694824219,
+        "13": 10.319999694824219,
+        "0": 10.539999961853027,
+        "4": 10.539999961853027,
+        "8": 10.539999961853027,
+        "12": 10.539999961853027
+      },
+      "captured_substeps": 14800
+    }
+  },
+  "rejected_attempt": {
+    "directory": "step_restart17_gate_20261103_a",
+    "physics_probe_valid": false,
+    "explanation": "Final uninterrupted14s engineering assertion failed due front-contact gap10.44s. Original2.5s hold succeededall16. Recordpreserved;onlyengineeringprobe changed. Acceptance unchanged."
+  },
+  "next_batch": "step_restart17_aux_20261103",
+  "formal_training_allowed": false,
+  "random_training": {
+    "seeds": [
+      70,
+      71
+    ],
+    "physical_gpus": [
+      0,
+      1
+    ],
+    "num_envs": 512,
+    "updates": 200,
+    "pretrained_models": [],
+    "weight_transfer": false
+  },
+  "events": "Checkactive/control/handledreview;latea/bevents mustnotduplicatebatch."
+}

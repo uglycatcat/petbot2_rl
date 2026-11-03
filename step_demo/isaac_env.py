@@ -21,7 +21,8 @@ from .progress import drive_memory
 from .contacts import forbidden_front_contact, early_top_contact
 from .terrain import convex_edges, wheel_terrain_clearance, rear_airborne
 from .critic_state import CRITIC_STATE_FIELDS, reward_state
-from .staged_task import FrontFlight, advance_intent, costs, terminal_value, body_pitch
+from .staged_task import FrontFlight, advance_intent, costs, terminal_value, body_pitch, MAX_RATE
+from .regulation import discounted_failure_cost
 
 
 def tensor(value):
@@ -47,6 +48,8 @@ class StepEnv(DirectRLEnv):
         self.training = training
         self.restart_task = training.get("reward_version") == "restart14_staged"
         self.auxiliary_stop = training.get("task_variant", "full") == "platform_stop_aux"
+        self.regulating_auxiliary = self.auxiliary_stop and training.get('auxiliary_objective') == 'continuous_stop'
+        self.evaluation_mode = training.get('_evaluation', False)
         self.extra_hold_s = float(training.get("hold_after_success_s", 0.))
         self.reward_state_critic = training.get('critic_observation', 'policy') == 'reward_state_v11'
         self.smooth_braking = training.get('reward_version') in ('brake_v10','brake_v13','restart14_staged')
@@ -65,7 +68,13 @@ class StepEnv(DirectRLEnv):
         cfg.sim.device = device; cfg.episode_length_s = task.acceptance.timeout_s
         if self.edge_reward:
             cfg.is_finite_horizon = True  # The 15 s task deadline is a failure, not a time-limit bootstrap.
+        if self.regulating_auxiliary:
+            # Training truncations reset the simulator but bootstrap the value
+            # of continued stopping. Evaluation retains the strict timed test.
+            cfg.is_finite_horizon = False
         super().__init__(cfg)
+        self.regulation_failure_cost = (discounted_failure_cost(MAX_RATE, self.step_dt, training['discount_gamma'])
+                                        if self.regulating_auxiliary else 0.)
         self.hips = self.robot.find_joints(['left_frame_1', 'right_frame_1'], preserve_order=True)[0]
         self.wheels = self.robot.find_joints(['left_rear_wheel_1', 'right_rear_wheel_1'], preserve_order=True)[0]
         self.front_joints = self.robot.find_joints(['left_front_wheel_1', 'right_front_wheel_1'], preserve_order=True)[0]
@@ -140,8 +149,10 @@ class StepEnv(DirectRLEnv):
         self.stop_entered = torch.zeros(n, dtype=torch.bool, device=d)
         self.auxiliary_hold = torch.zeros(n, device=d)
         self.learning_coverage = dict(stop_entries=0, stop_seconds=0., low_request_stop_frames=0,
-            eligible_stop_seconds=0., disqualified_stop_seconds=0.)
+            eligible_stop_seconds=0., disqualified_stop_seconds=0.,
+            physical_hold_0_5_seconds=0., physical_hold_2_5_seconds=0.)
         self.totals['quality_failures'] = 0
+        self.totals['platform_exits'] = 0
         if self.auxiliary_stop:
             # Separate diagnostic scene: initial terrain edge is behind the robot.
             # Estimator starts at its sensor-origin zero, never injected true velocity.
@@ -330,6 +341,12 @@ class StepEnv(DirectRLEnv):
         failure = torch.where((self.com[:,0]-self.origin_com[:,0] < -.05)
                               | ((self.com[:,1]-self.origin_com[:,1]).abs() > .15), 4, failure)
         self.failure = torch.where(self.failure == 0, failure, self.failure)
+        if self.regulating_auxiliary:
+            # Leaving the finite platform cannot become a cheap, stationary
+            # floor solution to the continuing auxiliary objective.
+            beyond_end = (self.maximum[:, :, 0] >= self.edge_x[:, None]
+                          + self.task.terrain.platform_length_m).any(-1)
+            self.failure = torch.where((self.failure == 0) & beyond_end, 6, self.failure)
         self.force_peak = torch.maximum(self.force_peak, force.norm(dim=-1).amax(-1))
         self.platform_normal=normal;self.platform_contact_x=contact_x
         self.wheel_contact_force=force
@@ -350,8 +367,8 @@ class StepEnv(DirectRLEnv):
         if self.auxiliary_stop and self.training.get('terminate_auxiliary_flight', False):
             # An auxiliary flight makes the original task permanently
             # ineligible. Reset instead of collecting dead rollout seconds.
-            # This is failure (code 5), charged the same conservative remaining
-            # horizon cost as physical failure; never rewarded as completion.
+            # This is failure (code 5), charged the objective's bounded failure
+            # penalty, never rewarded as completion.
             self.failure = torch.where((self.failure == 0) & (self.flight.count > 0).any(-1),
                                        5, self.failure)
         forward = self.com[:,0]-self.origin_com[:,0]
@@ -396,6 +413,10 @@ class StepEnv(DirectRLEnv):
                 self.auxiliary_hold = torch.where(auxiliary_stopped, self.auxiliary_hold+self.step_dt, 0.)
                 self.functional_completed = self.auxiliary_hold+1e-7 >= a.stop_hold_s
                 self.completed = self.auxiliary_hold+1e-7 >= a.stop_hold_s+self.extra_hold_s
+                if self.regulating_auxiliary and not self.evaluation_mode:
+                    # Keep collecting real physical holding after first stop.
+                    # Functional hold remains separately observable in logs.
+                    self.completed.zero_()
             else:
                 self.completed &= self.flight.complete
             entered = (self.intent >= 3) & ~self.stop_entered
@@ -406,12 +427,18 @@ class StepEnv(DirectRLEnv):
             self.learning_coverage['stop_seconds'] += float(valid_stop.sum())*self.step_dt
             self.learning_coverage['eligible_stop_seconds'] += float((valid_stop & quality_ok).sum())*self.step_dt
             self.learning_coverage['disqualified_stop_seconds'] += float((valid_stop & ~quality_ok).sum())*self.step_dt
+            if self.auxiliary_stop:
+                self.learning_coverage['physical_hold_0_5_seconds'] += float((self.auxiliary_hold+1e-7 >= a.stop_hold_s).sum())*self.step_dt
+                self.learning_coverage['physical_hold_2_5_seconds'] += float((self.auxiliary_hold+1e-7 >= a.stop_hold_s+2.).sum())*self.step_dt
             self.learning_coverage['low_request_stop_frames'] += int((valid_stop & ((self.actions[:, 1]+1.)*12.5 < 1.)).sum())
         self.phase = torch.where(self.front_landed.all(-1),1,0)
         self.phase = torch.where(ready,2,self.phase); self.phase = torch.where(drove,3,self.phase)
         self.phase = torch.where(self.completed,4,self.phase)
         timeout = self.episode_length_buf >= self.max_episode_length
-        return (self.failure > 0) | self.completed, timeout
+        terminated = (self.failure > 0) | self.completed
+        if self.regulating_auxiliary:
+            timeout &= ~terminated  # Never bootstrap a real failure/success.
+        return terminated, timeout
 
     def _get_rewards(self):
         pos = tensor(self.robot.data.joint_pos)
@@ -485,6 +512,10 @@ class StepEnv(DirectRLEnv):
             progress = torch.where((self.previous_intent >= 3) | self.auxiliary_stop, 0., progress)
             reward = progress - self.restart_running_cost + terminal_value(
                 self.completed, failed, self.episode_length_buf*self.step_dt, self.task.acceptance.timeout_s)
+            if self.regulating_auxiliary:
+                # No time-dependent terminal penalty, success jackpot, or
+                # reward for surviving longer. Minimize real stopping errors.
+                reward = -self.restart_running_cost-self.regulation_failure_cost*(self.failure > 0).float()
         self.last_reward = reward.clone()
         if self.trace_ids is not None:
             self.last_trace=self.trace(self.trace_ids)
@@ -534,7 +565,7 @@ class StepEnv(DirectRLEnv):
                 self.terminal_records.append(record)
                 if self.episode_writer: self.episode_writer.write(json.dumps(record)+'\n')
                 self.totals['episodes']+=1; self.totals['successes']+=int(record['success'])
-                for key,code in [('front_collisions',1),('rear_air',2),('falls',3),('quality_failures',5)]:self.totals[key]+=int(record['failure']==code)
+                for key,code in [('front_collisions',1),('rear_air',2),('falls',3),('quality_failures',5),('platform_exits',6)]:self.totals[key]+=int(record['failure']==code)
                 self.totals['timeouts']+=int(record['timeout'])
             self.terminal_records = self.terminal_records[-4096:]
             self.extras['log']={f'Step/{k}':float(v) for k,v in self.totals.items()}
@@ -583,6 +614,7 @@ class StepEnv(DirectRLEnv):
             front_flight_count=self.flight.count[ids].tolist(),flight_invalid=self.flight.invalid[ids].tolist(),
             front_flight_air=self.flight.air[ids].tolist(),functional_completed=self.functional_completed[ids].tolist(),
             auxiliary_hold=self.auxiliary_hold[ids].tolist(),
+            continuing_stop_training=self.regulating_auxiliary and not self.evaluation_mode,
             world_pitch=self.world_pitch[ids].tolist(),world_pitch_rate=self.world_pitch_rate[ids].tolist(),
             restart_cost_components=self.cost_components[ids].tolist(),restart_running_cost=self.restart_running_cost[ids].tolist(),
             elapsed=(self.episode_length_buf[ids]*self.step_dt).tolist(),
