@@ -19,7 +19,8 @@ def advance_intent(previous, landed, four_top, drove):
 
 
 def costs(intent, wheel_request, hip_request, hip_position, hip_velocity,
-          speed, yaw_rate, lateral, yaw, pitch, pitch_rate, repeated_flight):
+          speed, yaw_rate, lateral, yaw, pitch, pitch_rate, repeated_flight,
+          precision_stop=False):
     """Per-second costs: bounded but with nonzero slope over common stop errors."""
     stop = intent >= 3
     home = intent >= 2
@@ -32,6 +33,20 @@ def costs(intent, wheel_request, hip_request, hip_position, hip_velocity,
     line = .25 * ((lateral.abs()/.15).clamp_max(1.)
                   + (yaw.abs()/.5).clamp_max(1.))
     turning = .25 * (yaw_rate.abs()/1.).clamp_max(1.) * stop
+    if precision_stop:
+        # Auxiliary-only diagnostic: retain half the coarse gradient, and add
+        # a bounded term sensitive at the ORIGINAL acceptance scale. No dead
+        # zone, target override or relaxed physical success condition.
+        def fine(x, scale):
+            x = x.abs()
+            return x/(scale+x)
+        wheel = .5*wheel + .75*fine(wheel_request, .02/.03)*stop
+        motion = .5*motion + .75*fine(speed, .02)*stop
+        hip = .5*hip + .25*(fine(hip_request, .05)
+                            + fine(hip_position.abs().amax(-1), .05))*home
+        quiet = .5*quiet + .125*fine(hip_velocity.abs().amax(-1), .5)*home
+        line = .5*line + .125*(fine(lateral, .02)+fine(yaw, torch.pi/36))
+        turning = .5*turning + .125*fine(yaw_rate, .05)*stop
     # Secondary quality target throughout motion; not a hard limit on lifting.
     body = .1 * ((pitch.abs()/1.2).clamp_max(1.)
                  + (pitch_rate.abs()/10.).clamp_max(1.))
@@ -57,7 +72,8 @@ def body_pitch(quaternion, angular_velocity_world):
 class FrontFlight:
     """20 ms debounced physical flight; contact gaps alone do not count.
 
-    A quality violation stays latched but does not terminate physics early.
+    A quality violation stays latched. Full-task physics does not end early;
+    auxiliary diagnostics may explicitly terminate with the full failure cost.
     Full success additionally requires exactly one legal flight per wheel.
     """
     def __init__(self, n, device):

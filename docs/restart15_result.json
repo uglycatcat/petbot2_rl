@@ -1,0 +1,122 @@
+{
+  "status": "reviewed_auxiliary_gate_failed",
+  "handled": true,
+  "valid_terminal_policy_evaluation": true,
+  "completed_updates_each": 200,
+  "source_commit": "b760a17be4bebde0081be470b8087913ebb092fe",
+  "full_task_successes": null,
+  "counts_as_climb_result": false,
+  "policy_passed": false,
+  "outcomes": {
+    "70": {
+      "successes": 0,
+      "episodes": 64,
+      "base_stop_count": 54,
+      "groups": {
+        "0": {
+          "episodes": 16,
+          "stopped": 16,
+          "held": 0
+        },
+        "1": {
+          "episodes": 16,
+          "stopped": 16,
+          "held": 0
+        },
+        "2": {
+          "episodes": 16,
+          "stopped": 16,
+          "held": 0
+        },
+        "3": {
+          "episodes": 16,
+          "stopped": 6,
+          "held": 0
+        }
+      },
+      "longest_hold_s": {
+        "min": 0.3199999928474426,
+        "median": 0.7599998116493225,
+        "p95": 0.8799996972084045,
+        "max": 0.8999996781349182
+      },
+      "front_flight_episodes": 0,
+      "hold_release_reasons": {
+        "speed": 216
+      },
+      "after3s_median": {
+        "hip_requested": 0.017467045783996583,
+        "hip_executed": 0.017467047087848186,
+        "hip_actual": 0.03367813304066658,
+        "wheel_requested": 0.9256377816200256,
+        "wheel_executed": 0.9256377816200256,
+        "wheel_actual": 0.7703041732311249,
+        "speed": 0.019532464868035476,
+        "lateral": 0.0010857582092285156,
+        "yaw": 0.00406006770208478,
+        "world_pitch": 0.034454960376024246,
+        "world_pitch_rate": 0.0435614138841629,
+        "estimator_position_error": 0.07163196206057378
+      }
+    },
+    "71": {
+      "successes": 0,
+      "episodes": 64,
+      "base_stop_count": 0,
+      "groups": {
+        "0": {
+          "episodes": 16,
+          "stopped": 0,
+          "held": 0
+        },
+        "1": {
+          "episodes": 16,
+          "stopped": 0,
+          "held": 0
+        },
+        "2": {
+          "episodes": 16,
+          "stopped": 0,
+          "held": 0
+        },
+        "3": {
+          "episodes": 16,
+          "stopped": 0,
+          "held": 0
+        }
+      },
+      "longest_hold_s": {
+        "min": 0.0,
+        "median": 0.019999999552965164,
+        "p95": 0.07999999821186066,
+        "max": 0.11999998986721039
+      },
+      "front_flight_episodes": 16,
+      "hold_release_reasons": {},
+      "after3s_median": {
+        "hip_requested": 0.1059290885925293,
+        "hip_executed": 0.10236368700861931,
+        "hip_actual": 0.14427844434976578,
+        "wheel_requested": 1.5705149620771408,
+        "wheel_executed": 1.570514976978302,
+        "wheel_actual": 1.414957970380783,
+        "speed": 0.03956887902109493,
+        "lateral": 0.0065402984619140625,
+        "yaw": 0.017884829081594944,
+        "world_pitch": 0.14406566321849823,
+        "world_pitch_rate": 0.06959075480699539,
+        "estimator_position_error": 0.09863442147065705
+      }
+    }
+  },
+  "interruption": "seed70 training01 interrupted by agent engineering scheduling overlap and GPU memory guard; same-run full model150 checkpoint restored, training02/eval valid; failed attempt preserved.",
+  "decision": "Do not extend same configuration and do not launch full climb. Proceed with already-prepared restart16 parking-only candidate after current engineering gate passes, publish/freeze, train both seeds from random weights.",
+  "next_candidate": "step_restart16_gate_20261103_b",
+  "next_batch": "step_restart16_aux_20261103",
+  "hypothesis": "Strengthen bounded costs at original stop precision; reduce auxiliary exploration earlier without entropy bonus; terminate permanently disqualified auxiliary flights with unchanged full remaining-horizon failure charge; use512 environments after measured gate.",
+  "current_scope": [
+    "single clean front flight in full task",
+    "stop after original valid platform drive"
+  ],
+  "do_not_duplicate": true
+}

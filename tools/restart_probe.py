@@ -15,6 +15,8 @@ def main():
     p.add_argument('--output',type=Path,required=True)
     p.add_argument('--asset-dir',type=Path,required=True)
     p.add_argument('--model-dir',type=Path,required=True)
+    p.add_argument('--training-config',type=Path)
+    p.add_argument('--verify-flight-failure',action='store_true')
     AppLauncher.add_app_launcher_args(p);a=p.parse_args()
     a.output.mkdir(parents=True,exist_ok=False)
     app=AppLauncher(a).app
@@ -23,7 +25,7 @@ def main():
         from step_demo.config import load_config,PROJECT_ROOT
         from step_demo.runtime import load_training
         from step_demo.isaac_env import StepEnv,tensor
-        t=load_training(PROJECT_ROOT/'configs/restart15_gate.json')
+        t=load_training(a.training_config or PROJECT_ROOT/'configs/restart15_gate.json')
         t.update(num_envs=16,hold_after_success_s=10.)
         env=StepEnv(load_config(model_dir=a.model_dir),t,a.asset_dir,a.device)
         env.trace_ids=list(range(16));obs,_=env.reset()
@@ -55,6 +57,25 @@ def main():
             final_hold=env.auxiliary_hold.tolist(),totals=env.totals,
             captured_substeps=env.captured_substeps,static_group_preserved=True,
             moving_group_outcomes_require_behavior_review=True)
+        if a.verify_flight_failure:
+            assert t.get('terminate_auxiliary_flight'), 'Flight-failure probe requires enabled diagnostic'
+            found=[]
+            with (a.output/'quality_failure_trace.jsonl').open('w') as file:
+                for step in range(100):
+                    # Real motor actions, no injected contact/counter/pose state.
+                    hip=torch.where(torch.arange(16,device=env.device)%2==0,-1.,1.)
+                    obs,reward,done,truncated,_=env.step(torch.stack((hip,torch.full_like(hip,-1.)),dim=-1))
+                    row=env.last_trace;file.write(json.dumps(row)+'\n')
+                    for i,code in enumerate(row['failure']):
+                        if code==5:
+                            assert max(row['front_flight_count'][i])>0 and not row['completed'][i]
+                            expected=-50.-6.*max(0.,15.-row['elapsed'][i])-row['restart_running_cost'][i]
+                            assert abs(row['reward'][i]-expected)<3e-5
+                            found.append(dict(env=i,elapsed=row['elapsed'][i],reward=row['reward'][i]))
+                    if found:break
+            assert found, 'No real quality-failure episode exercised'
+            result['real_quality_failures']=found
+            result['quality_failure_cost_verified']=True
         (a.output/'result.json').write_text(json.dumps(result,indent=2)+'\n')
         env.close()
     finally:

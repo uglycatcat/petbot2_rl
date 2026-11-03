@@ -3,7 +3,7 @@
   "baseline_round": 14,
   "baseline_commit": "30fd5886271f7d70ed23a923647f824feb7c1f5f",
   "series": "step_restart14_20261103",
-  "next_round_label": "restart15",
+  "next_round_label": "restart16",
   "priority": [
     "single clean front-wheel flight",
     "stop after original valid platform drive"
@@ -87,5 +87,15 @@
       "physics_validity": "Not changed by this disposition; consult original engineering reports."
     }
   ],
-  "preview_policy": "round20_seed71 preserved for user inspection; not selected as new optimization baseline"
+  "preview_policy": "round20_seed71 preserved for user inspection; not selected as new optimization baseline",
+  "restart_results": [
+    {
+      "label": "restart15",
+      "source_commit": "b760a17be4bebde0081be470b8087913ebb092fe",
+      "task": "platform_stop_aux",
+      "outcomes": "both 0/64 sustained stop; seed70 54/64 transient 0.5s; seed71 0/64",
+      "full_task_passed": false,
+      "evidence": "docs/restart15_result.json"
+    }
+  ]
 }

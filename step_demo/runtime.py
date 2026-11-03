@@ -26,7 +26,8 @@ def code_digest():
 def load_training(path):
     defaults=json.loads((PROJECT_ROOT/'configs/train_v1.json').read_text())
     t=json.loads(Path(path).read_text())
-    optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling','critic_observation','task_variant'}
+    optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling','critic_observation','task_variant',
+              'auxiliary_precision_cost','terminate_auxiliary_flight','entropy_coef'}
     if set(t)-optional!=set(defaults) or t['schema']!='petbot_step_ppo_v1': raise ValueError('Unknown training schema/fields')
     if t.get('policy_distribution','gaussian') not in ('gaussian','beta'):raise ValueError('Unknown policy distribution')
     if t.get('critic_observation', 'policy') not in ('policy', 'reward_state_v11'):
@@ -52,6 +53,12 @@ def load_training(path):
         raise ValueError('Unknown task variant')
     if t.get('task_variant') == 'platform_stop_aux' and t.get('reward_version') != 'restart14_staged':
         raise ValueError('Auxiliary stopping requires the explicit restarted objective')
+    for name in ('auxiliary_precision_cost', 'terminate_auxiliary_flight'):
+        if name in t and (type(t[name]) is not bool or t.get('task_variant') != 'platform_stop_aux'):
+            raise ValueError('Parking diagnostic options must not silently change the full task')
+    if 'entropy_coef' in t and (type(t['entropy_coef']) not in (float,int)
+                              or not math.isfinite(t['entropy_coef']) or not 0<=t['entropy_coef']<=.1):
+        raise ValueError('Invalid entropy coefficient')
     if t['initialization']!='random' or t['pretrained_models']: raise ValueError('Only random initialization is allowed')
     for name in ('num_envs','iterations','save_interval','decimation','num_steps_per_env','num_learning_epochs','num_mini_batches'):
         if type(t[name]) is not int or t[name]<=0: raise ValueError(f'Invalid {name}')

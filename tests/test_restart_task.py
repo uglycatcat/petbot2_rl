@@ -63,6 +63,33 @@ class RestartTaskTests(unittest.TestCase):
         self.assertAlmostEqual(pitch.item(),.3,places=6)
         self.assertAlmostEqual(rate.item(),2.,places=6)
 
+    def test_precision_cost_keeps_bound_and_increases_low_error_gradient(self):
+        def evaluate(wheel, precise):
+            x=torch.tensor([wheel],requires_grad=True);z=torch.zeros(1);joint=torch.zeros(1,2)
+            rate,terms=costs(torch.tensor([3]),x,z,joint,joint,z,z,z,z,z,z,
+                             torch.tensor([False]),precision_stop=precise)
+            rate.sum().backward()
+            return rate.item(),x.grad.item()
+        self.assertEqual(evaluate(0.,True)[0],0.)
+        self.assertGreater(evaluate(.5,True)[1],evaluate(.5,False)[1]*5)
+        for precise in (False,True):
+            n=2000;z=torch.randn(n)*1000;j=torch.randn(n,2)*1000
+            rate,_=costs(torch.arange(n)%4,z.abs(),z,j,j,z.abs(),z,z,z,z,z,
+                         torch.ones(n,dtype=torch.bool),precision_stop=precise)
+            self.assertTrue((rate<=MAX_RATE).all())
+
+    def test_auxiliary_options_cannot_leak_into_full_config(self):
+        import json,tempfile
+        from pathlib import Path
+        from step_demo.config import PROJECT_ROOT
+        from step_demo.runtime import load_training
+        t=load_training(PROJECT_ROOT/'configs/restart16_aux_seed70.json')
+        self.assertEqual(t['num_envs'],512)
+        t['task_variant']='full'
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'invalid.json';path.write_text(json.dumps(t))
+            with self.assertRaises(ValueError):load_training(path)
+
     def test_auxiliary_cannot_be_launched_as_formal_climb_or_without_real_hold(self):
         import json,tempfile
         from pathlib import Path

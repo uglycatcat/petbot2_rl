@@ -139,7 +139,9 @@ class StepEnv(DirectRLEnv):
         self.world_pitch_rate = torch.zeros(n, device=d)
         self.stop_entered = torch.zeros(n, dtype=torch.bool, device=d)
         self.auxiliary_hold = torch.zeros(n, device=d)
-        self.learning_coverage = dict(stop_entries=0, stop_seconds=0., low_request_stop_frames=0)
+        self.learning_coverage = dict(stop_entries=0, stop_seconds=0., low_request_stop_frames=0,
+            eligible_stop_seconds=0., disqualified_stop_seconds=0.)
+        self.totals['quality_failures'] = 0
         if self.auxiliary_stop:
             # Separate diagnostic scene: initial terrain edge is behind the robot.
             # Estimator starts at its sensor-origin zero, never injected true velocity.
@@ -289,7 +291,8 @@ class StepEnv(DirectRLEnv):
                 requested_hip, pos[:, self.hips], vel[:, self.hips], self.com_vel.norm(dim=-1),
                 tensor(self.robot.data.body_link_ang_vel_w)[:, self.lower_body, 2],
                 self.com[:, 1]-self.origin_com[:, 1], self.yaw, self.world_pitch,
-                self.world_pitch_rate, self.flight.invalid if not self.auxiliary_stop else (self.flight.count > 0).any(-1))
+                self.world_pitch_rate, self.flight.invalid if not self.auxiliary_stop else (self.flight.count > 0).any(-1),
+                precision_stop=self.training.get('auxiliary_precision_cost', False))
             self.restart_running_cost += dt*rate
             self.cost_components += dt*terms
         x_min, x_max, z_min = self.minimum[:,:,0], self.maximum[:,:,0], self.minimum[:,:,2]
@@ -344,6 +347,13 @@ class StepEnv(DirectRLEnv):
     def _get_dones(self):
         self._capture(self._sim_step_counter)
         a = self.task.acceptance
+        if self.auxiliary_stop and self.training.get('terminate_auxiliary_flight', False):
+            # An auxiliary flight makes the original task permanently
+            # ineligible. Reset instead of collecting dead rollout seconds.
+            # This is failure (code 5), charged the same conservative remaining
+            # horizon cost as physical failure; never rewarded as completion.
+            self.failure = torch.where((self.failure == 0) & (self.flight.count > 0).any(-1),
+                                       5, self.failure)
         forward = self.com[:,0]-self.origin_com[:,0]
         aligned = ((self.com[:,1]-self.origin_com[:,1]).abs() <= a.line_tolerance_m) & (self.yaw.abs() <= a.heading_tolerance_rad)
         hip_home = tensor(self.robot.data.joint_pos)[:,self.hips].abs().amax(-1) <= a.hip_tolerance_rad
@@ -392,7 +402,10 @@ class StepEnv(DirectRLEnv):
             self.learning_coverage['stop_entries'] += int(entered.sum())
             self.stop_entered |= entered
             valid_stop = (self.intent >= 3) & (self.failure == 0)
+            quality_ok = ((self.flight.count == 0).all(-1) if self.auxiliary_stop else ~self.flight.invalid)
             self.learning_coverage['stop_seconds'] += float(valid_stop.sum())*self.step_dt
+            self.learning_coverage['eligible_stop_seconds'] += float((valid_stop & quality_ok).sum())*self.step_dt
+            self.learning_coverage['disqualified_stop_seconds'] += float((valid_stop & ~quality_ok).sum())*self.step_dt
             self.learning_coverage['low_request_stop_frames'] += int((valid_stop & ((self.actions[:, 1]+1.)*12.5 < 1.)).sum())
         self.phase = torch.where(self.front_landed.all(-1),1,0)
         self.phase = torch.where(ready,2,self.phase); self.phase = torch.where(drove,3,self.phase)
@@ -521,7 +534,7 @@ class StepEnv(DirectRLEnv):
                 self.terminal_records.append(record)
                 if self.episode_writer: self.episode_writer.write(json.dumps(record)+'\n')
                 self.totals['episodes']+=1; self.totals['successes']+=int(record['success'])
-                for key,code in [('front_collisions',1),('rear_air',2),('falls',3)]:self.totals[key]+=int(record['failure']==code)
+                for key,code in [('front_collisions',1),('rear_air',2),('falls',3),('quality_failures',5)]:self.totals[key]+=int(record['failure']==code)
                 self.totals['timeouts']+=int(record['timeout'])
             self.terminal_records = self.terminal_records[-4096:]
             self.extras['log']={f'Step/{k}':float(v) for k,v in self.totals.items()}
