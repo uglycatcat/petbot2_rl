@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round21r3_engineering",
+  "phase": "round21r3_ready",
   "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "21r2 paired landing-cost path rejected. LAND-only sensor geometry target envelope, unchanged motion and handoff; pending independent physical gate.",
+  "reason": "21r2 cost curriculum rejected. LAND target projection passed physical prefix/retention, short training/recovery/reload; interface benefit only, new policy unvalidated.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -14,13 +14,13 @@
   "next_experiment": {
     "series": "upright_restart_20261030",
     "name": "upright_restart_round21r3",
-    "status": "engineering_pending"
+    "status": "engineering_accepted_ready"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": false,
+  "engineering_validated": true,
   "implementation_review": "docs/round01_implementation.md",
-  "cpu_contract_tests_passed": 124,
+  "cpu_contract_tests_passed": 129,
   "allowed_host_gpus": [
     2,
     3
