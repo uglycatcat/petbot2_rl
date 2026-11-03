@@ -68,20 +68,22 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/step_rl_demo",
-      "verified_commit": "a6b85a9c7987bb4cb4fa4a1f0620041a3deffe3f",
+      "verified_commit": "a983e893b8864f9efaf71fd04290a1332e562c5f",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "round20_complete_seed70_reviewed_whole_batch_pending",
-      "local_validation": "Round19 valid2x500,complete0both,frontland4/51,home0/41. Exact2ms/contact/cost audits. Fixed current-policy unit-memory intervention seed71 drive0to36 still0complete. Round20 only fixed0-1 memory suffix/native26-prefix normalization;155tests/9guarded jobs,4to8resume/fullreload/512x4,128real actions+64static exactphysics/acceptance. Actual randominitial/PPO/GPU0/1 verified.",
+      "status": "round21_running_gpu0_gpu1_random_post_drive_stop_cost",
+      "local_validation": "Round20 valid2x500,complete0both,land21/60,home0/45,drive0/36;exact2ms/count/contact/worldpitch. Finite wheelzero0success,wheelzero+home31physicalsuccess,5contact/distance failures retained. Round21 only post-drive command/motion running cost;161tests/10guardedjobs,4to8resume/fullreload/512x4,256action-scenario replays exactphysics/acceptance,newcost scalarverified. Actual randominitial/PPO/GPU0/1verified.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [],
-      "active_training_commit": "a6b85a9c7987bb4cb4fa4a1f0620041a3deffe3f",
-      "next_iteration_requirement": "Review seed71 and whole batch before choosing change. Inspect repeated hip direction changes/front support loss between landing and rear climb; retain sensor memory/full worldpitch/complete task. New source must pass container gates,commit,push,freeze and randominitialization. No round21 started.",
-      "body_pitch_requirement_status": "Full cost final200updates/eval verified; seed70 worldpitch -52.99to51.07deg,ratepeak14.15rad/s remains unacceptable. Matched0.4to0.58s rateRMS3.209to4.485vsround19seed70; no smoothness improvement claim.",
-      "latest_lane_review": "Round20 seed70 valid500updates/full-costeval:0/64complete,21legalfrontland,0fourtop/home/drive;24edge/39relift/1rearair. Exact950substep replay; scalar contact/cost/terrain/memory valid. 3269CUDAactor decisions match exactly, memory suffix raw0-1; only1started transition,noneatlegalhome, parking effect untested."
+      "active_tasks": [
+        "step_round21_seed70@gpu0",
+        "step_round21_seed71@gpu1"
+      ],
+      "active_training_commit": "a983e893b8864f9efaf71fd04290a1332e562c5f",
+      "next_iteration_requirement": "Inspect post-drive wheel request/execution/actual speed and hip coordination,full0.5sstop; separately review earlyrelifts,worldpitch and contact/distance retention. No relaxed standards or scripted overrides.",
+      "body_pitch_requirement_status": "Full worldpitch objective and0.1to1 learning curriculum retained;final200updates/evalfullcost. Round20 pitch/rate remain excessive;new stop cost does not directly resolve earlybodymotion."
     },
     {
       "name": "recovery_rl_demo",

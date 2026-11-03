@@ -1,6 +1,6 @@
 # 项目文档索引
 
-- Step独立训练：[第19轮终局](step_round19_results.md)、[第20轮执行](step_round20_execution.md)、[第20轮seed70审查](step_round20_seed70_review.md)。两路已结束，seed70合法落顶21/64、四轮/归髋/短行/完整均0；落顶后重复离地和平顺性仍待修，seed71及整批决策待续接。
+- Step独立训练：[第20轮终局与停车诊断](step_round20_results.md)、[第21轮执行](step_round21_execution.md)。第20轮seed71已有36例规定短行但不停车；第21轮仅增加短行后轮请求/运动代价，工程门槛通过，GPU0/1从零运行。
 
 - 最新upright桌面反馈：基本流程与约0.6m/s体验获认可；允许较慢、更多调整以改善起立泛化，零输入交接后退已修复、两轮微漂仍待训练。见[反馈与修复](upright_restart20_desktop_feedback_20261102.md)。
 
