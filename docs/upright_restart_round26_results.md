@@ -57,6 +57,6 @@ seed101后退接近.6，但未验证.75，且原生/宽初态稳定性退步。s
 
 ## 决策
 
-第26轮不更新桌面、不作为新能力基线。第27轮只把balance_common_center_fraction从.6退回0，保留近地记忆/critic222、第25轮采样、其余奖励与全部14项验证，以从零同预算对照隔离该项影响。不是恢复旧权重，亦不添加新的增益或成本扫描；双向连续0–.75m/s、宽初态稳定起立、左右运动、零输入落地及普通交接要求均保持。先工程验证，再GPU2/3两份随机1000更新，见[第27轮执行](upright_restart_round27_execution.md)。
+验收时不主动更新桌面、不作为新能力基线。随后用户明确要求体验最新策略，已发布第26轮seed102预览并保留第20轮对照；这不改变本轮无一致升级、能力未通过的结论，见[发布记录](upright_restart26_sim2sim.md)。第27轮只把balance_common_center_fraction从.6退回0，保留近地记忆/critic222、第25轮采样、其余奖励与全部14项验证，以从零同预算对照隔离该项影响。不是恢复旧权重，亦不添加新的增益或成本扫描；双向连续0–.75m/s、宽初态稳定起立、左右运动、零输入落地及普通交接要求均保持。先工程验证，再GPU2/3两份随机1000更新，见[第27轮执行](upright_restart_round27_execution.md)。
 
-证据在控制目录acceptance、checkpoint_audit、process_audit、development_failure_audit、trajectory_analysis、physical_constraint_audit、landing_contact_audit、steady_actuator_audit、control_reward_audit与各固定outputs的原始trace。桌面第20轮ONNX+618081e保持；正式训练占位仍空，无周期定时器或goal。
+证据在控制目录acceptance、checkpoint_audit、process_audit、development_failure_audit、trajectory_analysis、physical_constraint_audit、landing_contact_audit、steady_actuator_audit、control_reward_audit与各固定outputs的原始trace。最新桌面预览见上述用户请求发布，第20轮ONNX+618081e行为保留作对照；正式训练占位仍空，无周期定时器或goal。
