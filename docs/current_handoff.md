@@ -40,7 +40,7 @@
 
 ## 当前工程实际状态
 
-`demo_project/upright_rl_demo`已恢复第20轮40e926d行为基线，当前提交5555855。21个行为文件逐字节相同，113项容器检查及GPU2固定重载32/32通过，重载轨迹与原第20轮逐字节一致。正式训练和旧自动队列关闭，工程诊断允许；完整21–27源码归档bce7793，sim2sim保持2ba0bac不改。四组MuJoCo开发对照确认接地确认及普通轮目标渐变明显贡献后退；组合干预仍残余.23–2.02cm总滑动，尚未采用为正式修复，见上方诊断。
+`demo_project/upright_rl_demo`已恢复第20轮40e926d行为基线，当前提交5555855。21个行为文件逐字节相同，113项容器检查及GPU2固定重载32/32通过，重载轨迹与原第20轮逐字节一致。正式训练和旧自动队列关闭，工程诊断允许；完整21–27源码归档bce7793，sim2sim保持2ba0bac不改。独立复检确认原交接时点的普通轮目标渐变加重后退；提前整个交接还改变髋归零，贡献尚未拆分。组合干预的.23–2.02cm是纵向采样积分，非总路程，仍未采用。Git/检查点/512组CPU网络输出已确认此前默认包为新第20轮102，而非第21轮；见上方诊断。
 
 入口见[demo README](../demo_project/upright_rl_demo/README.md)、[需求基线](current_scope.md)、[重建计划](../demo_project/upright_rl_demo/docs/rebuild_plan.md)、[架构边界](../demo_project/upright_rl_demo/docs/architecture.md)。重整验收见[upright_reorganization_20261030.md](upright_reorganization_20261030.md)。
 
