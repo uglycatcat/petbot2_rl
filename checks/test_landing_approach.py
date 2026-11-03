@@ -10,6 +10,13 @@ from checks.test_contracts import state, truth
 
 
 class LandingApproach(unittest.TestCase):
+    def test_candidate_config_loads_and_preserves_other_round20_choices(self):
+        old = load_config('configs/round20.json').to_dict()
+        new = load_config('configs/round21r1.json').to_dict()
+        changed = {k for k in old if old[k] != new[k]}
+        self.assertEqual(changed, {'round', 'normal_handoff_live_drive', 'landing_approach_motion_cost'})
+        self.assertEqual(new['round'], 21)
+
     def runtime(self, n=6):
         cfg = load_config('configs/round20.json', num_envs=32)
         return Runtime(n, 'cpu', .03, replace(cfg, normal_handoff_live_drive=True,
