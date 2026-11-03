@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round27_engineering_pending",
-  "training_enabled": false,
+  "phase": "round27_ready",
+  "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round26 rejected as upgrade: no consistent speed/landing benefit and wide-entry regression. Disable command-centered action only; retain LAND quality memory for isolated fresh comparison.",
+  "reason": "149CPU;fresh4to8same-run recovery,reload,default2048;explicit round26 reference mapping gives identical physics/actions/rewards/scoring;default original mapping verified in PhysX. Fresh isolation trial,not policy acceptance.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -15,11 +15,11 @@
     "series": "upright_restart_20261030",
     "round": 27,
     "name": "upright_restart_round27",
-    "status": "engineering_pending"
+    "status": "ready_random_initialization"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": false,
+  "engineering_validated": true,
   "implementation_review": "docs/round01_implementation.md",
   "cpu_contract_tests_passed": 149,
   "allowed_host_gpus": [
