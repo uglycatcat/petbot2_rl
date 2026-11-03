@@ -13,7 +13,7 @@
 
 quality在课程0—2成本为0，课程3—8系数依次1/6、2/6、…、1，最终仍为现有2/秒有界成本。全局课程已经保存和恢复，系数不新增记忆；低难度回归回合使用全局系数，静止落地质量仍需训练。原配置start=0维持原完整成本。新状态不进入actor，LAND入口实际运动继承、髋回0、正常交接当前输入及异常退出均保持。
 
-## 工程与运行状态
+## 工程与运行状态（已收官）
 
 工程固定3f1b082，最终训练发布3258504仅补验收元数据与文档，行为指纹保持`a691e25b…f72992d1`。124项容器检查及`demo_project/runs/_round21r2_gate`六项工程监督有效：control实际2048环境2更新/重载，quality128环境4→8同次恢复/重载，固定第20轮网络的真实PhysX轨迹验证课程2/3/5/8成本系数。
 
@@ -21,7 +21,7 @@ quality在课程0—2成本为0，课程3—8系数依次1/6、2/6、…、1，�
 
 固定第20轮网络只用于工程推理、不进入PPO：32/32静止循环完成，460个真实LAND样本验证0、1/6、1/2、1成本系数；与原同接口对照171帧的请求、执行、关节/机体状态及阶段逐项一致，只有奖励不同。全部轨迹有限、目标与力矩限制通过；固定策略实测轮峰35.349rad/s仍超目标上限，不作能力通过。详见工程`acceptance.json`、`checkpoint_audit.json`、`trajectory_audit.json`。
 
-已按[固定计划](experiments/upright_restart_round21r2.json)启动正式两份从零训练，启动器PID1213133。控制目录`demo_project/runs/_upright_restart_round21r2/`保存launch_status/eval_status/eval_finished；未结束时eval_finished不存在属预期。运行副本为`upright_restart_round21r2_control/quality`，仅GPU2/3，各2048×1000；固定版本运行，不热改。不重启21r1或废弃21—26/取消27，只用完成/异常事件，不设置周期定时器或goal。
+本批已完成，执行有效、quality能力退步，见[终局分析](upright_restart_round21r2_results.md)。此前按[固定计划](experiments/upright_restart_round21r2.json)启动正式两份从零训练，启动器PID1213133。控制目录`demo_project/runs/_upright_restart_round21r2/`保存launch_status/eval_status/eval_finished；未结束时eval_finished不存在属预期。运行副本为`upright_restart_round21r2_control/quality`，仅GPU2/3，各2048×1000；固定版本运行，不热改。不重启21r1或废弃21—26/取消27，只用完成/异常事件，不设置周期定时器或goal。
 
 ## 本轮验收
 
