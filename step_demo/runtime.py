@@ -26,7 +26,7 @@ def code_digest():
 def load_training(path):
     defaults=json.loads((PROJECT_ROOT/'configs/train_v1.json').read_text())
     t=json.loads(Path(path).read_text())
-    optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling','critic_observation','task_memory','wheel_mapping','body_pitch_curriculum','observation_normalization'}
+    optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling','critic_observation','task_memory','wheel_mapping','body_pitch_curriculum','observation_normalization','post_drive_stop_cost'}
     if set(t)-optional!=set(defaults) or t['schema']!='petbot_step_ppo_v1': raise ValueError('Unknown training schema/fields')
     if t.get('task_memory','none') not in ('none','sensor_stop_v16'):
         raise ValueError('Unknown deployable task memory')
@@ -41,6 +41,10 @@ def load_training(path):
         raise ValueError('stop_v16 requires the sensor-memory and zero-centered action contract')
     if t.get('reward_version') in ('clean_v17','pitch_v18') and (t.get('task_memory') != 'sensor_stop_v16' or t.get('wheel_mapping') != 'zero_margin'):
         raise ValueError('Single-flight tasks require sensor memory and the narrow zero-speed margin')
+    if 'post_drive_stop_cost' in t and (t['post_drive_stop_cost'] != 'command_motion_v21'
+            or t.get('reward_version') != 'pitch_v18'
+            or t.get('task_memory') != 'sensor_stop_v16' or t.get('wheel_mapping') != 'zero_margin'):
+        raise ValueError('Post-drive stop cost requires the complete sensor-memory pitch task')
     if t.get('policy_distribution','gaussian') not in ('gaussian','beta'):raise ValueError('Unknown policy distribution')
     if t.get('critic_observation', 'policy') not in ('policy', 'reward_state_v11'):
         raise ValueError('Unknown critic observation')
@@ -88,7 +92,7 @@ def main(argv):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('command',choices=('train','evaluate'))
     parser.add_argument('--config',type=Path,default=DEFAULT_CONFIG)
-    parser.add_argument('--training-config',type=Path,default=PROJECT_ROOT/'configs/round20_seed70.json')
+    parser.add_argument('--training-config',type=Path,default=PROJECT_ROOT/'configs/round21_seed70.json')
     parser.add_argument('--model-dir',type=Path)
     parser.add_argument('--asset-dir',type=Path,default=PROJECT_ROOT/'artifacts/robot')
     parser.add_argument('--run-dir',type=Path,required=True)

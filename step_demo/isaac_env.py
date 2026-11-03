@@ -17,7 +17,7 @@ from .estimator import InertialEstimator
 from .tensor_math import rotate, heading
 from .rewards import (edge_potential, potential_difference, progress_increment, terminal_reward,
                       staged_progress, component_increment, settled_progress, touch_costs,
-                      post_top_home_cost)
+                      post_top_home_cost, post_drive_stop_cost)
 from .progress import drive_memory
 from .stop_memory import SensorStopMemory, wheel_request
 from .front_motion import FrontMotion
@@ -59,6 +59,7 @@ class StepEnv(DirectRLEnv):
         self.home_pose_reward = training.get('reward_version') in ('home_v15','stop_v16','clean_v17','pitch_v18')
         self.stop_reward_memory = training.get('reward_version') in ('stop_v16','clean_v17','pitch_v18')
         self.single_lift = training.get('reward_version') in ('clean_v17','pitch_v18')
+        self.post_drive_stop_reward = training.get('post_drive_stop_cost') == 'command_motion_v21'
         self.body_pitch_reward = training.get('reward_version') == 'pitch_v18'
         self.sensor_stop_enabled = training.get('task_memory', 'none') == 'sensor_stop_v16'
         self.wheel_mapping = training.get('wheel_mapping', 'affine')
@@ -88,6 +89,9 @@ class StepEnv(DirectRLEnv):
         self.front_motion = FrontMotion(n, d)
         self.sensor_stop = SensorStopMemory(n, d, task.acceptance.post_climb_distance_m, task.acceptance.hip_tolerance_rad)
         self.reward_stop_intent = torch.zeros(n, dtype=torch.bool, device=d)
+        self.stop_cost_active = torch.zeros(n, dtype=torch.bool, device=d)
+        self.stop_request_cost = torch.zeros(n, device=d)
+        self.stop_motion_cost = torch.zeros(n, device=d)
         self.actions = torch.zeros(n, 2, device=d); self.actions[:, 1] = -1
         self.raw_actions = self.actions.clone(); self.last_actions = self.actions.clone()
         self.executed = self.actions.clone()
@@ -217,6 +221,7 @@ class StepEnv(DirectRLEnv):
     def _pre_physics_step(self, actions):
         if not torch.isfinite(actions).all():
             raise ValueError('Nonfinite policy action')
+        self.stop_cost_active.copy_(self.reward_stop_intent)
         self.last_actions.copy_(self.executed)
         self.raw_actions = actions.clone()
         self.actions = actions.clamp(-1., 1.)
@@ -451,6 +456,12 @@ class StepEnv(DirectRLEnv):
             self.task.acceptance.hip_tolerance_rad,self.step_dt) if self.home_pose_reward
             else torch.zeros_like(self.home_pose_cost))
         reward -= self.home_pose_cost
+        self.stop_request_cost.zero_(); self.stop_motion_cost.zero_()
+        if self.post_drive_stop_reward:
+            self.stop_request_cost, self.stop_motion_cost = post_drive_stop_cost(
+                wheel_request(self.actions[:, 1], self.wheel_mapping), self.com_vel.norm(dim=-1),
+                self.stop_cost_active, self.task.acceptance.stop_speed_m_s, self.step_dt)
+        reward -= self.stop_request_cost + self.stop_motion_cost
         self.body_pitch_applied_cost = self.body_pitch_cost_scale*(self.body_pitch_rate_cost+self.body_pitch_angle_cost)
         reward -= self.body_pitch_applied_cost
         self.last_reward = reward.clone()
@@ -523,6 +534,7 @@ class StepEnv(DirectRLEnv):
                          'stop_time','completed','supported_top','max_lift_fraction','previous_forward','wheel_speed_peak','ascent_rewarded',
                          'previous_potential','best_progress','motion_cost','stage_credit','drive_support_gap','near_top','relift_cost','home_hold',
                          'touch_impact_cost','touch_motion_cost','four_top_seen','home_pose_cost',
+                         'stop_cost_active','stop_request_cost','stop_motion_cost',
                          'body_pitch','body_pitch_rate','estimated_body_pitch','estimated_body_pitch_rate',
                          'body_pitch_rate_cost','body_pitch_angle_cost','body_pitch_applied_cost'):
                 getattr(self,name)[env_ids] = 0
@@ -560,6 +572,8 @@ class StepEnv(DirectRLEnv):
             body_pitch_cost_scale=self.body_pitch_cost_scale,body_pitch_applied_cost=self.body_pitch_applied_cost[ids].tolist(),
             home_hold=self.home_hold[ids].tolist(),
             four_top_seen=self.four_top_seen[ids].tolist(),home_pose_cost=self.home_pose_cost[ids].tolist(),
+            stop_cost_active=self.stop_cost_active[ids].tolist(),
+            stop_request_cost=self.stop_request_cost[ids].tolist(),stop_motion_cost=self.stop_motion_cost[ids].tolist(),
             sensor_stop_memory=self.sensor_stop.observation()[ids].tolist() if self.sensor_stop_enabled else [],
             sensor_stop_anchor=self.sensor_stop.anchor[ids].tolist() if self.sensor_stop_enabled else [],
             reward_stop_intent=self.reward_stop_intent[ids].tolist(),

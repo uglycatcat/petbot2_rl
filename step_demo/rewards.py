@@ -102,3 +102,16 @@ def post_top_home_cost(hip_position, four_top_seen, tolerance, dt):
     switch the cost off. The caller resets the milestone at each new episode.
     """
     return dt * 10. * (hip_position.abs()-tolerance).clamp_min(0.).mean(-1) * four_top_seen
+
+
+def post_drive_stop_cost(wheel_command, speed, active, stop_speed, dt):
+    """Price continued command and physical motion after the required short drive.
+
+    `active` is the reward-only completion latch from the previous control step.
+    It must stay set through later support/pose loss. No cost precedes that latch,
+    no bonus is paid for waiting, and zero command alone does not certify a stop.
+    Weights are learning hypotheses; control, sensors and acceptance are unchanged.
+    """
+    request = dt * 5. * (wheel_command / 25.).square() * active
+    motion = dt * 2. * ((speed - stop_speed).clamp_min(0.) / .3).square() * active
+    return request, motion
