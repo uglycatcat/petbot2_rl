@@ -1,0 +1,22 @@
+{
+  "selected": "restart26_s102",
+  "checkpoint": "update_001000.pt",
+  "batch": "upright_restart_round26",
+  "seed": 102,
+  "training_updates": 1000,
+  "task_commit": "8bdd13e8c655b6bac06a7ca20b90cfe3cd348d90",
+  "checkpoint_sha256": "6a371ba96df2e04049fca7ed253ddef009375abeb05dd2c9795a8d6c61994ba2",
+  "previous_default": "restart20_s102",
+  "previous_selection": "selection_restart20.json",
+  "inference_backend": "onnxruntime_cpu",
+  "status": "user_requested_latest_preview_not_capability_upgrade",
+  "criterion": "Latest completed round26 seed102: low/high60s complete32/32, wide initial29/32. Seed101 fails more and trained only0.6m/s. No consistent improvement over round25 and no claim of superiority to desktop20.",
+  "recommended_keyboard": {
+    "forward_mps": 0.15,
+    "yaw_radps": 0.5
+  },
+  "source_results": "docs/upright_restart_round26_results.md",
+  "limitations": "Native sustained+0.412/-0.465m/s under +/-0.75 requests; zero-input near-ground movement0.166m. Full speed, landing motion, mirror symmetry and broad initial conditions not accepted.",
+  "mujoco_evidence": "validation/20261103_restart26/review.json",
+  "mujoco_status": "Finite checks complete. Static/mixed loops and ordinary ownership work; landing retreat12.1-17.0cm and two-wheel zero-input drift remain. Full capability not accepted."
+}

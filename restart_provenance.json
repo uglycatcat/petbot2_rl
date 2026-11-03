@@ -15,7 +15,7 @@
     "input": "External Space/WASD/QE/arrow commands replace training scenario scheduler; no automatic rise/land.",
     "history": "Same first-frame replication and oldest-first order; cleared at every accepted rise.",
     "timing": "Use each bundle period: restart20 30ms/15 substeps; restart26 60ms/30 substeps; source physics2ms.",
-    "handoff": "LAND unchanged. At confirmed ground HANDOFF entry, live operator input immediately owns the ordinary command while pinned executed wheel targets blend over existing0.3s; hip0/ground confirmation do not defer input. No extra blend at success. EXIT uses the same pinned blend and live input.",
+    "handoff": "Normal restart_v20_handoff uses live input immediately after unchanged LAND confirmation, without inherited RL wheel blending; hip return and abnormal EXIT unchanged. Archived restart_v20/v26 retain original blending.",
     "safety": "Independent MuJoCo body-contact/height guard exits call without adding contact to actor observations.",
     "ordinary": "Source full wheel/hip targets independent of policy motion limits; trained source controller retained."
   },
@@ -44,6 +44,20 @@
       "timing": "2ms physics,30 substeps per60ms policy sample",
       "balance_common_center_fraction": 0.6,
       "live_ordinary_command": true
+    },
+    "restart_v20_handoff": {
+      "source_commit": "c8443fa74c3a5f30cca42d2bfaae968f25b02622",
+      "policy_training_commit": "40e926d8c181473e181ed5069535247525786fc9",
+      "source_run": "upright_restart_round20_s102",
+      "controller": "controller_handoff.py",
+      "files": {
+        "controller.py": "db4c1232489bf500a59d2f52b24ffddc613fa025c421ada873e12d7fcf659c08",
+        "geometry.py": "aee4929f871833fccdf082638a0dddc989453283f0cad564bf7b00aa7b4855f6",
+        "runtime.py": "ca0febdada278d13ad94845d28b97d9766ff9d6ef9984343c5fe10b627b575af"
+      },
+      "normal_handoff_live_drive": true,
+      "timing": "2ms physics,15substeps per30ms policy sample",
+      "training_rewards_included": false
     }
   }
 }

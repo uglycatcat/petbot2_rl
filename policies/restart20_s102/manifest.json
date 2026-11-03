@@ -200,7 +200,8 @@
     "heading_wheel_correction_rad_s": 2.0,
     "yaw_quality_rad": 0.35,
     "imu_noise_std": 0.0,
-    "joint_noise_std": 0.0
+    "joint_noise_std": 0.0,
+    "normal_handoff_live_drive": true
   },
   "numeric_max_abs_error": 8.344650268554688e-07,
   "simulation_validated": false,
@@ -554,5 +555,16 @@
     "fixed_cases_completed": 2,
     "full_capability_passed": false,
     "user_desktop_accepted": false
+  },
+  "controller_contract": "restart_v20_handoff",
+  "runtime_controller_source_commit": "c8443fa74c3a5f30cca42d2bfaae968f25b02622",
+  "runtime_revision": "round20_normal_handoff_v1",
+  "runtime_validation": "validation/20261103_round20_handoff/review.json",
+  "deployment_handoff": {
+    "normal": "Live ordinary request without old RL wheel-target blending after original landing confirmation",
+    "abnormal_exit": "Original target blend retained",
+    "ground_confirm_s": 0.18,
+    "hip_return": "Original default0/slew preserved",
+    "network_weights_changed": false
   }
 }

@@ -76,6 +76,10 @@ for name,case in result.items():
     # step must use the current request, including an unchanged zero.
     during=[r for r in rows if r['phase']==Phase.HANDOFF and r['time']>metrics['handoff']+.001]
     assert during and all(r['raw']==[0.,0.] for r in during),name
+    immediate=json.loads((args.policy/'manifest.json').read_text())['control_config'].get('normal_handoff_live_drive',False)
+    if immediate:
+        assert all(r['wheel_target']==[0.,0.] for r in during),name
+        checks[name]['zero_target_from_first_ordinary_sample']=True
     # Records are taken after physics. The blend-boundary target may contain
     # float32 roundoff; require exact zero one policy sample after that boundary.
     dt=case.get('control_period_s',.03)
@@ -90,9 +94,12 @@ for name,case in result.items():
         through=[i for i,r in enumerate(rows) if r['time']<=metrics['handoff']]
         assert all(rows[i]==old[i] for i in through), name
         first=rows[len(through)]
-        assert first['wheel_target']==old[len(through)]['wheel_target'],name
+        if immediate:
+            assert first['wheel_target']==[0.,0.],name
+        else:
+            assert first['wheel_target']==old[len(through)]['wheel_target'],name
         checks[name]['unchanged_through_handoff_entry_frames']=len(through)
-        checks[name]['first_ordinary_targets_inherited']=True
+        checks[name]['first_ordinary_targets_inherited']=not immediate
         checks[name]['before']=landing_metrics(old)
 (out/'verification.json').write_text(json.dumps(checks,indent=2)+'\n')
 print(json.dumps(checks,indent=2))

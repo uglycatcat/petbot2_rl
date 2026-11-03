@@ -1,22 +1,26 @@
 {
-  "selected": "restart26_s102",
+  "selected": "restart20_s102",
   "checkpoint": "update_001000.pt",
-  "batch": "upright_restart_round26",
+  "batch": "upright_restart_round20",
   "seed": 102,
   "training_updates": 1000,
-  "task_commit": "8bdd13e8c655b6bac06a7ca20b90cfe3cd348d90",
-  "checkpoint_sha256": "6a371ba96df2e04049fca7ed253ddef009375abeb05dd2c9795a8d6c61994ba2",
-  "previous_default": "restart20_s102",
-  "previous_selection": "selection_restart20.json",
+  "task_commit": "40e926d8c181473e181ed5069535247525786fc9",
+  "checkpoint_sha256": "19af9aa1faae970de1cc360fc312bffb116ad1fda565d60773249057702db035",
+  "previous_default": "restart26_s102",
+  "previous_selection": "selection_restart26.json",
   "inference_backend": "onnxruntime_cpu",
-  "status": "user_requested_latest_preview_not_capability_upgrade",
-  "criterion": "Latest completed round26 seed102: low/high60s complete32/32, wide initial29/32. Seed101 fails more and trained only0.6m/s. No consistent improvement over round25 and no claim of superiority to desktop20.",
+  "status": "user_requested_round20_normal_handoff_fix_preview",
+  "criterion": "Round20 seed102 completes low32/32 and high29/32; seed101 fails landing. This is the better seed from the requested round, not a claim of improvement over every earlier policy.",
   "recommended_keyboard": {
     "forward_mps": 0.15,
     "yaw_radps": 0.5
   },
-  "source_results": "docs/upright_restart_round26_results.md",
-  "limitations": "Native sustained+0.412/-0.465m/s under +/-0.75 requests; zero-input near-ground movement0.166m. Full speed, landing motion, mirror symmetry and broad initial conditions not accepted.",
-  "mujoco_evidence": "validation/20261103_restart26/review.json",
-  "mujoco_status": "Finite checks complete. Static/mixed loops and ordinary ownership work; landing retreat12.1-17.0cm and two-wheel zero-input drift remain. Full capability not accepted."
+  "source_results": "docs/upright_restart_round20_results.md",
+  "limitations": "Bidirectional0.75m/s, mirror symmetry, broad initial hips and actual wheel overspeed unresolved.",
+  "mujoco_evidence": "validation/20261103_round20_handoff/review.json",
+  "mujoco_status": "Fixed20 development: normal target handoff reduces zero-input reverse travel13.32/13.95/11.73to3.15/3.59/2.60cm. Policy unchanged; residual remains,not stationary touchdown acceptance.",
+  "latest_runtime_validation": "validation/20261103_round20_handoff/review.json",
+  "runtime_revision": "round20_normal_handoff_v1",
+  "controller_contract": "restart_v20_handoff",
+  "controller_source_commit": "c8443fa74c3a5f30cca42d2bfaae968f25b02622"
 }

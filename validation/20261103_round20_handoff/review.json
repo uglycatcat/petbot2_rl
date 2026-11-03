@@ -1,0 +1,129 @@
+{
+  "kind": "user_requested_round20_handoff_preview",
+  "default_policy": "restart20_s102",
+  "network_unchanged": true,
+  "network_sha256": "20e928cd45b4333f8213b12acf5193fbfaa597f04986606c78f960952fa5d60f",
+  "controller_contract": "restart_v20_handoff",
+  "controller_source_commit": "c8443fa74c3a5f30cca42d2bfaae968f25b02622",
+  "training_commit": "40e926d8c181473e181ed5069535247525786fc9",
+  "normal_handoff_only": true,
+  "ground_confirmation_unchanged": true,
+  "hip_and_abnormal_exit_unchanged": true,
+  "policy_period_s": 0.03,
+  "source_model_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+  "cases": {
+    "stationary": {
+      "zero_ordinary_pass": true,
+      "balance_drift_m_s": -0.010673256793272183,
+      "landing": {
+        "first_four_contact": 23.84999999999766,
+        "handoff": 23.999999999997577,
+        "stopped": 24.059999999997544,
+        "contact_to_stop_s": 0.2099999999998836,
+        "handoff_to_stop_s": 0.05999999999996675,
+        "backward_travel_m": 0.031501939818263054,
+        "peak_backward_m_s": 0.29124119877815247,
+        "complete": 24.629999999997228
+      },
+      "zero_target_from_first_ordinary_sample": true,
+      "unchanged_through_handoff_entry_frames": 800,
+      "first_ordinary_targets_inherited": false,
+      "before": {
+        "first_four_contact": 23.84999999999766,
+        "handoff": 23.999999999997577,
+        "stopped": 24.329999999997394,
+        "contact_to_stop_s": 0.479999999999734,
+        "handoff_to_stop_s": 0.3299999999998171,
+        "backward_travel_m": 0.13317141339182853,
+        "peak_backward_m_s": 0.5316750407218933,
+        "complete": 24.629999999997228
+      }
+    },
+    "forward_release": {
+      "zero_ordinary_pass": true,
+      "balance_drift_m_s": -0.010499715532981948,
+      "landing": {
+        "first_four_contact": 23.84999999999766,
+        "handoff": 23.999999999997577,
+        "stopped": 24.089999999997527,
+        "contact_to_stop_s": 0.239999999999867,
+        "handoff_to_stop_s": 0.08999999999995012,
+        "backward_travel_m": 0.03588248661719263,
+        "peak_backward_m_s": 0.375242680311203,
+        "complete": 24.629999999997228
+      },
+      "zero_target_from_first_ordinary_sample": true,
+      "unchanged_through_handoff_entry_frames": 800,
+      "first_ordinary_targets_inherited": false,
+      "before": {
+        "first_four_contact": 23.84999999999766,
+        "handoff": 23.999999999997577,
+        "stopped": 24.329999999997394,
+        "contact_to_stop_s": 0.479999999999734,
+        "handoff_to_stop_s": 0.3299999999998171,
+        "backward_travel_m": 0.13951425067149104,
+        "peak_backward_m_s": 0.6068060398101807,
+        "complete": 24.629999999997228
+      }
+    },
+    "reverse_release": {
+      "zero_ordinary_pass": true,
+      "balance_drift_m_s": -0.010644402965373091,
+      "landing": {
+        "first_four_contact": 23.819999999997677,
+        "handoff": 23.999999999997577,
+        "stopped": 24.089999999997527,
+        "contact_to_stop_s": 0.26999999999985036,
+        "handoff_to_stop_s": 0.08999999999995012,
+        "backward_travel_m": 0.026047611515969033,
+        "peak_backward_m_s": 0.2672880291938782,
+        "complete": 24.65999999999721
+      },
+      "zero_target_from_first_ordinary_sample": true,
+      "unchanged_through_handoff_entry_frames": 800,
+      "first_ordinary_targets_inherited": false,
+      "before": {
+        "first_four_contact": 23.819999999997677,
+        "handoff": 23.999999999997577,
+        "stopped": 24.329999999997394,
+        "contact_to_stop_s": 0.5099999999997173,
+        "handoff_to_stop_s": 0.3299999999998171,
+        "backward_travel_m": 0.11734264835715294,
+        "peak_backward_m_s": 0.5257377624511719,
+        "complete": 24.65999999999721
+      }
+    }
+  },
+  "published_vs_development_exact_prefix_frames": {
+    "stationary": 1334,
+    "forward_release": 1334,
+    "reverse_release": 1334
+  },
+  "source_parity": "source_port.json",
+  "operator_handoff": "input_handoff.json",
+  "headless_cases_complete": 5,
+  "injected_exit_checked": true,
+  "viewer_smoke_seconds": 4,
+  "viewer_exit_code": 0,
+  "target_limit_pass": true,
+  "sampled_effort_pass": true,
+  "sampled_peak_effort": [
+    0.11256702199405563,
+    0.026528402705977824,
+    0.036218921753682846,
+    1.2,
+    1.2,
+    0.38,
+    0.38
+  ],
+  "actual_wheel_peak": 32.817626953125,
+  "policy_stop_requirement_pass": false,
+  "full_capability_pass": false,
+  "desktop_acceptance_pending": true,
+  "training_modified": false,
+  "notes": [
+    "Remaining2.6-3.6cm backward integral from first four-contact record;not total planar travel.",
+    "Original ONNX retained;no21r1 training weights/rewards shipped.",
+    "Abnormal EXIT has synthetic-trigger physical validation,not a random-fall campaign."
+  ]
+}

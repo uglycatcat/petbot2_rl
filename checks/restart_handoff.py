@@ -33,6 +33,8 @@ assert all(r['raw']==[0.,0.] for r in idle)
 assert max(abs(r['motion'][0]) for r in idle)<.005
 handoff=[r for r in rows if r['phase']==Phase.HANDOFF and r['phase_time']>0]
 assert handoff and all(abs(r['raw'][0]-.15)<1e-6 for r in handoff)
+if getattr(c.cfg,'normal_handoff_live_drive',False):
+    assert all(abs(v-5.)<1e-5 for r in handoff for v in r['wheel_target'])
 result['held_command']={'cycles':c.cycles,'held_measured_mean':float(np.mean([r['motion'][0] for r in held])),
                         'released_speed_max':max(abs(r['motion'][0]) for r in idle),'unchanged_input_owned_during_transfer':True}
 # Release while the hips/ground are still being confirmed, not after success.
@@ -52,6 +54,8 @@ assert c.cycles==1 and c.interruptions==0,c.events
 after=[r for r in rows if r['time']>released+.001]
 assert after and all(r['raw']==[0.,0.] for r in after)
 assert any(r['phase']==Phase.HANDOFF for r in after)
+if getattr(c.cfg,'normal_handoff_live_drive',False):
+    assert all(r['wheel_target']==[0.,0.] for r in after)
 # Records follow physics; use the bundle period for the float32 blend boundary.
 blend=c.cfg.handoff_blend_s
 assert max(abs(x) for r in after if r['time']>=handoff_at+blend+c.dt-1e-8 for x in r['wheel_target'])<1e-5

@@ -14,6 +14,7 @@ import torch
 from .simulation import Simulation as LegacySimulation, batch, find_model, fingerprint
 from .restart_core.controller import Controller as SourceController, Phase, Reason
 from .restart_core.controller_v26 import Controller as Round26Controller
+from .restart_core.controller_handoff import Controller as HandoffController
 from .restart_core.geometry import WheelGeometry, orientation
 from .restart_core.observation import Observation
 
@@ -33,7 +34,8 @@ class RestartController:
         self.dt = m['control_period_s']
         self.geometry = WheelGeometry(m['wheel_geometry'], 'cpu')
         self.controller_contract = m.get('controller_contract', 'restart_v20')
-        controllers = {'restart_v20': SourceController, 'restart_v26': Round26Controller}
+        controllers = {'restart_v20': SourceController, 'restart_v26': Round26Controller,
+                       'restart_v20_handoff': HandoffController}
         if self.controller_contract not in controllers:
             raise ValueError(f'Unknown restart controller contract: {self.controller_contract}')
         self.control = controllers[self.controller_contract](
@@ -123,9 +125,8 @@ class RestartController:
             self.pending_land = False
             self.events.append(dict(time=self.elapsed, event='land_requested'))
         if self.ordinary_control:
-            # HANDOFF already belongs to ordinary control. Its pinned target blend
-            # inherits the last wheel targets and approaches the live request;
-            # hip/ground confirmation must not latch measured landing velocity.
+            # HANDOFF already belongs to ordinary control. The selected contract
+            # determines target blending; hip confirmation never defers live input.
             command = self.operator_command
         else:
             command = torch.maximum(torch.minimum(self.operator_command, self.policy_motion_limits), -self.policy_motion_limits)
