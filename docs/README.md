@@ -9,7 +9,7 @@
 - 桌面体验：upright默认改为新第20轮seed102单ONNX，旧C58保留；见[sim2sim发布记录](upright_restart20_sim2sim.md)。
 
 - upright落地新增审查：[方向/速度、普通控制交接与下一轮设计](upright_restart_landing_motion_20261102.md)，策略不延长四轮控制；第23轮固定运行不改。
-- 当前：**upright第25轮已验收，第26轮已在GPU2/3从零启动**。先看[交接](current_handoff.md)、[第25轮终局](upright_restart_round25_results.md)、[第26轮执行](upright_restart_round26_execution.md)；GPU2/3、从零及全部能力保持。
+- 当前：**upright第26轮已验收，第27轮工程验收中**。先看[交接](current_handoff.md)、[第26轮终局](upright_restart_round26_results.md)、[第27轮执行](upright_restart_round27_execution.md)；GPU2/3、从零及全部能力保持。
 
 
 先读根目录 [AGENTS.md](../AGENTS.md) 的硬规则和里程碑，再读[当前交接](current_handoff.md)。只按手头问题打开下面相应文档；历史实验与 `runs/` 不需要全读。根目录 README 用于部署和使用，不承载进度。

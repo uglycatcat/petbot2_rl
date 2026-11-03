@@ -26,6 +26,10 @@ actor195、critic222及私有输入隔离有效，源模型保持。目标±25�
 
 ## 正式启动
 
-最终固定8bdd13e8c655b6bac06a7ca20b90cfe3cd348d90，只更新已过门槛代码的状态和说明；行为7c8af24f70c0d6fdfc9d4861fe7896fc7889a7bfc5b1deccf3bce170309217e9、源模型b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f。种子101/102在GPU2/3各2048×1000，实际随机initialization.pt不同、初始updates=0、空历史/冻结父及实际PPO更新均已核验。run_id=c92c5a43-c7da-440e-806c-c16bc425c3bd、0d070899-3e7a-4131-bb6b-dfae0a0313f7，启动器415183、一次性退出观察器415188。控制`demo_project/runs/_upright_restart_round26`，当前未结束，不把训练启动当成功。
+最终固定8bdd13e8c655b6bac06a7ca20b90cfe3cd348d90，只更新已过门槛代码的状态和说明；行为7c8af24f70c0d6fdfc9d4861fe7896fc7889a7bfc5b1deccf3bce170309217e9、源模型b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f。种子101/102在GPU2/3各2048×1000，实际随机initialization.pt不同、初始updates=0、空历史/冻结父及实际PPO更新均已核验。run_id=c92c5a43-c7da-440e-806c-c16bc425c3bd、0d070899-3e7a-4131-bb6b-dfae0a0313f7，启动器415183、一次性退出观察器415188。控制`demo_project/runs/_upright_restart_round26`，此为启动时记录；实际终局和进程退出见下节。
 
 第25轮completion_review已handled，不重复启动；新第26轮完成/异常后先分析14项独立验证及实际进程、失败/OOM、请求/执行/实测、成功/失败轨迹，再决定下一步。保持普通接管所有权和全部能力要求，无周期定时器或goal；桌面不自动换策略。
+
+## 正式终局
+
+第26轮两份1000更新/14独立评估有效，无缺失/OOM/恢复；课程分别到.6/.75，高范围完整25/32与32/32、宽初态19/32与29/32，共9次起立及14次两轮失败。seed102满速实测+.412/−.465m/s，零请求近地后运动4.6/16.6cm，无一致升级。 不重复启动，不替换桌面。详见[第26轮终局](upright_restart_round26_results.md)。

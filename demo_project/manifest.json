@@ -44,23 +44,22 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "8bdd13e8c655b6bac06a7ca20b90cfe3cd348d90",
+      "verified_commit": "5f5c7fcc49443bfc1ea1b3d9b47f724bfd3350ea",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart_round26_running_gpu2_gpu3_random_command_center_landing_window",
-      "local_validation": "Round25 valid2x1000/14eval,noOOM/recovery;wide63complete64entered,high60complete,fullspeed.47-.54m/s,zero landing14cmfirst-ground travel. Round26 149CPU,4to8same-run/reload,default2048x2;center-off native/landing physics+scoring exact,newreward independently verified;center-on steady 32/32 development,10656 target frames verified. Targets/efforts valid,actualoverspeed/failures retained,noOOM/runtimefailures. TwoGPU2/3fresh2048x1000actualPPO/distinctrandomactorsverified;no policy/sim2sim acceptance,desktop20+618081e unchanged.",
+      "status": "restart_round27_engineering_pending_round26_reviewed",
+      "local_validation": "Round26 valid2x1000/14eval,no missing/OOM/recovery;courses0.6/0.75,wide19/29of32,9RISE14BALANCEfailures;seed102fullspeed+.412/-.465,zeroland4.6/16.6cm. No consistent upgrade. Round27 only disable action center,retain LAND memory;149CPU,GPUgate pending,no formal launch. Desktop20+618081e unchanged,no policy/sim2sim acceptance.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round26_s101@gpu2",
-        "upright_restart_round26_s102@gpu3"
+        "upright_restart_round27_gate01@gpu2_gpu3"
       ],
-      "active_training_commit": "8bdd13e8c655b6bac06a7ca20b90cfe3cd348d90",
+      "active_training_commit": null,
       "pending_design_review": null,
-      "latest_result_document": "docs/upright_restart_round25_results.md",
-      "active_execution_document": "docs/upright_restart_round26_execution.md"
+      "latest_result_document": "docs/upright_restart_round26_results.md",
+      "active_execution_document": "docs/upright_restart_round27_execution.md"
     },
     {
       "name": "step_rl_demo",
