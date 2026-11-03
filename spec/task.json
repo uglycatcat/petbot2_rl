@@ -31,21 +31,17 @@
     "ordinary_four_wheel": "full_source_model_capability_independent_of_policy_curriculum",
     "q_e": "ordinary_mode_common_hip_target_only",
     "space_first": "takeover_and_straight_rise",
-    "rise_adjustment": "sufficient_deceleration_and_hip_preparation_allowed_slower_rise_for_stability_and_generalization",
+    "rise_adjustment": "allowed_when_needed_but_discouraged",
     "rise_heading": "takeover_heading_no_commanded_turn",
     "two_wheel": "forward_reverse_stop_turn_and_combined_motion",
     "two_wheel_manual_hip_control": false,
     "two_wheel_hip_control": "policy_balancing_degree_of_freedom",
     "space_second": "front_wheel_landing_then_ordinary_controller",
     "landing_default_common_hip_rad": 0.0,
-    "landing_speed_and_handoff": "inherit_motion_and_heading_at_land_request_allow_speed_reduction_then_transfer_to_ordinary",
+    "landing_speed_and_handoff": "preserve_actual_motion_and_continuous_control_transfer",
     "unexpected_fall": "exit_to_ordinary_report_real_posture_require_new_request",
     "automatic_rerise": false,
-    "one_policy_call": "one_rise_hold_land_or_interrupt",
-    "landing_actor_control_boundary": "policy_controls_landing_until_ground_confirmation_then_ordinary_controller_owns_actuators",
-    "landing_direction_quality": "preserve_robot_travel_direction_allow_stability_deceleration_avoid_unnecessary_reverse_motion",
-    "stationary_landing": "stationary_zero_input_entry_should_transfer_without_uncommanded_motion",
-    "ordinary_after_landing": "live_operator_input_forward_reverse_or_stop_no_policy_driving_after_transfer"
+    "one_policy_call": "one_rise_hold_land_or_interrupt"
   },
   "capability": {
     "required_continuous_straight_speed_m_s": [
@@ -84,13 +80,16 @@
     "inspect_success_and_failure_trajectories": true,
     "deploy_format": "onnx",
     "onnx_export_is_sim2sim_pass": false,
-    "final_sim2sim_acceptance": "user_desktop_experience",
-    "landing_cases": [
-      "held_forward",
-      "held_reverse",
-      "stationary_zero",
-      "release_during_landing_or_handoff"
-    ],
-    "post_landing_validation": "ordinary_controller_only_check_takeover_and_motion_not_extended_policy_control"
+    "final_sim2sim_acceptance": "user_desktop_experience"
+  },
+  "latest_user_priority": {
+    "date": "2026-11-03",
+    "development_baseline": "upright_restart_round20",
+    "landing_stationary": "highest_priority_zero_input_touchdown_and_ordinary_handoff_must_stop_without_reverse_drive",
+    "motion_retention": "retain_user_accepted_round20_capability",
+    "sim2sim": "leave_current_published_version_unchanged",
+    "fresh_training": "random_initialization_only; round20 checkpoint allowed for fixed diagnostics, not PPO initialization",
+    "rise": "may adjust and slow for stability and generalization",
+    "landing": "inherit actual entry motion, allow slowing, return hip0, then ordinary controller obeys live input"
   }
 }

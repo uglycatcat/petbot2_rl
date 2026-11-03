@@ -140,12 +140,9 @@ def metrics(env):
             'Cycle/balance_velocity_cost': result['balance_velocity_cost'].mean(),
             'Cycle/balance_velocity_coarse_cost': result['balance_velocity_coarse_cost'].mean(),
             'Cycle/landing_velocity_cost': result['landing_velocity_cost'].mean(),
-            'Cycle/landing_quality_cost': result['landing_quality_cost'].mean(),
-            'Cycle/landing_quality_bonus': result['landing_quality_bonus'].mean(),
             'Cycle/phase_balance_fraction': (result['phase_before'] == 2).float().mean(),
             'Cycle/phase_land_fraction': (result['phase_before'] == 3).float().mean(),
             'Cycle/short_episode_occupancy': p.short_cycle.float().mean(),
-            'Cycle/command_dwell_s': p.command_dwell().mean(),
             'Physics/rear_contact_fraction': t['rear_fraction'].mean(),
             'Physics/wheel_actual_peak': s['wheel'].abs().max(),
             'Physics/wheel_target_peak': p.control.executed[:, 1:].abs().max(),
@@ -159,7 +156,7 @@ def metrics(env):
                 requested_action=p.control.requested_action, executed_targets=p.control.executed,
                 balance_yaw_correction=p.control.yaw_correction,
                 stage_time=p.control.age, policy_stage_time=p.observation_stage_age(),
-                longest_hold=p.longest_hold, curriculum_level=p.level, command_dwell_s=p.command_dwell()).items()}
+                longest_hold=p.longest_hold, curriculum_level=p.level).items()}
             if p.cfg.critic_task_state:
                 env.upright_snapshot['training_critic_state'] = p.critic_state().clone()
     return env.upright_metrics

@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round27_ready",
-  "training_enabled": true,
-  "automatic_iteration_enabled": true,
+  "phase": "round20_restored_landing_diagnosis",
+  "training_enabled": false,
+  "automatic_iteration_enabled": false,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "149CPU;fresh4to8same-run recovery,reload,default2048;explicit round26 reference mapping gives identical physics/actions/rewards/scoring;default original mapping verified in PhysX. Fresh isolation trial,not policy acceptance.",
+  "reason": "User rollback to accepted round20; first analyze/fix stationary landing. No round27 resume or new full batch before targeted engineering review.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -13,17 +13,18 @@
   "batch26_resume_allowed": false,
   "next_experiment": {
     "series": "upright_restart_20261030",
-    "round": 27,
-    "name": "upright_restart_round27",
-    "status": "ready_random_initialization"
+    "name": "round20_landing_diagnostic",
+    "status": "diagnostic_only_no_ppo"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": true,
+  "engineering_validated": false,
   "implementation_review": "docs/round01_implementation.md",
-  "cpu_contract_tests_passed": 149,
+  "cpu_contract_tests_passed": 113,
   "allowed_host_gpus": [
     2,
     3
-  ]
+  ],
+  "baseline_commit": "40e926d8c181473e181ed5069535247525786fc9",
+  "archived_commit": "bce7793e74a4dbe8876bc3a75304c96302a320b3"
 }

@@ -39,17 +39,10 @@ class Runtime:
         self.balance_elapsed = z(); self.balance_seen = z().bool(); self.invoked = z().bool()
         self.episode_goal = z().bool(); self.true_cycle = z().bool(); self.failure = z().bool()
         self.balance_velocity_error = z()
-        self.landing_quality_min = torch.ones(n, device=device)
         self.balance_duration = torch.full((n,), cfg.balance_train_s, device=device)
         self.short_cycle = z().bool()
         self.reversal_episode = z().bool(); self.reversal_speed = z()
-        self.steady_episode = z().bool(); self.steady_speed = z()
         self.initial_hip = z(); self.takeover_motion = torch.zeros(n, 2, device=device)
-        self.landing_case = torch.full((n,), -1, dtype=torch.long, device=device)
-        self.post_handoff_elapsed = z()
-        self.probe_landing = False
-        self.probe_steady = False
-        self.post_handoff_observe_s = 0.  # evaluation-only ordinary-controller observation
         self.probe_level = None
         self.probe_duration = None
         self.probe_moving = True
@@ -75,27 +68,10 @@ class Runtime:
         command[category == 1, 1] = 0  # straight
         command[category == 2, 0] = 0  # pure turn
         paired = self.reversal_episode[ids]
-        paired_ids = ids[paired]
-        stopped = torch.zeros(len(paired_ids), dtype=torch.bool, device=ids.device)
-        if self.cfg.reversal_stop_probability and len(paired_ids):
-            stopped = self.uniform(len(paired_ids))[:, 0] < self.cfg.reversal_stop_probability
-        command[paired, 0] = torch.where(stopped, 0., self.reversal_speed[paired_ids])
+        command[paired, 0] = self.reversal_speed[ids[paired]]
         command[paired, 1] = 0.
-        # A stop does not consume the pending reverse direction. The next moving
-        # request still reverses; actor never sees the random future choice.
-        self.reversal_speed[paired_ids[~stopped]] *= -1
-        steady = self.steady_episode[ids]
-        command[steady, 0] = self.steady_speed[ids[steady]]
-        command[steady, 1] = 0.
+        self.reversal_speed[ids[paired]] *= -1
         return command
-
-    def command_dwell(self):
-        """Per-episode training timing; fixed probes retain the original protocol."""
-        base = self.stage_dwell[self.level]
-        if self.probe_level is not None or not self.cfg.long_command_hold_extra_s:
-            return base
-        long_moving = (self.level >= 3) & ~self.short_cycle
-        return base + long_moving*self.cfg.long_command_hold_extra_s
 
     def sample_reversal_episodes(self, ids):
         # Train transitions that independent command draws rarely expose. Keep
@@ -104,7 +80,7 @@ class Runtime:
         if self.probe_level is not None or not self.cfg.reversal_episode_fraction:
             return
         eligible = ids[(self.level[ids] >= 3) & ~self.short_cycle[ids]
-                       & (self.balance_duration[ids] >= 2*self.command_dwell()[ids]+1.)]
+                       & (self.balance_duration[ids] >= 2*self.stage_dwell[self.level[ids]]+1.)]
         if not len(eligible):
             return
         selected = eligible[self.uniform(len(eligible))[:, 0] < self.cfg.reversal_episode_fraction]
@@ -117,13 +93,10 @@ class Runtime:
 
     def reset(self, ids):
         self.control.reset(ids)
-        self.landing_quality_min[ids] = 1.
-        self.landing_case[ids] = -1
-        self.post_handoff_elapsed[ids] = 0
         for name in ('episode_age', 'command_age', 'true_hold', 'longest_hold', 'peak_rise',
                      'peak_land', 'balance_elapsed', 'balance_seen', 'invoked', 'episode_goal',
                      'true_cycle', 'failure', 'initial_hip', 'takeover_motion', 'balance_velocity_error', 'short_cycle',
-                     'reversal_episode', 'reversal_speed', 'steady_episode', 'steady_speed'):
+                     'reversal_episode', 'reversal_speed'):
             getattr(self, name)[ids] = 0
         level = self.course.level if self.probe_level is None else self.probe_level
         self.level[ids] = level
@@ -140,19 +113,6 @@ class Runtime:
         if self.probe_level is None:
             velocity = (2*self.uniform(len(ids))[:, 0]-1)*ranges[:, 2]
             hip = (2*self.uniform(len(ids))[:, 0]-1)*ranges[:, 3]
-            eligible = (self.level[ids] >= 4).nonzero().flatten()
-            if self.cfg.takeover_expansion_fraction and len(eligible):
-                expanded = eligible[self.uniform(len(eligible))[:, 0] < self.cfg.takeover_expansion_fraction]
-                scale = self.cfg.takeover_expansion_scale
-                velocity[expanded] *= (ranges[expanded, 2]*scale).clamp_max(.75)/ranges[expanded, 2].clamp_min(1e-6)
-                hip[expanded] *= (ranges[expanded, 3]*scale).clamp_max(1.)/ranges[expanded, 3].clamp_min(1e-6)
-                if self.cfg.takeover_boundary_fraction and len(expanded):
-                    # Independent axis/sign sampling; keep the remaining uniform interior.
-                    edge = self.uniform(len(expanded), 2) < self.cfg.takeover_boundary_fraction
-                    vlim = (ranges[expanded, 2]*scale).clamp_max(.75)
-                    hlim = (ranges[expanded, 3]*scale).clamp_max(1.)
-                    velocity[expanded] = torch.where(edge[:, 0], torch.where(velocity[expanded]>=0, vlim, -vlim), velocity[expanded])
-                    hip[expanded] = torch.where(edge[:, 1], torch.where(hip[expanded]>=0, hlim, -hlim), hip[expanded])
         else:
             # Deterministic paired initial states, independent of training random draws.
             velocity = (((ids//2) % 3).float()-1)*ranges[:, 2]
@@ -172,27 +132,6 @@ class Runtime:
             self.balance_duration[moving_ids] = torch.where(short, sampled, self.cfg.balance_train_s)
             self.short_cycle[moving_ids] = short
         self.sample_reversal_episodes(ids)
-        if self.probe_landing:
-            self.landing_case[ids] = (ids % 3).long()  # Isaac reset indices can be int32
-        elif self.probe_level is None and self.cfg.landing_scenario_fraction:
-            eligible = ids[(self.level[ids] >= 2) & ~self.short_cycle[ids]]
-            chosen = eligible[self.uniform(len(eligible))[:, 0] < self.cfg.landing_scenario_fraction]
-            self.landing_case[chosen] = (self.uniform(len(chosen))[:, 0]*3).long()
-        if self.probe_level is None and self.cfg.steady_nonreversal_fraction:
-            eligible = ids[(self.level[ids] >= 3) & ~self.short_cycle[ids] & ~self.reversal_episode[ids]]
-            selected = eligible[self.uniform(len(eligible))[:, 0] < self.cfg.steady_nonreversal_fraction]
-            draws = self.uniform(len(selected), 3)
-            magnitude = torch.where(draws[:, 2] < self.cfg.boundary_command_fraction, 1., .5+.5*draws[:, 0])
-            direction = torch.where(draws[:, 1] < .5, -1., 1.)
-            self.steady_episode[selected] = True
-            self.steady_speed[selected] = direction*magnitude*self.stage_ranges[self.level[selected], 0]
-
-
-        if self.probe_steady:
-            # Independent validation: both directions at full and intermediate speeds.
-            factors = self.steady_speed.new_tensor([1., -1., .5, -.5])
-            self.steady_episode[ids] = True
-            self.steady_speed[ids] = factors[ids.long()%4]*self.stage_ranges[self.level[ids], 0]
 
     def before_action(self, s):
         c = self.control
@@ -205,9 +144,7 @@ class Runtime:
             self.invoked[ids] = True
         balance = c.phase == Phase.BALANCE
         self.command_age += balance*self.dt
-        closing = balance & (self.landing_case >= 0) & (self.balance_elapsed >=
-                    self.balance_duration-self.stage_dwell[self.level].clamp_min(3.))
-        change = balance & ~closing & (self.level >= 2) & (self.command_age >= self.command_dwell())
+        change = balance & (self.level >= 2) & (self.command_age >= self.stage_dwell[self.level])
         ids = change.nonzero().flatten()
         if len(ids):
             if self.probe_level is None:
@@ -221,15 +158,7 @@ class Runtime:
                 index = (self.balance_elapsed[ids]/self.stage_dwell[self.level[ids]]).long() % len(table)
                 command = table[index]*self.stage_ranges[self.level[ids], :2]
                 command[:, 1] *= torch.where(ids % 2 == 0, 1., -1.)
-            steady = self.steady_episode[ids]
-            command[steady, 0] = self.steady_speed[ids[steady]]
-            command[steady, 1] = 0.
             c.set_command(command, ids=ids); self.command_age[ids] = 0
-        closing_ids = closing.nonzero().flatten()
-        if len(closing_ids):
-            direction = s['motion'].new_tensor([0., 1., -1.])[self.landing_case[closing_ids]]
-            command = torch.stack((direction*self.stage_ranges[self.level[closing_ids], 0], torch.zeros_like(direction)), -1)
-            c.set_command(command, ids=closing_ids)
         landing = balance & (self.level > 0) & (self.balance_elapsed >= self.balance_duration)
         c.request_land(s, landing.nonzero().flatten())
         c.update_motion_reference()
@@ -263,9 +192,7 @@ class Runtime:
         required_hold = self.balance_duration
         real_ground = (truth['front_z'].amax(-1) < .065) & rear_near & ~truth['body_contact']
         valid_cycle = c.completed & self.balance_seen & (self.longest_hold >= required_hold-.15) & real_ground & ~self.failure
-        completion_event = valid_cycle & ~self.true_cycle
         self.true_cycle |= valid_cycle
-        self.post_handoff_elapsed += (c.completed & ~completion_event)*self.dt
         # Geometric handoff can occur without truth support: report failure, never a false success.
         mismatch = c.completed & ~valid_cycle
         c.reason[mismatch & ~self.failure] = Reason.SUPPORT_MISMATCH
@@ -275,18 +202,10 @@ class Runtime:
         result['support_truth'] = physical_support
         result['goal'] = self.episode_goal.clone()
         result['complete'] = self.true_cycle.clone()
-        result['completion_event'] = completion_event
-        # Only independent transfer validation extends observation. Targets are
-        # already ordinary-owned; PPO and native probes retain their end point.
-        ordinary_observed = self.post_handoff_elapsed >= self.post_handoff_observe_s
-        result['done'] = self.failure | self.episode_goal | (c.completed & ordinary_observed)
-        result['landing_case'] = self.landing_case.clone()
-        result['post_handoff_elapsed'] = self.post_handoff_elapsed.clone()
+        result['done'] = self.failure | self.episode_goal | c.completed
         result['balance_required_s'] = self.balance_duration.clone()
         result['short_cycle'] = self.short_cycle.clone()
         result['reversal_episode'] = self.reversal_episode.clone()
-        result['steady_episode'] = self.steady_episode.clone()
-        result['steady_speed'] = self.steady_speed.clone()
         result['perception_mismatch'] = result['support_estimate'] != physical_support
         result['reason'] = c.reason.clone()
         result['reward'] = self.reward(s, truth, result, rear_near)
@@ -329,18 +248,6 @@ class Runtime:
             landing_error/self.cfg.landing_velocity_error_scale_m_s)*landing
         return balance_cost, land_cost
 
-    def landing_motion_quality(self, s):
-        # Whole-robot longitudinal velocity, not wheel sign. Same-direction
-        # slowing (including zero) is allowed; no exact-speed tracking in LAND.
-        entry = self.control.transition_motion[:, 0]
-        signed = entry.sign()*s['motion'][:, 0]
-        reverse = (-signed-.02).clamp_min(0)
-        overspeed = (signed-entry.abs()-.10).clamp_min(0)
-        moving_error = torch.maximum(reverse, overspeed)/.15
-        static_error = (s['motion'][:, 0].abs()-.02).clamp_min(0)/.10
-        error = torch.where(entry.abs() > .05, moving_error, static_error)
-        return 1./(1.+error.square())
-
     def coarse_balance_velocity_cost(self, balancing):
         # Complement the unchanged fine objective at persistent .2-.3 m/s bias.
         # Reuse the signed-error filter; no new state enters control or observations.
@@ -381,14 +288,10 @@ class Runtime:
                           + self.cfg.rise_support_weight*m['support_truth']*(.2+.8*support_duration))
         reward += self.dt*bridge
         reward += 5*m['entered_balance']*m['support_truth']*safe
-        reward += 10*m['goal']*safe + 30*m.get('completion_event', m['complete'])*safe
-        # Keep LAND unchanged; allow preparation without rewarding endless waiting.
-        pitch_rate_excess = ((s['gyro'][:, 1].abs()-2.).clamp_min(0)/4.).square().clamp_max(1.)
-        reward += self.dt*((2+2*tracking)*balancing - .1*landing - self.cfg.rise_time_cost*rising
+        reward += 10*m['goal']*safe + 30*m['complete']*safe
+        reward += self.dt*((2+2*tracking)*balancing - .1*transition
                            - .15*transition*heading_error.square()
-                           - self.cfg.rise_adjustment_cost*rising*adjustment
-                           - self.cfg.rise_pitch_rate_cost*rising*pitch_rate_excess
-                           - .002*target_change.square().sum(-1)*self.invoked)
+                           - .02*rising*adjustment - .002*target_change.square().sum(-1)*self.invoked)
         # The first unsuccessful lift still ends this invocation immediately.
         # A large early terminal penalty was cheaper to postpone until timeout,
         # suppressing exploration just below the lift detector. Grade only an
@@ -399,23 +302,6 @@ class Runtime:
                         & rear_near & ~truth['body_contact'] & (truth['root_height'] >= .025)
                         & (s['g'][:, 2] < -.25) & (s['g'][:, 1].abs() < .35))
         penalty = torch.where(early_return, self.cfg.rise_front_return_penalty, 5.)*m['failure']
-        quality = self.landing_motion_quality(s)
-        approaching_ground = ((.10-s['gap'].amax(-1))/.10).clamp(0, 1)
-        landing_quality_cost = self.dt*self.cfg.landing_quality_cost*approaching_ground*(1-quality)*landing
-        bonus_quality = quality
-        if self.cfg.landing_quality_window:
-            # Remember near-ground motion until transfer. Final braking alone
-            # cannot erase an earlier slide; airborne preparation stays free.
-            near_ground = landing & (s['gap'].amax(-1) <= .025)
-            self.landing_quality_min.copy_(torch.where(near_ground,
-                torch.minimum(self.landing_quality_min, quality), self.landing_quality_min))
-            bonus_quality = self.landing_quality_min
-        landing_quality_bonus = self.cfg.landing_quality_bonus*bonus_quality*m['entered_handoff']*safe
-        reward += landing_quality_bonus-landing_quality_cost
-        m['landing_motion_quality'] = quality
-        m['landing_quality_min'] = self.landing_quality_min.clone()
-        m['landing_quality_cost'] = landing_quality_cost
-        m['landing_quality_bonus'] = landing_quality_bonus
         balance_cost, land_cost = self.velocity_costs(s, balancing, landing)
         coarse_cost = self.coarse_balance_velocity_cost(balancing)
         reward -= penalty+balance_cost+land_cost+coarse_cost
@@ -452,7 +338,7 @@ class Runtime:
         hold_limit = torch.where(self.level == 0, cfg.hold_s, duration)
         yaw_limit = max(1e-6, *(r[1] for r in cfg.motion_stages()))
         values = (self.episode_age/horizon, c.age/phase_limit, self.balance_elapsed/duration,
-                  duration/longest, self.command_age/self.command_dwell(),
+                  duration/longest, self.command_age/self.stage_dwell[self.level],
                   self.true_hold/hold_limit, self.peak_rise/1.25, self.peak_land,
                   self.balance_velocity_error/.75, self.takeover_motion[:, 0]/.75,
                   c.support_run/cfg.support_enter_s, c.return_run/cfg.return_confirm_s,
@@ -461,11 +347,6 @@ class Runtime:
                   self.invoked.float(), self.short_cycle.float(), self.reversal_episode.float(),
                   self.level.float()/cfg.max_course_level, c.command[:, 0]/.75,
                   c.command[:, 1]/yaw_limit, self.reversal_speed/.75)
-        if cfg.steady_nonreversal_fraction:
-            # Two private sampler fields help value learning; actor stays 195D.
-            values += (self.steady_episode.float(), self.steady_speed/.75)
-        if cfg.landing_quality_window:
-            values += (self.landing_quality_min,)
         return torch.stack(values, -1).clamp(-1., 1.)
 
     def observation(self, s):

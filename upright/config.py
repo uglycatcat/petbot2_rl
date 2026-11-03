@@ -35,15 +35,6 @@ class Config:
     baseline_fraction: float = 0.2
     boundary_command_fraction: float = 0.0  # training only, moving levels >= 3
     reversal_episode_fraction: float = 0.0  # fraction of eligible long training episodes
-    long_command_hold_extra_s: float = 0.0  # training only, moving levels >=3, long episodes
-    takeover_boundary_fraction: float = 0.0  # per axis, inside expanded training initial states only
-    steady_nonreversal_fraction: float = 0.0  # eligible long non-reversal episodes, private to training
-    takeover_expansion_fraction: float = 0.0  # training only, levels>=4; keep original initial states too
-    takeover_expansion_scale: float = 2.0
-    reversal_stop_probability: float = 0.0  # insert zero before the next signed reversal
-    rise_time_cost: float = .1
-    rise_adjustment_cost: float = .02
-    rise_pitch_rate_cost: float = 0.0  # bounded cost for actual pitch rate above2rad/s
     warmup_s: float = 1.5
     warmup_timeout_s: float = 4.0
     rise_timeout_s: float = 12.0
@@ -82,16 +73,10 @@ class Config:
     balance_velocity_tracking_scale_m_s: float = 0.1  # positive reward width; legacy default
     balance_velocity_error_tau_s: float = 0.3
     balance_velocity_error_scale_m_s: float = 0.05
-    live_ordinary_command: bool = False  # preserve live request on HANDOFF/EXIT; never drive from measured velocity
-    landing_quality_cost: float = 0.0  # bounded late-LAND cost/second, permits same-direction deceleration
-    landing_quality_window: bool = False  # near-ground minimum quality, private reward memory
-    landing_quality_bonus: float = 0.0  # once at transfer, before ordinary drives
-    landing_scenario_fraction: float = 0.0  # training-only long moving episodes: signed/zero closing requests
     landing_velocity_cost: float = 0.0
     landing_velocity_error_scale_m_s: float = 0.2
     balance_linear_accel_m_s2: float = 0.0  # zero disables reference slew for legacy configs
     balance_yaw_accel_rad_s2: float = 0.0
-    balance_common_center_fraction: float = 0.0  # bounded command-centered action, BALANCE only
     balance_yaw_feedforward: float = 0.0
     balance_yaw_feedback: float = 0.0
     balance_yaw_correction_limit_rad_s: float = 4.0
@@ -129,22 +114,6 @@ class Config:
             raise ValueError('GAE lambda must be finite and within [0, 1]')
         if self.bootstrap_probe_interval and self.probe_interval % self.bootstrap_probe_interval:
             raise ValueError('Bootstrap probe interval must divide motion probe interval')
-        for key in ('takeover_expansion_fraction', 'reversal_stop_probability', 'takeover_boundary_fraction', 'steady_nonreversal_fraction'):
-            value=getattr(self,key)
-            if type(value) not in (int,float) or not 0 <= value < 1:
-                raise ValueError('Invalid training mixture: '+key)
-        if type(self.takeover_expansion_scale) not in (int,float) or not 1 <= self.takeover_expansion_scale <= 2:
-            raise ValueError('Takeover scale must be within[1,2]')
-        if type(self.landing_quality_window) is not bool:
-            raise ValueError('landing_quality_window must be boolean')
-        if type(self.balance_common_center_fraction) not in (int, float) or not 0 <= self.balance_common_center_fraction <= .8:
-            raise ValueError('Common action center must be within [0,.8]')
-        if type(self.live_ordinary_command) is not bool:
-            raise ValueError('live_ordinary_command must be boolean')
-        if not 0 <= self.landing_scenario_fraction < 1:
-            raise ValueError('Landing mixture must retain original moving episodes')
-        if not 0 <= self.landing_quality_cost <= 2 or not 0 <= self.landing_quality_bonus <= 8:
-            raise ValueError('Landing shaping must remain bounded')
         previous = None
         for stage in self.motion_stages():
             if len(stage) != 4 or any(type(v) not in (int, float) or not __import__('math').isfinite(v) or v < 0 for v in stage):
@@ -185,10 +154,6 @@ class Config:
         if (type(self.reversal_episode_fraction) not in (int, float)
                 or not 0 <= self.reversal_episode_fraction < 1):
             raise ValueError('Reversal mixture must retain random mixed-control long episodes')
-        if (type(self.long_command_hold_extra_s) not in (int, float)
-                or not __import__('math').isfinite(self.long_command_hold_extra_s)
-                or self.long_command_hold_extra_s < 0):
-            raise ValueError('Long training command hold must be finite and nonnegative')
         if self.short_cycle_fraction and not (self.hold_s <= self.short_balance_min_s <= self.short_balance_max_s < self.balance_train_s):
             raise ValueError('Short-cycle duration must retain genuine support and be below the long duration')
         if not 0 <= self.low_speed <= .75 or not 0 <= self.initial_hip <= 1:
@@ -208,7 +173,7 @@ class Config:
 
 
 def load_config(path=None, **overrides):
-    data = json.loads(Path(path or ROOT/'configs/round27.json').read_text())
+    data = json.loads(Path(path or ROOT/'configs/round20.json').read_text())
     unknown = data.keys() - {f.name for f in fields(Config)}
     if unknown:
         raise ValueError(f'Unknown configuration keys: {sorted(unknown)}')

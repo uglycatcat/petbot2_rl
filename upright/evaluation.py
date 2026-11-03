@@ -7,24 +7,15 @@ from .experiment import atomic_json, rng_state, restore_rng
 
 
 @torch.inference_mode()
-def evaluate(env, policy, level, count, duration=None, moving=True, output=None, kind='independent_validation',
-             landing_transfer=False, ordinary_observe_s=0., steady_motion=False):
+def evaluate(env, policy, level, count, duration=None, moving=True, output=None, kind='independent_validation'):
     if kind not in ('independent_validation', 'development_curriculum_probe'):
         raise ValueError('Evaluation kind must be explicit')
     p = env.upright_runtime
     if level not in range(p.cfg.max_course_level+1):
         raise ValueError('Evaluation course level outside configured stages')
-    if not __import__('math').isfinite(ordinary_observe_s) or ordinary_observe_s < 0 or (ordinary_observe_s and not landing_transfer):
-        raise ValueError('Ordinary observation requires explicit landing transfer validation')
-    if landing_transfer and (level < 2 or not p.cfg.live_ordinary_command):
-        raise ValueError('Landing transfer requires a moving course and live ordinary input')
-    if steady_motion and (landing_transfer or level < 2 or not p.cfg.steady_nonreversal_fraction):
-        raise ValueError('Steady motion requires its configured, separate moving validation')
-    old = (p.probe_level, p.probe_duration, p.probe_moving, env.upright_record,
-           p.probe_landing, p.post_handoff_observe_s, p.probe_steady)
+    old = (p.probe_level, p.probe_duration, p.probe_moving, env.upright_record)
     saved_rng, scenario_rng = rng_state(), p.generator.get_state()
     p.probe_level, p.probe_duration, p.probe_moving = level, duration, moving
-    p.probe_landing, p.post_handoff_observe_s, p.probe_steady = landing_transfer, ordinary_observe_s, steady_motion
     env.upright_record = True
     observed = min(count, env.num_envs)
     if observed != count:
@@ -72,9 +63,6 @@ def evaluate(env, policy, level, count, duration=None, moving=True, output=None,
                 finished = True
                 break
         failures[live] = 9
-        handoffs_completed = int(complete.sum())
-        if landing_transfer:
-            complete &= failures == 0  # a fall during the ordinary tail still fails the closed loop
         effective_duration = p.cfg.hold_s if level < 2 else (duration if duration is not None else p.cfg.balance_train_s)
         from .model import load_model, POSITION_JOINTS, REAR_WHEELS
         source = load_model()
@@ -95,25 +83,6 @@ def evaluate(env, policy, level, count, duration=None, moving=True, output=None,
         if level >= 2:
             from .response import basic_response
             result.update(basic_response(traces, count, complete.cpu().tolist(), env.step_dt))
-        if landing_transfer:
-            from .landing_response import landing_response
-            result['landing_transfer'] = landing_response(traces, count, env.step_dt)
-            result['ordinary_observe_s'] = ordinary_observe_s
-            result['handoffs_completed_before_ordinary_observation'] = handoffs_completed
-            result['post_transfer_owner'] = 'ordinary_controller'
-        if steady_motion:
-            # Report actual sustained motion; mixed-task coverage scores do not apply.
-            cases = []
-            for i in range(count):
-                rows = [f for f in traces if f['active'][i] and f['phase_before'][i] == 2 and not f['failure'][i]]
-                target = traces[0]['steady_speed'][i] if traces else 0.
-                tail = [f for f in rows if f['t'] >= rows[-1]['t']-5.] if rows else []
-                cases.append(dict(env=i, requested_m_s=target, complete=bool(complete[i]), failure=int(failures[i]),
-                                  measured_s=len(tail)*env.step_dt,
-                                  last5_mean_m_s=sum(f['motion'][i][0] for f in tail)/max(1,len(tail)),
-                                  last5_mean_yaw_rad_s=sum(f['motion'][i][1] for f in tail)/max(1,len(tail))))
-            result['steady_motion'] = dict(protocol='held_signed_straight_v1', cases=cases,
-                no_capability_pass_inferred_from_completion=True)
         if output is not None:
             output = Path(output); output.mkdir(parents=True, exist_ok=False)
             atomic_json(output/'result.json', result)
@@ -122,8 +91,7 @@ def evaluate(env, policy, level, count, duration=None, moving=True, output=None,
                     handle.write(json.dumps(frame)+'\n')
         return result
     finally:
-        (p.probe_level, p.probe_duration, p.probe_moving, env.upright_record,
-         p.probe_landing, p.post_handoff_observe_s, p.probe_steady) = old
+        p.probe_level, p.probe_duration, p.probe_moving, env.upright_record = old
         p.generator.set_state(scenario_rng)
         restore_rng(saved_rng)
         # Probe episodes never enter PPO rollouts or count as independent validation.
