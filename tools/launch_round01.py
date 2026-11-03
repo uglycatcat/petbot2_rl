@@ -75,9 +75,10 @@ def main():
             shutil.copytree(asset_source,work/'artifacts')
             with mutex:
                 state['variants'][variant['name']]=dict(state='training',gpu=variant['gpu'],seed=variant['seed'],
+                                                       config=variant.get('config',plan['config']),
                                                        source=work.relative_to(REPOSITORY).as_posix(),initialization='random')
                 save(out/'launch_status.json',state)
-            command=['train.py','--kind','training','--config',plan['config'],'--run-dir','outputs/train',
+            command=['train.py','--kind','training','--config',variant.get('config',plan['config']),'--run-dir','outputs/train',
                      '--seed',str(variant['seed']),'--iterations',str(variant['iterations']),
                      '--num-envs',str(variant['num_envs']),'--device','cuda:0']
             for attempt in range(3):

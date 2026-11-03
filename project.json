@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round21r1_ready_for_scratch_training",
+  "phase": "round21r2_engineering",
   "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "Round20-based normal handoff and isolated LAND approach cost passed engineering. User-authorized fresh 1000-update trials; discarded21-26/27 are never resumed.",
+  "reason": "21r1 reduced static backward travel but high-range retention failed. Paired scratch control vs post-basic landing quality curriculum; pending engineering.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -13,12 +13,12 @@
   "batch26_resume_allowed": false,
   "next_experiment": {
     "series": "upright_restart_20261030",
-    "name": "upright_restart_round21r1",
-    "status": "engineering_passed_fresh_training_authorized"
+    "name": "upright_restart_round21r2",
+    "status": "engineering_pending"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": true,
+  "engineering_validated": false,
   "implementation_review": "docs/round01_implementation.md",
   "cpu_contract_tests_passed": 120,
   "allowed_host_gpus": [

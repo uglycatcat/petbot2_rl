@@ -255,6 +255,15 @@ class Runtime:
         rate = self.cfg.balance_velocity_coarse_weight*(-torch.expm1(-scaled.square()))
         return self.dt*rate*balancing
 
+    def landing_quality_scale(self):
+        start = self.cfg.landing_quality_start_course
+        if start == 0:
+            return 1.
+        # Use the saved global curriculum, including for lower-level regression
+        # episodes. No new clock, policy input, or unsaved training state.
+        width = self.cfg.max_course_level-start+1
+        return min(1., max(0., (self.course.level-start+1)/width))
+
     def landing_approach_cost(self, s, truth, landing, rear_near):
         # Ground truth shapes training credit only; it is not a controller input
         # or an early handoff trigger. Allow any same-direction deceleration.
@@ -265,7 +274,7 @@ class Runtime:
         excess = (low-speed).clamp_min(0.)+(speed-high).clamp_min(0.)
         scaled = (excess/self.cfg.landing_motion_scale_m_s).square()
         near = ((.10-truth['front_z'].amax(-1))/.055).clamp(0., 1.)*rear_near
-        return self.dt*self.cfg.landing_approach_motion_cost*(scaled/(1.+scaled))*near*landing
+        return self.dt*self.cfg.landing_approach_motion_cost*(scaled/(1.+scaled))*near*landing*self.landing_quality_scale()
 
     def reward(self, s, truth, m, rear_near):
         c = self.control; before = m['phase_before']
@@ -323,6 +332,7 @@ class Runtime:
         m['balance_velocity_coarse_cost'] = coarse_cost
         m['landing_velocity_cost'] = land_cost
         m['landing_approach_motion_cost'] = approach_cost
+        m['landing_quality_scale'] = torch.full_like(approach_cost, self.landing_quality_scale())
         m['failure_penalty'] = penalty
         m['early_front_return'] = early_return
         m['rise_bridge_reward'] = self.dt*bridge
