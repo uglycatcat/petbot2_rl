@@ -33,6 +33,7 @@ class Config:
     low_yaw: float = 0.30
     initial_hip: float = 0.10
     baseline_fraction: float = 0.2
+    baseline_anchor_fraction: float = 0.0  # portion of replay reserved 1:2 for static/lowest motion
     boundary_command_fraction: float = 0.0  # training only, moving levels >= 3
     reversal_episode_fraction: float = 0.0  # fraction of eligible long training episodes
     warmup_s: float = 1.5
@@ -103,6 +104,10 @@ class Config:
         return len(self.motion_stages())+1
 
     def validate(self):
+        if (type(self.baseline_anchor_fraction) not in (int, float)
+                or not __import__('math').isfinite(self.baseline_anchor_fraction)
+                or not 0 <= self.baseline_anchor_fraction < 1):
+            raise ValueError('Baseline anchor fraction must be finite and within [0, 1)')
         rate = self.landing_ground_brake_slew_rad_s2
         if (type(rate) not in (int, float) or not __import__('math').isfinite(rate)
                 or (rate != 0 and (not self.landing_projection_start_gap_m

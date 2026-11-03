@@ -107,6 +107,14 @@ class Runtime:
                 self.level[ids[baseline]] = 1
             else:
                 earlier = 1+(self.uniform(len(ids))[:, 0]*(level-1)).long()
+                if self.cfg.baseline_anchor_fraction:
+                    # Preserve the total replay/current-course split. Reserve
+                    # replay for static and lowest-motion skills as the number
+                    # of higher courses grows; leave all other old levels reachable.
+                    draw = self.uniform(len(ids))[:, 0]
+                    anchor = self.cfg.baseline_anchor_fraction
+                    earlier = torch.where(draw < anchor/3, 1,
+                                          torch.where(draw < anchor, 2, earlier))
                 self.level[ids[baseline]] = earlier[baseline]
         moving = self.level[ids] >= 2
         ranges = self.stage_ranges[self.level[ids]]
