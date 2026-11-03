@@ -1,0 +1,677 @@
+{
+  "status": "reviewed_engineering_passed_pending_publication",
+  "handled": true,
+  "engineering_gate_passed": true,
+  "ready_for_fresh_auxiliary_training": true,
+  "cpu_checks": 125,
+  "kind": "audit_only_aggregation_of_completed_physical_checks",
+  "physical_jobs_reused_from": {
+    "learning": "step_restart18_gate_20261103_a",
+    "probe": "step_restart18_gate_20261103_b"
+  },
+  "guards": {
+    "short512": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "interrupted",
+      "gpu_peak_mib": 17726.0,
+      "elapsed_s": 136.0920891650021
+    },
+    "resume512": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "complete",
+      "gpu_peak_mib": 17726.0,
+      "elapsed_s": 138.08061516936868
+    },
+    "eval512": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "complete",
+      "gpu_peak_mib": 17506.0,
+      "elapsed_s": 80.6084646070376
+    },
+    "physics_b": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "passed",
+      "gpu_peak_mib": 13654.0,
+      "elapsed_s": 115.53437890764326
+    }
+  },
+  "changes_since_physical_probe": [
+    "step_demo/stop_review.py"
+  ],
+  "change_scope": "Offline scalar auditor float32 accumulation;training,physics,distribution andconfigs unchanged",
+  "checkpoint_audit": {
+    "initial_optimizer_empty": true,
+    "unique_run_id": "ecd7e424-bbb5-4e8c-865c-0cc57459294c",
+    "random_origin": true,
+    "discount_gamma": 0.99,
+    "completed_updates": 8,
+    "resumed_from": 4,
+    "actor_critic_restore_match": true,
+    "optimizer_states": 13,
+    "coverage_preserved": true,
+    "final_coverage": {
+      "stop_entries": 1024,
+      "stop_seconds": 5242.879999999934,
+      "low_request_stop_frames": 261319,
+      "eligible_stop_seconds": 5242.879999999934,
+      "disqualified_stop_seconds": 0.0,
+      "physical_hold_0_5_seconds": 14.319999999999942,
+      "physical_hold_2_5_seconds": 0.0
+    },
+    "actor_changed": true
+  },
+  "physics_audit": {
+    "valid": true,
+    "initial_random_actor_successes": 16,
+    "initial_group_successes": {
+      "0": 4,
+      "1": 4,
+      "2": 4,
+      "3": 4
+    },
+    "initial_hold_duration_s": {
+      "0": 2.51999831199646,
+      "1": 2.51999831199646,
+      "2": 2.51999831199646,
+      "3": 2.51999831199646,
+      "4": 2.51999831199646,
+      "5": 2.51999831199646,
+      "6": 2.51999831199646,
+      "7": 2.51999831199646,
+      "8": 2.51999831199646,
+      "9": 2.51999831199646,
+      "10": 2.51999831199646,
+      "11": 2.51999831199646,
+      "12": 2.51999831199646,
+      "13": 2.51999831199646,
+      "14": 2.51999831199646,
+      "15": 2.51999831199646
+    },
+    "initial_metrics": {
+      "max_hip_actual": 0.017348501831293106,
+      "max_world_pitch": 0.01938640885055065,
+      "max_wheel_target": 0.04145428538322449,
+      "max_sampled_actual_wheel": 3.9754507541656494
+    },
+    "reward_recompute_max_error": 0.0,
+    "ppo_raw_sample_and_probability_consistent": true,
+    "raw_clipped_tail_samples": 516,
+    "ppo_loss_finite": true,
+    "untrained_initialization_prior_not_learned_climbing": true,
+    "no_auxiliary_acceptance_from_16_cases": true,
+    "can_transfer_weights_or_data": false
+  },
+  "independent_short_evaluation": {
+    "outcomes": {
+      "success": 16
+    },
+    "successes": 16,
+    "episodes": 16,
+    "base_stop_count": 16,
+    "extra_physics_hold_s": 2.0,
+    "groups": {
+      "0": {
+        "episodes": 4,
+        "stopped": 4,
+        "held": 4
+      },
+      "1": {
+        "episodes": 4,
+        "stopped": 4,
+        "held": 4
+      },
+      "2": {
+        "episodes": 4,
+        "stopped": 4,
+        "held": 4
+      },
+      "3": {
+        "episodes": 4,
+        "stopped": 4,
+        "held": 4
+      }
+    },
+    "initial_measured_speed_by_env": {
+      "0": 0.005042164249944712,
+      "1": 0.16329168626663215,
+      "2": 0.359415929088979,
+      "3": 0.5376728880904185,
+      "4": 0.005112434267942998,
+      "5": 0.163297555529361,
+      "6": 0.35939298842815626,
+      "7": 0.5376836447392123,
+      "8": 0.005084489185221003,
+      "9": 0.16328526734658808,
+      "10": 0.35941131886805344,
+      "11": 0.5376862012422683,
+      "12": 0.0051228855472219845,
+      "13": 0.1632995125789574,
+      "14": 0.35941539666923167,
+      "15": 0.5376788372609839
+    },
+    "examples": [
+      {
+        "env": 0,
+        "group": 0,
+        "elapsed": 2.5199999809265137,
+        "outcome": "success",
+        "speed": 0.00021575644807939523,
+        "hip": [
+          -0.01621157117187977,
+          -0.01588054560124874
+        ],
+        "hip_request": -0.0031635439954698086,
+        "hip_target": -0.0031635439954698086,
+        "wheel_request": 0.0,
+        "raw_policy_action": [
+          -0.0031635439954698086,
+          -1.0220208168029785
+        ],
+        "wheel_target": 0.0,
+        "wheel_actual": [
+          0.09127343446016312,
+          0.08765138685703278
+        ],
+        "support": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "position": [
+          0.0005993843078613281,
+          2.384185791015625e-05,
+          -0.0008810386061668396
+        ],
+        "yaw": -7.208640909084352e-06,
+        "flight_count": [
+          0,
+          0
+        ]
+      },
+      {
+        "env": 4,
+        "group": 0,
+        "elapsed": 2.5199999809265137,
+        "outcome": "success",
+        "speed": 0.0002670365199494516,
+        "hip": [
+          -0.016249775886535645,
+          -0.015920141711831093
+        ],
+        "hip_request": -0.003174886107444763,
+        "hip_target": -0.003174886107444763,
+        "wheel_request": 0.0,
+        "raw_policy_action": [
+          -0.003174886107444763,
+          -1.0220158100128174
+        ],
+        "wheel_target": 0.0,
+        "wheel_actual": [
+          0.0886804461479187,
+          0.08460329473018646
+        ],
+        "support": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "position": [
+          0.0005970001220703125,
+          2.6702880859375e-05,
+          -0.0008812993764877319
+        ],
+        "yaw": -3.695162013173103e-05,
+        "flight_count": [
+          0,
+          0
+        ]
+      },
+      {
+        "env": 8,
+        "group": 0,
+        "elapsed": 2.5199999809265137,
+        "outcome": "success",
+        "speed": 0.0003665742246002892,
+        "hip": [
+          -0.016255855560302734,
+          -0.015926318243145943
+        ],
+        "hip_request": -0.0031157301273196936,
+        "hip_target": -0.0031157301273196936,
+        "wheel_request": 0.0,
+        "raw_policy_action": [
+          -0.0031157301273196936,
+          -1.0220890045166016
+        ],
+        "wheel_target": 0.0,
+        "wheel_actual": [
+          0.09168841689825058,
+          0.08376403898000717
+        ],
+        "support": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "position": [
+          0.0007203817367553711,
+          2.956390380859375e-05,
+          -0.0008819401264190674
+        ],
+        "yaw": -4.295570761314593e-06,
+        "flight_count": [
+          0,
+          0
+        ]
+      },
+      {
+        "env": 12,
+        "group": 0,
+        "elapsed": 2.5199999809265137,
+        "outcome": "success",
+        "speed": 0.0002126185673215254,
+        "hip": [
+          -0.016266653314232826,
+          -0.015935838222503662
+        ],
+        "hip_request": -0.0031838109716773033,
+        "hip_target": -0.0031838109716773033,
+        "wheel_request": 0.0,
+        "raw_policy_action": [
+          -0.0031838109716773033,
+          -1.0221045017242432
+        ],
+        "wheel_target": 0.0,
+        "wheel_actual": [
+          0.08085983991622925,
+          0.08140738308429718
+        ],
+        "support": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "position": [
+          0.0005526542663574219,
+          2.6702880859375e-05,
+          -0.0008812621235847473
+        ],
+        "yaw": -3.0722683732165024e-05,
+        "flight_count": [
+          0,
+          0
+        ]
+      },
+      {
+        "env": 1,
+        "group": 1,
+        "elapsed": 2.5999999046325684,
+        "outcome": "success",
+        "speed": 0.0002677221744881873,
+        "hip": [
+          -0.018303213641047478,
+          -0.01817505620419979
+        ],
+        "hip_request": -0.005049230996519327,
+        "hip_target": -0.005049230996519327,
+        "wheel_request": 0.0,
+        "raw_policy_action": [
+          -0.005049230996519327,
+          -1.0211666822433472
+        ],
+        "wheel_target": 0.0,
+        "wheel_actual": [
+          0.12018938362598419,
+          0.06941314041614532
+        ],
+        "support": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "position": [
+          0.00973367691040039,
+          7.367134094238281e-05,
+          -0.0013484805822372437
+        ],
+        "yaw": 0.0012275312328711152,
+        "flight_count": [
+          0,
+          0
+        ]
+      },
+      {
+        "env": 5,
+        "group": 1,
+        "elapsed": 2.5999999046325684,
+        "outcome": "success",
+        "speed": 0.0003363335323277094,
+        "hip": [
+          -0.018329450860619545,
+          -0.018208106979727745
+        ],
+        "hip_request": -0.005090606864541769,
+        "hip_target": -0.005090606864541769,
+        "wheel_request": 0.0,
+        "raw_policy_action": [
+          -0.005090606864541769,
+          -1.0211763381958008
+        ],
+        "wheel_target": 0.0,
+        "wheel_actual": [
+          0.11463331431150436,
+          0.06544623523950577
+        ],
+        "support": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "position": [
+          0.00973367691040039,
+          7.283687591552734e-05,
+          -0.0013488009572029114
+        ],
+        "yaw": 0.0012240733485668898,
+        "flight_count": [
+          0,
+          0
+        ]
+      },
+      {
+        "env": 9,
+        "group": 1,
+        "elapsed": 2.5999999046325684,
+        "outcome": "success",
+        "speed": 0.00030413569770427947,
+        "hip": [
+          -0.018361713737249374,
+          -0.018249910324811935
+        ],
+        "hip_request": -0.005102323833853006,
+        "hip_target": -0.005102323833853006,
+        "wheel_request": 0.0,
+        "raw_policy_action": [
+          -0.005102323833853006,
+          -1.021160364151001
+        ],
+        "wheel_target": 0.0,
+        "wheel_actual": [
+          0.11824680119752884,
+          0.06390327960252762
+        ],
+        "support": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "position": [
+          0.009745180606842041,
+          7.43865966796875e-05,
+          -0.0013490840792655945
+        ],
+        "yaw": 0.0012284856056794524,
+        "flight_count": [
+          0,
+          0
+        ]
+      },
+      {
+        "env": 13,
+        "group": 1,
+        "elapsed": 2.5999999046325684,
+        "outcome": "success",
+        "speed": 0.00029363870488455875,
+        "hip": [
+          -0.018288282677531242,
+          -0.018175015226006508
+        ],
+        "hip_request": -0.005058917682617903,
+        "hip_target": -0.005058917682617903,
+        "wheel_request": 0.0,
+        "raw_policy_action": [
+          -0.005058917682617903,
+          -1.0211821794509888
+        ],
+        "wheel_target": 0.0,
+        "wheel_actual": [
+          0.11994883418083191,
+          0.06709170341491699
+        ],
+        "support": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "position": [
+          0.009737014770507812,
+          7.367134094238281e-05,
+          -0.0013486146926879883
+        ],
+        "yaw": 0.0012257086345925927,
+        "flight_count": [
+          0,
+          0
+        ]
+      },
+      {
+        "env": 2,
+        "group": 2,
+        "elapsed": 2.6599998474121094,
+        "outcome": "success",
+        "speed": 0.00027947066960775263,
+        "hip": [
+          -0.014778520911931992,
+          -0.01608332246541977
+        ],
+        "hip_request": -0.002573651960119605,
+        "hip_target": -0.002573651960119605,
+        "wheel_request": 0.0,
+        "raw_policy_action": [
+          -0.002573651960119605,
+          -1.0216562747955322
+        ],
+        "wheel_target": 0.0,
+        "wheel_actual": [
+          0.08778300881385803,
+          0.0805487409234047
+        ],
+        "support": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "position": [
+          0.028987884521484375,
+          -0.0004942417144775391,
+          -0.0013365596532821655
+        ],
+        "yaw": 0.007264154031872749,
+        "flight_count": [
+          0,
+          0
+        ]
+      },
+      {
+        "env": 6,
+        "group": 2,
+        "elapsed": 2.6599998474121094,
+        "outcome": "success",
+        "speed": 0.0002788903065635215,
+        "hip": [
+          -0.01503577921539545,
+          -0.016362028196454048
+        ],
+        "hip_request": -0.0025926134549081326,
+        "hip_target": -0.0025926134549081326,
+        "wheel_request": 0.0,
+        "raw_policy_action": [
+          -0.0025926134549081326,
+          -1.0216403007507324
+        ],
+        "wheel_target": 0.0,
+        "wheel_actual": [
+          0.08090820163488388,
+          0.08585463464260101
+        ],
+        "support": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "position": [
+          0.02895641326904297,
+          -0.0004807710647583008,
+          -0.0013407841324806213
+        ],
+        "yaw": 0.007402325980365276,
+        "flight_count": [
+          0,
+          0
+        ]
+      },
+      {
+        "env": 10,
+        "group": 2,
+        "elapsed": 2.6599998474121094,
+        "outcome": "success",
+        "speed": 0.00030794654949501174,
+        "hip": [
+          -0.014832346700131893,
+          -0.016133178025484085
+        ],
+        "hip_request": -0.002598722465336323,
+        "hip_target": -0.002598722465336323,
+        "wheel_request": 0.0,
+        "raw_policy_action": [
+          -0.002598722465336323,
+          -1.0216190814971924
+        ],
+        "wheel_target": 0.0,
+        "wheel_actual": [
+          0.09016266465187073,
+          0.09126689285039902
+        ],
+        "support": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "position": [
+          0.02898639440536499,
+          -0.000494837760925293,
+          -0.0013372451066970825
+        ],
+        "yaw": 0.007304021622985601,
+        "flight_count": [
+          0,
+          0
+        ]
+      },
+      {
+        "env": 14,
+        "group": 2,
+        "elapsed": 2.6599998474121094,
+        "outcome": "success",
+        "speed": 0.0003098740332296747,
+        "hip": [
+          -0.015283538959920406,
+          -0.016583556309342384
+        ],
+        "hip_request": -0.0027693118900060654,
+        "hip_target": -0.0027693118900060654,
+        "wheel_request": 0.0,
+        "raw_policy_action": [
+          -0.0027693118900060654,
+          -1.0215810537338257
+        ],
+        "wheel_target": 0.0,
+        "wheel_actual": [
+          0.09137745201587677,
+          0.07523565739393234
+        ],
+        "support": [
+          true,
+          true,
+          true,
+          true
+        ],
+        "position": [
+          0.02893853187561035,
+          -0.0004831552505493164,
+          -0.0013433918356895447
+        ],
+        "yaw": 0.007357453461736441,
+        "flight_count": [
+          0,
+          0
+        ]
+      }
+    ],
+    "max_wheel_target": 2.000000238418579,
+    "max_sampled_actual_wheel": 5.300106048583984,
+    "max_estimator_error_m": 0.05006714460152484,
+    "max_requested_hip_rad": 0.10347840934991837,
+    "max_world_pitch_rad": 0.03271050751209259,
+    "max_world_pitch_rate_rad_s": 3.0251452922821045,
+    "raw_policy_action_peak": 1.0239535570144653,
+    "raw_action_outside_fraction": 0.49619771863117873,
+    "scalar_hold_agrees": true,
+    "auxiliary_gate_passed": false
+  },
+  "audit_precision_regression": {
+    "observed_125_steps_s": 2.4999983310699463,
+    "native_completed_at_step": 126,
+    "successful16_reaudited": true,
+    "old_restart17_negative_128_outcomes_unchanged": true,
+    "physical_acceptance_changed": false
+  },
+  "preserved_failures": [
+    "CPUtestfixture reuseda mutateddistributioncfg;fixeddeepcopy then125pass",
+    "Gatea probe manualreset outsideinference rejected;16initialholds preserved,bpassed",
+    "Olddoubleprecisionscalarreview reported success1frameearly;correctedhostfloat32audit agreeswithunchangedphysicaltimer"
+  ],
+  "untrained_actor_successes": 16,
+  "short_trained_successes": 16,
+  "full_auxiliary_gate_passed": false,
+  "full_task_training_allowed": false,
+  "next_batch": "step_restart18_aux_20261103",
+  "next_training": {
+    "seeds": [
+      70,
+      71
+    ],
+    "gpus": [
+      0,
+      1
+    ],
+    "num_envs": 512,
+    "updates": 200,
+    "initialization": "fresh_random_network_with_default_target_bias",
+    "historical_models": [],
+    "weight_or_data_transfer": false
+  }
+}

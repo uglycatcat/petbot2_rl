@@ -2,7 +2,31 @@
 import math
 
 import torch
-from rsl_rl.modules import BetaDistribution
+from rsl_rl.modules import BetaDistribution, GaussianDistribution
+
+
+class StopCenteredGaussianDistribution(GaussianDistribution):
+    """Auxiliary-only local exploration around the known default STOP command.
+
+    All network parameters remain trainable. PPO stores the raw Gaussian
+    sample/density; the environment applies its existing [-1,1] actuator
+    clipping. This is an initialization, never a state-dependent override.
+    Native bounded std prevents the old unconstrained-entropy runaway.
+    """
+    def __init__(self, output_dim, init_std=.03):
+        if output_dim != 2 or not .005 <= init_std <= .05:
+            raise ValueError('STOP Gaussian requires two actions and local initial noise')
+        super().__init__(output_dim, init_std=init_std, std_type='log',
+                         std_range=(.005, .05))
+
+    def init_mlp_weights(self, mlp):
+        head = [layer for layer in mlp.modules() if isinstance(layer, torch.nn.Linear)][-1]
+        if head.out_features != 2:
+            raise ValueError('STOP actor must produce two unconstrained means')
+        torch.nn.init.normal_(head.weight, mean=0., std=.001)
+        torch.nn.init.zeros_(head.bias)
+        with torch.no_grad():
+            head.bias[1] = -1.  # Existing map: normalized -1 is wheel target 0.
 
 
 def std_ceiling_at(schedule, completed_updates):

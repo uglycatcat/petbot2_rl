@@ -9,7 +9,7 @@ import numpy as np
 import torch
 from rsl_rl.runners import OnPolicyRunner
 from rsl_rl.modules import BetaDistribution
-from .distributions import CeilingBetaDistribution, std_ceiling_at
+from .distributions import CeilingBetaDistribution, StopCenteredGaussianDistribution, std_ceiling_at
 
 
 def runner_config(t):
@@ -17,6 +17,9 @@ def runner_config(t):
     distribution = (dict(class_name='BetaDistribution', action_range=(-1.,1.))
                     if t.get('policy_distribution','gaussian')=='beta' else
                     dict(class_name='GaussianDistribution', init_std=t['initial_std'], std_type='log'))
+    if t.get('policy_distribution') == 'stop_gaussian':
+        distribution = dict(class_name='step_demo.distributions:StopCenteredGaussianDistribution',
+                            init_std=t['initial_std'])
     if 'beta_std_ceiling' in t:
         name = ('ActionwiseCeilingBetaDistribution' if 'wheel_final_std' in t['beta_std_ceiling']
                 else 'CeilingBetaDistribution')
@@ -40,6 +43,11 @@ def distribution_metrics(distribution):
     if isinstance(distribution,BetaDistribution) and (mean.abs().max()>1.+1e-6 or std.max()>1.):
         raise RuntimeError('Bounded policy distribution violated its action range')
     result=dict(kind=kind,mean_abs_max=float(mean.abs().max()),std_min=float(std.min()),std_max=float(std.max()))
+    if isinstance(distribution, StopCenteredGaussianDistribution):
+        if std.min() < .005-1e-6 or std.max() > .05+1e-6:
+            raise RuntimeError('STOP Gaussian exploration left its finite std range')
+        result['raw_sample_density'] = True
+        result['std_range'] = list(distribution.std_range)
     if isinstance(distribution,CeilingBetaDistribution):
         result['std_ceiling']=distribution.std_ceiling.detach().cpu().tolist()
         if distribution.std_ceiling.ndim:

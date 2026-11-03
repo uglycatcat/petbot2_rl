@@ -1,12 +1,18 @@
 """Independent scalar audit for isolated platform stopping, never climb scores."""
 import json
 import math
+import struct
 from collections import Counter
 from pathlib import Path
 
 
 def read(path):
     return json.loads(Path(path).read_text())
+
+
+def float32(value):
+    """Match the physical timer's precision without importing Torch on host."""
+    return struct.unpack('f',struct.pack('f',value))[0]
 
 
 def summarize_auxiliary(run, evaluation):
@@ -28,6 +34,7 @@ def summarize_auxiliary(run, evaluation):
     dt = layout['step_dt']; hold = {}; base_seen = set(); seen = set()
     counts = Counter(); groups = {i:dict(episodes=0,stopped=0,held=0) for i in range(4)}
     initial_speeds = {}; examples = []; max_target = 0.; max_actual_wheel = 0.
+    raw_count = 0; raw_outside = 0; raw_peak = 0.
     max_estimator_error=0.; max_hip_request=0.; max_pitch=0.; max_pitch_rate=0.
     terminals = {r['env']:r for r in result['episodes']}
     extra = result.get('hold_after_success_s',0.)
@@ -48,7 +55,14 @@ def summarize_auxiliary(run, evaluation):
                     raise ValueError('Auxiliary executed target outside source limits')
                 max_target = max(max_target,row['wheel_target'][k])
                 max_estimator_error=max(max_estimator_error,math.dist(row['com'][k],row['estimated_com'][k]))
-                hip_action=row['action'][k][0]
+                raw=row['action'][k]
+                if not all(math.isfinite(v) for v in raw):raise ValueError('Nonfinite raw policy action')
+                raw_count += len(raw); raw_outside += sum(abs(v)>1.+1e-6 for v in raw)
+                raw_peak=max(raw_peak,*(abs(v) for v in raw))
+                request=[max(-1.,min(1.,v)) for v in raw]
+                if 'requested_action' in row and any(abs(a-b)>1e-6 for a,b in zip(request,row['requested_action'][k])):
+                    raise ValueError('Physical action request does not match existing source-limit clipping')
+                hip_action=request[0]
                 max_hip_request=max(max_hip_request,abs(hip_action*(1.2 if hip_action>=0 else 1.)))
                 max_pitch=max(max_pitch,abs(row['world_pitch'][k]))
                 max_pitch_rate=max(max_pitch_rate,abs(row['world_pitch_rate'][k]))
@@ -59,12 +73,12 @@ def summarize_auxiliary(run, evaluation):
                     and max(abs(q[j]) for j in layout['hips']) <= a['hip_tolerance_rad']
                     and speed <= a['stop_speed_m_s']
                     and abs(row['yaw_rate'][k]) <= a['stop_yaw_rate_rad_s'])
-                hold[i] = hold.get(i,0.)+dt if good else 0.
+                hold[i] = float32(hold.get(i,0.)+float32(dt)) if good else 0.
                 if abs(hold[i]-row['auxiliary_hold'][k]) > 1e-4:
                     raise ValueError('Independent auxiliary hold timer disagrees')
                 if hold[i]+1e-6 >= a['stop_hold_s']:
                     base_seen.add(i)
-                completed = hold[i]+1e-6 >= a['stop_hold_s']+extra
+                completed = float32(hold[i]+float32(1e-7)) >= float32(a['stop_hold_s']+extra)
                 if completed != row['completed'][k]:
                     raise ValueError('Auxiliary success disagreement')
                 failure = row['failure'][k]
@@ -80,12 +94,15 @@ def summarize_auxiliary(run, evaluation):
                     if len(examples) < 12:
                         examples.append(dict(env=i,group=i%4,elapsed=row['elapsed'][k],outcome=key,
                             speed=speed,hip=[q[j] for j in layout['hips']],hip_request=hip_action*(1.2 if hip_action>=0 else 1.),
-                            hip_target=row['hip_target'][k],wheel_request=(row['action'][k][1]+1.)*12.5,
+                            hip_target=row['hip_target'][k],wheel_request=(request[1]+1.)*12.5,
+                            raw_policy_action=raw,
                             wheel_target=row['wheel_target'][k],wheel_actual=[v[j] for j in layout['rear_wheels']],
                             support=row['supported_top'][k],position=row['com'][k],yaw=row['yaw'][k],
                             flight_count=row['front_flight_count'][k]))
     if len(seen) != result['num_envs']:
         raise ValueError('Missing auxiliary terminal trajectories')
+    if origin['training'].get('policy_distribution')=='beta' and raw_outside:
+        raise ValueError('Bounded Beta policy produced out-of-range actions')
     n = result['num_envs']
     passed = (n == 64 and extra >= 2. and counts['success'] >= 61
               and all(g['episodes']==16 and g['held']>=15 for g in groups.values()))
@@ -98,6 +115,7 @@ def summarize_auxiliary(run, evaluation):
             max_wheel_target=max_target,max_sampled_actual_wheel=max_actual_wheel,
             max_estimator_error_m=max_estimator_error,max_requested_hip_rad=max_hip_request,
             max_world_pitch_rad=max_pitch,max_world_pitch_rate_rad_s=max_pitch_rate,
+            raw_policy_action_peak=raw_peak,raw_action_outside_fraction=raw_outside/max(raw_count,1),
             scalar_hold_agrees=True,auxiliary_gate_passed=passed),
         review_required=True,notes=['Auxiliary STOP is a known command, not demonstrated deployed phase recognition.',
             'Both seeds must pass; no auxiliary weights/states may enter full-task training.'])
