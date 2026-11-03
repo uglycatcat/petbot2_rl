@@ -84,7 +84,7 @@
         "demo"
       ],
       "shallow": false,
-      "status": "restart20_engineering_passed_ready",
+      "status": "restart20_full_training_running",
       "local_validation": "Restart19 both0/64 without front landing or STOP. Restart20 finite gamma1 objective, movement costs and forward fresh Gaussian;136 container tests, real approach/PPO/quality semantics,512env4to8 restore and independent reload. Full capability unproven; new2x512x500; no weight/state transfer.",
       "task": null,
       "usage": "README.md",
