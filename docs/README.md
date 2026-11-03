@@ -15,7 +15,7 @@
 | 固定姿态恢复及参考来源 | [MuJoCo固定恢复](fixed_pose_recovery.md)、[参考项目选择](reference_selection.md)、[已关闭参考recovery](reference_recovery_validation.md) |
 | 跳跃预研与早期调查 | [跳跃预研](jump_prestudy.md)、[历史资料](reports/) |
 
-- Step从第14轮继续修正单次抬轮与停车：Restart15辅助持续保持未通过，Restart16在工程门槛后以两种子512×200从零修正停车学习。见[当前终局与迭代](step_restart16_20261103.md)；辅助不迁移，MuJoCo仍保留第20轮。
+- Step从第14轮继续修正单次抬轮与停车：Restart16两路辅助均0/64，Restart17改持续停车目标，经物理门槛后两种子512×200从零验证。见[当前终局与迭代](step_restart17_20261103.md)；辅助不迁移，MuJoCo仍保留第20轮。
 
 - Step历史回退：[暂停/回退证据](step_rollback14_20261103.md)，[第20轮终局](step_round20_results.md)、[第21轮取消记录](step_round21_execution.md)保留追溯；旧15–21均已废弃，不再作为优化基线。
 

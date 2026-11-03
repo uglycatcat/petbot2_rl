@@ -79,20 +79,20 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/step_rl_demo",
-      "verified_commit": "1ebc4f494eb289bf58cd76a39c2518bd6991943e",
+      "verified_commit": "49223a1227c223f5a7270a607a81b17435f41b88",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart16_auxiliary_diagnostic_running",
-      "local_validation": "116container CPU checks and6guarded jobs passed;real positive/negative physics probe,GPU0 512admission,GPU1 128/512 short train,512 same-run4to8resume and16eval. Each new seed512x200random auxiliary only. Prior restart15 both0/64 held; no capability pass.",
+      "status": "restart17_auxiliary_diagnostic_ready",
+      "local_validation": "119 container checks;512env4to8 same-run resume and16 independent eval valid;corrected physics probe checks real2.5s holding,15s truncation and real nonbootstrapped failures. First14s-hold probe rejected and preserved;only probe changed. Restart16 both0/64. Restart17 two512x200 fresh auxiliary only;no weight/data transfer or full-task pass.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "restart16_aux_seed70",
-        "restart16_aux_seed71"
+        "restart17_aux_seed70",
+        "restart17_aux_seed71"
       ],
-      "active_training_commit": "1ebc4f494eb289bf58cd76a39c2518bd6991943e",
+      "active_training_commit": "49223a1227c223f5a7270a607a81b17435f41b88",
       "next_iteration_requirement": "Authorized continuous iteration from14;old15-21invalidated.Each auxiliary seed61/64 and each speedgroup15/16 with real actor+physics extra2s required before full-task execution review.No weight/state transfer;fullbudget/STOPcoverage/prefixnonregression gates remain.",
       "body_pitch_requirement_status": "World lower_body pitch is a secondary full-episode soft objective;single flight and actual platform stopping are primary. Not yet capability accepted.",
       "baseline_commit": "30fd5886271f7d70ed23a923647f824feb7c1f5f",
