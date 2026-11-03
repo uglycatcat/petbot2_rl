@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round21r5_engineering",
+  "phase": "round21r5_ready",
   "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "21r4 landing improved but small-speed/zero-command retention regressed. Keep control/rewards; rebalance existing20percent replay toward static and low motion. Engineering pending.",
+  "reason": "Anchored replay passed137checks,2048 short training,4to8 recovery/reloads,8192 real high-course resets and256 physical steps, fixed-policy2106frames exact. New policy unvalidated.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -14,13 +14,13 @@
   "next_experiment": {
     "series": "upright_restart_20261030",
     "name": "upright_restart_round21r5",
-    "status": "engineering_pending"
+    "status": "engineering_accepted_ready"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": false,
+  "engineering_validated": true,
   "implementation_review": "docs/round01_implementation.md",
-  "cpu_contract_tests_passed": 133,
+  "cpu_contract_tests_passed": 137,
   "allowed_host_gpus": [
     2,
     3
