@@ -22,9 +22,9 @@
 
 ### 版本管理与双端协作
 
-正式项目补充（2026-10-27）：`rl_project/std_train_upright_project`和`std_s2s_upright_project`由同一repo清单物化，远程独立`rlproj/<项目名>`分支。训练目录保持空，sim2sim存放推理程序及必要小型网络；main维护`rl_project/README.md`、`manifest.json`和忽略规则。训练仍在原demo，runs未移动；后续归档到忽略的history前先保存检查点依赖与来源。见[sim2sim方案](upright_sim2sim_20261027.md)。
+正式项目由同一repo清单物化，远程独立`rlproj/<项目名>`分支。`std_train_upright_project`保持空，`std_s2s_upright_project`存放ONNX推理程序及必要网络；main维护项目索引和manifest。训练仍在demo，重启系列固定运行副本保持原路径；重启前旧upright文档和runs已迁到忽略的服务器`history/upright/`，来源映射与依赖核验见[归档说明](upright_history.md)。
 
-根目录`tools/`是已退役的宿主机辅助目录，2026-10-27按用户要求加入`/tools/`忽略规则；原受跟踪的`tools/session_resume/dispatch.py`移出索引，服务器本地文件保留，历史可从Git恢复。它负责旧04/10/16/22周期续接的投递/去重，配置保持enabled=false，timer未启用。`tools/upright_training/`当前只剩旧Python缓存，没有训练启动源码。旧训练、评估和有限队列事件工具已随2026-10-30旧demo封存，不能将历史`upright_rl_demo/tools/`当作当前入口。新第1轮以`train.py`为唯一训练入口，修改后待用户核对，尚未发批；历史固定副本保存在runs，MuJoCo工具在正式sim2sim项目内。目录存在不表示定时器或训练正在运行。
+根目录`tools/`是已退役的宿主机辅助目录，已被忽略；旧周期续接配置保持停用，不得因历史记录恢复。当前upright唯一训练入口为`demo_project/upright_rl_demo/train.py`；有限队列工具随项目管理，按[当前交接](current_handoff.md)的固定计划执行。宿主只编排，训练和评估在专用容器中进行；旧源码、批次及已废弃队列不作为当前入口。
 
 
 - demo 是独立 checkout，代码推送到本仓库专用分支 `demoproj/recovery_agile_01`；后续 demo 按任务、底座与编号另建，参考分支仍使用 `refproj/`。
@@ -169,6 +169,6 @@ MuJoCo 迁移先用固定观测比较网络输出，再对照伺服阶跃响应�
 
 首版有意控制复杂度，未引入完整的课程、历史观测、对称增强与探索辅助等机制。用户提出的重点排查假设是奖励偏好静止解，以及策略探索标准差坍缩；这两项尚需奖励分项、策略标准差与动作轨迹证据确认，不能把初始标准差当成训练后的标准差，也不能把现有观测归一化等同于奖励或回报归一化。尚未决定下一版引入哪些机制。
 
-## upright_rl_demo 第二版实现（2026-10-16）
+## upright历史实现
 
-先实际复现jump_demo、记录车架/轮速与接触/姿态/位移，再设计分阶段训练。已在anna用户的项目内uv环境完成原MuJoCo控制器复现及渲染，模型未改。策略接口仍为位置/速度，任务要求过程允许移动而终局回到原位置。第二版设计、待校准阈值、验收与训练安排在[设计文档](upright_v2_design.md)；代码已实现，实际验收与正式部署状态见[第二版训练记录](upright_v2_training.md)。必须分别验证抬升、支撑、稳定与回位，不能只报告最大高度或曾经成功。
+2026-10-30重启前的第二版及其他旧系列仅作历史资料；当时回原位置等任务条件不属于当前契约。旧全文已保存到服务器history，见[归档说明](upright_history.md)。现行要求统一见[需求基线](current_scope.md)，新训练禁止历史权重初始化。

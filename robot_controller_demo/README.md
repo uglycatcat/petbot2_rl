@@ -7,7 +7,7 @@
 | 路径 | 内容 |
 |---|---|
 | [pose_recover_demo/](pose_recover_demo/) | 固定姿态恢复。动作组与试操结论见 [固定姿态恢复](../docs/fixed_pose_recovery.md) |
-| [jump_demo/](jump_demo/) | 前轮离地后以后轮维持倒立。动作可用但僵硬，是起立的参照，不是训练数据。见 [起立](../docs/upright.md) |
+| [jump_demo/](jump_demo/) | 前轮离地后以后轮维持倒立。动作可用但僵硬，是起立的参照，不是训练数据。见 [起立（旧档：upright.md）](../docs/upright_history.md) |
 | [test/rear_wheel_inverted_pendulum/](test/rear_wheel_inverted_pendulum/) | 前轮离地的一次约束动力学测试，不开窗口 |
 | [test/rear_wheel_liftoff/](test/rear_wheel_liftoff/) | jump_demo 后轮支撑姿态上，车架力矩能否让后轮离地。一次约束动力学，不开窗口 |
 | [test/fall_pose_statistics/](test/fall_pose_statistics/) | 执行器关闭后的被动沉降。结果见同一篇文档的[被动沉降](../docs/fixed_pose_recovery.md#被动沉降) |

@@ -16,7 +16,7 @@
       "remote": "ours",
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "branch": "rlproj/std_s2s_upright_project",
-      "verified_commit": "773836e168ef3c20d17b084e9af34920e13aa69b",
+      "verified_commit": "4941f4be9d111d111d24738fea181f08ae143961",
       "status": "User-requested round20 original ONNX plus normal handoff correction; default restored from discarded round26. Residual2.6-3.6cm backward landing travel remains,not full acceptance.",
       "usage": "README.md",
       "local_validation": "3x42s landing complete;each800frames through original handoff identical,and1334frames exact to development candidate.Held/released input,unchanged injectedEXIT,180source parity,27geometry,full ordinary,QE,ONNX-only and4sGUI pass.Actual wheel peak32.82rad/s remains;21r1training unchanged.",
@@ -26,7 +26,8 @@
       "default_policy": "restart20_s102",
       "previous_policy": "restart26_s102",
       "controller_contract": "restart_v20_handoff",
-      "runtime_revision": "round20_normal_handoff_v1"
+      "runtime_revision": "round20_normal_handoff_v1",
+      "history_document": "docs/upright_history.md"
     },
     {
       "name": "std_s2s_step_project",

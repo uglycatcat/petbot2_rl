@@ -1,6 +1,6 @@
 # 跳跃预研（2026-10-15 关闭）
 
-与第三轮摔倒恢复无关。本页只保留关闭完整跳跃的依据。起立任务见[起立](upright.md)。
+与第三轮摔倒恢复无关。本页只保留关闭完整跳跃的依据。起立任务见[起立（旧档：upright.md）](upright_history.md)。
 
 桌面机、`mujoco_env`、只读 `robot_description/mjcf/scene.xml`，积分器 `implicitfast`。源模型未改。
 

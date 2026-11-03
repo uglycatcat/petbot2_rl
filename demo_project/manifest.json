@@ -44,7 +44,7 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "839fc6ce37db803d77e9f876900e13910ea093c5",
+      "verified_commit": "5b9ffc90ce89dccb941639977c55c9763f8bd968",
       "groups": [
         "demo"
       ],
@@ -70,7 +70,8 @@
       ],
       "cancelled_rounds": [
         27
-      ]
+      ],
+      "history_document": "docs/upright_history.md"
     },
     {
       "name": "step_rl_demo",
