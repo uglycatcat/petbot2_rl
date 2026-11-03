@@ -5,7 +5,7 @@
 | 项目 | 职责 | 当前开发状态 |
 |---|---|---|
 | [upright_rl_demo](upright_rl_demo/README.md) | 从随机初始化完成起落与两轮遥控；不依赖历史权重。 | 第26轮无一致扩速/落地收益，宽初态19/29各32；第27轮bce7793通过工程验收，GPU2/3各2048×1000从零对照。见[执行](../docs/upright_restart_round27_execution.md)。 |
-| [step_rl_demo](step_rl_demo/README.md) | 固定2cm平台、初始质心前方30cm；同步髋角/轮速，前轮单次离地登台，沿线短行后停稳。 | 第20轮从零GPU0/1运行，仅修正任务记忆输入尺度；155项容器/9项仿真通过，完整能力待验。见[执行](../docs/step_round20_execution.md)。 |
+| [step_rl_demo](step_rl_demo/README.md) | 固定2cm平台、初始质心前方30cm；同步髋角/轮速，前轮单次离地登台，沿线短行后停稳。 | 第20轮两路已结束；seed70合法落顶21/64、完整0，落顶后重复离地待修；seed71及整批决策待续接。见[单路审查](../docs/step_round20_seed70_review.md)。 |
 | [recovery_rl_demo](recovery_rl_demo/README.md) | 重新设计分阶段跌倒恢复。 | 仅登记与需求说明，尚无训练代码。 |
 | [recovery_agile_01](recovery_agile_01/PETBOT.md) | 基于AGILE的早期恢复原型。 | 历史实验，不能直接作为新恢复任务的设计或成功基线。 |
 | [jump_rl_demo](jump_rl_demo/README.md) | 跳跃可行性预研。 | 完整跳跃已放弃，保留历史入口。 |

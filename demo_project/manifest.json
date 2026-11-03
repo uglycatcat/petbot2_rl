@@ -73,17 +73,15 @@
         "demo"
       ],
       "shallow": false,
-      "status": "round20_running_gpu0_gpu1_random_unit_memory",
+      "status": "round20_complete_seed70_reviewed_whole_batch_pending",
       "local_validation": "Round19 valid2x500,complete0both,frontland4/51,home0/41. Exact2ms/contact/cost audits. Fixed current-policy unit-memory intervention seed71 drive0to36 still0complete. Round20 only fixed0-1 memory suffix/native26-prefix normalization;155tests/9guarded jobs,4to8resume/fullreload/512x4,128real actions+64static exactphysics/acceptance. Actual randominitial/PPO/GPU0/1 verified.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [
-        "step_round20_seed70@gpu0",
-        "step_round20_seed71@gpu1"
-      ],
+      "active_tasks": [],
       "active_training_commit": "a6b85a9c7987bb4cb4fa4a1f0620041a3deffe3f",
-      "next_iteration_requirement": "Inspect early collisions/relifts and post-memory-transition home stability,0.15m drive and actual0.5s stop; worldpitch quality still required. No new capability proven.",
-      "body_pitch_requirement_status": "Original full world-pitch objective and0.1to1 learning curriculum unchanged; final200updates/evaluation fullcost. Round19 excessive tilt/rate remain unresolved."
+      "next_iteration_requirement": "Review seed71 and whole batch before choosing change. Inspect repeated hip direction changes/front support loss between landing and rear climb; retain sensor memory/full worldpitch/complete task. New source must pass container gates,commit,push,freeze and randominitialization. No round21 started.",
+      "body_pitch_requirement_status": "Full cost final200updates/eval verified; seed70 worldpitch -52.99to51.07deg,ratepeak14.15rad/s remains unacceptable. Matched0.4to0.58s rateRMS3.209to4.485vsround19seed70; no smoothness improvement claim.",
+      "latest_lane_review": "Round20 seed70 valid500updates/full-costeval:0/64complete,21legalfrontland,0fourtop/home/drive;24edge/39relift/1rearair. Exact950substep replay; scalar contact/cost/terrain/memory valid. 3269CUDAactor decisions match exactly, memory suffix raw0-1; only1started transition,noneatlegalhome, parking effect untested."
     },
     {
       "name": "recovery_rl_demo",
