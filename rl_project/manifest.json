@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-02",
+  "updated_at": "2026-11-03",
   "repositories": [
     {
       "name": "std_train_upright_project",
@@ -32,15 +32,16 @@
       "remote": "ours",
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "branch": "rlproj/std_s2s_step_project",
-      "verified_commit": "771d7a5fdfd2cddbbfef933775325b6abd236d01",
-      "status": "ONNX/MuJoCo preview; user desktop confirms traversal but no stop and redundant first lift. Independent rendering/physics worker,60FPS display target,source and policy unchanged. No full task acceptance.",
+      "verified_commit": "167191ff6020e9a0031c48b0017230c298e281f7",
+      "status": "Latest completed Step round20 seed71 ONNX preview,29D sensor-memory contract. MuJoCo front-edge contact at0.56s and no stop in15s. Not task acceptance; round14/13 retained.",
       "usage": "README.md",
-      "validation": "validation/review.json",
+      "validation": "validation/round20_20261103/review.json",
       "inference_backend": "onnxruntime_cpu",
-      "default_policy": "round14_seed71",
+      "default_policy": "round20_seed71",
       "reference_policy": "round13_seed71",
-      "local_validation": "ONNX maxabs3.22e-6;1200 estimator steps maxabs1.13e-6;48000 targets exact;robot physics unchanged;52-frame reset replay exact;actual X11 Space/R and rendered frames verified. Display update:1200 sensor steps and150 physical trace frames exact,worker prefix exact;real X11 Space/R sequence passes. Xvfb software render1.60->10.68FPS;desktop FPS pending.",
-      "display_validation": "validation/display_20261102.json"
+      "local_validation": "12355 ONNX cases maxabs5.96e-7;10304 memory/target cases aligned;103040 flight-substep flags exact;robot physics unchanged;28-frame reset replay exact;legacy14 300frames exact;actual X11 Space/R passed. CPU software GUI only,desktop performance unmeasured.",
+      "display_validation": "validation/display_20261102.json",
+      "previous_policy": "round14_seed71"
     },
     {
       "name": "std_train_step_project",
