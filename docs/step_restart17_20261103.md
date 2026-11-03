@@ -15,3 +15,7 @@ Restart17仅辅助改为持续停车调节：保留同一精细运动成本、�
 b物理探针已通过：16例达到原2.5s保持并继续真实运行至15s；真实离地与驶离平台均为无bootstrap失败，逐帧独立复算保持及奖励一致。完整工程证据见[验证数据](../demo_project/step_rl_demo/docs/restart17_validation.json)。随后提交推送、同步manifest、冻结新Restart17辅助批次：两种子70/71各512环境×64步×200更新，从随机参数和空优化器开始。每路64例须至少61例通过、每初速组至少15/16；门槛前不发完整登台。辅助权重、短训权重、工程轨迹和状态均不得迁移。
 
 方案与方程见[demo设计](../demo_project/step_rl_demo/docs/restart17.md)。实时证据在忽略目录`demo_project/runs/step_restart17_gate_20261103_a/b`及控制文件；先查active、已有agent_review和实际进程，避免延迟事件重发批次。
+
+## 发布与从零启动
+
+固定`49223a1227c223f5a7270a607a81b17435f41b88`已推送，main与repo manifest已同步后冻结到`step_restart17_aux_20261103`；107份运行代码、工具和配置逐字节对应验收副本。GPU0/1两路已进入PPO更新。实际initial.pt、随机来源、空优化器、actor/critic哈希、唯一run_id和无恢复文件均核对；没有加载旧轮、辅助或短训权重。每路512环境×64步×200更新，终局64例原停稳加真实2s保持，沿原完成/异常事件链续接。启动检查只确认工程和来源，不代表停车能力通过。

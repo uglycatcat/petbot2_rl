@@ -84,7 +84,7 @@
         "demo"
       ],
       "shallow": false,
-      "status": "restart17_auxiliary_diagnostic_ready",
+      "status": "restart17_auxiliary_diagnostic_running",
       "local_validation": "119 container checks;512env4to8 same-run resume and16 independent eval valid;corrected physics probe checks real2.5s holding,15s truncation and real nonbootstrapped failures. First14s-hold probe rejected and preserved;only probe changed. Restart16 both0/64. Restart17 two512x200 fresh auxiliary only;no weight/data transfer or full-task pass.",
       "task": null,
       "usage": "README.md",
