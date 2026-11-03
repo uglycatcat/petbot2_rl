@@ -79,20 +79,20 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/step_rl_demo",
-      "verified_commit": "19b359292de00670b2e888c4758685245728a07f",
+      "verified_commit": "71f87675a3d458f5182f074a0c4797c272950cbc",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart18_auxiliary_diagnostic_running",
-      "local_validation": "125container checks;fresh untrainedactor16/16 and512env8update independent16/16 original2.5shold.4to8 same-runrestore13optimizerstates,rawGaussian PPO/storage/logprob physicalprobe passed.No entropy runaway,std bounded.No weights/data transferred.Firstprobe inference-reset failurepreserved;offlinefloat32timer fixed with unchangedphysicalacceptance.2fresh512x200aux;not full-taskpass.",
+      "status": "restart19_full_training_ready",
+      "local_validation": "Restart18 both64/64 original stop plus real2s, all groups16/16; no auxiliary transfer. Restart19 full Gaussian bounded exploration, discounted constant-failure objective;131 container checks, real PPO raw storage/logprob and quality failure,512env4to8 restore and independent reload. Full capability unproven; fresh2x512x1000 with original full task and extra2s evaluation.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "restart18_aux_seed70",
-        "restart18_aux_seed71"
+        "restart19_full_seed70",
+        "restart19_full_seed71"
       ],
-      "active_training_commit": "19b359292de00670b2e888c4758685245728a07f",
+      "active_training_commit": "71f87675a3d458f5182f074a0c4797c272950cbc",
       "next_iteration_requirement": "Authorized continuous iteration from14;old15-21invalidated.Each auxiliary seed61/64 and each speedgroup15/16 with real actor+physics extra2s required before full-task execution review.No weight/state transfer;fullbudget/STOPcoverage/prefixnonregression gates remain.",
       "body_pitch_requirement_status": "World lower_body pitch is a secondary full-episode soft objective;single flight and actual platform stopping are primary. Not yet capability accepted.",
       "baseline_commit": "30fd5886271f7d70ed23a923647f824feb7c1f5f",
