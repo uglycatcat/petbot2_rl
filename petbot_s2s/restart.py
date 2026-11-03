@@ -13,6 +13,7 @@ import torch
 
 from .simulation import Simulation as LegacySimulation, batch, find_model, fingerprint
 from .restart_core.controller import Controller as SourceController, Phase, Reason
+from .restart_core.controller_v26 import Controller as Round26Controller
 from .restart_core.geometry import WheelGeometry, orientation
 from .restart_core.observation import Observation
 
@@ -31,7 +32,12 @@ class RestartController:
         self.cfg = SimpleNamespace(**m['control_config'])
         self.dt = m['control_period_s']
         self.geometry = WheelGeometry(m['wheel_geometry'], 'cpu')
-        self.control = SourceController(1, 'cpu', self.dt, self.cfg, m['source_model'], self.geometry.track)
+        self.controller_contract = m.get('controller_contract', 'restart_v20')
+        controllers = {'restart_v20': SourceController, 'restart_v26': Round26Controller}
+        if self.controller_contract not in controllers:
+            raise ValueError(f'Unknown restart controller contract: {self.controller_contract}')
+        self.control = controllers[self.controller_contract](
+            1, 'cpu', self.dt, self.cfg, m['source_model'], self.geometry.track)
         if not self.control.lo <= frame <= self.control.hi or not math.isfinite(frame):
             raise ValueError('Initial hip target is outside the source range')
         self.frame = float(frame)

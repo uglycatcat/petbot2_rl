@@ -10,18 +10,20 @@ from petbot_s2s.restart import RestartSimulation
 from petbot_s2s.restart_core.controller import Phase
 
 
-def run(source, output):
+def run(source, output, policy):
     sys.path.insert(0,str(source))
     from upright.runtime import Runtime
     from upright.config import Config
     from upright.model import load_model
     import mujoco
     torch.set_num_threads(1)
-    result={'source_commit':'40e926d8c181473e181ed5069535247525786fc9','cases':{}}
+    manifest=json.loads((policy/'manifest.json').read_text())
+    result={'source_commit':manifest['source_commit'],'policy':policy.name,'cases':{}}
     for name in ('controller.py','geometry.py'):
-        assert (source/'upright'/name).read_bytes()==(ROOT/'petbot_s2s/restart_core'/name).read_bytes()
+        local='controller_v26.py' if name=='controller.py' and manifest.get('controller_contract')=='restart_v26' else name
+        assert (source/'upright'/name).read_bytes()==(ROOT/'petbot_s2s/restart_core'/local).read_bytes()
     with patch('torch.load',side_effect=AssertionError('PT runtime forbidden')),patch('torch.jit.load',side_effect=AssertionError('PT runtime forbidden')):
-        sim=RestartSimulation(ROOT/'policies/restart20_s102');c=sim.controller
+        sim=RestartSimulation(policy);c=sim.controller
         original=Runtime(1,'cpu',c.dt,Config(**c.manifest['control_config']),load_model())
         original.probe_level=1
         gen=torch.Generator().manual_seed(231)
@@ -89,4 +91,6 @@ def run(source, output):
     print(json.dumps(result,indent=2))
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--source',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args();run(a.source.resolve(),a.output)
+    p=argparse.ArgumentParser();p.add_argument('--source',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
+    p.add_argument('--policy',type=Path,default=ROOT/'policies/restart20_s102')
+    a=p.parse_args();run(a.source.resolve(),a.output,a.policy.resolve())

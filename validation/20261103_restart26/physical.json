@@ -1,0 +1,52 @@
+[
+  {
+    "trace": "outputs/restart26_stationary/trace.jsonl",
+    "sha256": "b5ed09e08a511e504a6a63151cfeb0e53eb79db4816f9115fe32c562e7a12ff3",
+    "frames": 179,
+    "target_and_effort_valid": true,
+    "source_model_unchanged": true,
+    "policy_period_s": 0.06,
+    "actual_wheel_peak_rad_s": 34.178627014160156,
+    "final_real_four_wheel_geometry": true
+  },
+  {
+    "trace": "outputs/restart26_mixed/trace.jsonl",
+    "sha256": "76190415c1a7619679cdecabb5b23591f0d124738f93332dc995f49387ad2681",
+    "frames": 379,
+    "target_and_effort_valid": true,
+    "source_model_unchanged": true,
+    "policy_period_s": 0.06,
+    "actual_wheel_peak_rad_s": 32.77480697631836,
+    "final_real_four_wheel_geometry": true
+  },
+  {
+    "trace": "outputs/restart26_idle/stationary.jsonl",
+    "sha256": "6987241fdf87cf94faf0764308217f14cf0e24f69ec7d53b0d549fd4889c7b57",
+    "frames": 700,
+    "target_and_effort_valid": true,
+    "source_model_unchanged": true,
+    "policy_period_s": 0.06,
+    "actual_wheel_peak_rad_s": 35.937225341796875,
+    "final_real_four_wheel_geometry": true
+  },
+  {
+    "trace": "outputs/restart26_idle/forward_release.jsonl",
+    "sha256": "432275adc26eb27ca2696fec4bd06ba35eeecee86a24fc359e428198124a4aea",
+    "frames": 700,
+    "target_and_effort_valid": true,
+    "source_model_unchanged": true,
+    "policy_period_s": 0.06,
+    "actual_wheel_peak_rad_s": 30.033370971679688,
+    "final_real_four_wheel_geometry": true
+  },
+  {
+    "trace": "outputs/restart26_idle/reverse_release.jsonl",
+    "sha256": "629c270b98b92dda2ad911641dd0fba889d429ea9a4847415fbd5e1fde377017",
+    "frames": 700,
+    "target_and_effort_valid": true,
+    "source_model_unchanged": true,
+    "policy_period_s": 0.06,
+    "actual_wheel_peak_rad_s": 31.40425682067871,
+    "final_real_four_wheel_geometry": true
+  }
+]

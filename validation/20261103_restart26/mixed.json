@@ -1,0 +1,144 @@
+{
+  "policy": "restart26_s102",
+  "checkpoint_sha256": "6a371ba96df2e04049fca7ed253ddef009375abeb05dd2c9795a8d6c61994ba2",
+  "inference_backend": "onnxruntime_cpu",
+  "network_sha256": {
+    "policy": {
+      "file": "policy.onnx",
+      "sha256": "672dbbc1d9e93d2654af58c5141730bb6ebcc7a4aa66ad633786c2fc7cfaee43"
+    }
+  },
+  "deployment_contract": "restart_single_actor_v1",
+  "transition_contract": "restart_single_actor",
+  "development_intervention": false,
+  "source_model_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+  "mujoco_version": "3.16.0",
+  "scenario": "mixed",
+  "forward_speed": 0.15,
+  "turn_rate": 0.5,
+  "takeover_yaw": 0.0,
+  "command_scale": 1.0,
+  "frame": 0.0,
+  "wall_seconds": 3.6646691551432014,
+  "simulated_seconds": 22.739999999998275,
+  "entered_balance": true,
+  "requested_cycles": 1,
+  "completed_cycles": 1,
+  "interrupted_calls": 0,
+  "last_exit_code": 0,
+  "failure_code": 0,
+  "events": [
+    {
+      "time": 3.0599999999998846,
+      "event": "rise_requested"
+    },
+    {
+      "time": 3.599999999999825,
+      "event": "balance_entered"
+    },
+    {
+      "time": 21.659999999998874,
+      "event": "land_requested"
+    },
+    {
+      "time": 22.739999999998275,
+      "event": "ordinary_handoff_complete"
+    }
+  ],
+  "maximum_front_height": 0.20760010944043236,
+  "final": {
+    "time": 22.739999999998275,
+    "phase": 0,
+    "phase_time": 0.6599999666213989,
+    "armed": false,
+    "failure_code": 0,
+    "cycles": 1,
+    "interruptions": 0,
+    "last_exit_code": 0,
+    "inference_backend": "onnxruntime_cpu",
+    "operator_request": [
+      0.15000000596046448,
+      0.0
+    ],
+    "ordinary_control": true,
+    "ordinary_frame_target": 0.0,
+    "manual_frame_allowed": true,
+    "policy_motion_limits": [
+      0.75,
+      0.5
+    ],
+    "position": [
+      1.2217450941484966,
+      -0.5862282820338617,
+      0.08372676887258243
+    ],
+    "gravity": [
+      0.0002198534202761948,
+      -6.022143497830257e-05,
+      -1.0
+    ],
+    "front_z": 0.044847268252100184,
+    "rear_z": 0.029594506618579527,
+    "rear_fraction": 1.0,
+    "four_fraction": 0.9666666666666667,
+    "raw": [
+      0.15000000596046448,
+      0.0
+    ],
+    "command": [
+      0.15000000596046448,
+      0.0
+    ],
+    "requested": [
+      0.15000000596046448,
+      0.0
+    ],
+    "control_reference": [
+      0.15000000596046448,
+      0.0
+    ],
+    "motion": [
+      0.15086406469345093,
+      -0.00041783670894801617
+    ],
+    "interval_motion": [
+      0.15086406469345093,
+      -0.00041783670894801617
+    ],
+    "yaw": 1.1325581073760986,
+    "instant": [
+      0.15086406469345093,
+      -0.00041783670894801617
+    ],
+    "frame": [
+      -0.008740137331187725,
+      -0.008687954396009445
+    ],
+    "frame_target": [
+      0.0,
+      0.0
+    ],
+    "wheel_measured": [
+      4.901034355163574,
+      4.8979082107543945
+    ],
+    "wheel_target": [
+      5.0,
+      5.0
+    ],
+    "actuator_force": [
+      0.00027559593063429175,
+      0.007976163806234381,
+      0.008176970784930631,
+      0.02844894842753813,
+      0.027220341415863228,
+      0.015020741369714208,
+      0.017997188975797274
+    ],
+    "inference_count": 317
+  },
+  "interpretation": "MuJoCo diagnostic, not an Isaac success-rate estimate; legacy C58 functional scoring is not applied to the restart observation/control contract",
+  "policy_period_s": 0.06,
+  "maximum_actual_wheel_rad_s": 32.77480697631836,
+  "maximum_target_wheel_rad_s": 24.69759178161621
+}

@@ -1,0 +1,44 @@
+{
+  "source_run": "upright_restart_round26_s102",
+  "source_commit": "8bdd13e8c655b6bac06a7ca20b90cfe3cd348d90",
+  "checkpoint": "update_001000.pt",
+  "checkpoint_sha256": "6a371ba96df2e04049fca7ed253ddef009375abeb05dd2c9795a8d6c61994ba2",
+  "updates": 1000,
+  "initialization": "random",
+  "historical_models": [],
+  "controller_contract": "restart_v26",
+  "policy_period_s": 0.06,
+  "physics_period_s": 0.002,
+  "onnx_numeric_max_abs_error": 1.430511474609375e-06,
+  "mujoco_version": "3.16.0",
+  "status": "user_requested_preview_not_capability_upgrade",
+  "tests": {
+    "source_parity": "port26.json",
+    "old20_regression": "port20_regression.json",
+    "closed_loops": [
+      "stationary.json",
+      "mixed.json"
+    ],
+    "three_42second_zero_release_scenarios": "idle_summary.json",
+    "ordinary_input_ownership": "handoff.json",
+    "landing_motion": "idle_verification.json",
+    "constraints": "physical.json",
+    "gui": {
+      "seconds": 4,
+      "exit_code": 0,
+      "renderer": "Xvfb software OpenGL",
+      "desktop_user_acceptance": false
+    }
+  },
+  "failures_and_corrections": [
+    "First export invocation masked CUDA visibility, which the source isolation guard rejected before export. Repeated with unchanged dedicatedGPU2 container environment; exporter loads and evaluates only on CPU.",
+    "Initial idle/handoff assertions retained30ms timing. At60ms, float32 blend boundary contained at most3.82e-6rad/s before exact zero on the next tick. Checks now derive timing from the bundle and preserve1e-5 boundary tolerance. Idle was reverified from identical saved traces; handoff reran. Controller and policy were not changed to pass these checks."
+  ],
+  "limitations": [
+    "Static/mixed short loops complete, not full-range or desktop acceptance.",
+    "Zero-input landing still retreats12.1-17.0cm after first four-wheel contact; stops after0.54s.",
+    "BALANCE zero request after forward/reverse motion drifts+0.067/+0.090m/s, despite zero command/reference.",
+    "Source target/effort constraints pass, actual wheel peak35.94rad/s exceeds25rad/s target cap.",
+    "Isaac fullspeed+0.412/-0.465m/s is below requested+/-0.75. No consistent upgrade over round25; old desktop20 remains selectable."
+  ]
+}

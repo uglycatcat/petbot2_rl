@@ -12,6 +12,7 @@ from petbot_s2s.restart import RestartSimulation
 from petbot_s2s.restart_core.controller import Phase
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--output',type=Path,required=True)
+parser.add_argument('--policy',type=Path,default=root/'policies/restart20_s102')
 parser.add_argument('--reference',type=Path)
 parser.add_argument('--verify-only',action='store_true')
 args=parser.parse_args()
@@ -20,7 +21,7 @@ if not args.verify_only:out.mkdir(exist_ok=False,parents=True)
 torch.set_num_threads(1)
 result={}
 for name,speed in ([] if args.verify_only else [('stationary',0.),('forward_release',.6),('reverse_release',-.6)]):
-    sim=RestartSimulation(root/'policies/restart20_s102');c=sim.controller
+    sim=RestartSimulation(args.policy);c=sim.controller
     c.set_policy_limits(.6,.5)
     rows=[];balanced=None;arm=False;land=False;complete=None
     while sim.data.time<42:
@@ -36,7 +37,7 @@ for name,speed in ([] if args.verify_only else [('stationary',0.),('forward_rele
     def stats(a):
         if not a:return None
         return dict(n=len(a),v_mean=float(np.mean([r['motion'][0] for r in a])),v_min=min(r['motion'][0] for r in a),v_max=max(r['motion'][0] for r in a),operator_max=max(abs(x) for r in a for x in r['operator_request']),raw_mean=float(np.mean([r['raw'][0] for r in a])),reference_mean=float(np.mean([r['control_reference'][0] for r in a])),wheel_mean=float(np.mean([r['wheel_target'] for r in a])),phase=sorted(set(r['phase'] for r in a)))
-    result[name]=dict(balanced_at=balanced,completed_at=complete,cycles=c.cycles,interruptions=c.interruptions,events=c.events,
+    result[name]=dict(policy=args.policy.name,control_period_s=c.dt,balanced_at=balanced,completed_at=complete,cycles=c.cycles,interruptions=c.interruptions,events=c.events,
         zero_balance=stats([r for r in rows if balanced is not None and 12<r['time']-balanced<20 and r['phase']==2]),
         zero_ordinary=stats([r for r in rows if complete is not None and r['time']>complete+2]),
         source_model=sim.model_sha256,network=c.manifest['networks'],
@@ -66,7 +67,7 @@ for name,case in result.items():
         stop=after[last+1]
         return dict(first_four_contact=contact['time'],handoff=handoff['time'],stopped=stop['time'],
                     contact_to_stop_s=stop['time']-contact['time'],handoff_to_stop_s=stop['time']-handoff['time'],
-                    backward_travel_m=sum(max(0.,-r['motion'][0])*.03 for r in after[:last+1]),
+                    backward_travel_m=sum(max(0.,-r['motion'][0])*case.get('control_period_s',.03) for r in after[:last+1]),
                     peak_backward_m_s=-min(r['motion'][0] for r in after),
                     complete=next(r['time'] for r in trace if r['cycles']))
     metrics=landing_metrics(rows)
@@ -75,7 +76,13 @@ for name,case in result.items():
     # step must use the current request, including an unchanged zero.
     during=[r for r in rows if r['phase']==Phase.HANDOFF and r['time']>metrics['handoff']+.001]
     assert during and all(r['raw']==[0.,0.] for r in during),name
-    settled=[r for r in during if r['time']>metrics['handoff']+.33]
+    # Records are taken after physics. The blend-boundary target may contain
+    # float32 roundoff; require exact zero one policy sample after that boundary.
+    dt=case.get('control_period_s',.03)
+    blend=json.loads((args.policy/'manifest.json').read_text())['control_config']['handoff_blend_s']
+    boundary=[r for r in during if r['time']>=metrics['handoff']+blend+dt-1e-8]
+    assert boundary and max(abs(x) for r in boundary for x in r['wheel_target'])<1e-5,name
+    settled=[r for r in during if r['time']>=metrics['handoff']+blend+2*dt-1e-8]
     assert settled and all(r['wheel_target']==[0.,0.] for r in settled),name
     assert metrics['handoff_to_stop_s']<.65 and metrics['stopped']<metrics['complete'],(name,metrics)
     if args.reference:

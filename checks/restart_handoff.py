@@ -7,10 +7,11 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 from petbot_s2s.restart import RestartSimulation
 from petbot_s2s.restart_core.controller import Phase
-p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=Path,required=True);args=p.parse_args()
+p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output',type=Path,required=True)
+p.add_argument('--policy',type=Path,default=ROOT/'policies/restart20_s102');args=p.parse_args()
 torch.set_num_threads(1)
 result={}
-sim=RestartSimulation(ROOT/'policies/restart20_s102');c=sim.controller
+sim=RestartSimulation(args.policy);c=sim.controller
 c.set_command(.15,0.)
 arm=land=False;balance=complete=None;rows=[]
 while sim.data.time<22:
@@ -35,7 +36,7 @@ assert handoff and all(abs(r['raw'][0]-.15)<1e-6 for r in handoff)
 result['held_command']={'cycles':c.cycles,'held_measured_mean':float(np.mean([r['motion'][0] for r in held])),
                         'released_speed_max':max(abs(r['motion'][0]) for r in idle),'unchanged_input_owned_during_transfer':True}
 # Release while the hips/ground are still being confirmed, not after success.
-sim=RestartSimulation(ROOT/'policies/restart20_s102');c=sim.controller
+sim=RestartSimulation(args.policy);c=sim.controller
 arm=land=False;balance=handoff_at=released=None;rows=[]
 while sim.data.time<16:
     t=float(sim.data.time)
@@ -51,16 +52,16 @@ assert c.cycles==1 and c.interruptions==0,c.events
 after=[r for r in rows if r['time']>released+.001]
 assert after and all(r['raw']==[0.,0.] for r in after)
 assert any(r['phase']==Phase.HANDOFF for r in after)
-# At the 0.30s float32 blend boundary the last sample may retain ~2e-6
-# rad/s. Require numerical zero there and exact zero one control tick later.
-assert max(abs(x) for r in after if r['time']>handoff_at+.33 for x in r['wheel_target'])<1e-5
-assert all(r['wheel_target']==[0.,0.] for r in after if r['time']>handoff_at+.36)
+# Records follow physics; use the bundle period for the float32 blend boundary.
+blend=c.cfg.handoff_blend_s
+assert max(abs(x) for r in after if r['time']>=handoff_at+blend+c.dt-1e-8 for x in r['wheel_target'])<1e-5
+assert all(r['wheel_target']==[0.,0.] for r in after if r['time']>=handoff_at+blend+2*c.dt-1e-8)
 assert max(abs(r['motion'][0]) for r in after if r['time']>handoff_at+.65)<.005
 result['release_during_handoff']={'cycles':c.cycles,'release_at':released,'handoff_at':handoff_at,
                                  'zero_owned_before_success':True,'no_deferred_command':True}
 # Exercise the adapter's unexpected-exit branch, explicitly a synthetic event,
 # then use real MuJoCo steps to verify initial continuity and zero-speed ownership.
-sim=RestartSimulation(ROOT/'policies/restart20_s102');c=sim.controller
+sim=RestartSimulation(args.policy);c=sim.controller
 c.set_command(-.15,0.)
 for _ in range(100):sim.step()
 c.set_command(0.,0.);c.toggle();sim.step()

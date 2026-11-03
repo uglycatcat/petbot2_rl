@@ -2,7 +2,7 @@
 
 通过ONNX Runtime加载已训练策略，体验四轮行驶中起立、两轮遥控、前轮落地与普通控制交接。源模型从工作区 `robot_description/` 只读加载；本项目不包含训练代码。
 
-当前默认为**新系列第20轮seed102的1000更新终局**，单Actor从随机初始化训练，不依赖旧父网络。旧C58包完整保留供切换比较。默认窗口两轮幅度0.15m/s、0.5rad/s，可用方向键调整；普通四轮保持完整源范围。
+当前默认为**新系列第26轮seed102的1000更新终局**，按用户要求提供最新体验预览，单Actor从随机初始化训练，不依赖旧父网络。第20轮与旧C58完整保留供对照；第26轮没有一致升级证据，尤其零输入漂移仍未解决。默认窗口两轮幅度0.15m/s、0.5rad/s，可用方向键调整；普通四轮保持完整源范围。
 
 ## 启动
 
@@ -37,13 +37,29 @@ uv run --locked run.py --forward-speed 0.15 --turn-rate 0.5
 
 `--frame 0.15`设置初始普通车架目标；所有策略包的普通车架范围均来自源模型[-1,1.2]rad。这个范围是控制器允许范围，不表示各角度均已通过起立验证。窗口显示原始操作者请求`Operator`、限幅/投影后目标`Target`、平滑及阶段处理后的实际策略指令`Command`、实测速度`Measured`和当前两轮上限。普通满幅请求可使Operator显示0.75，即使两轮Target只有0.15；判断响应应对照Command与Measured。
 
-**新第20轮seed102仍未证明双向0.75m/s和宽髋角起立能力。** 起立沿用该轮训练的12秒时限、单网络连续控制，允许必要减速/调髋，没有强制停车或回零脚本。普通控制完整范围与策略分开。要用与此前体验一致的手动输入幅度，可显式设置普通与两轮参数，物理能力与策略范围不变：
+**当前第26轮seed102仍未证明双向0.75m/s和宽髋角起立能力。** 起立沿用该轮训练的12秒时限、单网络连续控制，允许必要减速/调髋，没有强制停车或回零脚本。普通控制完整范围与策略分开。要用与此前体验一致的手动输入幅度，可显式设置普通与两轮参数，物理能力与策略范围不变：
 
 ```bash
 uv run --locked run.py --forward-speed 0.15 --turn-rate 0.5 --ordinary-forward-speed 0.15 --ordinary-turn-rate 0.5
 ```
 
-## 零输入落地后退修复（2026-11-02补充）
+## 新系列第26轮seed102预览（2026-11-03）
+
+默认`restart26_s102/update_001000`来自训练代码`8bdd13e`。仅加载一张ONNX，39×5观测、3维动作；**60ms策略/2ms物理周期**及两轮共同轮速中心映射与该次训练一致，由manifest显式选择`restart_v26`控制源码。旧第20轮保留原30ms周期和控制源码，不能只在旧控制器里换权重。
+
+Isaac独立结果：低速60秒完整/基本32/32；高范围完整32/32、基本20/32；宽初态完整29/32。持续请求±0.75时实测约+0.412/−0.465m/s，未达目标。第26轮整体宽初态稳定性相对第25轮退步，当前选择仅供最新策略体验。
+
+MuJoCo静止保持6秒与0.15m/s、0.5rad/s混合遥控18秒均完成起落；另三条42秒零输入/前后运动后松键轨迹全部完成并最终停车。但首次四轮接触后仍后退12.1–17.0厘米、约0.54秒才停；运动后两轮零输入平均仍前漂0.067/0.090m/s。普通控制输入所有权、持键落地、交接中松键与异常退出有效，**不能把最终停车解释为落地质量通过**。目标/力矩受限，实测轮速峰35.94rad/s超调保留。详见[发布检查与失败](validation/20261103_restart26/review.json)。
+
+与此前用户认可的第20轮对照：
+
+```bash
+uv run --locked run.py --policy policies/restart20_s102 --forward-speed 0.15 --turn-rate 0.5
+```
+
+以下第20轮及更早章节均为历史结果，不是当前默认权重的成绩。
+
+## 第20轮零输入落地后退接口修复（2026-11-02历史）
 
 普通控制从确认四轮落地、进入HANDOFF时就响应当前WASD请求；零输入开始制动，持续按键继续行驶。保留首帧轮目标继承及原0.3秒平滑交接，髋关节归零和接地确认不再推迟操作者输入。异常退出同样响应当前请求，不自动重起。网络、源物理和落地策略未改。
 
@@ -53,7 +69,7 @@ uv run --locked run.py --forward-speed 0.15 --turn-rate 0.5 --ordinary-forward-s
 
 ## 新系列第20轮seed102预览（2026-11-02）
 
-默认包`restart20_s102/update_001000`来自代码`40e926d`，训练独立run_id和检查点/网络SHA见[策略manifest](policies/restart20_s102/manifest.json)。只有一张`policy.onnx`，39维观测×5帧、3维动作；按原30ms策略周期、2ms物理步运行。旧C58的58×5观测和多网络控制不能用于这个新包，程序按manifest选择相应适配器。
+此前默认包`restart20_s102/update_001000`来自代码`40e926d`，训练独立run_id和检查点/网络SHA见[策略manifest](policies/restart20_s102/manifest.json)。只有一张`policy.onnx`，39维观测×5帧、3维动作；按原30ms策略周期、2ms物理步运行。旧C58的58×5观测和多网络控制不能用于这个新包，程序按manifest选择相应适配器。
 
 Isaac独立默认起立32/32、静止循环32/32、低速60秒完整/基本32/32、高范围29/32；满速请求下前/后实测约0.487/0.535m/s，尚未达到双向0.75m/s。包上限是可请求范围，不是已通过的稳定能力。训练进度见主仓库当前交接，本包权重仍固定第20轮终局。
 
@@ -124,10 +140,10 @@ uv run --locked run.py --headless --scenario mixed --cycles 2 --seconds 65 --out
 ## 代码与控制契约
 
 - `run.py`：GUI / 固定诊断场景入口。
-- `petbot_s2s/restart.py`与`restart_core/`：新系列单ONNX适配器及固定控制/观测源码，来源见`restart_provenance.json`；30ms/2ms时序，运行时不依赖训练checkout。
+- `petbot_s2s/restart.py`与`restart_core/`：新系列单ONNX适配器及固定控制/观测源码，来源见`restart_provenance.json`；策略时序随manifest（第20轮30ms、第26轮60ms），物理2ms，运行时不依赖训练checkout。
 - `petbot_s2s/controller.py`：历史C58的58×5 观测、历史、外部模式请求与反复接管；`simulation.py`：MuJoCo 状态/接触力翻译与电机接口；`viewer.py`：按键按下/释放和显示。
 - `petbot_s2s/core/`：固定训练源码的纯张量阶段/控制逻辑。`provenance.json`记录来源和部署扩展；普通控制在`ordinary.py`独立实现，`controller.py`负责输入所有权及默认落地目标。不依赖当前demo checkout随后如何修改。
-- `policies/`：CPU ONNX网络及来源。运行时只加载manifest列出的`.onnx`，不回退到`.pt`；保留TorchScript文件仅供转换与审计。外层、内部反馈及其base输出、完整父网络均已转换。历史控制链为60ms策略、20ms冻结平衡反馈、2ms转向反馈；新系列只含单网络30ms控制；张量状态/控制计算仍用PyTorch，神经网络推理全部由ONNX Runtime执行。物理限位、力矩限幅和源模型不变。
+- `policies/`：CPU ONNX网络及来源。运行时只加载manifest列出的`.onnx`，不回退到`.pt`；保留TorchScript文件仅供转换与审计。外层、内部反馈及其base输出、完整父网络均已转换。历史控制链为60ms策略、20ms冻结平衡反馈、2ms转向反馈；新系列只含单网络，按包声明的30ms或60ms控制；张量状态/控制计算仍用PyTorch，神经网络推理全部由ONNX Runtime执行。物理限位、力矩限幅和源模型不变。
 - `checks/export_onnx.py`：用`uv run --locked --group export python checks/export_onnx.py`重建ONNX并逐输出检查。manifest保留源文件SHA、ONNX SHA及数值容差；图转换不等于闭环验收。
 - `checks/operator_controls.py`：真实MuJoCo普通满幅、Q/E、输入所有权和禁止PT运行加载检查。
 - `checks/validate_port.py`：开发时对照固定源码、观测、接触力、方向和按键。例：`uv run checks/validate_port.py --source ../../demo_project/upright_rl_demo --output outputs/port_check.json`。源码更新后需使用 provenance 指定的提交；不应为让检查通过而改来源 SHA。
