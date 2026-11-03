@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round21r1_landing_approach_engineering",
-  "training_enabled": false,
+  "phase": "round21r1_ready_for_scratch_training",
+  "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "User authorized restarting changes from round20; rounds21-26 invalid for optimization,27cancelled. Fixed-policy handoff engineering precedes any new scratch PPO.",
+  "reason": "Round20-based normal handoff and isolated LAND approach cost passed engineering. User-authorized fresh 1000-update trials; discarded21-26/27 are never resumed.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -14,13 +14,13 @@
   "next_experiment": {
     "series": "upright_restart_20261030",
     "name": "upright_restart_round21r1",
-    "status": "new_round20_based_engineering_not_discarded_round21"
+    "status": "engineering_passed_fresh_training_authorized"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": false,
+  "engineering_validated": true,
   "implementation_review": "docs/round01_implementation.md",
-  "cpu_contract_tests_passed": 119,
+  "cpu_contract_tests_passed": 120,
   "allowed_host_gpus": [
     2,
     3
