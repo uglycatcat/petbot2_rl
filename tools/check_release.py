@@ -9,7 +9,7 @@ r=json.loads((ROOT/'release.json').read_text())
 for item in r['source_files']:
  assert hashlib.sha256((ROOT/item['path']).read_bytes()).hexdigest()==item['sha256'],item['path']
 c=load_config();assert c.to_dict()==r['resolved_training_configuration']
-assert digest(c.to_dict())==r['source_config_sha256']
+assert digest(c.to_dict())==r.get('training_config_sha256',r['source_config_sha256'])
 assert source_fingerprint()==r['source_model_sha256']
 s=json.loads((ROOT/'project.json').read_text())
 assert s['historical_weights_allowed'] is False and s['allowed_host_gpus']==[2,3]

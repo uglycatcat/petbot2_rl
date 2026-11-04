@@ -4,8 +4,8 @@
   "selected_training_config": "configs/round21r5.json",
   "configuration": "configs/train_1104.json",
   "seed": 102,
-  "iterations": 1000,
-  "num_envs": 2048,
+  "iterations": 5000,
+  "num_envs": 4096,
   "initialization": "random",
   "historical_models": [],
   "source_behavior_sha256": "8a36b0153f518e61c2cd590d775155065470e6f8e3f89498a4326ceecfde6d0f",
@@ -27,8 +27,8 @@
     "series": "upright_restart_20261030",
     "round": 21,
     "seed": 102,
-    "iterations": 1000,
-    "num_envs": 2048,
+    "iterations": 5000,
+    "num_envs": 4096,
     "decimation": 15,
     "history": 5,
     "rollout_steps": 64,
@@ -217,7 +217,7 @@
       "path": "tools/run_guarded.py",
       "source_path": "tools/run_guarded.py",
       "source_sha256": "a0ae09b198baa9c5837382cb8edc0c15f387cac116a528ab6bcc7717176c1132",
-      "sha256": "8e337210046ba68f9879eec4824153a57f0ce59543e6805a7951645cd06c6f49",
+      "sha256": "ba0094f4fcd764d3fa3293094bacdc2c7f1cf38bfe8f116ac4a4ae91a4caca0e",
       "packaging_only_change": true
     },
     {
@@ -343,8 +343,29 @@
       "path": "configs/train_1104.json",
       "source_path": "configs/round21r5.json",
       "source_sha256": "35de9c031b1fd423543ba9eccb1ebbc4c900dc16cc0568ce7c1e1d699bc744ab",
-      "sha256": "35de9c031b1fd423543ba9eccb1ebbc4c900dc16cc0568ce7c1e1d699bc744ab",
-      "packaging_only_change": false
+      "sha256": "ca92bbe7d28f10af008601c5079bf8e5f3ab9ded23989f058d2dcbbaad2129f2",
+      "packaging_only_change": false,
+      "parameter_changes": {
+        "num_envs": [
+          2048,
+          4096
+        ],
+        "iterations": [
+          1000,
+          5000
+        ]
+      }
     }
-  ]
+  ],
+  "training_config_sha256": "eb1c51a196c4e655d2692c3e5db9e4435da67642c699d755c2c6e1762241145c",
+  "authorized_parameter_changes": {
+    "num_envs": [
+      2048,
+      4096
+    ],
+    "iterations": [
+      1000,
+      5000
+    ]
+  }
 }

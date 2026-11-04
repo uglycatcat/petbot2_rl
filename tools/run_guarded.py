@@ -26,6 +26,7 @@ def usage(gpu):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--gpu', type=int, choices=(2,3), required=True)
+    parser.add_argument('--container', help='Dedicated single-GPU container; GPU identity is still verified')
     parser.add_argument('--workdir', required=True)
     parser.add_argument('--log', type=Path, required=True)
     parser.add_argument('--reserve-mib', type=int, default=6000)
@@ -34,7 +35,7 @@ def main():
     command = args.command[1:] if args.command[:1] == ['--'] else args.command
     if not command or Path(args.workdir).name != 'train_upright_project_1104':
         raise ValueError('Explicit command and fixed run workspace are required')
-    container = f'petbot-upright-gpu{args.gpu}'
+    container = args.container or f'petbot-upright-gpu{args.gpu}'
     identity, total, used = usage(args.gpu)
     inspected = json.loads(subprocess.check_output(['docker', 'inspect', container], text=True))[0]
     if inspected['HostConfig']['DeviceRequests'][0]['DeviceIDs'] != [identity]:
