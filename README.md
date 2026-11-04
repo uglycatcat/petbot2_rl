@@ -37,4 +37,4 @@ demo每份1000更新、2048环境，物理GPU2/3内按明确计划运行；正�
 
 ## 文档与历史
 
-实时状态仅维护在[当前交接](../../docs/current_handoff.md)和[21r5执行](../../docs/upright_restart_round21r5_execution.md)。重启系列历程见[按需索引](../../docs/upright_restart_history.md)，旧系列文档/运行产物在服务器`history/upright/`，不进Git，见[归档说明](../../docs/upright_history.md)。新工程运行不依赖这些归档。README不再逐轮追加结果。
+实时状态仅维护在[当前交接](../../docs/current_handoff.md)和[21r6执行](../../docs/upright_restart_round21r6_execution.md)。重启系列历程见[按需索引](../../docs/upright_restart_history.md)，旧系列文档/运行产物在服务器`history/upright/`，不进Git，见[归档说明](../../docs/upright_history.md)。新工程运行不依赖这些归档。README不再逐轮追加结果。

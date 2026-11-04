@@ -196,6 +196,11 @@ class Controller:
             self.landing_projection_weight.copy_(weight)
             common = common+(projected-common)*weight
         self.landing_projected_common.copy_(common)
+        if self.cfg.landing_hip_default_projection:
+            # Return to the existing default hip target while the LAND sensor
+            # envelope closes. Prevent late policy hip oscillation during ground
+            # confirmation; retain joint slew, motor effort and ownership timing.
+            hip = hip*(1-self.landing_projection_weight)
         differential = action[:, 2]*self.limit
         # Deterministic command/measurement feedback, not a parent policy. The
         # one scratch actor still controls the hips, common drive and residual.

@@ -83,6 +83,7 @@ class Config:
     landing_quality_start_course: int = 0  # 0: legacy full cost; otherwise ramp after the basic-control gate
     landing_projection_start_gap_m: float = 0.0  # 0 disables LAND-only sensor-space target projection
     landing_ground_brake_slew_rad_s2: float = 0.0  # only speed-target braking, after full LAND projection
+    landing_hip_default_projection: bool = False  # use the same LAND sensor envelope to return hips to zero
     balance_linear_accel_m_s2: float = 0.0  # zero disables reference slew for legacy configs
     balance_yaw_accel_rad_s2: float = 0.0
     balance_yaw_feedforward: float = 0.0
@@ -104,6 +105,10 @@ class Config:
         return len(self.motion_stages())+1
 
     def validate(self):
+        if type(self.landing_hip_default_projection) is not bool:
+            raise ValueError('LAND hip projection requires an explicit boolean')
+        if self.landing_hip_default_projection and not self.landing_projection_start_gap_m:
+            raise ValueError('LAND hip projection requires the existing sensor-space envelope')
         if (type(self.baseline_anchor_fraction) not in (int, float)
                 or not __import__('math').isfinite(self.baseline_anchor_fraction)
                 or not 0 <= self.baseline_anchor_fraction < 1):
