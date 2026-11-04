@@ -83,7 +83,7 @@
         "demo"
       ],
       "shallow": false,
-      "status": "v2_full_training_authorized",
+      "status": "v2_full_training_running_gpu0_same_run_resource_recovery",
       "local_validation": "STEP v2: 52 container tests; static5s; 3 scripted full routes independently verified at2ms plus repeated-flight rejection. 512env8 updates with exact same-run4to8 restore and independent16env reload valid. Reload0/16 front collision, no learned landing/STOP. Random initialization, no weight/data transfer. Source robot unchanged.",
       "task": null,
       "usage": "README.md",
