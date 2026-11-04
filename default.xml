@@ -47,7 +47,7 @@
            remote="ours"
            revision="demoproj/upright_rl_demo"
            groups="demo" />
-  <!-- STEP v2重构：已验工程版本见demo_project/manifest.json；正式训练暂停。 -->
+  <!-- STEP v2：用户已授权完整从零训练；已验版本见demo_project/manifest.json。 -->
   <project name="petbot2_rl"
            path="demo_project/step_rl_demo"
            remote="ours"
