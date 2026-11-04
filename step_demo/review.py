@@ -1,148 +1,84 @@
-"""Streaming, CPU-only audit of actual training and evaluation artifacts."""
+"""Host-side physical replay and concise policy behavior review for STEP v2."""
+import argparse
 from collections import Counter
+import gzip
 import json
 import math
 from pathlib import Path
-import statistics
-
 from .config import load_config
-from .evaluation import CompletionTracker, EvaluationSample, Stage
-
-
-def read(path):
-    return json.loads(Path(path).read_text())
+from .evaluation import PhysicsVerifier
 
 
 def records(path):
-    with Path(path).open() as file:
-        for line in file:
+    path = Path(path)
+    opener = gzip.open if path.suffix == '.gz' else open
+    with opener(path, 'rt') as f:
+        for line in f:
             if line.strip(): yield json.loads(line)
 
 
+def verify_physics(path, ids, hip_indices, contract=None):
+    contract = contract or load_config()
+    verifiers = [PhysicsVerifier(contract.acceptance, contract.terrain, hip_indices) for _ in ids]
+    previous_counter = None
+    samples = 0
+    for row in records(path):
+        if row.get('schema') != 'step_trace_v2': raise ValueError('Unknown physics trace schema')
+        counter = row['physics_step']
+        if previous_counter is not None and counter != previous_counter+1:
+            raise ValueError('Missing physics substeps; continuous hold cannot be verified')
+        previous_counter = counter
+        for i, verifier in enumerate(verifiers):
+            if verifier.result is not None: continue
+            if row['episode'][i] != 1: raise ValueError('First episode ended without independent certification')
+            verifier.update(row,i)
+            expected = row['task']
+            if verifier.phase != expected['phase'][i] or verifier.reason != expected['failure'][i]:
+                raise ValueError(f'Physical replay differs at step {counter}, env {ids[i]}: '
+                                 f'{verifier.phase}/{verifier.reason} vs {expected["phase"][i]}/{expected["failure"][i]}')
+            if verifier.flight != expected['flight_count'][i]:
+                raise ValueError('Flight event count differs from physical replay')
+            if abs(verifier.distance-expected['drive_distance'][i]) > 2e-6:
+                raise ValueError('Drive distance differs from physical replay')
+            if verifier.hold != expected['hold_ticks'][i]: raise ValueError('Continuous substep hold differs')
+        samples += 1
+        if all(v.result is not None for v in verifiers): break
+    return dict(samples=samples, all_terminal=all(v.result is not None for v in verifiers),
+                episodes={str(i):v.result for i,v in zip(ids,verifiers)},
+                task_labels_used_for_decisions=False)
+
+
 def summarize(run, evaluation):
-    run=Path(run);evaluation=Path(evaluation)
-    if read(run/'origin.json')['training'].get('task_variant') == 'platform_stop_aux':
-        from .stop_review import summarize_auxiliary
-        return summarize_auxiliary(run,evaluation)
-    origin=read(run/'origin.json');initial=read(run/'initialization.json')
-    status=read(run/'status.json');latest=read(run/'latest.json');result=read(evaluation/'result.json')
-    if origin['initialization']!='random' or origin['pretrained_models'] or initial['optimizer_states']!=0 or initial['frozen_parameters']!=0:
-        raise ValueError('Invalid independent random initialization provenance')
-    if status['status']!='complete' or latest['completed_updates']!=origin['training']['iterations']:
-        raise ValueError('Incomplete training cannot become a valid round result')
-    if result['status']!='complete' or result['completed_updates']!=latest['completed_updates']:
-        raise ValueError('Evaluation must reload the completed final model')
-    layout=read(evaluation/'layout.json'); hips=layout['hips'];wheels=layout['rear_wheels']
-    config=load_config()
-    support_memory=.06 if origin['training'].get('reward_version') in ('stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','restart14_staged') else 0.
-    full_discounted=origin['training'].get('full_objective') in ('discounted_staged','finite_staged','qualified_baseline')
-    extra_hold=result.get('hold_after_success_s',0.)
-    trackers={i:CompletionTracker(config.acceptance,support_memory,extra_hold,full_discounted)
-              for i in range(result['num_envs'])}
-    base_stop_seen=set();milestones={name:set() for name in ('front_landed','four_top','hip_home','legal_drive')}
-    terminals={r['env']:r for r in result['episodes']}
-    if len(terminals)!=result['num_envs']: raise ValueError('Missing or duplicate first-episode evaluations')
-    seen=set();phases=Counter();examples={};frames=0;counts=Counter()
-    peaks=dict(estimator_error_m=0.,yaw_rad=0.,lateral_m=0.,hip_asymmetry_rad=0.,wheel_asymmetry_rad_s=0.,
-               sampled_actual_wheel_rad_s=0.,head_ear_error_rad=0.,contact_force_n=0.,raw_action_abs=0.,
-               estimator_orientation_error_rad=0.)
-    action_count=0;action_outside_count=0
+    run, evaluation = Path(run), Path(evaluation)
+    result = json.loads((evaluation/'result.json').read_text())
+    layout = json.loads((evaluation/'layout.json').read_text())
+    physics = verify_physics(evaluation/'physics.jsonl.gz', layout['trace_ids'], layout['hips'])
+    if not physics['all_terminal']: raise ValueError('Incomplete independent physical verification')
+    for record in result['episodes']:
+        checked = physics['episodes'][str(record['env'])]
+        if (checked['success'], checked['failure']) != (record['success'],record['failure']):
+            raise ValueError('Reported result disagrees with physical replay')
+    maxima = dict(pitch=0.,pitch_rate=0.,lateral=0.,yaw=0.,wheel_actual=0.,wheel_target=0.)
+    phase_frames = Counter()
     for row in records(evaluation/'trace.jsonl'):
-        frames+=1
-        for local,i in enumerate(layout['trace_ids']):
-            if row['episode'][local]!=1 or i in seen: continue
-            q=row['joint_position'][local];v=row['joint_velocity'][local];com=row['com'][local]
-            speed=math.sqrt(sum(x*x for x in row['velocity'][local]))
-            phase=row['phase'][local];failure=row['failure'][local];completed=row['completed'][local]
-            target=[row['hip_target'][local],row['wheel_target'][local]]
-            raw=row['action'][local]
-            if not all(math.isfinite(x) for x in raw):raise ValueError('Nonfinite raw policy action')
-            action_count+=len(raw);action_outside_count+=sum(abs(x)>1.+1e-6 for x in raw)
-            peaks['raw_action_abs']=max(peaks['raw_action_abs'],*(abs(x) for x in raw))
-            if not all(math.isfinite(x) for x in (*q,*v,*com,*target)):
-                raise ValueError('Nonfinite physical trajectory')
-            if not (-1.-1e-5<=target[0]<=1.2+1e-5 and -1e-5<=target[1]<=25.+1e-5):
-                raise ValueError('Executed targets exceed the source contract')
-            peaks['estimator_error_m']=max(peaks['estimator_error_m'],math.dist(com,row['estimated_com'][local]))
-            if 'estimated_quaternion' in row:
-                qe,qt=row['estimated_quaternion'][local],row['true_quaternion'][local]
-                denominator=math.sqrt(sum(x*x for x in qe)*sum(x*x for x in qt))
-                cosine=abs(sum(x*y for x,y in zip(qe,qt)))/max(denominator,1e-12)
-                peaks['estimator_orientation_error_rad']=max(peaks['estimator_orientation_error_rad'],
-                    2*math.acos(min(1.,cosine)))
-            peaks['yaw_rad']=max(peaks['yaw_rad'],abs(row['yaw'][local]))
-            peaks['lateral_m']=max(peaks['lateral_m'],abs(com[1]))
-            peaks['hip_asymmetry_rad']=max(peaks['hip_asymmetry_rad'],abs(q[hips[0]]-q[hips[1]]))
-            peaks['wheel_asymmetry_rad_s']=max(peaks['wheel_asymmetry_rad_s'],abs(v[wheels[0]]-v[wheels[1]]))
-            peaks['sampled_actual_wheel_rad_s']=max(peaks['sampled_actual_wheel_rad_s'],*(abs(v[j]) for j in wheels))
-            peaks['head_ear_error_rad']=max(peaks['head_ear_error_rad'],*(abs(q[j]) for j,n in enumerate(layout['joints']) if n in ('head_1','left_ear_1','right_ear_1')))
-            peaks['contact_force_n']=max(peaks['contact_force_n'],row['force_peak'][local])
-            phases[str(phase)]+=1
-            sample=EvaluationSample(layout['step_dt'],com[0],com[1],row['yaw'][local],speed,row['yaw_rate'][local],
-                tuple(q[j] for j in hips),tuple(row['front_cleared'][local]),all(row['supported_top'][local]),
-                row['front_hit'][local],failure==2,failure==3,failure==4,
-                row.get('near_top',[False]*len(layout['trace_ids']))[local],quality_failure=failure==5)
-            stage=trackers[i].update(sample)
-            if all(row['front_landed'][local]):milestones['front_landed'].add(i)
-            if all(row['supported_top'][local]):milestones['four_top'].add(i)
-            if all(row['supported_top'][local]) and max(abs(q[j]) for j in hips)<=config.acceptance.hip_tolerance_rad:
-                milestones['hip_home'].add(i)
-            if stage in (Stage.STOPPING,Stage.COMPLETE):milestones['legal_drive'].add(i)
-            if trackers[i].stopped_s+1e-7 >= config.acceptance.stop_hold_s:base_stop_seen.add(i)
-            if full_discounted and not failure and abs(trackers[i].stopped_s-row['stop_time'][local])>1e-4:
-                raise ValueError(f'Full-task physical hold timer disagreement for env {i}')
-            timed_out=row['elapsed'][local]+1e-5>=config.acceptance.timeout_s
-            if failure or completed or timed_out:
-                seen.add(i)
-                scalar_success = stage == Stage.COMPLETE
-                if origin['training'].get('reward_version') == 'restart14_staged':
-                    scalar_success &= (row['front_flight_count'][local] == [1,1] and not row['flight_invalid'][local]
-                                       and not any(row['front_flight_air'][local]))
-                if origin['training'].get('full_objective') == 'qualified_baseline':
-                    scalar_success &= (all(row['front_flight_landed_top'][local])
-                                       and not any(row['front_flight_returned_floor'][local]))
-                if bool(completed)!=scalar_success: raise ValueError(f'Completion disagreement for env {i}')
-                if bool(completed)!=terminals[i]['success']: raise ValueError(f'Terminal artifact disagrees for env {i}')
-                category='success' if completed else ('timeout' if timed_out and not failure else f'failure_{failure}')
-                counts[category]+=1
-                example=dict(env=i,elapsed_s=row['elapsed'][local],phase=phase,failure=failure,com=com,
-                    estimated_com=row['estimated_com'][local],speed_m_s=speed,yaw_rad=row['yaw'][local],
-                    targets=target,hip_actual=[q[j] for j in hips],wheel_actual=[v[j] for j in wheels],
-                    front_lifted=row['front_lifted'][local],front_cleared=row['front_cleared'][local],
-                    front_landed=row['front_landed'][local],supported_top=row['supported_top'][local])
-                bucket=examples.setdefault(category,[])
-                if len(bucket)<3: bucket.append(example)
-    if len(seen)!=result['num_envs']: raise ValueError('Terminal physics frames missing from trace')
-    if origin['training'].get('policy_distribution')=='beta' and action_outside_count:
-        raise ValueError('Bounded policy produced out-of-range actions')
-    train_counts=Counter();first_lift=0;front_landing=0
-    for episode in records(run/'episodes.jsonl'):
-        train_counts[str(episode['failure'])]+=1
-        first_lift+=all(episode['front_lifted']);front_landing+=all(episode['front_landed'])
-    updates=list(records(run/'updates.jsonl'))
-    last=updates[-50:]
-    return dict(schema='step_behavior_review_v1',valid=True,source_code_sha256=origin['code_sha256'],
-        run_id=origin['run_id'],completed_updates=latest['completed_updates'],random_initialization_verified=True,
-        evaluation=dict(episodes=result['num_envs'],successes=result['successes'],outcomes=dict(counts),
-            phases=dict(phases),peaks=peaks,substep_actual_wheel_peak_rad_s=max(r['actual_wheel_peak'] for r in terminals.values()),
-            scalar_completion_agrees=True,frames=frames,examples=examples,scene_randomization=False,
-            base_stop_count=len(base_stop_seen),extra_physics_hold_s=extra_hold,
-            milestones={name:len(ids) for name,ids in milestones.items()},
-            raw_action_outside_fraction=action_outside_count/max(action_count,1)),
-        training=dict(checkpoint_accounted_totals=status['totals'],recorded_episode_outcomes=dict(train_counts),
-            recorded_both_front_lift=first_lift,recorded_both_front_landing=front_landing,
-            last_update=updates[-1],last_50_mean_collect_s=statistics.mean(r['collect_s'] for r in last)),
-        review_required=True,notes=['Recorded episodes include rollouts discarded by any same-run recovery.',
-            'Fixed identical initial scenes do not establish generalization.',
-            'Agent must inspect success and failure examples and justify the next code/config change.'])
+        for i, episode in enumerate(row['episode']):
+            if episode != 1: continue
+            phase_frames[str(row['task']['phase'][i])] += 1
+            for name, field in [('pitch','world_pitch'),('pitch_rate','world_pitch_rate'),('yaw','yaw'),('wheel_target','wheel_target')]:
+                maxima[name] = max(maxima[name],abs(row[field][i]))
+            maxima['lateral'] = max(maxima['lateral'],abs(row['com'][i][1]))
+            maxima['wheel_actual'] = max(maxima['wheel_actual'],max(abs(row['joint_velocity'][i][j]) for j in layout['rear_wheels']))
+    failures = Counter(str(r['failure']) for r in result['episodes'] if not r['success'])
+    return dict(schema='step_review_v2', completed_updates=result['completed_updates'],
+        evaluation=dict(outcomes=dict(total=result['num_envs'],successes=result['successes'],failures=dict(failures)),
+                        independent_physics=physics, phase_frames=dict(phase_frames), maxima=maxima),
+        trained_from_random=json.loads((run/'initialization.json').read_text()))
 
 
 def main():
-    import argparse
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--run',type=Path,required=True)
-    p.add_argument('--evaluation',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
-    a=p.parse_args();report=summarize(a.run,a.evaluation)
-    a.output.write_text(json.dumps(report,indent=2,ensure_ascii=False)+'\n')
-    print(json.dumps(dict(valid=report['valid'],evaluation=report['evaluation']['outcomes']),ensure_ascii=False))
+    p=argparse.ArgumentParser(description=__doc__)
+    p.add_argument('run',type=Path);p.add_argument('evaluation',type=Path);p.add_argument('--output',type=Path,required=True)
+    a=p.parse_args();a.output.write_text(json.dumps(summarize(a.run,a.evaluation),indent=2)+'\n')
+
 
 if __name__=='__main__':main()

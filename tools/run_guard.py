@@ -10,6 +10,11 @@ import uuid
 
 FATAL=re.compile(r'Traceback \(most recent call last\)|CUDA out of memory|illegal memory access|\[Error\].*(?:physx|physics)',re.I)
 
+def control_enabled(path):
+    cfg = json.loads(Path(path).read_text())
+    return bool(cfg.get('enabled')) and not cfg.get('paused_by_user', False)
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--container')
@@ -34,7 +39,7 @@ def main():
     if len(devices)!=1 or devices[0] not in (str(a.gpu),expected_uuid):
         p.error('Container GPU exposure must exactly match the selected physical GPU 0/1')
     if container['Config'].get('Labels',{}).get('petbot.project')!='step': p.error('Use a dedicated step container')
-    if a.control and not json.loads(a.control.read_text()).get('enabled'): p.error('Campaign is disabled')
+    if a.control and not control_enabled(a.control): p.error('Campaign is disabled or paused')
     gpu_out=subprocess.check_output(['nvidia-smi',f'--id={a.gpu}',
         '--query-gpu=memory.used,memory.total','--format=csv,noheader,nounits'],text=True)
     used,total=map(float,gpu_out.strip().split(','))
@@ -55,7 +60,7 @@ def main():
         child=subprocess.Popen(['docker','exec','-w',a.workdir,a.container,'/isaac-sim/python.sh','-c',bootstrap,pidfile,token,*command],stdout=log,stderr=subprocess.STDOUT)
         try:
             while child.poll() is None:
-                if a.control and not json.loads(a.control.read_text()).get('enabled'):
+                if a.control and not control_enabled(a.control):
                     reason='cancelled_by_user';break
                 if time.monotonic()-started>a.timeout: reason='timeout';break
                 if FATAL.search(a.log.read_text(errors='replace')): reason='physical_or_python_error';break

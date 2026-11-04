@@ -12,7 +12,6 @@ import unittest
 from step_demo.cli import main
 from step_demo.config import DEFAULT_CONFIG, load_config
 from step_demo.control import map_action
-from step_demo.evaluation import CompletionTracker, EvaluationSample, Stage
 from step_demo.model import read_limits
 from step_demo.observations import MotionEstimate, ObservationBuilder, Proprioception, TerrainPacket
 
@@ -23,10 +22,6 @@ class ContractTests(unittest.TestCase):
         cls.config = load_config()
         cls.limits = read_limits(cls.config.model_dir)
 
-    def sample(self, **changes):
-        base = EvaluationSample(.1, .5, 0., 0., .1, 0., (0., 0.),
-                                (True, True), True, False, False, False, False)
-        return replace(base, **changes)
 
     def test_actions_enforce_source_limits_and_bilateral_identity(self):
         for hip in (-1., -.4, 0., .3, 1.):
@@ -77,57 +72,6 @@ class ContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             builder.build(malformed, MotionEstimate(0., 0., 0., 0., 0.), (0., -1.))
 
-    def test_complete_requires_drive_after_alignment_and_continuous_stop(self):
-        tracker = CompletionTracker(self.config.acceptance)
-        self.assertEqual(tracker.update(self.sample()), Stage.PLATFORM_DRIVE)
-        self.assertEqual(tracker.update(self.sample(forward_m=.66)), Stage.STOPPING)
-        for _ in range(4):
-            self.assertEqual(tracker.update(self.sample(forward_m=.66, speed_m_s=0.)), Stage.STOPPING)
-        self.assertEqual(tracker.update(self.sample(forward_m=.66, speed_m_s=0.)), Stage.COMPLETE)
-
-    def test_front_only_or_no_clearance_cannot_count_as_climb(self):
-        for change in (dict(four_wheels_on_top=False), dict(front_clearance_verified=(False, True))):
-            tracker = CompletionTracker(self.config.acceptance)
-            for i in range(8):
-                self.assertEqual(tracker.update(self.sample(forward_m=.5 + i * .1, speed_m_s=0., **change)), Stage.CROSSING)
-
-    def test_stationary_on_platform_cannot_skip_extra_straight_distance(self):
-        tracker = CompletionTracker(self.config.acceptance)
-        for _ in range(10):
-            self.assertEqual(tracker.update(self.sample(speed_m_s=0.)), Stage.PLATFORM_DRIVE)
-
-    def test_path_pose_or_support_loss_clears_drive_credit(self):
-        for change in (dict(lateral_m=.1), dict(heading_rad=.2),
-                       dict(hip_error_rad=(0., .2)), dict(four_wheels_on_top=False)):
-            tracker = CompletionTracker(self.config.acceptance)
-            tracker.update(self.sample())
-            tracker.update(self.sample(forward_m=.66))
-            self.assertEqual(tracker.update(self.sample(forward_m=.66, **change)), Stage.CROSSING)
-            self.assertEqual(tracker.update(self.sample(forward_m=.66, speed_m_s=0.)), Stage.PLATFORM_DRIVE)
-
-    def test_collision_and_other_failures_latch_before_success(self):
-        for flag in ("front_face_or_edge_hit", "rear_support_lost", "body_collision_or_fall", "deliberate_reverse"):
-            tracker = CompletionTracker(self.config.acceptance)
-            self.assertEqual(tracker.update(self.sample(**{flag: True})), Stage.FAILED)
-            self.assertEqual(tracker.update(self.sample()), Stage.FAILED)
-
-    def test_stop_timer_resets_when_robot_moves(self):
-        tracker = CompletionTracker(self.config.acceptance)
-        tracker.update(self.sample())
-        for _ in range(4):
-            tracker.update(self.sample(forward_m=.66, speed_m_s=0.))
-        tracker.update(self.sample(forward_m=.66, yaw_rate_rad_s=.3))
-        for _ in range(4):
-            self.assertEqual(tracker.update(self.sample(forward_m=.66, speed_m_s=0.)), Stage.STOPPING)
-        self.assertEqual(tracker.update(self.sample(forward_m=.66, speed_m_s=0.)), Stage.COMPLETE)
-
-    def test_timeout_is_failure_and_reset_clears_episode_evidence(self):
-        tracker = CompletionTracker(self.config.acceptance)
-        self.assertEqual(tracker.update(self.sample(dt_s=15.)), Stage.FAILED)
-        self.assertEqual(tracker.reason, "timeout")
-        tracker.reset()
-        self.assertEqual(tracker.front_clearance, [False, False])
-        self.assertIsNone(tracker.drive_start_m)
 
     def test_changed_task_and_undocumented_initialization_rejected(self):
         for change in ("height", "parent", "nan"):
@@ -147,7 +91,7 @@ class ContractTests(unittest.TestCase):
     def test_training_rejects_foreign_initialization(self):
         from step_demo.config import PROJECT_ROOT
         from step_demo.runtime import load_training
-        data = json.loads((PROJECT_ROOT/'configs/train_v1.json').read_text())
+        data = json.loads((PROJECT_ROOT/'configs/train.json').read_text())
         data['pretrained_models']=['historical.pt']
         with tempfile.TemporaryDirectory(prefix='step-config-') as directory:
             path=Path(directory)/'train.json';path.write_text(json.dumps(data))

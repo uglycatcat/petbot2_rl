@@ -3,6 +3,7 @@
 from dataclasses import dataclass, fields
 import json
 import math
+import os
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -70,5 +71,6 @@ def load_config(path: Path = DEFAULT_CONFIG, model_dir: Path | None = None) -> S
         raise ValueError("Stop hold must fit inside the episode timeout")
     if any(getattr(control, f.name) != 0 for f in fields(control)):
         raise ValueError("First demo uses the source default joint pose (zero)")
-    source = Path(model_dir) if model_dir is not None else PROJECT_ROOT / data["model_dir"]
+    override = model_dir if model_dir is not None else os.environ.get('STEP_MODEL_DIR')
+    source = Path(override) if override is not None else PROJECT_ROOT / data["model_dir"]
     return StepConfig(source.resolve(), terrain, control, acceptance)

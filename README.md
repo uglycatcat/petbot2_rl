@@ -1,86 +1,68 @@
 # PetBot Step RL Demo
 
-从随机初始化训练直线上低台阶的独立策略：前轮提前抬起、越过前沿后落到平台顶面，后轮保持支撑并滚上平台；随后恢复默认髋角，沿原直线前进一小段并停稳。
+训练一个独立策略，让默认姿态的机器人直行、前轮抬起落到2cm平台、后轮滚上，然后归髋、沿原线短行并停稳。两维输出分别控制左右共同髋角和后轮目标速度，头部及耳朵保持默认位置。
 
-**当前状态（2026-11-04）：Restart20两路均0/64，未到前轮落顶或STOP。** 已定位提前失败回报排序和失格后仍有进度信用的问题。Restart21候选恢复第14轮Beta探索与有界进度，严格单次离地，补充精确零轮速与停车质量信用，训练也真实保持2.5s，并修正单次无碰沿落顶却卡阶段的包围盒判定；141项容器与实际工程门槛通过，固定两种子512×500从零训练，正式状态以campaign文件为准。见[方案](docs/restart21.md)、[终局](docs/restart20_result.json)。
+**当前：v2重构已通过工程检查，正式训练和自动迭代保持停止。** 用户重新授权前不发正式训练。当前实现说明见[架构](docs/architecture.md)，旧实验源码在`archive/step_pre_refactor_20261104`；其余按轮次命名的文档仅用于追溯。
 
-## 固定首版场景
+## 固定场景与验收
 
-- 默认姿态、静止开始，平台前沿位于初始整机质心沿前进方向的0.30m处；平台高0.02m，边沿与行驶方向成90°，有足够宽度和长度。
-- 速度由策略决定，允许减速、短暂停顿，不主动倒车。前轮不得碰撞立面或棱边，允许落到顶面；后轮允许接触台阶并滚上。
-- 两个动作量为共同髋角和共同后轮速度，左右目标严格相同；头部/脖子和耳朵保持默认位置，前轮被动。对称目标不等于物理轨迹必然对称，仍须验收原直线上的实际运动。
-- 台阶高度、初始距离和边沿角度每回合只输入一次；之后由自身传感信息估计运动。不得每步向策略提供真实剩余距离、真实位姿或接触判定。
-- 不依赖其他demo、历史检查点、冻结父网络、教师或示范数据。源码经验可以独立审查后复用；新训练必须随机初始化。
+- 平台高2cm，前沿位于初始整机质心前30cm，边沿与行驶方向90度；速度由策略决定。
+- 前轮只能离地一次，不能碰立面/棱边或落回台下；后轮保持支撑。
+- 四轮上台、共同髋回默认、在原线上前进15cm后，实际速度不超过0.02m/s、偏航率不超过0.05rad/s，连续保持0.5s并再保持2s。
+- 地形只在开始传入一次。GRU策略接收IMU、编码器、运动估计、上次执行目标及本地时钟；任务真值仅用于判定和critic。
+- 源机器人及物理参数只读。所有新训练随机初始化，不加载旧权重、辅助权重、教师或轨迹。
 
-完整契约见[任务规格](docs/task.md)，实现状态和下一步见[架构与实施顺序](docs/architecture.md)。
+## 代码与数据
 
-## 当前可运行的检查
+| 路径 | 职责 |
+|---|---|
+| `step_demo/task.py` | 唯一任务状态、物理事件、阶段与有界回报 |
+| `step_demo/isaac_env.py` | Isaac/PhysX、执行器、传感器与任务适配 |
+| `step_demo/estimator.py` | 仅IMU与编码器的递推估计 |
+| `step_demo/ppo.py` | RSL-RL PPO、GRU actor、非对称critic、同次恢复 |
+| `step_demo/evaluation.py` / `review.py` | 独立重算2ms物理轨迹，核对完整流程 |
+| `configs/step_v1.json` | 固定用户场景与验收数值 |
+| `configs/train.json` / `engineering.json` | 唯一v2训练配置；工程为512环境、8更新 |
+| `tools/validate_physics.py` | 有限电机正负轨迹；不进入PPO |
 
-在本项目目录使用Python 3.10或更高版本，无第三方依赖，也不启动Isaac/训练：
+项目由repo物化，分支为`demoproj/step_rl_demo`。运行产物放主仓库忽略的`demo_project/runs/`，正式运行使用固定源码与资产副本。旧配置不兼容v2，旧运行必须用原固定副本追溯，不能迁移权重。
+
+## 检查与工程入口
+
+不启动仿真的模型/场景检查：
 
 ```bash
 python3 -m step_demo check
 ```
 
-完整测试含PyTorch和RSL-RL依赖，使用专用容器执行：
+容器CPU检查：
 
 ```bash
-docker exec -w /workspace/demo_project/step_rl_demo petbot-step-gpu1 /isaac-sim/python.sh -m unittest discover -s tests -v
+docker exec -e CUDA_VISIBLE_DEVICES= -w /workspace/demo_project/step_rl_demo \
+  petbot-step-gpu1 /isaac-sim/python.sh -m unittest discover -s tests -v
 ```
 
-源模型默认相对本项目读取`../../robot_description`。独立检出时可显式指定模型目录：
+仅允许本项目容器`petbot-step-gpu0`和`petbot-step-gpu1`，对应物理GPU0/1。已存在容器不要重复创建。默认相对路径读取只读的`../../robot_description`，也可显式传`--model-dir`。
+
+提交后的源码可以冻结到一个新目录：
 
 ```bash
-python3 -m step_demo check --model-dir /path/to/robot_description
+python3 tools/freeze.py ../runs/step_v2_example
 ```
 
-`check`输出模型文件指纹、物理限位、场景和接口维数。模型和物理参数只读，地形将由step自己的场景适配层创建。`train`和`evaluate`只允许在专用容器执行。训练流程见下方。
-
-## 目录
-
-| 路径 | 职责 |
-|---|---|
-| `configs/step_v1.json` | 首版场景、接口与待验证的验收初值 |
-| `step_demo/model.py` | 只读解析MJCF执行器限位、计算模型文件指纹 |
-| `step_demo/control.py` | 两维归一化动作到左右同步目标的映射 |
-| `step_demo/observations.py` | 一次性地形锁存、自身状态/运动估计与actor输入 |
-| `step_demo/interfaces.py` | 标量接口参考；具体后端为 `isaac_env.py` |
-| `step_demo/evaluation.py` | 独立验收流程；用于离线复核的标量完成判据 |
-| `tests/` | 合成输入验证动作、观测边界及结束判据；非仿真证据 |
-| `docs/` | 用户契约、实现边界与下一阶段门槛 |
-
-本项目由`repo`物化，源码在`demoproj/step_rl_demo`分支。训练只在专用容器内使用固定提交副本，产物放主仓库忽略的`demo_project/runs/`；用户已恢复从零迭代，各候选仍须先通过相应工程和能力门槛；机制见[自动迭代](docs/automation.md)，不使用周期定时器。
-
-## 容器与训练
-
-运行时：Isaac Lab 3.0.0-beta2、PyTorch 2.10.0+cu128、RSL-RL 5.4.1、Python 3.12。专用容器为 `petbot-step-gpu0` 和 `petbot-step-gpu1`。`docker/Dockerfile`记录构建依赖；`tools/container.py`创建容器并将源模型只读挂载，仅允许物理GPU 0/1，默认GPU 1。已存在容器不要重复创建。
-
-先在容器构建本demo派生资产：
-
-```bash
-docker exec petbot-step-gpu1 /isaac-sim/python.sh tools/prepare_asset.py
-```
-
-完成代码提交后，在宿主机冻结源码与派生资产。每次使用新目录：
-
-```bash
-python3 tools/freeze.py ../runs/step_run_example
-```
-
-然后使用宿主机监督入口，在固定副本内启动PPO：
-
-```bash
-python3 tools/run_guard.py --workdir /workspace/runs/step_run_example/source \
-  --log ../runs/step_run_example/train.log --status ../runs/step_run_example/train/status.json -- \
-  -m step_demo train --run-dir ../train --asset-dir ../asset --model-dir ../../../robot_description
-```
-
-默认使用第14轮：保持第13轮控制和奖励，将最终归一化探索上限分为髋0.02、共同轮速0.10，actor/critic均为26维自身观测；保留第10轮其它奖励、后轮地形距离修复和方差课程：512环境、500次更新，详见[第14轮](docs/round14.md)。工程检查使用 `--training-config configs/round14_gate.json`（128环境、8更新）；加 `--stop-after 4`验证在更新边界中断，再以相同入口和 `--resume`完成剩余预算。恢复时不改配置，不指定外来检查点；若进程意外退出，恢复最近一次完整保存的更新，当前未保存rollout丢弃。日志使用新名字。
-
-独立进程重载评估，把上述监督参数的日志/状态改为新路径，执行：
+训练/评估命令只在容器中执行，并通过`tools/run_guard.py`核查退出、产物和物理错误。以下是固定副本内的工程命令参数，**不是已启动的正式训练**：
 
 ```text
--m step_demo evaluate --run-dir ../train --asset-dir ../asset --model-dir ../../../robot_description --output ../evaluation --eval-envs 32
+-m step_demo train --training-config configs/engineering.json --run-dir ../engineering \
+  --asset-dir ../asset --model-dir ../../../robot_description --stop-after 4
+
+-m step_demo train --run-dir ../engineering --asset-dir ../asset \
+  --model-dir ../../../robot_description --resume
+
+-m step_demo evaluate --run-dir ../engineering --asset-dir ../asset \
+  --model-dir ../../../robot_description --output ../evaluation --eval-envs 16
 ```
 
-查看 `origin.json`、`initialization.json`、`latest.json`、`status.json`、`*.guard.json`和评估`result.json`；轨迹在`trace*.jsonl`，逐回合终局在`episodes.jsonl`。监督器检查真实产物和物理/Python错误，不能只看Isaac进程退出码。固定首版没有随机地形，多个并行环境不能冒充独立泛化测试。
+训练保留origin、随机初始化指纹、完整优化器和更新计数。恢复严格核对同一次运行、配置、源码和资产；仿真回合及GRU回合记忆重新开始。评估记录完整2ms物理采样到`physics.jsonl.gz`，使用`python3 -m step_demo.review RUN EVALUATION --output analysis.json`独立复核。
+
+工程短训不作为策略成功率、模型交付或sim2sim证明。当前无正式训练重启授权。

@@ -1,3 +1,3 @@
-"""Independent step-climbing contracts; no simulation or training on import."""
+"""STEP v2: recurrent sensor policy and explicit physical task contract."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

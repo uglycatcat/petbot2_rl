@@ -1,0 +1,178 @@
+{
+  "date": "2026-11-04",
+  "status": "engineering_passed_policy_unproven",
+  "base_commit": "b5fe58b0322952107894900216618522512c5f8d",
+  "run_artifacts": "demo_project/runs/step_refactor_gate_20261104_b",
+  "cpu_tests": 52,
+  "source_sha256": "de1862d58f9989ae7eb0de5b20188e2ffc7052d2b9d5588446eef4b166b5f53f",
+  "training": {
+    "num_envs": 512,
+    "steps_per_env": 128,
+    "completed_updates": 8,
+    "transitions": 524288,
+    "initialization": {
+      "initialization": "random",
+      "pretrained_models": [],
+      "actor_sha256": "525be8870c0984f0a3571d5ecab6c9cc93d5d4bea44a8f92b9cc161f9fc6579c",
+      "critic_sha256": "33a2ecf27d71f75331827f4398ff304ca760f9bbe4cb9f06b8b3ec95f3cb509b",
+      "optimizer_states": 0,
+      "frozen_parameters": 0
+    },
+    "same_run_restore": {
+      "checkpoint": "model_3.pt",
+      "completed_updates": 4,
+      "actor_sha256": "0a93abcd47aeb2710c46d1eaaaa05d865b4db6f4624f95aae97bedda1bbb91de",
+      "critic_sha256": "dbac79787fb19c49d13488f89b05f5ec9b34e952972d69dbc37f46bf71e06e6b",
+      "optimizer_states": 16,
+      "optimizer_sha256": "ba60041a76ef81ca12726cf956aa223a3c017e8e47c5290574dc9b9688974067",
+      "learning_rate": 0.0003,
+      "physics_episodes_restarted": true
+    },
+    "totals": {
+      "episodes": 6596,
+      "successes": 0,
+      "front_collisions": 6596,
+      "rear_air": 0,
+      "falls": 0,
+      "quality_failures": 0,
+      "platform_exits": 0,
+      "timeouts": 0
+    },
+    "coverage": {
+      "front_landing_entries": 0.0,
+      "four_top_entries": 0.0,
+      "drive_entries": 0.0,
+      "stop_entries": 0.0,
+      "stop_seconds": 0.0,
+      "eligible_stop_seconds": 0.0
+    }
+  },
+  "evaluation_outcomes": {
+    "total": 16,
+    "successes": 0,
+    "failures": {
+      "1": 16
+    }
+  },
+  "independent_replay_samples": 868,
+  "physics_probes": {
+    "samples": 2049,
+    "all_terminal": true,
+    "episodes": {
+      "22": {
+        "success": false,
+        "failure": 5,
+        "phase": 7,
+        "front_flight_count": [
+          1,
+          2
+        ],
+        "drive_distance": 0.0,
+        "hold_s": 0.0,
+        "elapsed_s": 0.5740000000000001
+      },
+      "28": {
+        "success": true,
+        "failure": 0,
+        "phase": 6,
+        "front_flight_count": [
+          1,
+          1
+        ],
+        "drive_distance": 0.15,
+        "hold_s": 2.5,
+        "elapsed_s": 3.904
+      },
+      "33": {
+        "success": true,
+        "failure": 0,
+        "phase": 6,
+        "front_flight_count": [
+          1,
+          1
+        ],
+        "drive_distance": 0.15,
+        "hold_s": 2.5,
+        "elapsed_s": 4.098
+      },
+      "42": {
+        "success": true,
+        "failure": 0,
+        "phase": 6,
+        "front_flight_count": [
+          1,
+          1
+        ],
+        "drive_distance": 0.15,
+        "hold_s": 2.5,
+        "elapsed_s": 3.896
+      }
+    },
+    "task_labels_used_for_decisions": false
+  },
+  "guards": {
+    "routes": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "passed",
+      "gpu_peak_mib": 17590.0,
+      "elapsed_s": 119.71388451848179
+    },
+    "standstill": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "passed",
+      "gpu_peak_mib": 17510.0,
+      "elapsed_s": 152.74840643629432
+    },
+    "train4": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "interrupted",
+      "gpu_peak_mib": 12878.0,
+      "elapsed_s": 296.4775243671611
+    },
+    "resume8": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "complete",
+      "gpu_peak_mib": 15910.0,
+      "elapsed_s": 279.8661538762972
+    },
+    "reload": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "complete",
+      "gpu_peak_mib": 10934.0,
+      "elapsed_s": 74.46730651147664
+    }
+  },
+  "independent_audit": "reported P1/P2 closed in reviewed scope",
+  "formal_training_enabled": false,
+  "sim2sim_changed": false,
+  "limitations": [
+    "8 updates verify engineering, not learned climbing or stopping.",
+    "Short reload 0/16; all front collisions before flight. No legal STOP exposure.",
+    "Scripted complete routes prove reachability, not smooth learned behavior; pitch and actual wheel overshoot recorded.",
+    "No formal training or autoiteration restart; no sim2sim change."
+  ],
+  "publication_equivalence": {
+    "runtime_training_task_and_physics_identical": true,
+    "only_nonfunctional_change": [
+      "step_demo/cli.py"
+    ],
+    "change": "CLI static check reports its own validation scope rather than a stale global engineering status",
+    "static_check": "static_check.json",
+    "fixed_source_unchanged": true
+  }
+}

@@ -26,10 +26,10 @@ def main(argv=None) -> int:
         config = load_config(args.config, args.model_dir)
         limits = read_limits(config.model_dir)
         standstill = map_action((0., -1.), limits, config.control)
-        result = dict(status="implementation_present", physics_validated="see engineering evidence", training_implemented=True,
+        result = dict(status="implementation_present", physics_validated=False, validation_scope="static_contract_only", training_implemented=True,
                       source_sha256=source_fingerprint(config.model_dir), limits=asdict(limits),
                       terrain=asdict(config.terrain), acceptance_provisional=asdict(config.acceptance),
-                      action_dim=2, actor_observation_dim=len(OBSERVATION_FIELDS),
+                      action_dim=2, actor_observation_dim=len(OBSERVATION_FIELDS)+1, actor_memory="GRU",
                       terrain_updates_per_episode=1, standstill_targets=asdict(standstill),
                       initialization="random_only", pretrained_models=[])
     except (OSError, ValueError, KeyError, TypeError) as error:

@@ -34,7 +34,7 @@ def safe_relative(base,value):
 
 
 def validate_plan(plan,folder):
-    if plan.get('schema')!='step_batch_v1' or plan.get('kind') not in ('engineering','formal','diagnostic'):
+    if plan.get('schema')!='step_batch_v2' or plan.get('kind') not in ('engineering','formal','diagnostic'):
         raise ValueError('Unknown plan schema/kind')
     if not plan.get('hypothesis') or not plan.get('jobs'): raise ValueError('A plan needs a hypothesis and jobs')
     ids=set();gpus=set()
@@ -44,8 +44,7 @@ def validate_plan(plan,folder):
         gpus.add(job['gpu']);ids.add(job['id']);safe_relative(folder,job['id'])
         config=safe_relative(Path(folder)/'source',job['training_config'])
         training=load_training(config)
-        if training.get('task_variant') == 'platform_stop_aux' and (plan['kind'] != 'diagnostic' or job.get('hold_after_success_s') != 2.):
-            raise ValueError('Auxiliary STOP requires diagnostic label and real extra 2s evaluation')
+        if 'hold_after_success_s' in job: raise ValueError('The full 2.5s hold is fixed in both training and evaluation')
         if type(job['eval_envs']) is not int or not 1<=job['eval_envs']<=512:raise ValueError('Invalid evaluation size')
     if plan.get('round_number',0)>1:
         if not plan.get('previous_review') or not plan.get('decision'):
@@ -58,7 +57,7 @@ def queue_event(control_path,event_path,message):
     """Write before delivery. Uncertain deliveries are preserved and never blindly retried."""
     control=read(control_path);event_path=Path(event_path)
     if event_path.exists():return read(event_path)
-    if not control.get('enabled'):return dict(status='disabled')
+    if not control.get('enabled') or control.get('paused_by_user'):return dict(status='disabled')
     data=dict(status='submitting',created_at=stamp(),message=message)
     write(event_path,data)
     try:
@@ -73,7 +72,9 @@ def queue_event(control_path,event_path,message):
     write(event_path,data);return data
 
 
-def enabled(control):return bool(read(control).get('enabled'))
+def enabled(control):
+    cfg=read(control)
+    return bool(cfg.get('enabled')) and not cfg.get('paused_by_user',False)
 
 
 def gpu_ready(gpu,minimum_free_mib=3400):
@@ -129,8 +130,6 @@ def job_run(job,folder,control):
                 evaluation.rename(job_dir/f'evaluation_failed_{count:02}')
             command=['-m','step_demo','evaluate','--run-dir',f'../{job["id"]}/train',
                 '--output',f'../{job["id"]}/evaluation','--eval-envs',str(job['eval_envs']),*common]
-            if job.get('hold_after_success_s'):
-                command += ['--hold-after-success',str(job['hold_after_success_s'])]
             guarded('evaluating',command,evaluation/'status.json')
         state.update(status='analyzing',updated_at=stamp());write(state_path,state)
         report=summarize(train,evaluation);write(job_dir/'analysis.json',report)
@@ -145,6 +144,7 @@ def run(folder,control):
     folder=Path(folder).resolve();control=Path(control).resolve();cfg=read(control)
     if cfg.get('project')!='step' or cfg.get('allowed_gpus')!=[0,1]:raise ValueError('Invalid campaign scope')
     if not enabled(control):raise ValueError('Campaign disabled')
+    if cfg.get('execution_schema') != 'petbot_step_ppo_v2': raise ValueError('Explicit authorization for the refactored campaign is required')
     if (folder/'disposition.json').exists() and read(folder/'disposition.json').get('disposition') == 'invalidated_by_user':
         raise ValueError('Discarded rounds cannot be restarted')
     plan=read(folder/'plan.json');validate_plan(plan,folder)
@@ -163,28 +163,28 @@ def run(folder,control):
                         f'[step单路结果事件] {folder}/{result["job"]}/job_status.json已有结果。'
                         f'先读取{control.parent}/active.json、{folder}/agent_review.json（若有）、{folder}/batch_status.json及{control}。'
                         '若是已处理旧事件且更新批次已运行，只补记接收，不重复发批或中止新训练。'
-                        '用户授权持续迭代，仅GPU0/1。立即审查本路真实轨迹/analysis.json和失败原因，准备改进；'
+                        '仅GPU0/1；先确认当前用户授权范围和暂停状态，再审查真实轨迹/analysis.json与失败原因；'
                         '同批其它路仍可运行，不能修改固定副本或重复发批。等整批完成事件后汇总并验证、推送下一轮。')
         state.update(status='complete' if all(job['status']=='complete' for job in state['jobs']) else 'failed',finished_at=stamp())
         if not enabled(control):state['status']='cancelled_by_user'
         write(folder/'batch_status.json',state)
         if enabled(control):
-            event_kind={'engineering':'工程检查完成','diagnostic':'独立停车诊断完成/异常','formal':'正式批次完成/异常'}[plan['kind']]
+            event_kind={'engineering':'工程检查完成','diagnostic':'工程诊断完成/异常','formal':'正式批次完成/异常'}[plan['kind']]
             message=(f'[step自动迭代事件：{event_kind}] 固定目录 {folder}；控制文件 {control}。'
                 f'先核对{control.parent}/active.json、enabled、agent_review.json（若有）、batch_status.json、每路analysis.json、日志和实际进程。'
                 '若事件属于已处理的旧轮次且更新批次已运行，只补记接收，不重复发批或中止新训练。'
-                '只负责step，物理GPU仅0/1。用户已授权持续分析、修改优化、工程验证并重新从零训练。'
+                '只负责step，物理GPU仅0/1。按当前用户授权范围处理；完成事件不构成新的训练授权。'
                 '检查真实阶段、请求/执行/实测关节、接触、运动和成功/失败轨迹，记录结论与下一轮修改假设；'
                 '任何无效物理或失败工程不得作策略结论。新配置/源码先过容器门槛、提交推送、冻结，再启动下一批并延续同一事件链。'
                 '不得加载历史权重、修改源机器人、使用其它GPU、启动sim2sim或其它项目。'
-                '新系列从第14轮源码重建，旧15–21轮已废弃不可恢复。若是platform_stop_aux，分速度组审查原停稳加真实2s保持；两种子门槛通过前不得启动全程训练，诊断权重/状态不得迁移。'
+                '当前为重构v2；不可恢复旧轮次或迁移任何旧权重。单次离地与2.5s真实子步保持须独立复核。'
                 '若本事件为工程连通性测试且正式批次已经启动，只核对并记录接收，不重复发批。')
             queue_event(control,folder/'continuation_event.json',message)
     except Exception:
         state.update(status='controller_failed',error=traceback.format_exc(),finished_at=stamp())
         write(folder/'batch_status.json',state)
         if enabled(control):queue_event(control,folder/'controller_failure_event.json',
-            f'[step控制器异常] 检查{folder}/batch_status.json和{control}，仅step/GPU0/1；修复后继续用户授权迭代，避免重复运行。')
+            f'[step控制器异常] 检查{folder}/batch_status.json和{control}，仅step/GPU0/1；先核对用户是否仍授权迭代，避免重复运行。')
         raise
     finally:
         write(control.parent/'active.json',dict(round=str(folder),pid=os.getpid(),finished_at=stamp(),status=state['status']))
@@ -203,8 +203,8 @@ def main():
         if not thread or not shutil.which('codex'):raise RuntimeError('Current session identity and codex queue are required')
         control.parent.mkdir(parents=True,exist_ok=True)
         root=PROJECT.parents[1]
-        write(control,dict(project='step',enabled=True,allowed_gpus=[0,1],thread=thread,codex=shutil.which('codex'),
-            cwd=str(root),runs_root=str(root/'demo_project/runs'),created_at=stamp(),authorization='2026-10-30 user: train/analyze/optimize/repeat; only GPU0/1'))
+        write(control,dict(project='step',enabled=False,paused_by_user=True,execution_schema='petbot_step_ppo_v2',allowed_gpus=[0,1],thread=thread,codex=shutil.which('codex'),
+            cwd=str(root),runs_root=str(root/'demo_project/runs'),created_at=stamp(),authorization='Not authorized to launch; obtain explicit user restart instruction before enabling'))
     elif a.command=='stop':
         cfg=read(control);cfg.update(enabled=False,stopped_at=stamp());write(control,cfg)
     elif a.command=='canary':

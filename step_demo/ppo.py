@@ -8,68 +8,57 @@ import random
 import numpy as np
 import torch
 from rsl_rl.runners import OnPolicyRunner
-from rsl_rl.modules import BetaDistribution
-from .distributions import CeilingBetaDistribution, StopCenteredGaussianDistribution, StopReachableBetaDistribution, std_ceiling_at
 
 
 def runner_config(t):
-    model = dict(class_name='MLPModel', hidden_dims=t['hidden_dims'], activation='elu', obs_normalization=True)
-    distribution = (dict(class_name='BetaDistribution', action_range=(-1.,1.))
-                    if t.get('policy_distribution','gaussian')=='beta' else
-                    dict(class_name='GaussianDistribution', init_std=t['initial_std'], std_type='log'))
-    if t.get('policy_distribution') == 'stop_gaussian':
-        distribution = dict(class_name='step_demo.distributions:StopCenteredGaussianDistribution',
-                            init_std=t['initial_std'])
-    if t.get('policy_distribution') == 'full_step_gaussian':
-        distribution = dict(class_name='step_demo.distributions:FullStepGaussianDistribution',
-                            init_std=t['initial_std'])
-    if t.get('policy_distribution') == 'finite_step_gaussian':
-        distribution = dict(class_name='step_demo.distributions:FiniteStepGaussianDistribution',
-                            init_std=t['initial_std'])
-    if 'beta_std_ceiling' in t:
-        name = ('ActionwiseCeilingBetaDistribution' if 'wheel_final_std' in t['beta_std_ceiling']
-                else 'CeilingBetaDistribution')
-        distribution['class_name']='step_demo.distributions:'+name
-    if t.get('policy_distribution') == 'stop_reachable_beta':
-        distribution = dict(class_name='step_demo.distributions:StopReachableBetaDistribution')
+    # Static engineering-unit scaling is in the environment. No normalization
+    # statistics move between action collection and PPO probability recomputation.
+    model = dict(hidden_dims=t['hidden_dims'], activation='elu', obs_normalization=False)
     return dict(num_steps_per_env=t['num_steps_per_env'], save_interval=t['save_interval'],
         logger='tensorboard', check_for_nan=True,
-        obs_groups={'actor':['policy'], 'critic':(['policy','critic']
-            if t.get('critic_observation', 'policy') == 'reward_state_v11' else ['policy'])},
-        actor=dict(**model, distribution_cfg=distribution),
-        critic=deepcopy(model), algorithm=dict(class_name='PPO', learning_rate=t['learning_rate'],
+        obs_groups={'actor':['policy'], 'critic':['critic']},
+        actor=dict(**model, class_name='RNNModel', rnn_type='gru',
+                   rnn_hidden_dim=t['memory_dim'], rnn_num_layers=1,
+                   distribution_cfg=dict(class_name='step_demo.distributions:StepBetaDistribution',
+                                         initial_mean=t['initial_mean'], initial_std=t['initial_std'])),
+        critic=dict(**model, class_name='MLPModel'),
+        algorithm=dict(class_name='PPO', learning_rate=t['learning_rate'],
             num_learning_epochs=t['num_learning_epochs'], num_mini_batches=t['num_mini_batches'],
-            clip_param=.2, gamma=t.get('discount_gamma',.99), lam=.95, entropy_coef=t.get('entropy_coef',.01), desired_kl=.01,
-            schedule=t.get('learning_rate_schedule','adaptive'), rnd_cfg=None, symmetry_cfg=None))
+            clip_param=.2, gamma=1., lam=.95, entropy_coef=t['entropy_coef'], desired_kl=.01,
+            schedule='fixed', rnd_cfg=None, symmetry_cfg=None))
 
 
 def distribution_metrics(distribution):
-    mean=distribution.mean.detach();std=distribution.std.detach()
+    mean, std = distribution.mean.detach(), distribution.std.detach()
     if not torch.isfinite(mean).all() or not torch.isfinite(std).all():
         raise RuntimeError('Nonfinite action distribution')
-    kind=type(distribution).__name__
-    limit = 1.1 if isinstance(distribution, StopReachableBetaDistribution) else 1.
-    if isinstance(distribution,BetaDistribution) and (mean.abs().max()>limit+1e-6 or std.max()>1.):
-        raise RuntimeError('Bounded policy distribution violated its action range')
-    result=dict(kind=kind,mean_abs_max=float(mean.abs().max()),std_min=float(std.min()),std_max=float(std.max()))
-    if isinstance(distribution, StopCenteredGaussianDistribution):
-        if std.min() < distribution.std_range[0]-1e-6 or std.max() > distribution.std_range[1]+1e-6:
-            raise RuntimeError('STOP Gaussian exploration left its finite std range')
-        result['raw_sample_density'] = True
-        result['std_range'] = list(distribution.std_range)
-    if isinstance(distribution,CeilingBetaDistribution):
-        result['std_ceiling']=distribution.std_ceiling.detach().cpu().tolist()
-        if distribution.std_ceiling.ndim:
-            result['std_min_per_action']=std.amin(dim=0).cpu().tolist()
-            result['std_max_per_action']=std.amax(dim=0).cpu().tolist()
-        if (std>distribution.std_ceiling+1e-6).any():raise RuntimeError('Action variance ceiling violated')
-    return result
+    if (mean[...,0].abs()>1.+1e-6).any() or (mean[...,1]<-1.1-1e-6).any() or (mean[...,1]>1.+1e-6).any():
+        raise RuntimeError('Action distribution support violated')
+    return dict(kind=type(distribution).__name__, mean_abs_max=float(mean.abs().max()),
+                std_min=float(std.min()), std_max=float(std.max()), raw_sample_density=True)
 
 
 def state_digest(state):
     sha = hashlib.sha256()
     for key, value in sorted(state.items()):
         sha.update(key.encode()); sha.update(value.detach().cpu().contiguous().numpy().tobytes())
+    return sha.hexdigest()
+
+
+def optimizer_digest(value):
+    sha = hashlib.sha256()
+    def visit(x):
+        if isinstance(x, torch.Tensor):
+            sha.update(str((x.dtype, tuple(x.shape))).encode())
+            sha.update(x.detach().cpu().contiguous().numpy().tobytes())
+        elif isinstance(x, dict):
+            for key in sorted(x, key=repr):
+                sha.update(repr(key).encode()); visit(x[key])
+        elif isinstance(x, (list, tuple)):
+            for item in x: visit(item)
+        else:
+            sha.update(repr(x).encode())
+    visit(value)
     return sha.hexdigest()
 
 
@@ -83,7 +72,6 @@ class StepRunner(OnPolicyRunner):
     def __init__(self, env, cfg, origin, log_dir=None, device='cuda:0'):
         self.origin = origin
         super().__init__(env, deepcopy(cfg), log_dir, device)
-        self._set_std_ceiling(0)
         if log_dir:
             original_log=self.logger.log
             def log_progress(**values):
@@ -95,15 +83,7 @@ class StepRunner(OnPolicyRunner):
                     totals=env.unwrapped.totals.copy(),coverage=env.unwrapped.learning_coverage.copy(),distribution=distribution_metrics(self.alg.actor.distribution))
                 write_json(Path(log_dir)/'progress.json',record)
                 with (Path(log_dir)/'updates.jsonl').open('a') as file: file.write(json.dumps(record)+'\n')
-                # Change only after PPO has consumed this rollout's log-probs.
-                # Checkpoints now contain the ceiling for the next collection.
-                self._set_std_ceiling(values['it']+1)
             self.logger.log=log_progress
-
-    def _set_std_ceiling(self, completed_updates):
-        schedule=self.origin['training'].get('beta_std_ceiling')
-        if schedule is not None:
-            self.alg.actor.distribution.set_std_ceiling(std_ceiling_at(schedule,completed_updates))
 
     def save(self, path, infos=None):
         data = self.alg.save()
@@ -127,15 +107,15 @@ class StepRunner(OnPolicyRunner):
         if data.get('completed_updates') != data['iter']+1:
             raise ValueError('Invalid checkpoint iteration accounting')
         self.alg.load(data, None, strict=True)
+        actor_digest = state_digest(self.alg.actor.state_dict())
+        critic_digest = state_digest(self.alg.critic.state_dict())
+        if actor_digest != state_digest(data['actor_state_dict']) or critic_digest != state_digest(data['critic_state_dict']):
+            raise RuntimeError('Checkpoint model state did not restore exactly')
+        restored_optimizer = optimizer_digest(self.alg.optimizer.state_dict())
+        if restored_optimizer != optimizer_digest(data['optimizer_state_dict']):
+            raise RuntimeError('Checkpoint optimizer state did not restore exactly')
         self.alg.learning_rate = data['learning_rate']
         self.current_learning_iteration = data['completed_updates']
-        schedule=self.origin['training'].get('beta_std_ceiling')
-        if schedule is not None:
-            actual=self.alg.actor.distribution.std_ceiling
-            expected=torch.as_tensor(std_ceiling_at(schedule,data['completed_updates']),
-                                     dtype=actual.dtype,device=actual.device)
-            if actual.shape!=expected.shape or not torch.allclose(actual,expected,atol=1e-6,rtol=0):
-                raise ValueError('Checkpoint action variance curriculum is inconsistent')
         if training:
             torch.set_rng_state(data['rng']['torch'].cpu())
             torch.cuda.set_rng_state_all([v.cpu() for v in data['rng']['cuda']])
@@ -147,5 +127,6 @@ class StepRunner(OnPolicyRunner):
             actor_sha256=state_digest(self.alg.actor.state_dict()),
             critic_sha256=state_digest(self.alg.critic.state_dict()),
             optimizer_states=len(self.alg.optimizer.state),
+            optimizer_sha256=restored_optimizer,
             learning_rate=self.alg.learning_rate,
             physics_episodes_restarted=True)

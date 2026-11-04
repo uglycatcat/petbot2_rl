@@ -6,15 +6,14 @@ import unittest
 from unittest.mock import patch
 
 from step_demo.config import PROJECT_ROOT
-from step_demo.evaluation import CompletionTracker, EvaluationSample, Stage
 from tools.campaign import queue_event,safe_relative,validate_plan
 
 
 class AutomationTests(unittest.TestCase):
     def plan_directory(self,directory):
         root=Path(directory);(root/'source/configs').mkdir(parents=True)
-        (root/'source/configs/train.json').write_text((PROJECT_ROOT/'configs/train_v1.json').read_text())
-        return root,dict(schema='step_batch_v1',kind='formal',round_number=1,hypothesis='baseline',
+        (root/'source/configs/train.json').write_text((PROJECT_ROOT/'configs/train.json').read_text())
+        return root,dict(schema='step_batch_v2',kind='formal',round_number=1,hypothesis='baseline',
             jobs=[dict(id='seed70',gpu=0,training_config='configs/train.json',eval_envs=64)])
 
     def test_gpu_restriction_and_one_job_per_gpu(self):
@@ -64,11 +63,29 @@ class AutomationTests(unittest.TestCase):
                 self.assertEqual(queue_event(control,event,'done')['status'],'disabled')
                 call.assert_not_called();self.assertFalse(event.exists())
 
-    def test_timeout_accumulation_matches_750_policy_steps(self):
-        from step_demo.config import load_config
-        tracker=CompletionTracker(load_config().acceptance)
-        sample=EvaluationSample(.02,0.,0.,0.,0.,0.,(0.,0.),(False,False),False,False,False,False,False)
-        for _ in range(749):self.assertEqual(tracker.update(sample),Stage.CROSSING)
-        self.assertEqual(tracker.update(sample),Stage.FAILED)
+    def test_pause_blocks_delivery_even_if_enabled_is_stale(self):
+        with tempfile.TemporaryDirectory(prefix='step-event-') as directory:
+            control,event=self.control(directory,True)
+            value=json.loads(control.read_text()); value['paused_by_user']=True
+            control.write_text(json.dumps(value))
+            with patch('tools.campaign.subprocess.run') as call:
+                self.assertEqual(queue_event(control,event,'done')['status'],'disabled')
+                call.assert_not_called()
+
+    def test_historical_schema_cannot_launch_under_new_code(self):
+        with tempfile.TemporaryDirectory(prefix='step-plan-') as directory:
+            root,plan=self.plan_directory(directory);plan['schema']='step_batch_v1'
+            with self.assertRaises(ValueError):validate_plan(plan,root)
+
+    def test_guard_and_campaign_agree_for_all_pause_switch_combinations(self):
+        from tools.run_guard import control_enabled
+        from tools.campaign import enabled
+        with tempfile.TemporaryDirectory(prefix='step-control-') as directory:
+            path=Path(directory)/'control.json'
+            for switch in (False,True):
+                for pause in (False,True):
+                    path.write_text(json.dumps(dict(enabled=switch,paused_by_user=pause)))
+                    self.assertEqual(control_enabled(path), switch and not pause)
+                    self.assertEqual(control_enabled(path), enabled(path))
 
 if __name__=='__main__':unittest.main()
