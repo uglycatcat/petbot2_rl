@@ -36,7 +36,7 @@
 | 21r3 | [执行](upright_restart_round21r3_execution.md) | [终局](upright_restart_round21r3_results.md)：102高范围31/32、落地改善，MuJoCo残余与速度目标仍未过 |
 | 21r4 | [执行](upright_restart_round21r4_execution.md) | [终局](upright_restart_round21r4_results.md)：静止后退约1mm，低速/零令响应未保住，桌面20保持 |
 | 21r5 | [执行](upright_restart_round21r5_execution.md) | [终局](upright_restart_round21r5_results.md)：低速基本31/26，落地仍动、高速无一致收益 |
-| 21r6 | [执行](upright_restart_round21r6_execution.md) | LAND近地髋回默认；工程通过，两份2048×1000从零训练，仅GPU2/3 |
+| 21r6 | [执行](upright_restart_round21r6_execution.md) | [终局](upright_restart_round21r6_results.md)：落地总移动改善，运动保留未过；用户暂停后续训练 |
 
 [编号与旧21—26废弃/27取消](upright_restart_discarded_rounds_20261103.md)。这些记录和固定运行副本保留，不能重启旧队列或作为新优化来源。
 
