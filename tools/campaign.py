@@ -100,7 +100,7 @@ def job_run(job,folder,control):
     if not enabled(control):state.update(status='cancelled_by_user');write(state_path,state);return state
     source=folder/'source';guard=source/'tools/run_guard.py';train=job_dir/'train'
     working=container_directory(folder,control)
-    common=['--asset-dir','../asset','--model-dir','../../../robot_description']
+    common=['--asset-dir','../asset','--model-dir','../../../robot_description','--headless']
     def guarded(phase,command,status):
         attempt=1
         while (job_dir/f'{phase}_{attempt:02}.log').exists():attempt+=1
