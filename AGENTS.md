@@ -7,7 +7,7 @@
 - **upright已冻结，1104版本为21r5 seed102。** 当前有效完整训练源码位于`rl_project/train_upright_project_1104`；sim2sim保持现有21r5，demo原样留作辅助存档，`std_train_upright_project`继续预留为空。全部upright训练和自动迭代停止，须用户明确重新授权；旧完成事件不得重启。见[冻结交接](docs/upright_1104.md)。
 - **现有效果与问题：** 用户认可基本流程、起立及运动尚可；落地后多余抬头与残余移动仍未解决，运动能力也未满足全部目标。21r6运动保留失败，未选用。后续需重新审查任务/控制/奖励/验收，必要时重构；当前只封存，不开展新训练。
 - **长期要求保持：** 从随机初始化独立训练，禁止历史权重/冻结父网络/教师；仅同次受迫中断可恢复。普通四轮全能力，Space允许充分调整和慢起；两轮双向连续0—0.75m/s及镜像遥控、髋自主平衡；落地继承实际运动、髋回0并交普通当前输入，零令停稳；意外倒下退出。源模型只读，轮目标±25rad/s，upright仅容器内GPU2/3。demo1000更新、正式可更多；不启用周期定时器或goal，导出不等于sim2sim通过。完整要求见[需求基线](docs/current_scope.md)。
-- **阅读边界：** 日常只读本页、当前交接、[1104说明](docs/upright_1104.md)和相关需求。全部旧upright轮次文档与runs已放服务器`history/`，不进Git、不默认加载；原远程archive分支已本地备份后删除，禁止重新推送。细节按[历史定位](docs/upright_history.md)查找。
+- **阅读边界：** 日常只读本页的当前工作与全局规则、当前交接、[1104说明](docs/upright_1104.md)和相关需求；upright接手可跳过其他任务的里程碑及历史链接。全部旧upright轮次文档与runs已放服务器`history/`，不进Git、不默认加载；原远程archive分支已本地备份后删除，禁止重新推送。细节按[历史定位](docs/upright_history.md)查找。
 
 - **2026-11-04 STEP用户授权重启新版完整训练：** 重构工程已通过，用户要求查看完整新版训练效果。发布`cdd6c95`，v2第1批两随机种子各512环境×500更新、GPU0/1，终局各64例独立2ms物理复核；不迁移任何旧/工程/辅助权重或轨迹。新版控制目录`_step_refactor_campaign_20261104`，旧campaign与旧轮次保持关闭；完成/异常事件续接分析，无周期定时器或goal。能力尚待本批验证，见[执行](docs/step_v2_round01_20261104.md)。
 
@@ -85,12 +85,12 @@
 | 路径 | 职责 |
 |---|---|
 | `robot_description/` | MJCF/STL 源模型，只读；仅 README 的文字描述可更新。 |
-| `demo_project/<项目名>/` | `repo` 物化的 demo 源码，独立 `demoproj/` 分支；[upright 导览](demo_project/upright_rl_demo/README.md)列出唯一训练入口与专用评估/导出入口。 |
-| `demo_project/runs/` | 各批固定提交的独立副本、检查点、日志和评估轨迹；历史产物体量大，按当前状态文件定位，不整体遍历或清理。 |
-| `rl_project/<项目名>/` | repo管理的正式项目，独立`rlproj/`分支；训练预留与sim2sim职责见[索引](rl_project/README.md)。 |
-| `history/` | 服务器本地历史归档，不进Git；旧upright迁移清单见`history/upright/archival_20261103/`，查阅规则见[归档说明](docs/upright_history.md)。 |
+| `demo_project/<项目名>/` | `repo`物化的demo，独立`demoproj/`分支；upright仅辅助存档，其内部说明和执行开关保留历史状态，不构成当前授权。有效训练源码见[1104工程](rl_project/train_upright_project_1104/README.md)。 |
+| `demo_project/runs/` | 在此保留的其他任务固定副本、检查点、日志和轨迹，按当前状态文件定位；upright runs全部在服务器history，不整体遍历或恢复旧队列。 |
+| `rl_project/<项目名>/` | `repo`管理、独立`rlproj/`分支；包含upright临时1104训练源码、sim2sim与空的std训练预留目录，职责见[索引](rl_project/README.md)。 |
+| `history/` | 服务器本地历史归档，不进Git；upright两次迁移清单、文档、runs及分支备份的位置见[历史定位](docs/upright_history.md)。 |
 | `reference_project/` | 上游快照及产物，不在主线重复跟踪。 |
 | `robot_controller_demo/` | MuJoCo 恢复、跳跃前轮离地演示与姿态统计，不是策略训练仓。 |
-| `docs/` | [当前交接](docs/current_handoff.md)、需求、工程和新系列各批证据；按问题读取。 |
+| `docs/` | [当前交接](docs/current_handoff.md)、需求、工程与当前结果索引；upright逐轮证据在history，按需读取。 |
 
 涉及重要变化时先更新对应主题文档，再视收录原则追加本表；无实质变化不写。旧研究资料在 `docs/reports/`，不作当前模型或训练基线。

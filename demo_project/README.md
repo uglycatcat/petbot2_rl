@@ -16,6 +16,8 @@
 
 `upright_rl_demo/`按用户要求原样保留作辅助存档，不是当前有效版本入口。1104完整训练源码另存于`rl_project/train_upright_project_1104/`；sim2sim继续使用21r5 seed102。全部upright runs已迁出到服务器history，其他任务的runs仍按原流程管理；源`robot_description/`只读。
 
+存档内README的“当前候选/训练入口”和旧执行开关只反映当时状态，不构成执行授权；upright工程短训、固定策略评估及自动迭代均冻结。旧文档链接按[历史定位](../docs/upright_history.md)查找，当前接手以[1104说明](../docs/upright_1104.md)为准。
+
 ## 同步与开发
 
 - 开发前检查嵌套仓库分支与远程，干净工作区同步相应 `demoproj/` 分支；两端同一 demo 只由一端写入。主仓库 `git pull` 不会自动更新嵌套 checkout。
