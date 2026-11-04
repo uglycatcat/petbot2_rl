@@ -18,11 +18,13 @@
 
 运行入口：`demo_project/runs/step_v2_round01_20261104/`；新版控制文件`demo_project/runs/_step_refactor_campaign_20261104/control.json`。旧`_step_campaign_20261030`继续停用，旧事件不得恢复旧批次。实时以active、batch/job状态、日志和真实进程为准；见[本批执行](step_v2_round01_20261104.md)。
 
-GPU0两次整卡显存保护后，采用进程级expandable_segments，同次101→104检查通过后继续；已运行到165更新，PyTorch预留稳定774MiB、整卡约18338MiB。GPU1随后在261更新触发原78%显存保护，未记录OOM/物理错误；从本次251更新存盘恢复完整网络/优化器/RNG，使用同样分配设置，已实际完成252更新、预留794MiB，78%保护未提高。训练源码、参数和500更新预算保持。
+**11月4日23:56，seed71完成500更新及64例独立评估，完整成功0/64：47例后轮离地、17例前轮碰沿。** 两前轮均各离地一次，但没有合法进入落顶阶段、四轮登台或STOP。恢复训练和评估guard均有效；原资源中断证据保留，不影响这份完整结果的判读。GPU0仍在本批训练，审查时约420/500，不能重复发批或提前中止。
 
-原控制器已退出，其失败状态保存在`batch_status_original_controller.json`；当前两路恢复进程仍在运行。看`resource_recovery02_status.json`（seed70）、`seed71_allocator_recovery_status.json`（seed71）、最新job状态和实际进程，不能因旧完成/异常事件重复发批。GPU1恢复完成会单独通知，整批由现有恢复链路汇总；`agent_review.json`已记录事件接收与下一步假设。
+GPU0采用进程级expandable_segments后继续同次恢复，仍受82%保护；GPU1同次251→500恢复完成，原78%保护保持，PyTorch预留最终914MiB、无分配重试/OOM，整卡峰11880MiB。固定训练源码和预算未改。原控制器失败记录见`batch_status_original_controller.json`；当前以`resource_recovery02_status.json`、`seed71_allocator_recovery_status.json`、job和实际进程为准。GPU1宿主恢复进程只等待GPU0以协调汇总，已不占用GPU训练；单路事件已审查，等待整批事件。
 
-用户最新要求以TensorBoard为主要分析依据，不默认整套测试；工程异常、实质改动、可疑行为与最终交付保留必要验证。seed71中断前近20更新奖励约-9.105、回合约50控制步，落顶/STOP仍为0；现有失败轨迹可见前轮未抬起即接触边沿。候选诊断方向是髋探索幅度/持续性及抬轮收益与运动成本，不提前断定原因或修改正在训练的固定输入。详见`tensorboard_review_resource03.json`和`resource03_behavior_review.json`；没有终局能力结论或追加预算。
+按用户要求优先读TensorBoard，没有重复启动仿真测试。seed71后期回报由约-9.10升至末20更新-8.131，已经出现抬轮，但停在失败前的局部进展；终局在0.766–0.792s结束。实际髋目标快速正反切换，前轮抬起后下落；后轮失支撑时仍距平台至少16.9cm，是真实地面间隙和零接触力，不能解释成跨沿参考面误判。下一步待整批审查抬轮高度信用、前向越沿/持续支撑以及髋动作时序，不直接用加长训练或增大探索替代诊断。
+
+单路证据见`seed71/agent_review.json`、`tensorboard_review_seed71_final.json`及[本批执行](step_v2_round01_20261104.md)。独立2ms轨迹还发现碰沿瞬间实测后轮峰40.59rad/s，原20ms汇总仅19.59；轮目标峰18.65。最终报告必须保留该瞬态，不把目标范围或低频汇总代替实测峰值。无完整能力通过、无新增批次或追加预算。
 
 任务/奖励/网络/物理与已验收重构版131d03d一致。本次只增加种子71配置、更新授权文档，正式入口显式headless与工程条件一致。52项容器、真实物理正负例、512环境4→8恢复和重载证据有效。8更新工程策略0/16、无落顶或STOP，仅证明链路通畅；正式能力待本批完整训练验证，见[重构及限制](step_refactor_20261104.md)。
 
