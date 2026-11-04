@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round21r6_ready",
-  "training_enabled": true,
-  "automatic_iteration_enabled": true,
+  "phase": "round21r6_finished_analysis_only",
+  "training_enabled": false,
+  "automatic_iteration_enabled": false,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "141checks and8 engineering jobs accepted;2048 short training,4to8 same-run recovery/reloads;fixed static/low/high retained,all pre-intervention physical prefixes exact. Static total motion1.116to0.556cm. Policy not validated.",
+  "reason": "2026-11-04 user requested round21r6 result analysis only and no next round. Training and automatic iteration remain paused until explicit reauthorization; no new run launched.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -14,7 +14,7 @@
   "next_experiment": {
     "series": "upright_restart_20261030",
     "name": "upright_restart_round21r6",
-    "status": "engineering_accepted_ready"
+    "status": "execution_finished_analysis_only_paused_by_user"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
@@ -26,5 +26,6 @@
     3
   ],
   "baseline_commit": "40e926d8c181473e181ed5069535247525786fc9",
-  "archived_commit": "bce7793e74a4dbe8876bc3a75304c96302a320b3"
+  "archived_commit": "bce7793e74a4dbe8876bc3a75304c96302a320b3",
+  "paused_by_user": true
 }
