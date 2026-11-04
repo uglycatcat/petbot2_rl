@@ -29,13 +29,13 @@ def load_training(path):
     optional={'policy_distribution','learning_rate_schedule','reward_version','discount_gamma','beta_std_ceiling','critic_observation','task_variant',
               'auxiliary_precision_cost','terminate_auxiliary_flight','entropy_coef','auxiliary_objective','full_objective'}
     if set(t)-optional!=set(defaults) or t['schema']!='petbot_step_ppo_v1': raise ValueError('Unknown training schema/fields')
-    if t.get('policy_distribution','gaussian') not in ('gaussian','beta','stop_gaussian','full_step_gaussian','finite_step_gaussian'):raise ValueError('Unknown policy distribution')
+    if t.get('policy_distribution','gaussian') not in ('gaussian','beta','stop_gaussian','full_step_gaussian','finite_step_gaussian','stop_reachable_beta'):raise ValueError('Unknown policy distribution')
     if t.get('critic_observation', 'policy') not in ('policy', 'reward_state_v11'):
         raise ValueError('Unknown critic observation')
     if t.get('learning_rate_schedule','adaptive') not in ('adaptive','fixed'):raise ValueError('Unknown learning rate schedule')
     if 'beta_std_ceiling' in t:
         s=t['beta_std_ceiling']
-        if (t.get('policy_distribution')!='beta' or not isinstance(s,dict)
+        if (t.get('policy_distribution') not in ('beta','stop_reachable_beta') or not isinstance(s,dict)
                 or set(s) not in ({'start_update','end_update','final_std'},
                                   {'start_update','end_update','final_std','wheel_final_std'})
                 or type(s['start_update']) is not int or type(s['end_update']) is not int
@@ -50,8 +50,16 @@ def load_training(path):
     continuing = t.get('auxiliary_objective') == 'continuous_stop'
     full_discounted = t.get('full_objective') == 'discounted_staged'
     full_finite = t.get('full_objective') == 'finite_staged'
-    if 'full_objective' in t and not (full_discounted or full_finite):
+    qualified = t.get('full_objective') == 'qualified_baseline'
+    if 'full_objective' in t and not (full_discounted or full_finite or qualified):
         raise ValueError('Unknown full objective')
+    if qualified and (t.get('task_variant') != 'full' or t.get('reward_version') != 'restart14_staged'
+            or t.get('discount_gamma') != 1. or t.get('policy_distribution') != 'stop_reachable_beta'
+            or t.get('entropy_coef') != .01 or 'beta_std_ceiling' not in t
+            or 'auxiliary_objective' in t):
+        raise ValueError('Qualified baseline requires independent full-task Beta configuration')
+    if t.get('policy_distribution') == 'stop_reachable_beta' and not qualified:
+        raise ValueError('STOP-reachable Beta requires qualified full-task objective')
     if full_discounted and (t.get('task_variant') != 'full'
             or t.get('reward_version') != 'restart14_staged' or t.get('discount_gamma') != .99
             or t.get('policy_distribution') != 'full_step_gaussian' or t.get('entropy_coef') != 0.
@@ -160,7 +168,7 @@ def main(argv):
             actual['hold_after_success_s']=args.hold_after_success
             actual['_evaluation']=True
         if args.hold_after_success and not (actual.get('task_variant') == 'platform_stop_aux'
-                or actual.get('full_objective') in ('discounted_staged','finite_staged')):
+                or actual.get('full_objective') in ('discounted_staged','finite_staged','qualified_baseline')):
             raise ValueError('Extra hold currently supported only by isolated platform STOP diagnostic')
         env=StepEnv(task,actual,args.asset_dir,args.device)
         env.trace_ids=list(range(min(actual['num_envs'],8))) if args.command=='train' else list(range(actual['num_envs']))
@@ -213,7 +221,7 @@ def main(argv):
             if len(records)!=actual['num_envs']: raise RuntimeError('Evaluation did not terminate every initial episode')
             write_json(output/'result.json',dict(status='complete',episodes=list(records.values()),
                 successes=sum(r['success'] for r in records.values()),num_envs=actual['num_envs'],
-                completed_updates=runner.current_learning_iteration,scene=t.get('task_variant','full'),hold_after_success_s=args.hold_after_success,
+                completed_updates=runner.current_learning_iteration,scene=t.get('task_variant','full'),hold_after_success_s=env.extra_hold_s,
                 independent_randomization=False))
             write_json(output/'status.json',dict(status='complete',command='evaluate'))
         trace_file.close();episode_file.close()

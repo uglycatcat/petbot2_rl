@@ -24,6 +24,7 @@ from .critic_state import CRITIC_STATE_FIELDS, reward_state
 from .staged_task import FrontFlight, advance_intent, costs, terminal_value, body_pitch, MAX_RATE
 from .regulation import discounted_failure_cost
 from .finite_task import quality_terminates, reward as finite_reward
+from .qualified_task import stopping_progress, certified_front_landing
 
 
 def tensor(value):
@@ -52,9 +53,12 @@ class StepEnv(DirectRLEnv):
         self.regulating_auxiliary = self.auxiliary_stop and training.get('auxiliary_objective') == 'continuous_stop'
         self.discounted_full = training.get('full_objective') == 'discounted_staged'
         self.finite_full = training.get('full_objective') == 'finite_staged'
-        self.reviewed_full = self.discounted_full or self.finite_full
+        self.qualified_full = training.get('full_objective') == 'qualified_baseline'
+        self.reviewed_full = self.discounted_full or self.finite_full or self.qualified_full
         self.evaluation_mode = training.get('_evaluation', False)
         self.extra_hold_s = float(training.get("hold_after_success_s", 0.))
+        if self.qualified_full:
+            self.extra_hold_s = max(2., self.extra_hold_s)  # Train the same real hold evaluated at deployment.
         self.reward_state_critic = training.get('critic_observation', 'policy') == 'reward_state_v11'
         self.smooth_braking = training.get('reward_version') in ('brake_v10','brake_v13','restart14_staged')
         self.brake_weight = 4. if training.get('reward_version') in ('brake_v13','restart14_staged') else 1.
@@ -313,13 +317,24 @@ class StepEnv(DirectRLEnv):
         x_min, x_max, z_min = self.minimum[:,:,0], self.maximum[:,:,0], self.minimum[:,:,2]
         above_edge = z_min[:,:2] >= height + .0005
         before_edge = x_max[:,:2] < self.edge_x[:,None] - .0005
-        self.front_lifted |= before_edge & above_edge
-        self.front_cleared |= self.front_lifted & (x_min[:,:2] > self.edge_x[:,None] + .0005) & above_edge
+        if self.qualified_full:
+            # A circular wheel can land on the top while its trailing arc is
+            # still behind the edge. Requiring the ENTIRE AABB to be elevated
+            # before crossing rejects collision-free single-flight landings.
+            # Instead retain real takeoff before any actual top contact.
+            self.front_lifted |= ((self.flight.count == 1) & self.flight.air
+                                  & ~self.front_touched & ~self.flight.returned_floor)
+        else:
+            self.front_lifted |= before_edge & above_edge
+            self.front_cleared |= self.front_lifted & (x_min[:,:2] > self.edge_x[:,None] + .0005) & above_edge
         top_contact = (normal[:,:,2] > .02) & (z_min >= height-.002) & (x_min > self.edge_x[:,None]+.0005)
         bad = forbidden_front_contact(normal[:,:2],contact_x[:,:2],x_min[:,:2],self.edge_x)
         self.front_hit |= bad.any(-1)
         touch = early_top_contact(normal[:,:2],contact_x[:,:2],self.edge_x,bad)
         self.front_touched |= touch
+        if self.qualified_full:
+            self.front_cleared |= certified_front_landing(self.front_lifted, self.flight.count,
+                self.flight.landed_top, self.flight.returned_floor, self.front_hit, top_contact[:,:2])
         landed = self.front_cleared & top_contact[:,:2]
         first_landing=landed & ~self.front_landed
         wheel_vz=tensor(self.robot.data.body_com_lin_vel_w)[:,self.wheel_bodies[:2],2]
@@ -375,7 +390,7 @@ class StepEnv(DirectRLEnv):
             # penalty, never rewarded as completion.
             self.failure = torch.where((self.failure == 0) & (self.flight.count > 0).any(-1),
                                        5, self.failure)
-        if self.discounted_full:
+        if self.discounted_full or self.qualified_full:
             # Once a first lift returns to the floor, or a second lift occurs,
             # this episode can no longer meet the original single-flight goal.
             self.failure = torch.where((self.failure == 0) & self.flight.invalid, 5, self.failure)
@@ -510,6 +525,12 @@ class StepEnv(DirectRLEnv):
                         # Completed approach/lift cannot pay again during rear ascent.
                         parts[:, :3] = torch.where((self.previous_intent >= 1)[:, None], self.stage_credit[:, :3], parts[:, :3])
                         parts[:, 3:5] = torch.where((self.previous_intent >= 2)[:, None], self.stage_credit[:, 3:5], parts[:, 3:5])
+                    if self.qualified_full:
+                        stop = self.phase >= 3
+                        parts[:, 7] += stopping_progress(self.com_vel.norm(dim=-1),
+                            (self.actions[:, 1]+1.)*12.5, stop & ~self.flight.invalid)
+                        parts[:, :7] = torch.where((self.previous_intent >= 3)[:, None], self.stage_credit[:, :7], parts[:, :7])
+                        failed |= self.flight.invalid
                     gain,self.stage_credit=component_increment(self.stage_credit,parts,failed)
                     self.best_progress=self.stage_credit.sum(-1)
                     reward=gain+2*self.new_landing*(~failed)
@@ -525,7 +546,12 @@ class StepEnv(DirectRLEnv):
                 reward-=self.step_dt*(2*(self.com[:,1]-self.origin_com[:,1]).square()+self.yaw.square()
                                       +on_platform*pos[:,self.hips].square().mean(-1))
                 self.last_shaping=gain
-        if self.restart_task:
+        if self.qualified_full:
+            # Keep round14 movement/contact/action and line costs above. Only
+            # secondary WORLD body motion is added; no elapsed-time tax, no
+            # continuing STOP bill that can be escaped by early termination.
+            reward -= self.cost_components[:, 6]
+        elif self.restart_task:
             timeout = self.episode_length_buf >= self.max_episode_length
             failed = (self.failure > 0) | (timeout & ~self.completed)
             # No new forward/lift/drive credit after STOP, and none in the auxiliary task.
@@ -663,6 +689,8 @@ class StepEnv(DirectRLEnv):
             imu_acceleration=tensor(self.imu.data.lin_acc_b)[ids].tolist(),imu_gyro=tensor(self.imu.data.ang_vel_b)[ids].tolist(),
             estimated_quaternion=self.estimator.q[ids].tolist(),
             true_quaternion=tensor(self.robot.data.body_link_quat_w)[ids,self.lower_body].tolist(),
+            front_flight_landed_top=self.flight.landed_top[ids].tolist(),
+            front_flight_returned_floor=self.flight.returned_floor[ids].tolist(),
             reward=self.last_reward[ids].tolist(),motion_cost=self.motion_cost[ids].tolist(),
             potential=self.previous_potential[ids].tolist(),
             progress_credit=self.best_progress[ids].tolist(),shaping_reward=self.last_shaping[ids].tolist() if self.edge_reward else [],

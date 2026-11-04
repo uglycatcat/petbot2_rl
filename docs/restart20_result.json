@@ -1,0 +1,123 @@
+{
+  "schema": "step_batch_agent_review_v1",
+  "handled": true,
+  "status": "reviewed_rejected_preparing_restart21",
+  "reviewed_at": "2026-11-04T02:01:35.457260+00:00",
+  "source_commit": "e454ac29a38be61d76230858611d40b8258f76c5",
+  "engineering_valid": true,
+  "both_runs_random": true,
+  "both_completed_updates": 500,
+  "successes": [
+    0,
+    0
+  ],
+  "episodes_per_seed": 64,
+  "no_front_landing_or_legal_stop": true,
+  "seed70": "0.16s early fall; wheel request zero; rapid failure beats long idle failure under current return.",
+  "seed71": "0.46s invalid first flight return; training disqualified repeated flights still earn progress.",
+  "full_task_capability_passed": false,
+  "next_hypothesis": "Return close to round14 Beta and bounded milestone objective; strict quality masks reward and terminates; remove elapsed failure/time-cost ordering; make STOP zero accessible and expose bounded acceptance-scale stopping progress. Validate real single-flight feasibility and PPO before deployment.",
+  "no_weights_or_data_transfer": true,
+  "next_batch_started": false,
+  "routes": {
+    "seed70": {
+      "schema": "step_route_agent_review_v1",
+      "handled": true,
+      "status": "rejected_capability",
+      "engineering_valid": true,
+      "random_initialization_verified": true,
+      "completed_updates": 500,
+      "no_interruption_or_resume": true,
+      "evaluation_successes": 0,
+      "evaluation_episodes": 64,
+      "outcomes": {
+        "failure_3": 64
+      },
+      "failure_description": "Lowerbody pitch crossed fall threshold before any front flight; wheel target zero throughout.",
+      "failure_seconds": 0.16,
+      "max_abs_world_pitch_rad": 1.1725051403,
+      "max_abs_world_pitch_rate_rad_s": 11.1334486,
+      "wheel_request": 0.0,
+      "wheel_execute": 0.0,
+      "training_counts": {
+        "episodes": 1315844,
+        "both_front_lifted": 105,
+        "both_front_cleared": 0,
+        "both_front_landed": 0,
+        "quality_invalid": 17211
+      },
+      "legal_stop_entry_lower_bound": 0,
+      "eligible_stop_seconds": 0.0,
+      "actor_replay_max_error": 1.0728836059570312e-06,
+      "reward_recompute_max_error": 9.544584109733023e-07,
+      "observations": [
+        "首100更新大部分接近边沿后碰撞；101–200更新坍缩至快速低头失败，201–500样本全失败3。",
+        "固定失败25加持续负成本使15s静止失败回报-28，比0.16s失败约-25.086更差；不是唯一或已证实全部因果，但错误排序明确。",
+        "未见任何前轮越沿、落顶或合法STOP。"
+      ],
+      "evidence": [
+        "behavior_audit.json",
+        "policy_replay_audit.json",
+        "analysis.json"
+      ]
+    },
+    "seed71": {
+      "schema": "step_route_agent_review_v1",
+      "handled": true,
+      "status": "rejected_capability_pending_batch_review",
+      "reviewed_at": "2026-11-04T01:55:46.613954+00:00",
+      "source_commit": "e454ac29a38be61d76230858611d40b8258f76c5",
+      "engineering_valid": true,
+      "random_initialization_verified": true,
+      "completed_updates": 500,
+      "no_interruption_or_resume": true,
+      "evaluation_successes": 0,
+      "evaluation_episodes": 64,
+      "outcomes": {
+        "failure_5": 64
+      },
+      "failure_description": "first front-wheel flight returned to floor before step edge; not second takeoff",
+      "failure_seconds": 0.46,
+      "first_flight_seconds": 0.34,
+      "first_flight_count": [
+        1,
+        1
+      ],
+      "failure_forward_range_m": [
+        0.05840110778808594,
+        0.06380987167358398
+      ],
+      "front_to_edge_gap_m": [
+        0.08384037017822266,
+        0.08834266662597656
+      ],
+      "max_front_min_z_m": 0.015571018680930138,
+      "max_abs_world_pitch_rad": 1.0243442058563232,
+      "max_abs_world_pitch_rate_rad_s": 10.794050216674805,
+      "training_counts": {
+        "episodes": 212762,
+        "both_front_lifted": 159536,
+        "both_front_cleared": 0,
+        "both_front_landed": 0,
+        "quality_invalid": 208411
+      },
+      "quality_valid_stop_entry_lower_bound": 0,
+      "eligible_stop_seconds": 0.0,
+      "reward_recompute_max_error": 9.545232337870857e-07,
+      "actor_replay_max_error": 9.5367431640625e-07,
+      "observed_reward_inconsistency": "Quality-invalid training episodes can still earn approach/lift progress. Late sampled episodes median2.874 total progress,2.826 after invalidation; zero actual clearing/landing.",
+      "observations": [
+        "评估不是上台后停车失败，而是提前无效离地；世界pitch变化幅度和速度也不合格。",
+        "全量212762训练回合无任何双前轮越沿或落顶，抬升159536不能代表有效登台。",
+        "恢复前进探索并未恢复第14轮前段能力；记录与模型重放一致，未发现工程异常。"
+      ],
+      "evidence": [
+        "behavior_audit.json",
+        "policy_replay_audit.json",
+        "analysis.json"
+      ],
+      "batch_completion_event_pending": true,
+      "no_next_batch_started": true
+    }
+  }
+}

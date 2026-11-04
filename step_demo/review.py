@@ -35,7 +35,7 @@ def summarize(run, evaluation):
     layout=read(evaluation/'layout.json'); hips=layout['hips'];wheels=layout['rear_wheels']
     config=load_config()
     support_memory=.06 if origin['training'].get('reward_version') in ('stage_v5','settle_v6','touch_v8','brake_v10','brake_v13','restart14_staged') else 0.
-    full_discounted=origin['training'].get('full_objective') in ('discounted_staged','finite_staged')
+    full_discounted=origin['training'].get('full_objective') in ('discounted_staged','finite_staged','qualified_baseline')
     extra_hold=result.get('hold_after_success_s',0.)
     trackers={i:CompletionTracker(config.acceptance,support_memory,extra_hold,full_discounted)
               for i in range(result['num_envs'])}
@@ -98,6 +98,9 @@ def summarize(run, evaluation):
                 if origin['training'].get('reward_version') == 'restart14_staged':
                     scalar_success &= (row['front_flight_count'][local] == [1,1] and not row['flight_invalid'][local]
                                        and not any(row['front_flight_air'][local]))
+                if origin['training'].get('full_objective') == 'qualified_baseline':
+                    scalar_success &= (all(row['front_flight_landed_top'][local])
+                                       and not any(row['front_flight_returned_floor'][local]))
                 if bool(completed)!=scalar_success: raise ValueError(f'Completion disagreement for env {i}')
                 if bool(completed)!=terminals[i]['success']: raise ValueError(f'Terminal artifact disagrees for env {i}')
                 category='success' if completed else ('timeout' if timed_out and not failure else f'failure_{failure}')

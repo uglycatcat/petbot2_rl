@@ -113,3 +113,63 @@ class ActionwiseCeilingBetaDistribution(CeilingBetaDistribution):
                 or (value < .005).any() or (value > 1.).any()):
             raise ValueError('Invalid per-action normalized std ceilings')
         self.std_ceiling.copy_(value)
+
+
+class StopReachableBetaDistribution(ActionwiseCeilingBetaDistribution):
+    """Round14 Beta with wheel latent support [-1.1,1], hip unchanged.
+
+    Existing environment clipping maps the short extra interval to zero speed.
+    Raw samples, densities, entropy, KL, and PPO storage use this SAME affine
+    distribution. Physical limits, slew, and observation mapping are unchanged.
+    """
+    def __init__(self, output_dim, action_range=(-1., 1.)):
+        super().__init__(output_dim, action_range)
+        self.register_buffer('_range_scale_tensor', torch.tensor([2., 2.1]))
+        self.register_buffer('_range_offset_tensor', torch.tensor([-1., -1.1]))
+
+    def update(self, mlp_output):
+        BetaDistribution.update(self, mlp_output)
+        total = self._alpha+self._beta
+        mean = self._alpha/total
+        required = self._range_scale_tensor.square()*mean*(1.-mean)/self.std_ceiling.square()-1.
+        scale = torch.maximum(total, required)/total
+        self._alpha = self._alpha*scale
+        self._beta = self._beta*scale
+        self._distribution = torch.distributions.Beta(self._alpha, self._beta)
+
+    def sample(self):
+        return self._distribution.sample()*self._range_scale_tensor+self._range_offset_tensor
+
+    def deterministic_output(self, mlp_output):
+        alpha, beta = torch.nn.functional.softplus(mlp_output).unbind(-2)
+        return (alpha+1.)/(alpha+beta+2.)*self._range_scale_tensor+self._range_offset_tensor
+
+    @property
+    def mean(self):
+        return self._alpha/(self._alpha+self._beta)*self._range_scale_tensor+self._range_offset_tensor
+
+    @property
+    def std(self):
+        return self._distribution.stddev*self._range_scale_tensor
+
+    @property
+    def entropy(self):
+        return (self._distribution.entropy()+self._range_scale_tensor.log()).sum(-1)
+
+    def log_prob(self, outputs):
+        raw = ((outputs-self._range_offset_tensor)/self._range_scale_tensor).clamp(1e-6, 1.-1e-6)
+        return (self._distribution.log_prob(raw)-self._range_scale_tensor.log()).sum(-1)
+
+    def as_deterministic_output_module(self):
+        return _StopReachableBetaMean().to(self._range_scale_tensor.device)
+
+
+class _StopReachableBetaMean(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.register_buffer('scale', torch.tensor([2., 2.1]))
+        self.register_buffer('offset', torch.tensor([-1., -1.1]))
+
+    def forward(self, x):
+        alpha, beta = torch.nn.functional.softplus(x).unbind(-2)
+        return (alpha+1.)/(alpha+beta+2.)*self.scale+self.offset

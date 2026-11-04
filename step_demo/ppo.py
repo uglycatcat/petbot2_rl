@@ -9,7 +9,7 @@ import numpy as np
 import torch
 from rsl_rl.runners import OnPolicyRunner
 from rsl_rl.modules import BetaDistribution
-from .distributions import CeilingBetaDistribution, StopCenteredGaussianDistribution, std_ceiling_at
+from .distributions import CeilingBetaDistribution, StopCenteredGaussianDistribution, StopReachableBetaDistribution, std_ceiling_at
 
 
 def runner_config(t):
@@ -30,6 +30,8 @@ def runner_config(t):
         name = ('ActionwiseCeilingBetaDistribution' if 'wheel_final_std' in t['beta_std_ceiling']
                 else 'CeilingBetaDistribution')
         distribution['class_name']='step_demo.distributions:'+name
+    if t.get('policy_distribution') == 'stop_reachable_beta':
+        distribution = dict(class_name='step_demo.distributions:StopReachableBetaDistribution')
     return dict(num_steps_per_env=t['num_steps_per_env'], save_interval=t['save_interval'],
         logger='tensorboard', check_for_nan=True,
         obs_groups={'actor':['policy'], 'critic':(['policy','critic']
@@ -46,7 +48,8 @@ def distribution_metrics(distribution):
     if not torch.isfinite(mean).all() or not torch.isfinite(std).all():
         raise RuntimeError('Nonfinite action distribution')
     kind=type(distribution).__name__
-    if isinstance(distribution,BetaDistribution) and (mean.abs().max()>1.+1e-6 or std.max()>1.):
+    limit = 1.1 if isinstance(distribution, StopReachableBetaDistribution) else 1.
+    if isinstance(distribution,BetaDistribution) and (mean.abs().max()>limit+1e-6 or std.max()>1.):
         raise RuntimeError('Bounded policy distribution violated its action range')
     result=dict(kind=kind,mean_abs_max=float(mean.abs().max()),std_min=float(std.min()),std_max=float(std.max()))
     if isinstance(distribution, StopCenteredGaussianDistribution):

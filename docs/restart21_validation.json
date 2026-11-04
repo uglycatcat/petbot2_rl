@@ -1,0 +1,288 @@
+{
+  "handled": true,
+  "status": "reviewed_engineering_passed_ready",
+  "reviewed_at": "2026-11-04T02:26:45.221885+00:00",
+  "engineering_gate_passed": true,
+  "ready_for_fresh_full_training": true,
+  "cpu_tests": 141,
+  "guards": {
+    "physics": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "passed",
+      "gpu_peak_mib": 10918.0,
+      "elapsed_s": 70.39395994506776
+    },
+    "reachability": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "passed",
+      "gpu_peak_mib": 10908.0,
+      "elapsed_s": 306.37330273818225
+    },
+    "short512": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "interrupted",
+      "gpu_peak_mib": 17728.0,
+      "elapsed_s": 140.21621819213033
+    },
+    "resume512": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "complete",
+      "gpu_peak_mib": 17728.0,
+      "elapsed_s": 138.05116756726056
+    },
+    "eval512": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "complete",
+      "gpu_peak_mib": 17506.0,
+      "elapsed_s": 41.55142012797296
+    }
+  },
+  "checkpoint": {
+    "evaluation_actor_critic_match": true,
+    "initial_optimizer_empty": true,
+    "unique_run_id": "79acf11c-01d2-4b2d-93f0-28f4ccc8cead",
+    "random_origin": true,
+    "discount_gamma": 1.0,
+    "completed_updates": 8,
+    "resumed_from": 4,
+    "actor_critic_restore_match": true,
+    "optimizer_states": 12,
+    "coverage_preserved": true,
+    "final_coverage": {
+      "stop_entries": 0,
+      "stop_seconds": 0.0,
+      "low_request_stop_frames": 0,
+      "eligible_stop_seconds": 0.0,
+      "disqualified_stop_seconds": 0.0,
+      "physical_hold_0_5_seconds": 0.0,
+      "physical_hold_2_5_seconds": 0.0
+    },
+    "actor_changed": true
+  },
+  "short_reload_successes": 0,
+  "short_reload_episodes": 16,
+  "short_reload_outcomes": {
+    "failure_1": 16
+  },
+  "short_reload_forward_range": [
+    0.1628398895263672,
+    0.16693949699401855
+  ],
+  "ppo_raw_density_error": 0.0,
+  "reward_recompute_error": 5.369032791691097e-07,
+  "physical_full_route_positive_count": 3,
+  "physical_route_cases": 54,
+  "physical_route_hold_min": 2.51999831199646,
+  "physical_route_is_scripted_not_policy": true,
+  "physical_route_scalar_agreement": true,
+  "landing_certificate": "Actual debounced takeoff before first top touch; exactly one flight, no floor return or forbidden edge contact, debounced true top contact; then unchanged support/hip/line/drive/stop requirements.",
+  "legacy_landing_counter_comparison_caveat": true,
+  "source_robot_unchanged": true,
+  "read_only_source_sha256": "de1862d58f9989ae7eb0de5b20188e2ffc7052d2b9d5588446eef4b166b5f53f",
+  "new_batch_started": false,
+  "full_task_capability_passed": false,
+  "no_weights_or_trajectories_transfer": true,
+  "evidence": [
+    "landing_semantics_audit.json",
+    "route_audit.json",
+    "behavior_audit.json",
+    "checkpoint_audit.json",
+    "evaluation_audit.json"
+  ],
+  "representative_script_motion": {
+    "slew_excess": 8.52346420288086e-06,
+    "max_world_pitch": 0.7236572504043579,
+    "max_world_pitch_rate": 13.867356300354004,
+    "max_requested_wheel": 25.0,
+    "max_executed_wheel": 25.0,
+    "max_sampled_actual_wheel": 33.103206634521484,
+    "terminal_speed": 0.0003452496528441232,
+    "terminal_hip": [
+      -0.011741983704268932,
+      -0.014039820060133934
+    ],
+    "terminal_wheel": [
+      0.10108612477779388,
+      0.07314126193523407
+    ],
+    "terminal_targets": [
+      0.0,
+      -1.0
+    ]
+  },
+  "route_milestones": {
+    "22": {
+      "takeoff": 0.41999998688697815,
+      "landing": 0.699999988079071,
+      "four_top": 0.85999995470047,
+      "drive": 1.1399999856948853,
+      "base_stop": 1.8799999952316284,
+      "complete": 3.8999998569488525
+    },
+    "28": {
+      "takeoff": 0.41999998688697815,
+      "landing": 0.699999988079071,
+      "four_top": 0.8399999737739563,
+      "drive": 1.0799999237060547,
+      "base_stop": 1.899999976158142,
+      "complete": 3.919999837875366
+    },
+    "42": {
+      "takeoff": 0.4399999976158142,
+      "landing": 0.5600000023841858,
+      "four_top": 0.8999999761581421,
+      "drive": 1.1399999856948853,
+      "base_stop": 1.8799999952316284,
+      "complete": 3.8999998569488525
+    }
+  },
+  "real_quality_rejections": {
+    "quality_train": [
+      {
+        "env": 1,
+        "elapsed": 0.11999999731779099,
+        "count": [
+          1,
+          1
+        ]
+      },
+      {
+        "env": 3,
+        "elapsed": 0.11999999731779099,
+        "count": [
+          1,
+          1
+        ]
+      },
+      {
+        "env": 5,
+        "elapsed": 0.11999999731779099,
+        "count": [
+          1,
+          1
+        ]
+      },
+      {
+        "env": 7,
+        "elapsed": 0.11999999731779099,
+        "count": [
+          1,
+          1
+        ]
+      },
+      {
+        "env": 9,
+        "elapsed": 0.11999999731779099,
+        "count": [
+          1,
+          1
+        ]
+      },
+      {
+        "env": 11,
+        "elapsed": 0.11999999731779099,
+        "count": [
+          1,
+          1
+        ]
+      },
+      {
+        "env": 13,
+        "elapsed": 0.11999999731779099,
+        "count": [
+          1,
+          1
+        ]
+      },
+      {
+        "env": 15,
+        "elapsed": 0.11999999731779099,
+        "count": [
+          1,
+          1
+        ]
+      }
+    ],
+    "quality_eval": [
+      {
+        "env": 1,
+        "elapsed": 0.11999999731779099,
+        "count": [
+          1,
+          1
+        ]
+      },
+      {
+        "env": 3,
+        "elapsed": 0.11999999731779099,
+        "count": [
+          1,
+          1
+        ]
+      },
+      {
+        "env": 5,
+        "elapsed": 0.11999999731779099,
+        "count": [
+          1,
+          1
+        ]
+      },
+      {
+        "env": 7,
+        "elapsed": 0.11999999731779099,
+        "count": [
+          1,
+          1
+        ]
+      },
+      {
+        "env": 9,
+        "elapsed": 0.11999999731779099,
+        "count": [
+          1,
+          1
+        ]
+      },
+      {
+        "env": 11,
+        "elapsed": 0.11999999731779099,
+        "count": [
+          1,
+          1
+        ]
+      },
+      {
+        "env": 13,
+        "elapsed": 0.11999999731779099,
+        "count": [
+          1,
+          1
+        ]
+      },
+      {
+        "env": 15,
+        "elapsed": 0.11999999731779099,
+        "count": [
+          1,
+          1
+        ]
+      }
+    ]
+  }
+}
