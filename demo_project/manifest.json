@@ -44,22 +44,22 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/upright_rl_demo",
-      "verified_commit": "8cac727a270fa670b182bc385b0066330b13ad42",
+      "verified_commit": "44a6fb9dfba7f81dc4adbc66dd79964e3d27d6f8",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "round21r4_reviewed_not_passed;round21r5_scratch_training;desktop20_retained",
-      "local_validation": "21r4 two1000/8eval valid,no OOM/resume;102 low32/basic29,high29;103 low32/basic20,high30/basic18. Landing reverse0.108/0.071cm, full speed/zero-input goals unmet.21r5 anchored replay only,137 container checks and7 engineering jobs accepted; fixed2106frames exact; fresh2048x1000 seeds102/103 on GPU2/3.",
+      "status": "round21r5_reviewed_not_passed;round21r6_scratch_training;desktop20_retained",
+      "local_validation": "21r5 two1000/8eval valid,no OOM/resume;low32/basic31 and26,high30/basic30 and29/basic16.21r6 LAND hip default projection only;141 checks and8 engineering jobs accepted;fixed low32/basic31,high30/basic30 and failure traces retained;static total1.116to0.556cm. Fresh2048x1000 seeds102/103 GPU2/3.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "upright_restart_round21r5_s102",
-        "upright_restart_round21r5_s103"
+        "upright_restart_round21r6_s102",
+        "upright_restart_round21r6_s103"
       ],
-      "active_training_commit": "8cac727a270fa670b182bc385b0066330b13ad42",
-      "latest_result_document": "docs/upright_restart_round21r4_results.md",
-      "active_execution_document": "docs/upright_restart_round21r5_execution.md",
+      "active_training_commit": "44a6fb9dfba7f81dc4adbc66dd79964e3d27d6f8",
+      "latest_result_document": "docs/upright_restart_round21r5_results.md",
+      "active_execution_document": "docs/upright_restart_round21r6_execution.md",
       "invalidated_rounds": [
         21,
         22,

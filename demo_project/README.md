@@ -4,7 +4,7 @@
 
 | 项目 | 职责 | 当前开发状态 |
 |---|---|---|
-| [upright_rl_demo](upright_rl_demo/README.md) | 从随机初始化完成起落与两轮遥控；不依赖历史权重。 | 21r4落地改善但基本响应未保住；21r5加强静止/低速回归，工程通过，种子102/103各2048×1000从零训练，仅GPU2/3。见[当前执行](../docs/upright_restart_round21r5_execution.md)。 |
+| [upright_rl_demo](upright_rl_demo/README.md) | 从随机初始化完成起落与两轮遥控；不依赖历史权重。 | 21r5低速部分恢复；21r6处理LAND近地髋运动，工程通过，两份2048×1000从零训练，仅GPU2/3。见[当前执行](../docs/upright_restart_round21r6_execution.md)。 |
 | [step_rl_demo](step_rl_demo/README.md) | 固定2cm/30cm、同步髋轮；单次抬轮、归髋短行后停稳。 | Restart20完整0/64，Restart21有界进度与严格资格工程通过；GPU0/1两种子各512×500已从零启动。见[当前迭代](../docs/step_restart21_20261104.md)。 |
 | [recovery_rl_demo](recovery_rl_demo/README.md) | 重新设计分阶段跌倒恢复。 | 仅登记与需求说明，尚无训练代码。 |
 | [recovery_agile_01](recovery_agile_01/PETBOT.md) | 基于AGILE的早期恢复原型。 | 历史实验，不能直接作为新恢复任务的设计或成功基线。 |
