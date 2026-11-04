@@ -22,7 +22,8 @@ def run(source, output, policy):
             'controller_source_commit':manifest.get('runtime_controller_source_commit',manifest['source_commit']),
             'policy':policy.name,'cases':{}}
     for name in ('controller.py','geometry.py'):
-        controllers={'restart_v26':'controller_v26.py','restart_v20_handoff':'controller_handoff.py'}
+        controllers={'restart_v26':'controller_v26.py','restart_v20_handoff':'controller_handoff.py',
+                     'restart_v21r5':'controller_21r5.py'}
         local=controllers.get(manifest.get('controller_contract'),name) if name=='controller.py' else name
         assert (source/'upright'/name).read_bytes()==(ROOT/'petbot_s2s/restart_core'/local).read_bytes()
     with patch('torch.load',side_effect=AssertionError('PT runtime forbidden')),patch('torch.jit.load',side_effect=AssertionError('PT runtime forbidden')):

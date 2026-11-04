@@ -1,0 +1,362 @@
+[
+  {
+    "policy": "restart21r5_s102",
+    "case": "static",
+    "initial_hip": 0.0,
+    "cycles": 1,
+    "interruptions": 0,
+    "events": [
+      {
+        "time": 3.029999999999888,
+        "event": "rise_requested"
+      },
+      {
+        "time": 3.5399999999998317,
+        "event": "balance_entered"
+      },
+      {
+        "time": 12.540000000000857,
+        "event": "land_requested"
+      },
+      {
+        "time": 13.590000000001208,
+        "event": "ordinary_handoff_complete"
+      }
+    ],
+    "contact": 12.782000000000938,
+    "handoff": 12.960000000000997,
+    "complete": 13.590000000001208,
+    "reverse_m": 0.002417625120155665,
+    "rear_backward_m": 0.002429188248089684,
+    "rear_forward_m": 0.00823864019782728,
+    "forward_m": 0.005471132895759511,
+    "final_speed": -1.8931206795969047e-05,
+    "peak_actual_wheel": 36.636242720419645,
+    "peak_target": 24.597789764404297,
+    "actuator_peak": [
+      0.14290017760717083,
+      0.02745591517456567,
+      0.035402868783307034,
+      1.2,
+      1.2,
+      0.38,
+      0.38
+    ],
+    "settled_actual_mean": null
+  },
+  {
+    "policy": "restart21r5_s102",
+    "case": "forward_stop",
+    "initial_hip": 0.0,
+    "cycles": 1,
+    "interruptions": 0,
+    "events": [
+      {
+        "time": 3.029999999999888,
+        "event": "rise_requested"
+      },
+      {
+        "time": 3.5399999999998317,
+        "event": "balance_entered"
+      },
+      {
+        "time": 12.540000000000857,
+        "event": "land_requested"
+      },
+      {
+        "time": 13.590000000001208,
+        "event": "ordinary_handoff_complete"
+      }
+    ],
+    "contact": 12.782000000000938,
+    "handoff": 12.960000000000997,
+    "complete": 13.590000000001208,
+    "reverse_m": 0.003157068673127702,
+    "rear_backward_m": 0.003463892331907901,
+    "rear_forward_m": 0.009089461508811056,
+    "forward_m": 0.007322812076561176,
+    "final_speed": 2.522383738323697e-06,
+    "peak_actual_wheel": 36.636242720419645,
+    "peak_target": 24.597789764404297,
+    "actuator_peak": [
+      0.041174967861472,
+      0.02745591517456567,
+      0.032380362876472286,
+      1.2,
+      1.2,
+      0.38,
+      0.38
+    ],
+    "settled_actual_mean": null
+  },
+  {
+    "policy": "restart21r5_s102",
+    "case": "reverse_stop",
+    "initial_hip": 0.0,
+    "cycles": 1,
+    "interruptions": 0,
+    "events": [
+      {
+        "time": 3.029999999999888,
+        "event": "rise_requested"
+      },
+      {
+        "time": 3.5399999999998317,
+        "event": "balance_entered"
+      },
+      {
+        "time": 12.540000000000857,
+        "event": "land_requested"
+      },
+      {
+        "time": 13.590000000001208,
+        "event": "ordinary_handoff_complete"
+      }
+    ],
+    "contact": 12.778000000000937,
+    "handoff": 12.960000000000997,
+    "complete": 13.590000000001208,
+    "reverse_m": 0.003090321212665519,
+    "rear_backward_m": 0.0027365026357704736,
+    "rear_forward_m": 0.010391380802599524,
+    "forward_m": 0.008944826600981469,
+    "final_speed": 1.7107258827309124e-05,
+    "peak_actual_wheel": 36.636242720419645,
+    "peak_target": 24.597789764404297,
+    "actuator_peak": [
+      0.0888514263034168,
+      0.0343510489687687,
+      0.028815132063929615,
+      1.2,
+      1.2,
+      0.38,
+      0.38
+    ],
+    "settled_actual_mean": null
+  },
+  {
+    "policy": "restart21r5_s102",
+    "case": "held_forward",
+    "initial_hip": 0.0,
+    "cycles": 1,
+    "interruptions": 0,
+    "events": [
+      {
+        "time": 3.029999999999888,
+        "event": "rise_requested"
+      },
+      {
+        "time": 3.5399999999998317,
+        "event": "balance_entered"
+      },
+      {
+        "time": 12.540000000000857,
+        "event": "land_requested"
+      },
+      {
+        "time": 13.560000000001198,
+        "event": "ordinary_handoff_complete"
+      }
+    ],
+    "contact": 12.75800000000093,
+    "handoff": 12.930000000000987,
+    "complete": 13.560000000001198,
+    "reverse_m": 0.004445921036181971,
+    "rear_backward_m": 0.0024322196571899637,
+    "rear_forward_m": 0.5339570738645182,
+    "forward_m": 0.5333019978110672,
+    "final_speed": 0.14222218096256256,
+    "peak_actual_wheel": 36.30008506327161,
+    "peak_target": 24.61812400817871,
+    "actuator_peak": [
+      0.05389444030113923,
+      0.032442873130352094,
+      0.032974458699831156,
+      1.2,
+      1.2,
+      0.38,
+      0.38
+    ],
+    "settled_actual_mean": null
+  },
+  {
+    "policy": "restart21r5_s102",
+    "case": "held_reverse",
+    "initial_hip": 0.0,
+    "cycles": 1,
+    "interruptions": 0,
+    "events": [
+      {
+        "time": 3.029999999999888,
+        "event": "rise_requested"
+      },
+      {
+        "time": 3.5399999999998317,
+        "event": "balance_entered"
+      },
+      {
+        "time": 12.540000000000857,
+        "event": "land_requested"
+      },
+      {
+        "time": 13.590000000001208,
+        "event": "ordinary_handoff_complete"
+      }
+    ],
+    "contact": 12.784000000000939,
+    "handoff": 12.960000000000997,
+    "complete": 13.590000000001208,
+    "reverse_m": 0.5413134021963935,
+    "rear_backward_m": 0.540668275059753,
+    "rear_forward_m": 0.003108889735071113,
+    "forward_m": 0.0019703459888696672,
+    "final_speed": -0.14573785662651062,
+    "peak_actual_wheel": 35.94934737997668,
+    "peak_target": 24.576557159423828,
+    "actuator_peak": [
+      0.05589970453764297,
+      0.026850543339540685,
+      0.03923501770758278,
+      1.2,
+      1.2,
+      0.38,
+      0.38
+    ],
+    "settled_actual_mean": null
+  },
+  {
+    "policy": "restart21r5_s102",
+    "case": "mixed",
+    "initial_hip": 0.0,
+    "cycles": 1,
+    "interruptions": 0,
+    "events": [
+      {
+        "time": 3.029999999999888,
+        "event": "rise_requested"
+      },
+      {
+        "time": 3.5399999999998317,
+        "event": "balance_entered"
+      },
+      {
+        "time": 21.569999999998924,
+        "event": "land_requested"
+      },
+      {
+        "time": 22.67999999999831,
+        "event": "ordinary_handoff_complete"
+      }
+    ],
+    "contact": 21.803999999998794,
+    "handoff": 21.98999999999869,
+    "complete": 22.67999999999831,
+    "reverse_m": 0.0008076337598297703,
+    "rear_backward_m": 0.0009086934449554632,
+    "rear_forward_m": 0.029876530259462658,
+    "forward_m": 0.027991163334857176,
+    "final_speed": -7.241601269925013e-05,
+    "peak_actual_wheel": 36.636242720419645,
+    "peak_target": 24.597789764404297,
+    "actuator_peak": [
+      0.017811914254310324,
+      0.03133862296462692,
+      0.03083626876904918,
+      1.2,
+      1.2,
+      0.38,
+      0.38
+    ],
+    "settled_actual_mean": null
+  },
+  {
+    "policy": "restart21r5_s102",
+    "case": "endpoint_forward",
+    "initial_hip": 0.0,
+    "cycles": 1,
+    "interruptions": 0,
+    "events": [
+      {
+        "time": 3.029999999999888,
+        "event": "rise_requested"
+      },
+      {
+        "time": 3.5399999999998317,
+        "event": "balance_entered"
+      },
+      {
+        "time": 17.550000000001152,
+        "event": "land_requested"
+      },
+      {
+        "time": 18.60000000000057,
+        "event": "ordinary_handoff_complete"
+      }
+    ],
+    "contact": 17.792000000001018,
+    "handoff": 17.97000000000092,
+    "complete": 18.60000000000057,
+    "reverse_m": 0.004480665373889918,
+    "rear_backward_m": 0.004653629574078867,
+    "rear_forward_m": 0.0081194419758822,
+    "forward_m": 0.005791342620524121,
+    "final_speed": -3.022875898750499e-05,
+    "peak_actual_wheel": 36.636242720419645,
+    "peak_target": 24.597789764404297,
+    "actuator_peak": [
+      0.0570407068409891,
+      0.02745591517456567,
+      0.03419515939485132,
+      1.2,
+      1.2,
+      0.38,
+      0.38
+    ],
+    "settled_actual_mean": 0.467831447571516
+  },
+  {
+    "policy": "restart21r5_s102",
+    "case": "endpoint_reverse",
+    "initial_hip": 0.0,
+    "cycles": 1,
+    "interruptions": 0,
+    "events": [
+      {
+        "time": 3.029999999999888,
+        "event": "rise_requested"
+      },
+      {
+        "time": 3.5399999999998317,
+        "event": "balance_entered"
+      },
+      {
+        "time": 17.550000000001152,
+        "event": "land_requested"
+      },
+      {
+        "time": 18.630000000000553,
+        "event": "ordinary_handoff_complete"
+      }
+    ],
+    "contact": 17.812000000001007,
+    "handoff": 18.000000000000902,
+    "complete": 18.630000000000553,
+    "reverse_m": 0.0006686373397581044,
+    "rear_backward_m": 0.0010660344043273771,
+    "rear_forward_m": 0.01668444841936078,
+    "forward_m": 0.01725568213760424,
+    "final_speed": -0.00012768393207807094,
+    "peak_actual_wheel": 36.636242720419645,
+    "peak_target": 24.597789764404297,
+    "actuator_peak": [
+      0.018458444482969023,
+      0.034713119613963894,
+      0.034886015678377055,
+      1.2,
+      1.2,
+      0.38,
+      0.38
+    ],
+    "settled_actual_mean": -0.5198628677427769
+  }
+]

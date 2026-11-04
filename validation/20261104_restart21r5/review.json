@@ -1,0 +1,35 @@
+{
+  "kind": "user_requested_preview_release",
+  "policy": "restart21r5_s102",
+  "training_commit": "8cac727a270fa670b182bc385b0066330b13ad42",
+  "checkpoint": "update_001000.pt",
+  "checkpoint_sha256": "5300e3ce8a4661c95394cc9ecc242e163706917f16cd0d610f6c61e04b51c62b",
+  "onnx_sha256": "a64cba43e9c5d887728c4a8d16068728f530b044ff050a31eb17eb6b7837cf7d",
+  "onnx_numeric_max_error": 9.5367431640625e-07,
+  "runtime_controller_contract": "restart_v21r5",
+  "runtime_controller_source_exact": true,
+  "control_config_exact_to_training": true,
+  "no_round21r6_hip_projection": true,
+  "source_parity": "source_port.json",
+  "default_cli_mixed": "default_mixed.json",
+  "default_cli_trace_frames": 755,
+  "default_cli_all_finite": true,
+  "default_cli_target_effort_pass": true,
+  "gui_default_smoke": {
+    "seconds": 4,
+    "exit_code": 0,
+    "display": "Xvfb software OpenGL",
+    "headless_flag": false
+  },
+  "isolated_closed_loop": {
+    "scenarios": 8,
+    "all_complete": true,
+    "evidence": "isolated_closed_loop.json",
+    "raw_evidence_server": "demo_project/runs/round21r5_mujoco",
+    "preparation_failures_preserved_in_source_acceptance": 2
+  },
+  "full_policy_acceptance": false,
+  "desktop_acceptance": false,
+  "previous_default": "restart20_s102",
+  "training21r6_unchanged": true
+}

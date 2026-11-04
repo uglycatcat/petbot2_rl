@@ -15,6 +15,7 @@ from .simulation import Simulation as LegacySimulation, batch, find_model, finge
 from .restart_core.controller import Controller as SourceController, Phase, Reason
 from .restart_core.controller_v26 import Controller as Round26Controller
 from .restart_core.controller_handoff import Controller as HandoffController
+from .restart_core.controller_21r5 import Controller as Round21r5Controller
 from .restart_core.geometry import WheelGeometry, orientation
 from .restart_core.observation import Observation
 
@@ -35,7 +36,7 @@ class RestartController:
         self.geometry = WheelGeometry(m['wheel_geometry'], 'cpu')
         self.controller_contract = m.get('controller_contract', 'restart_v20')
         controllers = {'restart_v20': SourceController, 'restart_v26': Round26Controller,
-                       'restart_v20_handoff': HandoffController}
+                       'restart_v20_handoff': HandoffController, 'restart_v21r5': Round21r5Controller}
         if self.controller_contract not in controllers:
             raise ValueError(f'Unknown restart controller contract: {self.controller_contract}')
         self.control = controllers[self.controller_contract](

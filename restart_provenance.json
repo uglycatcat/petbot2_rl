@@ -58,6 +58,24 @@
       "normal_handoff_live_drive": true,
       "timing": "2ms physics,15substeps per30ms policy sample",
       "training_rewards_included": false
+    },
+    "restart_v21r5": {
+      "source_commit": "8cac727a270fa670b182bc385b0066330b13ad42",
+      "source_run": "upright_restart_round21r5_s102",
+      "controller": "controller_21r5.py",
+      "files": {
+        "controller.py": "4ba6ca764c366dfce4d6a54b326a84b333aaa1d0322d35f89ce4ecb69218c2e4",
+        "geometry.py": "aee4929f871833fccdf082638a0dddc989453283f0cad564bf7b00aa7b4855f6",
+        "runtime.py": "e8a671041fd63477f556411adc521d0bf2aac9486066486538293900599b52dc"
+      },
+      "shared_observation_methods_ast_identical": true,
+      "shared_geometry_byte_identical": true,
+      "timing": "2ms physics,15 substeps per30ms policy sample",
+      "normal_handoff_live_drive": true,
+      "landing_projection_start_gap_m": 0.04,
+      "landing_ground_brake_slew_rad_s2": 450.0,
+      "training_rewards_included": false
     }
-  }
+  },
+  "active_contract": "restart_v21r5"
 }
