@@ -1,0 +1,21 @@
+{
+  "schema": "petbot_upright_1104_frozen_v1",
+  "release": "1104",
+  "phase": "frozen_by_user",
+  "training_enabled": false,
+  "automatic_iteration_enabled": false,
+  "engineering_execution_enabled": false,
+  "evaluation_enabled": false,
+  "training_implemented": true,
+  "policy_validated": false,
+  "engineering_validated": true,
+  "paused_by_user": true,
+  "historical_weights_allowed": false,
+  "allowed_host_gpus": [
+    2,
+    3
+  ],
+  "specification": "spec/task.json",
+  "planned_training_entrypoint": "train.py",
+  "reason": "Frozen user-selected21r5 seed102; packaging only. No training or automatic continuation authorized."
+}

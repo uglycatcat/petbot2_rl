@@ -1,0 +1,50 @@
+{
+  "release": {
+    "release": "1104",
+    "source_files_checked": 26,
+    "effective_config_exact": true,
+    "seed": 102,
+    "iterations": 1000,
+    "num_envs": 2048,
+    "source_model_exact": true,
+    "training_enabled": false,
+    "automatic_iteration_enabled": false,
+    "simulation_or_training_started": false
+  },
+  "source": {
+    "requirements_consistent_with_source": true,
+    "user_speed_derived_wheel_limit_rad_s": 50.0,
+    "rear_wheels": {
+      "left_rear_wheel": {
+        "target_limit_rad_s": 25.0,
+        "source_effort_range_nm": [
+          -0.38,
+          0.38
+        ]
+      },
+      "right_rear_wheel": {
+        "target_limit_rad_s": 25.0,
+        "source_effort_range_nm": [
+          -0.38,
+          0.38
+        ]
+      }
+    },
+    "hip_source_limits_rad": {
+      "left_frame": [
+        -1.0,
+        1.2
+      ],
+      "right_frame": [
+        -1.0,
+        1.2
+      ]
+    },
+    "training_implemented": true,
+    "policy_validated": false,
+    "scope": "Specification and XML inspection only; no simulation or training performed"
+  },
+  "frozen_entry_refuses_training": true,
+  "python_compilation": true,
+  "new_training_or_simulation_started": false
+}

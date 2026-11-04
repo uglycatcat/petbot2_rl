@@ -1,0 +1,350 @@
+{
+  "release": "1104",
+  "selected_training_commit": "8cac727a270fa670b182bc385b0066330b13ad42",
+  "selected_training_config": "configs/round21r5.json",
+  "configuration": "configs/train_1104.json",
+  "seed": 102,
+  "iterations": 1000,
+  "num_envs": 2048,
+  "initialization": "random",
+  "historical_models": [],
+  "source_behavior_sha256": "8a36b0153f518e61c2cd590d775155065470e6f8e3f89498a4326ceecfde6d0f",
+  "source_config_sha256": "8d2024d197d662a21302b794287341ad5d07799a6507b94d22fa5179b2b740d4",
+  "source_model_sha256": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+  "source_software_versions": {
+    "python": "3.12.13",
+    "torch": "2.10.0+cu128",
+    "rsl-rl-lib": "5.4.1",
+    "tensordict": "0.13.0",
+    "numpy": "2.4.6",
+    "isaaclab": "6.1.11",
+    "onnx": "1.21.0",
+    "onnxruntime": "1.31.1",
+    "isaaclab_source_version": "3.0.0"
+  },
+  "resolved_training_configuration": {
+    "schema": "upright_restart_round01_v1",
+    "series": "upright_restart_20261030",
+    "round": 21,
+    "seed": 102,
+    "iterations": 1000,
+    "num_envs": 2048,
+    "decimation": 15,
+    "history": 5,
+    "rollout_steps": 64,
+    "learning_rate": 0.0003,
+    "gae_lambda": 0.9746794344808963,
+    "beta_shape_cap": 512.0,
+    "critic_task_state": true,
+    "checkpoint_interval": 100,
+    "probe_interval": 25,
+    "bootstrap_probe_interval": 25,
+    "capability_stages": [
+      [
+        0.1,
+        0.3,
+        0.1,
+        0.1
+      ],
+      [
+        0.2,
+        0.5,
+        0.1,
+        0.1
+      ],
+      [
+        0.2,
+        0.5,
+        0.1,
+        0.2
+      ],
+      [
+        0.35,
+        0.5,
+        0.2,
+        0.2
+      ],
+      [
+        0.5,
+        0.5,
+        0.3,
+        0.2
+      ],
+      [
+        0.6,
+        0.5,
+        0.3,
+        0.2
+      ],
+      [
+        0.75,
+        0.5,
+        0.3,
+        0.2
+      ]
+    ],
+    "probe_count": 32,
+    "curriculum_pass_rate": 0.8,
+    "curriculum_consecutive": 2,
+    "low_speed": 0.1,
+    "low_yaw": 0.3,
+    "initial_hip": 0.1,
+    "baseline_fraction": 0.2,
+    "baseline_anchor_fraction": 0.75,
+    "boundary_command_fraction": 0.25,
+    "reversal_episode_fraction": 0.5,
+    "warmup_s": 1.5,
+    "warmup_timeout_s": 4.0,
+    "rise_timeout_s": 12.0,
+    "support_enter_s": 0.3,
+    "lifted_confirm_s": 0.06,
+    "return_confirm_s": 0.12,
+    "ground_confirm_s": 0.18,
+    "hold_s": 2.0,
+    "balance_train_s": 30.0,
+    "short_cycle_fraction": 0.5,
+    "short_balance_min_s": 4.0,
+    "short_balance_max_s": 8.0,
+    "balance_eval_s": 60.0,
+    "balance_observation_age_cap_s": 2.0,
+    "landing_timeout_s": 4.0,
+    "handoff_hold_s": 0.6,
+    "handoff_timeout_s": 3.0,
+    "handoff_blend_s": 0.3,
+    "normal_handoff_live_drive": true,
+    "lift_gap_m": 0.025,
+    "support_gap_m": 0.075,
+    "ground_gap_m": 0.012,
+    "hip_slew_rad_s": 6.0,
+    "wheel_slew_rad_s2": 150.0,
+    "rise_hip_slew_rad_s": 40.0,
+    "rise_wheel_slew_rad_s2": 1000.0,
+    "rise_prepare_weight": 0.2,
+    "rise_partial_lift_weight": 0.5,
+    "rise_support_weight": 2.0,
+    "rise_prepare_decay_s": 2.0,
+    "rise_front_return_penalty": 0.5,
+    "balance_velocity_cost": 2.0,
+    "balance_velocity_cost_cap": 1.5,
+    "balance_velocity_coarse_weight": 0.0,
+    "balance_velocity_coarse_scale_m_s": 0.3,
+    "balance_velocity_cost_tail": "rational",
+    "balance_velocity_tracking_scale_m_s": 0.1,
+    "balance_velocity_error_tau_s": 0.3,
+    "balance_velocity_error_scale_m_s": 0.05,
+    "landing_velocity_cost": 0.0,
+    "landing_velocity_error_scale_m_s": 0.2,
+    "landing_approach_motion_cost": 0.0,
+    "landing_motion_slack_m_s": 0.03,
+    "landing_motion_scale_m_s": 0.1,
+    "landing_quality_start_course": 0,
+    "landing_projection_start_gap_m": 0.04,
+    "landing_ground_brake_slew_rad_s2": 450.0,
+    "balance_linear_accel_m_s2": 0.5,
+    "balance_yaw_accel_rad_s2": 1.5,
+    "balance_yaw_feedforward": 1.0,
+    "balance_yaw_feedback": 8.0,
+    "balance_yaw_correction_limit_rad_s": 4.0,
+    "heading_kp": 1.0,
+    "heading_kd": 0.1,
+    "heading_wheel_correction_rad_s": 2.0,
+    "yaw_quality_rad": 0.35,
+    "imu_noise_std": 0.0,
+    "joint_noise_std": 0.0
+  },
+  "sim2sim": {
+    "project": "../std_s2s_upright_project",
+    "commit": "99201770b7aae28e58ed8b8eb66a56ca80230788",
+    "policy": "restart21r5_s102",
+    "onnx_sha256": "a64cba43e9c5d887728c4a8d16068728f530b044ff050a31eb17eb6b7837cf7d"
+  },
+  "packaging_changes": [
+    "Default config pathname points totrain_1104.json with identical effective config.",
+    "Host supervisor accepts this project directory name; guard semantics retained.",
+    "Execution disabled, old experiment docs/configs/queues omitted, instructions and source inventory added."
+  ],
+  "source_files": [
+    {
+      "path": ".gitignore",
+      "source_path": ".gitignore",
+      "source_sha256": "8b4f5f80f3a0c82448a20737136c90e4ce708dc428e7588a787dd4874e134d43",
+      "sha256": "8b4f5f80f3a0c82448a20737136c90e4ce708dc428e7588a787dd4874e134d43",
+      "packaging_only_change": false
+    },
+    {
+      "path": "environment/requirements.txt",
+      "source_path": "environment/requirements.txt",
+      "source_sha256": "60ce5b59683cc96c1bbb4d8885840a6d03606b94228960425c0cb3b9ed646258",
+      "sha256": "60ce5b59683cc96c1bbb4d8885840a6d03606b94228960425c0cb3b9ed646258",
+      "packaging_only_change": false
+    },
+    {
+      "path": "evaluate.py",
+      "source_path": "evaluate.py",
+      "source_sha256": "64eca690d570511f50ff62edbeb5c8dacb13e6b1bc9e51b7fd8c830d7ddd1cce",
+      "sha256": "64eca690d570511f50ff62edbeb5c8dacb13e6b1bc9e51b7fd8c830d7ddd1cce",
+      "packaging_only_change": false
+    },
+    {
+      "path": "export_policy.py",
+      "source_path": "export_policy.py",
+      "source_sha256": "10540583098898d7421fcd76c01284db38a47b6970dd71078a525b1a0c0c4449",
+      "sha256": "10540583098898d7421fcd76c01284db38a47b6970dd71078a525b1a0c0c4449",
+      "packaging_only_change": false
+    },
+    {
+      "path": "project.py",
+      "source_path": "project.py",
+      "source_sha256": "fd7f2a6a4bb77993405fecbde6eadcccbd89f8b4b7cbc458692bc0743ee82e49",
+      "sha256": "fd7f2a6a4bb77993405fecbde6eadcccbd89f8b4b7cbc458692bc0743ee82e49",
+      "packaging_only_change": false
+    },
+    {
+      "path": "tools/job_control.py",
+      "source_path": "tools/job_control.py",
+      "source_sha256": "4439a6f810ec8c77d4551cfdbb440f1f0def5ddfdc79b21a88679128445d6c90",
+      "sha256": "4439a6f810ec8c77d4551cfdbb440f1f0def5ddfdc79b21a88679128445d6c90",
+      "packaging_only_change": false
+    },
+    {
+      "path": "tools/physics_log.py",
+      "source_path": "tools/physics_log.py",
+      "source_sha256": "a2c383d5ed0ce876297bc8d8977a0b6bca6ac6c2be1eb783fde2e52021b1dd93",
+      "sha256": "a2c383d5ed0ce876297bc8d8977a0b6bca6ac6c2be1eb783fde2e52021b1dd93",
+      "packaging_only_change": false
+    },
+    {
+      "path": "tools/run_guarded.py",
+      "source_path": "tools/run_guarded.py",
+      "source_sha256": "a0ae09b198baa9c5837382cb8edc0c15f387cac116a528ab6bcc7717176c1132",
+      "sha256": "8e337210046ba68f9879eec4824153a57f0ce59543e6805a7951645cd06c6f49",
+      "packaging_only_change": true
+    },
+    {
+      "path": "train.py",
+      "source_path": "train.py",
+      "source_sha256": "cf1830e53fc3a18f39897424bfcb7f7b3d4d8a4abe6b5a3228a1d94c61d4d291",
+      "sha256": "cf1830e53fc3a18f39897424bfcb7f7b3d4d8a4abe6b5a3228a1d94c61d4d291",
+      "packaging_only_change": false
+    },
+    {
+      "path": "upright/__init__.py",
+      "source_path": "upright/__init__.py",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "packaging_only_change": false
+    },
+    {
+      "path": "upright/asset_cfg.py",
+      "source_path": "upright/asset_cfg.py",
+      "source_sha256": "91f0b19a199d718151ba3c36a85711fa4bcb39b237cbc1e6fe59606cdddcfdb3",
+      "sha256": "91f0b19a199d718151ba3c36a85711fa4bcb39b237cbc1e6fe59606cdddcfdb3",
+      "packaging_only_change": false
+    },
+    {
+      "path": "upright/config.py",
+      "source_path": "upright/config.py",
+      "source_sha256": "5ca4b234154865e831a4751503f9ada9bcca98f64cffcfc9a157ca7c6ce9f74b",
+      "sha256": "72d55c87d17c779c72d137b78272cbae193ad2e7aa22a4ea0252fa295ca7e8a7",
+      "packaging_only_change": true
+    },
+    {
+      "path": "upright/controller.py",
+      "source_path": "upright/controller.py",
+      "source_sha256": "4ba6ca764c366dfce4d6a54b326a84b333aaa1d0322d35f89ce4ecb69218c2e4",
+      "sha256": "4ba6ca764c366dfce4d6a54b326a84b333aaa1d0322d35f89ce4ecb69218c2e4",
+      "packaging_only_change": false
+    },
+    {
+      "path": "upright/curriculum.py",
+      "source_path": "upright/curriculum.py",
+      "source_sha256": "07fc6bb85c5e603914b9db01837071c6936715f2bfb5f96ec5db2e52ea1d73e4",
+      "sha256": "07fc6bb85c5e603914b9db01837071c6936715f2bfb5f96ec5db2e52ea1d73e4",
+      "packaging_only_change": false
+    },
+    {
+      "path": "upright/distribution.py",
+      "source_path": "upright/distribution.py",
+      "source_sha256": "2cc006c6ff68a54de6530f069165524b5afca29bc0403ca704e42234be547d87",
+      "sha256": "2cc006c6ff68a54de6530f069165524b5afca29bc0403ca704e42234be547d87",
+      "packaging_only_change": false
+    },
+    {
+      "path": "upright/evaluation.py",
+      "source_path": "upright/evaluation.py",
+      "source_sha256": "3081df5a9228faac156f8058367d9bc1761c445675c22e1153a1f59e879dbef4",
+      "sha256": "3081df5a9228faac156f8058367d9bc1761c445675c22e1153a1f59e879dbef4",
+      "packaging_only_change": false
+    },
+    {
+      "path": "upright/experiment.py",
+      "source_path": "upright/experiment.py",
+      "source_sha256": "a97715ec1dee7a260270cc3036f71427993dfd5352f97564220ab257a8769429",
+      "sha256": "a97715ec1dee7a260270cc3036f71427993dfd5352f97564220ab257a8769429",
+      "packaging_only_change": false
+    },
+    {
+      "path": "upright/export.py",
+      "source_path": "upright/export.py",
+      "source_sha256": "1623032e2517aaaad937545c3f6a45ef733f66a337ed0eb7983f0160964b0bc9",
+      "sha256": "1623032e2517aaaad937545c3f6a45ef733f66a337ed0eb7983f0160964b0bc9",
+      "packaging_only_change": false
+    },
+    {
+      "path": "upright/geometry.py",
+      "source_path": "upright/geometry.py",
+      "source_sha256": "aee4929f871833fccdf082638a0dddc989453283f0cad564bf7b00aa7b4855f6",
+      "sha256": "aee4929f871833fccdf082638a0dddc989453283f0cad564bf7b00aa7b4855f6",
+      "packaging_only_change": false
+    },
+    {
+      "path": "upright/learning.py",
+      "source_path": "upright/learning.py",
+      "source_sha256": "3a25ae472acadcea417ba20e04818947bde28998c20981e71668d35e8f4cff74",
+      "sha256": "3a25ae472acadcea417ba20e04818947bde28998c20981e71668d35e8f4cff74",
+      "packaging_only_change": false
+    },
+    {
+      "path": "upright/model.py",
+      "source_path": "upright/model.py",
+      "source_sha256": "2fe208960b6f0a0943dc725b90d7bea4a8885fa20c9fc03a085bd7cda6daa71e",
+      "sha256": "2fe208960b6f0a0943dc725b90d7bea4a8885fa20c9fc03a085bd7cda6daa71e",
+      "packaging_only_change": false
+    },
+    {
+      "path": "upright/prepare.py",
+      "source_path": "upright/prepare.py",
+      "source_sha256": "66a0dda0a4a3587aa79d9d37320e71eaea51be9b9ee24ca3f72d73566b289771",
+      "sha256": "66a0dda0a4a3587aa79d9d37320e71eaea51be9b9ee24ca3f72d73566b289771",
+      "packaging_only_change": false
+    },
+    {
+      "path": "upright/response.py",
+      "source_path": "upright/response.py",
+      "source_sha256": "77e0e9d992d35a42f952e2410f46038be96be515c457950798876ef83ea5e0a4",
+      "sha256": "77e0e9d992d35a42f952e2410f46038be96be515c457950798876ef83ea5e0a4",
+      "packaging_only_change": false
+    },
+    {
+      "path": "upright/runtime.py",
+      "source_path": "upright/runtime.py",
+      "source_sha256": "e8a671041fd63477f556411adc521d0bf2aac9486066486538293900599b52dc",
+      "sha256": "e8a671041fd63477f556411adc521d0bf2aac9486066486538293900599b52dc",
+      "packaging_only_change": false
+    },
+    {
+      "path": "upright/task.py",
+      "source_path": "upright/task.py",
+      "source_sha256": "60b2bdb7f19057c3506fcff1aefbbc118771d2e768e9ae2464c80b001fe32f71",
+      "sha256": "60b2bdb7f19057c3506fcff1aefbbc118771d2e768e9ae2464c80b001fe32f71",
+      "packaging_only_change": false
+    },
+    {
+      "path": "configs/train_1104.json",
+      "source_path": "configs/round21r5.json",
+      "source_sha256": "35de9c031b1fd423543ba9eccb1ebbc4c900dc16cc0568ce7c1e1d699bc744ab",
+      "sha256": "35de9c031b1fd423543ba9eccb1ebbc4c900dc16cc0568ce7c1e1d699bc744ab",
+      "packaging_only_change": false
+    }
+  ]
+}
