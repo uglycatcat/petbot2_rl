@@ -84,7 +84,7 @@
         "demo"
       ],
       "shallow": false,
-      "status": "restart21_engineering_passed_ready",
+      "status": "restart21_full_training_running",
       "local_validation": "Restart20 both0/64, no landing or STOP; reviewed raw trajectories and actor replay. Restart21 restores bounded Beta progress, strict quality eligibility, reachable zero wheel and real2.5s train/eval hold; contact-sequence landing certificate replaces whole-AABB false negatives. 141 container tests, real PPO/reward/quality,512env4to8 restore/reload valid; short reload0/16 front collision, capability unproven. No weights/data transferred.",
       "task": null,
       "usage": "README.md",
