@@ -6,6 +6,7 @@
 |---|---|
 | 当前任务、运行状态、接手顺序 | [当前交接](current_handoff.md) |
 | 全部用户目标和约束 | [需求基线](current_scope.md) |
+| 当前桌面落地再抬头、任务设计问题 | [21r5任务与执行链复查](upright_landing_task_review_20261104.md)；训练暂停，未改默认策略 |
 | upright最新结果与训练暂停 | [21r6终局](upright_restart_round21r6_results.md)、[本轮设计与门槛](upright_restart_round21r6_execution.md)；用户要求先不开下一轮 |
 | 第20轮停车问题与对照依据 | [归因复检](upright_round20_rollback_landing.md)、[交接修正](upright_round20_handoff_v1.md) |
 | 当前MuJoCo体验与未解决问题 | [21r5用户请求预览](upright_restart21r5_sim2sim.md)、[使用说明](../rl_project/std_s2s_upright_project/README.md) |
