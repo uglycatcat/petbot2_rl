@@ -2,6 +2,29 @@
   "updated_at": "2026-11-04",
   "repositories": [
     {
+      "name": "train_upright_project_1104",
+      "path": "rl_project/train_upright_project_1104",
+      "remote": "ours",
+      "url": "https://github.com/uglycatcat/petbot2_rl.git",
+      "branch": "rlproj/train_upright_project_1104",
+      "verified_commit": "5c3e381067eb693a0b77ce7834dc42b559dcdeb6",
+      "status": "frozen_by_user;complete_scratch_training_source;not_full_capability_acceptance",
+      "release": "1104",
+      "source_commit": "8cac727a270fa670b182bc385b0066330b13ad42",
+      "selected_policy": "restart21r5_s102",
+      "seed": 102,
+      "num_envs": 2048,
+      "iterations": 1000,
+      "training_enabled": false,
+      "automatic_iteration_enabled": false,
+      "usage": "README.md",
+      "release_identity": "release.json",
+      "validation": "docs/validation.json",
+      "current_document": "docs/upright_1104.md",
+      "history_document": "docs/upright_history.md",
+      "local_validation": "26 source/config files audited; original effective config and source model exact; CPU checks and training-disabled rejection passed. No new PPO or physics validation during freeze."
+    },
+    {
       "name": "std_train_upright_project",
       "path": "rl_project/std_train_upright_project",
       "remote": "ours",
@@ -17,7 +40,7 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "branch": "rlproj/std_s2s_upright_project",
       "verified_commit": "99201770b7aae28e58ed8b8eb66a56ca80230788",
-      "status": "User-requested21r5 seed102 ONNX preview with exact trained controller;desktop feedback pending,landing/full-speed goals unmet.",
+      "status": "frozen1104_selection;21r5_seed102_ONNX_unchanged;user_accepts_basic_flow_and_motion;landing_quality_and_full_speed_unmet",
       "usage": "README.md",
       "local_validation": "180source obs/targets exact,27geometry,ordinary full range/QE/ONNX-only;default mixed1cycle0interruptions755finite frames,target/effort valid;4s GUI startup. Prior8native closed loops complete;static rear travel1.067cm,endpoint+0.468/-0.520m/s. No21r6 hip intervention.",
       "validation": "validation/20261104_restart21r5/review.json",
@@ -27,7 +50,8 @@
       "previous_policy": "restart20_s102",
       "controller_contract": "restart_v21r5",
       "runtime_revision": "round21r5_trained_controller",
-      "history_document": "docs/upright_history.md"
+      "history_document": "docs/upright_history.md",
+      "current_document": "docs/upright_1104.md"
     },
     {
       "name": "std_s2s_step_project",

@@ -1,24 +1,27 @@
-# upright旧系列归档
+# upright服务器本地历史
 
-2026-11-03按用户要求整理。**需要重启前的历史记录，可以去训练服务器仓库的`history/upright/`下面找。** 该目录由根`.gitignore`排除，不随Git或repo同步到桌面；Git已有提交历史不重写。
+2026-11-04冻结收尾。**需要upright历史记录，请去服务器仓库的`history/`下面找；桌面与Git不再同步这些历史文件。** 当前有效训练代码是[1104工程](../rl_project/train_upright_project_1104/README.md)，当前结论见[冻结说明](upright_1104.md)。
 
-| 位置（相对仓库根目录） | 内容 |
+| 本地路径（相对仓库根目录） | 内容 |
 |---|---|
-| `history/upright/docs/` | 重启前静止/旧移动/rebuild/完整循环/scratch系列文档、旧入口快照及实验计划；保留原文件名 |
-| `history/upright/demo_project/runs/` | 上述旧系列固定副本、检查点、日志、状态和轨迹，保留原目录名 |
-| `history/upright/archival_20261103/` | 原路径→归档路径清单、迁移校验、文件元数据、入口修改前全文及文档SHA256；`before/`保存未提交的原文版本 |
+| `history/upright/freeze_1104/docs/` | 重启系列1—20、废弃21—26、取消27、21r1—r6、当前诊断与实验计划；保留原文件名 |
+| `history/upright/freeze_1104/demo_project/runs/` | 上述运行副本、检查点、日志、状态、轨迹、固定诊断及已停用编排 |
+| `history/upright/archival_20261104/` | 本次原路径→归档路径清单、迁移核验、入口原文、版本身份与包装检查 |
+| `history/upright/docs/`、`history/upright/demo_project/runs/` | 11月3日已归档的更早系列；旧编号不与重启系列混用 |
+| `history/upright/archival_20261103/` | 上次迁移清单、核验与入口原文 |
+| `history/remote_archives_20261104/` | 全部4条原远程archive分支的完整Git bundle、分支头、SHA256及删除证据；2条upright、2条step |
 
-本次迁移154份旧文档/计划、546个旧运行目录及39份旧日志文件。目录采用同文件系统迁移，保留81,320份目录内普通文件及其inode/大小/修改时间，约133GB；文档另核对SHA256，没有删除训练数据。完整清单在归档内，不把几百个历史链接重新放回当前入口。
+本次迁移308个文件或目录，共39,077个目录项、92,417,329,222字节，采用同文件系统改名，逐树核对inode、大小和修改时间；不删除训练数据。少量旧容器创建的目录仅修正目录所有者以允许迁移，单独记录。混合目录只移upright条目，不移动其他任务产物。现用sim2sim的3个忽略参考链接已指向本地归档，其受版本管理代码与策略未改。
 
-**保留边界：** 新系列`upright_restart_round01`至20、无效21—26、取消27、当前21r1及其工程/诊断目录全部保留原路径，文档见[新系列索引](upright_restart_history.md)。第20轮固定参考、现用sim2sim策略包及其证明材料不动；重建快照`_upright_reorganization_20261030`和运行依赖`_upright_runtime_sync_20261030`保留。混有recovery记录的`_night_20261015`只归档明确带upright名称的文件；其他任务目录不动。
+所有`archive/*`远程分支已备份后删除，历史分支只留服务器本地。`history/`由根`.gitignore`排除；这次撤下当前树中的历史文档和远程分支，不重写既有Git提交历史，不声称远端旧对象已物理清除。不得再次推送这些历史记录或创建远程archive分支。
 
-需要追溯时在服务器执行，例如：
+检索示例：
 
 ```bash
-rg --files --hidden --no-ignore history/upright/docs
-rg --hidden --no-ignore '起立超时' history/upright/docs/upright_cycle_batch24_results.md
+rg --files --hidden --no-ignore history/upright/freeze_1104/docs
+rg --hidden --no-ignore '落地' history/upright/freeze_1104/docs/upright_restart_round21r5_results.md
 ```
 
-旧记录里的路径、固定commit、状态和结论保持当时原文；从旧`docs/...`、`demo_project/runs/...`查找时加`history/upright/`前缀。迁移清单`completed_moves.json`记录个别文件和完整目录。旧快照中的绝对路径不代表可直接原地重新运行；如需复现，应另建隔离副本并审查依赖，不能恢复废弃队列、历史权重初始化或旧定时器。新训练不依赖history存在。
+旧记录路径保持原文；先在`freeze_1104/`下加原相对路径查找，再查11月3日归档。完整映射见各次`move_plan.json`/`completed_moves.json`。历史内部链接或运行快照中的绝对路径可能失效，需要按清单定位，不能为兼容旧队列恢复runs入口。现用demo和sim2sim内的历史文档引用也按此定位，不为修复旧说明而改变其冻结版本。
 
-日常入口仅为AGENTS→当前交接→当前轮次；历史成功率、失败与旧授权不会覆盖现行[需求基线](current_scope.md)。
+如需恢复本地历史代码，先核对`backups.json`及`git bundle verify`，另建隔离目录读取，勿推回远程或启动旧任务。1104训练代码不依赖history、旧检查点或旧资产缓存。当前全部upright训练/自动迭代冻结；归档不会恢复任何旧授权。

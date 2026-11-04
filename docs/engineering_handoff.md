@@ -1,6 +1,6 @@
 # PetBot RL工程实施说明
 
-更新说明：本文的版本管理与模型只读约束仍适用；大部分训练接口、奖励及阶段验收写于2026-10-13，记录的是历史原型 `recovery_agile_01`，**不适用于当前 upright 任务或未来 step/recovery 的任务定义**。当前三demo目标见[需求基线](current_scope.md)，upright 入口见[项目导览](../demo_project/upright_rl_demo/README.md)，运行交接见[当前交接](current_handoff.md)。
+更新说明：本文的版本管理与模型只读约束仍适用；大部分训练接口、奖励及阶段验收写于2026-10-13，记录的是历史原型 `recovery_agile_01`，**不适用于当前 upright 任务或未来 step/recovery 的任务定义**。当前三demo目标见[需求基线](current_scope.md)，upright 入口见[1104冻结工程](../rl_project/train_upright_project_1104/README.md)，运行交接见[当前交接](current_handoff.md)。
 
 ## 背景与当前状态
 
@@ -22,9 +22,9 @@
 
 ### 版本管理与双端协作
 
-正式项目由同一repo清单物化，远程独立`rlproj/<项目名>`分支。`std_train_upright_project`保持空，`std_s2s_upright_project`存放ONNX推理程序及必要网络；main维护项目索引和manifest。训练仍在demo，重启系列固定运行副本保持原路径；重启前旧upright文档和runs已迁到忽略的服务器`history/upright/`，来源映射与依赖核验见[归档说明](upright_history.md)。
+正式项目由同一repo清单物化，远程独立`rlproj/<项目名>`分支。upright临时`train_upright_project_1104`保存21r5 seed102完整训练代码，默认冻结；`std_train_upright_project`继续留空，`std_s2s_upright_project`保持现有ONNX程序与策略，demo原样作辅助存档。main维护索引和manifest，源码不依赖history。全部upright历史文档/runs及原archive分支备份仅在忽略的服务器`history/`；远程archive分支已删除，不得重推。见[当前版本](upright_1104.md)及[归档定位](upright_history.md)。
 
-根目录`tools/`是已退役的宿主机辅助目录，已被忽略；旧周期续接配置保持停用，不得因历史记录恢复。当前upright唯一训练入口为`demo_project/upright_rl_demo/train.py`；有限队列工具随项目管理，按[当前交接](current_handoff.md)的固定计划执行。宿主只编排，训练和评估在专用容器中进行；旧源码、批次及已废弃队列不作为当前入口。
+根目录`tools/`是已退役且忽略的宿主辅助目录，旧周期续接保持停用。upright没有当前运行队列；未来重新授权后，从`rl_project/train_upright_project_1104/train.py`按其说明独立从零运行。宿主只编排，Isaac训练和评估仅专用容器GPU2/3；旧源码和队列不作为当前入口。
 
 
 - demo 是独立 checkout，代码推送到本仓库专用分支 `demoproj/recovery_agile_01`；后续 demo 按任务、底座与编号另建，参考分支仍使用 `refproj/`。

@@ -59,7 +59,9 @@
            revision="demoproj/recovery_rl_demo"
            groups="demo" />
 
-  <!-- 正式项目：训练占位保持空；sim2sim 为 ONNX 推理及普通 Q/E 控制，版本见 rl_project/manifest.json。 -->
+  <!-- Upright冻结：1104临时训练源码独立保存；std训练仍空，sim2sim保持21r5。 -->
+  <project name="petbot2_rl" path="rl_project/train_upright_project_1104"
+           remote="ours" revision="rlproj/train_upright_project_1104" groups="rl" />
   <project name="petbot2_rl" path="rl_project/std_train_upright_project"
            remote="ours" revision="rlproj/std_train_upright_project" groups="rl" />
   <project name="petbot2_rl" path="rl_project/std_s2s_upright_project"

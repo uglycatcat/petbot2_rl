@@ -49,14 +49,14 @@
         "demo"
       ],
       "shallow": false,
-      "status": "round21r6_reviewed_not_passed;training_paused_by_user;desktop21r5_retained",
+      "status": "frozen_auxiliary_archive; unchanged_a821990; effective_training_in_rl_project_1104",
       "local_validation": "Two2048x1000 scratch runs and8eval valid onGPU2/3;no OOM/resume/missing. Static travel0.498/0.290cm,backward0.066/0.233cm;low basic26/25,high complete29/28 basic20/18 per32. Five front-return andtwo body-contact failures. User requested analysis only;training andautomatic iteration disabled.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [],
       "active_training_commit": null,
-      "latest_result_document": "docs/upright_restart_round21r6_results.md",
-      "active_execution_document": "docs/upright_restart_round21r6_execution.md",
+      "latest_result_document": "docs/upright_1104.md",
+      "active_execution_document": null,
       "invalidated_rounds": [
         21,
         22,
@@ -70,7 +70,8 @@
       ],
       "history_document": "docs/upright_history.md",
       "last_training_commit": "44a6fb9dfba7f81dc4adbc66dd79964e3d27d6f8",
-      "next_iteration_requirement": "User paused next training on2026-11-04;requires explicit reauthorization. Do not deploy21r6 or restart finished queues."
+      "next_iteration_requirement": "Upright frozen by user. No training or automatic iteration until explicitly reauthorized.",
+      "current_effective_project": "rl_project/train_upright_project_1104"
     },
     {
       "name": "step_rl_demo",
@@ -94,10 +95,10 @@
       "next_iteration_requirement": "User reauthorized full new training. GPU0/1 two seeds512x500 from random; independently review64 episodes each at2ms. Old campaign/rounds stay stopped. No weights/data migration; continue by completion/error events and evidence.",
       "body_pitch_requirement_status": "World lower_body pitch is a secondary full-episode soft objective;single flight and actual platform stopping are primary. Not yet capability accepted.",
       "baseline_commit": "30fd5886271f7d70ed23a923647f824feb7c1f5f",
-      "archive_branch": "archive/step_pre_refactor_20261104",
       "lineage": "docs/refactor_validation.json",
       "series": "step_refactor_v2_20261104",
-      "last_training_commit": "cdd6c95f23a96d4462f3f7755f4898603736ecd5"
+      "last_training_commit": "cdd6c95f23a96d4462f3f7755f4898603736ecd5",
+      "local_archive_bundle": "history/remote_archives_20261104/archive__step_pre_refactor_20261104.bundle"
     },
     {
       "name": "recovery_rl_demo",
