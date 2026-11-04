@@ -79,20 +79,20 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/step_rl_demo",
-      "verified_commit": "e454ac29a38be61d76230858611d40b8258f76c5",
+      "verified_commit": "b5fe58b0322952107894900216618522512c5f8d",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "restart20_full_training_running",
-      "local_validation": "Restart19 both0/64 without front landing or STOP. Restart20 finite gamma1 objective, movement costs and forward fresh Gaussian;136 container tests, real approach/PPO/quality semantics,512env4to8 restore and independent reload. Full capability unproven; new2x512x500; no weight/state transfer.",
+      "status": "restart21_engineering_passed_ready",
+      "local_validation": "Restart20 both0/64, no landing or STOP; reviewed raw trajectories and actor replay. Restart21 restores bounded Beta progress, strict quality eligibility, reachable zero wheel and real2.5s train/eval hold; contact-sequence landing certificate replaces whole-AABB false negatives. 141 container tests, real PPO/reward/quality,512env4to8 restore/reload valid; short reload0/16 front collision, capability unproven. No weights/data transferred.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [
-        "restart20_full_seed70",
-        "restart20_full_seed71"
+        "restart21_full_seed70",
+        "restart21_full_seed71"
       ],
-      "active_training_commit": "e454ac29a38be61d76230858611d40b8258f76c5",
+      "active_training_commit": "b5fe58b0322952107894900216618522512c5f8d",
       "next_iteration_requirement": "Authorized continuous iteration from14;old15-21invalidated.Each auxiliary seed61/64 and each speedgroup15/16 with real actor+physics extra2s required before full-task execution review.No weight/state transfer;fullbudget/STOPcoverage/prefixnonregression gates remain.",
       "body_pitch_requirement_status": "World lower_body pitch is a secondary full-episode soft objective;single flight and actual platform stopping are primary. Not yet capability accepted.",
       "baseline_commit": "30fd5886271f7d70ed23a923647f824feb7c1f5f",
