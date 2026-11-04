@@ -18,6 +18,6 @@
 
 工程已接受，证据见`acceptance.json`、`checkpoint_audit.json`、`physics_audit.json`及状态/日志，相关工程进程均结束。发布`44a6fb9`仅补验收元数据，行为指纹`e6f6a3bc…6dfe394`与固定工程副本一致。
 
-已按[固定计划](experiments/upright_restart_round21r6.json)启动seed102/103各2048×1000、仅GPU2/3，控制目录`demo_project/runs/_upright_restart_round21r6/`。独立随机初始化，不重复21r5，禁止热改运行副本；新模型训练前无历史权重、教师或冻结父策略。完成/异常事件先分析再迭代，无周期定时器/goal；正式训练目录保持空，桌面第20轮不自动更新。
+已按[固定计划](experiments/upright_restart_round21r6.json)启动seed102/103各2048×1000、仅GPU2/3，控制目录`demo_project/runs/_upright_restart_round21r6/`。独立随机初始化，不重复21r5，禁止热改运行副本；新模型训练前无历史权重、教师或冻结父策略。完成/异常事件先分析再迭代，无周期定时器/goal；正式训练目录保持空；随后用户明确要求桌面切换21r5预览，见[发布](upright_restart21r5_sim2sim.md)，21r6固定训练副本保持。
 
 启动核验：两路已进入实际PPO更新，启动日志无运行/显存失败；初始检查点各自为0更新、独立run_id、不同种子网络不同、历史模型列表为空。各自与21r5同种子的初始哈希一致，仅比较元数据记录，不载入旧权重。见控制目录`initialization_audit.json`；launcher、两guard及一次性退出观察器有效，后续仍须完成训练和独立评估。

@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-03",
+  "updated_at": "2026-11-04",
   "repositories": [
     {
       "name": "std_train_upright_project",
@@ -16,17 +16,17 @@
       "remote": "ours",
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "branch": "rlproj/std_s2s_upright_project",
-      "verified_commit": "4941f4be9d111d111d24738fea181f08ae143961",
-      "status": "User-requested round20 original ONNX plus normal handoff correction; default restored from discarded round26. Residual2.6-3.6cm backward landing travel remains,not full acceptance.",
+      "verified_commit": "99201770b7aae28e58ed8b8eb66a56ca80230788",
+      "status": "User-requested21r5 seed102 ONNX preview with exact trained controller;desktop feedback pending,landing/full-speed goals unmet.",
       "usage": "README.md",
-      "local_validation": "3x42s landing complete;each800frames through original handoff identical,and1334frames exact to development candidate.Held/released input,unchanged injectedEXIT,180source parity,27geometry,full ordinary,QE,ONNX-only and4sGUI pass.Actual wheel peak32.82rad/s remains;21r1training unchanged.",
-      "validation": "validation/20261103_round20_handoff/review.json",
+      "local_validation": "180source obs/targets exact,27geometry,ordinary full range/QE/ONNX-only;default mixed1cycle0interruptions755finite frames,target/effort valid;4s GUI startup. Prior8native closed loops complete;static rear travel1.067cm,endpoint+0.468/-0.520m/s. No21r6 hip intervention.",
+      "validation": "validation/20261104_restart21r5/review.json",
       "inference_backend": "onnxruntime_cpu",
-      "runtime_controls_validation": "validation/20261103_round20_handoff/input_handoff.json",
-      "default_policy": "restart20_s102",
-      "previous_policy": "restart26_s102",
-      "controller_contract": "restart_v20_handoff",
-      "runtime_revision": "round20_normal_handoff_v1",
+      "runtime_controls_validation": "validation/20261104_restart21r5/source_port.json",
+      "default_policy": "restart21r5_s102",
+      "previous_policy": "restart20_s102",
+      "controller_contract": "restart_v21r5",
+      "runtime_revision": "round21r5_trained_controller",
       "history_document": "docs/upright_history.md"
     },
     {

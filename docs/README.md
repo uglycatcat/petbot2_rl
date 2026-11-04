@@ -8,7 +8,7 @@
 | 全部用户目标和约束 | [需求基线](current_scope.md) |
 | upright当前21r6设计、门槛和执行 | [21r6执行](upright_restart_round21r6_execution.md)、[21r5终局与MuJoCo对照](upright_restart_round21r5_results.md) |
 | 第20轮停车问题与对照依据 | [归因复检](upright_round20_rollback_landing.md)、[交接修正](upright_round20_handoff_v1.md) |
-| 当前MuJoCo体验与未解决问题 | [第20轮交接版及桌面反馈](upright_round20_handoff_sim2sim.md)、[使用说明](../rl_project/std_s2s_upright_project/README.md) |
+| 当前MuJoCo体验与未解决问题 | [21r5用户请求预览](upright_restart21r5_sim2sim.md)、[使用说明](../rl_project/std_s2s_upright_project/README.md) |
 | 重启系列历程、废弃记录 | [新系列1—20及后续索引](upright_restart_history.md)；按需读取 |
 | 重启前旧upright记录在哪里 | [服务器history归档说明](upright_history.md)；不进入日常接手上下文 |
 | repo、容器、独立分支与双端协作 | [工程管理](engineering_handoff.md)、[demo索引](../demo_project/README.md)、[正式项目索引](../rl_project/README.md) |
