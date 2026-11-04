@@ -76,4 +76,4 @@ Isaac Lab + RSL-RL + PPO、单Actor–Critic、MuJoCo验证的路线保持。阶
 
 ## 其他项目
 
-upright、step、recovery独立。当前只做upright；step为前轮登上0–3cm低台阶后加速爬升，recovery另行设计。历史recovery七路动作与站立奖励不能当作upright规格。更早背景完整保留在[服务器历史需求查阅](upright_history.md)，有冲突时本页最新需求及用户指令优先。
+upright、step、recovery独立。step固定2cm平台、前沿距初始质心30cm、边沿90度；默认姿态静止开始，左右髋角及后轮速度同步，速度自主且不主动倒车，头耳保持默认。前轮恰好一次真实离地后无碰沿落顶，不能返台下或落顶后再抬；后轮保持支撑。四轮登台归髋、沿原线净行15cm，再停稳0.5s并额外保持2s；lower_body世界pitch幅度与变化率为次级平顺目标。地形仅初始输入一次，后续使用自身IMU/编码器估计；全部新训练随机初始化，不迁移历史、辅助或工程权重/轨迹。2026-11-04用户停止正式训练并授权按独立审查重构；工程已验证，训练与自动迭代仍暂停，见[STEP重构](step_refactor_20261104.md)。sim2sim保留原预览，正式训练预留目录保持空。recovery另行设计；历史recovery动作与奖励不作为其他任务规格。更早背景见[服务器历史需求查阅](upright_history.md)，冲突时最新用户指令优先。
