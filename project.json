@@ -1,11 +1,11 @@
 {
   "schema": "petbot_upright_rebuild_v1",
-  "phase": "round21r6_engineering",
+  "phase": "round21r6_ready",
   "training_enabled": true,
   "automatic_iteration_enabled": true,
   "training_implemented": true,
   "policy_validated": false,
-  "reason": "21r5 partially recovered basic response; LAND near-ground hip oscillation remains. Test hip return inside existing sensor envelope; no reward or non-LAND change.",
+  "reason": "141checks and8 engineering jobs accepted;2048 short training,4to8 same-run recovery/reloads;fixed static/low/high retained,all pre-intervention physical prefixes exact. Static total motion1.116to0.556cm. Policy not validated.",
   "specification": "spec/task.json",
   "planned_training_entrypoint": "train.py",
   "historical_implementation_role": "audited_early_source_reuse_allowed_no_historical_weights",
@@ -14,11 +14,11 @@
   "next_experiment": {
     "series": "upright_restart_20261030",
     "name": "upright_restart_round21r6",
-    "status": "engineering_pending"
+    "status": "engineering_accepted_ready"
   },
   "engineering_execution_enabled": true,
   "evaluation_enabled": true,
-  "engineering_validated": false,
+  "engineering_validated": true,
   "implementation_review": "docs/round01_implementation.md",
   "cpu_contract_tests_passed": 141,
   "allowed_host_gpus": [
