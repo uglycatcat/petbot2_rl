@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-04",
+  "updated_at": "2026-11-05",
   "purpose": "PetBot experimental training projects. Code is versioned on dedicated demoproj branches; checkouts are managed by default.xml.",
   "repositories": [
     {
@@ -84,21 +84,20 @@
         "demo"
       ],
       "shallow": false,
-      "status": "v2_round01_seed71_complete_0of64_seed70_training",
+      "status": "v2_round01_complete_engineering_valid_policy_0of128",
       "local_validation": "STEP v2: 52 container tests; static5s; 3 scripted full routes independently verified at2ms plus repeated-flight rejection. 512env8 updates with exact same-run4to8 restore and independent16env reload valid. Reload0/16 front collision, no learned landing/STOP. Random initialization, no weight/data transfer. Source robot unchanged.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [
-        "step_v2_round01_20261104"
-      ],
-      "active_training_commit": "cdd6c95f23a96d4462f3f7755f4898603736ecd5",
-      "next_iteration_requirement": "User reauthorized full new training. GPU0/1 two seeds512x500 from random; independently review64 episodes each at2ms. Old campaign/rounds stay stopped. No weights/data migration; continue by completion/error events and evidence.",
+      "active_tasks": [],
+      "active_training_commit": null,
+      "next_iteration_requirement": "Round01 two500-update random seeds complete; valid engineering but0/128,108rear-air+20front-collision,no legal landing orSTOP. Review front-flight/landing progress gap before any new candidate; targeted engineering gates,push/freeze and scratch initialization required. No unchanged-budget extension or old-weight transfer.",
       "body_pitch_requirement_status": "World lower_body pitch is a secondary full-episode soft objective;single flight and actual platform stopping are primary. Not yet capability accepted.",
       "baseline_commit": "30fd5886271f7d70ed23a923647f824feb7c1f5f",
       "lineage": "docs/refactor_validation.json",
       "series": "step_refactor_v2_20261104",
       "last_training_commit": "cdd6c95f23a96d4462f3f7755f4898603736ecd5",
-      "local_archive_bundle": "history/remote_archives_20261104/archive__step_pre_refactor_20261104.bundle"
+      "local_archive_bundle": "history/remote_archives_20261104/archive__step_pre_refactor_20261104.bundle",
+      "latest_result_document": "docs/step_v2_round01_20261104.md"
     },
     {
       "name": "recovery_rl_demo",

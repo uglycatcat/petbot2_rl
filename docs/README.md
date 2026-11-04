@@ -14,7 +14,7 @@
 | 固定姿态恢复及参考来源 | [MuJoCo固定恢复](fixed_pose_recovery.md)、[参考项目选择](reference_selection.md)、[已关闭参考recovery](reference_recovery_validation.md) |
 | 跳跃预研与早期调查 | [跳跃预研](jump_prestudy.md)、[历史资料](reports/) |
 
-- Step当前：[v2第1批完整训练](step_v2_round01_20261104.md)。用户在[重构工程通过](step_refactor_20261104.md)后重新授权，GPU0/1两种子各512×500从零学习完整任务；最终能力待独立评估。
+- Step当前：[v2第1批终局](step_v2_round01_20261104.md)。两随机种子各512×500工程有效，独立评估完整0/128（108后轮离地、20碰沿）；无合法落顶/STOP，已汇总学习信号缺口，训练进程退出、尚无下一批。
 
 - Step历史回退：[暂停/回退证据](step_rollback14_20261103.md)，[第20轮终局](step_round20_results.md)、[第21轮取消记录](step_round21_execution.md)保留追溯；旧15–21均已废弃，不再作为优化基线。
 
