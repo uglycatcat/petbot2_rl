@@ -84,21 +84,19 @@
         "demo"
       ],
       "shallow": false,
-      "status": "restart21_full_training_running",
+      "status": "paused_by_user_independent_code_review",
       "local_validation": "Restart20 both0/64, no landing or STOP; reviewed raw trajectories and actor replay. Restart21 restores bounded Beta progress, strict quality eligibility, reachable zero wheel and real2.5s train/eval hold; contact-sequence landing certificate replaces whole-AABB false negatives. 141 container tests, real PPO/reward/quality,512env4to8 restore/reload valid; short reload0/16 front collision, capability unproven. No weights/data transferred.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [
-        "restart21_full_seed70",
-        "restart21_full_seed71"
-      ],
-      "active_training_commit": "b5fe58b0322952107894900216618522512c5f8d",
-      "next_iteration_requirement": "Authorized continuous iteration from14;old15-21invalidated.Each auxiliary seed61/64 and each speedgroup15/16 with real actor+physics extra2s required before full-task execution review.No weight/state transfer;fullbudget/STOPcoverage/prefixnonregression gates remain.",
+      "active_tasks": [],
+      "active_training_commit": null,
+      "next_iteration_requirement": "User stopped current STEP investment and requested independent subagent code audit. Training and auto iteration disabled; explicit new user authorization required before any restart. Keep source, fixed runs and prior evidence; no automatic resume.",
       "body_pitch_requirement_status": "World lower_body pitch is a secondary full-episode soft objective;single flight and actual platform stopping are primary. Not yet capability accepted.",
       "baseline_commit": "30fd5886271f7d70ed23a923647f824feb7c1f5f",
       "archive_branch": "archive/step_pre_rollback14_20261103",
       "lineage": "docs/lineage.json",
-      "series": "step_restart14_20261103"
+      "series": "step_restart14_20261103",
+      "last_training_commit": "b5fe58b0322952107894900216618522512c5f8d"
     },
     {
       "name": "recovery_rl_demo",
