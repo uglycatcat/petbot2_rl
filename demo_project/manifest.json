@@ -79,18 +79,18 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/step_rl_demo",
-      "verified_commit": "e4865e66af05f9cba9faba1cd6faccc26a2fa0bd",
+      "verified_commit": "3c3d2a9654c7ac81f30c44a96b46269066de5415",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "v2_scaling_engineering_validated;formal_training_not_started",
-      "local_validation": "61 container tests;8192 geometry comparisons max7.45e-9m;54 physical routes identical before/after with3 complete;4096-env4->8 same-run restore and16 independent physical replays valid. Short policy0/16 is not a capability conclusion. Fused4096x32 steady24.31s/update,5348MiB own peak;full task remains unproven.",
+      "status": "v2_4096x128x1000_and_batch_video_ready;training_not_authorized",
+      "local_validation": "Targeted video-selection/automation tests and one fixed-command Isaac renderer check passed;H2641280x72025fps MP4 decoded and inspected. No PPO, weights, training or short training used. Prior32-step throughput is historical, not current128-step resource evidence.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [],
       "active_training_commit": null,
-      "next_iteration_requirement": "Prepared two groups x seeds70/71;each4096x1000x32 random initialization. A/B hip std .03/.10 only;fixed task and acceptance. Four GPU containers and guards implemented. Formal control remains disabled; no engineering weights/trajectories may transfer.",
+      "next_iteration_requirement": "User explicitly has not authorized starting training. Keep controls disabled. Prepared A/B x seeds70/71, each4096x128x1000 random initialization. Formal batch completion records its best evaluated checkpoint to artifacts/step/videos/<batch>/best.mp4; do not transfer engineering weights or trajectories.",
       "series": "step_refactor_v2_20261104",
       "last_training_commit": "728cef16811766fa3441a06ab43204bc0ee396af",
       "latest_result_document": "docs/step_current.md",
@@ -119,10 +119,22 @@
       "prepared_full_training": {
         "num_envs": 4096,
         "iterations": 1000,
-        "num_steps_per_env": 32,
+        "num_steps_per_env": 128,
         "groups": 2,
         "seeds_per_group": 2,
         "started": false
+      },
+      "batch_video": {
+        "enabled_in_formal_workflow": true,
+        "default_root": "artifacts/step/videos",
+        "format": "mp4",
+        "fps": 25,
+        "resolution": [
+          1280,
+          720
+        ],
+        "config_key": "video_root",
+        "validation": "Fixed-motor renderer probe only; no completed formal batch yet"
       }
     },
     {
