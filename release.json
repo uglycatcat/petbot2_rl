@@ -154,14 +154,18 @@
   },
   "sim2sim": {
     "project": "../std_s2s_upright_project",
-    "commit": "99201770b7aae28e58ed8b8eb66a56ca80230788",
-    "policy": "restart21r5_s102",
-    "onnx_sha256": "a64cba43e9c5d887728c4a8d16068728f530b044ff050a31eb17eb6b7837cf7d"
+    "commit": "234794cd72d55d9ac856ee1b72cd1333bb529afe",
+    "commit_scope": "ONNX policy publication; later documentation commits may change branch HEAD",
+    "policy": "upright1104_5000_s102",
+    "onnx_sha256": "83fb16ce0e635952894c2659423e3a3bb4a3afa4a70e6ee54818b063020ad01e",
+    "checkpoint_sha256": "75d737e1f01a23380d4a528975c1a337f48126f1d1a16d2d593aa138b4211f5f",
+    "previous_policy": "restart21r5_s102"
   },
   "packaging_changes": [
-    "Default config pathname points totrain_1104.json with identical effective config.",
-    "Host supervisor accepts this project directory name; guard semantics retained.",
-    "Execution disabled, old experiment docs/configs/queues omitted, instructions and source inventory added."
+    "Initial freeze renamed the original config and audited unchanged training behavior.",
+    "Current config directly changes num_envs2048 to4096 and iterations1000 to5000; other effective training values unchanged.",
+    "Host supervisor accepts the1104 project and an explicitly selected isolated container; guard semantics retained.",
+    "One-off GPU3 training and requested ONNX publication completed; no automatic iteration or additional training authorization."
   ],
   "source_files": [
     {
@@ -367,5 +371,23 @@
       1000,
       5000
     ]
-  }
+  },
+  "latest_completed_run": {
+    "name": "gpu3_4096x5000_s102_20261104",
+    "run_id": "4ab949ad-ddfa-4531-b236-6b9bddca57ec",
+    "training_commit": "7ce7bc5062d90dc0eb63e53d2ea2bc6a4a9050c9",
+    "initialization": "random",
+    "updates_completed": 5000,
+    "num_envs": 4096,
+    "seed": 102,
+    "host_gpu": 3,
+    "state": "complete_execution_only",
+    "interrupted_or_resumed": false,
+    "run_dir": "outputs/gpu3_4096x5000_s102_20261104",
+    "log_dir": "logs/gpu3_4096x5000_s102_20261104",
+    "checkpoint": "checkpoints/update_005000.pt",
+    "artifacts_tracked_by_git": false,
+    "policy_full_acceptance": false
+  },
+  "original_freeze_validation": "docs/validation.json (2026-11-04 packaging evidence only; not current training status)"
 }

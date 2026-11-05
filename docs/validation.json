@@ -1,4 +1,7 @@
 {
+  "record_scope": "Historical first-freeze packaging verification before the authorized4096x5000 run; values below are not current execution configuration.",
+  "recorded_date": "2026-11-04",
+  "current_release": "../release.json",
   "release": {
     "release": "1104",
     "source_files_checked": 26,
