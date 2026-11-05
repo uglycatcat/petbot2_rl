@@ -84,18 +84,20 @@
         "demo"
       ],
       "shallow": false,
-      "status": "v2_reward_fix_engineering_passed_ready_for_round02",
+      "status": "v2_round02_training_from_random_gpu0_gpu1",
       "local_validation": "57 container tests;3 real full routes with single flight/net15cm/2.5s hold and repeated-flight rejection;512x8 PPO with4to8 restore and independent16 reload valid. Short policy0/16 collision. Task acceptance and source physics unchanged;no transfer.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [],
-      "active_training_commit": null,
-      "next_iteration_requirement": "Publish/sync/freeze verified728cef16, then two seeds512x500 random onGPU0/1;only same-run interruption may resume. Evaluate supported crossing/actual landing and STOP with2ms evidence, TensorBoard first.",
+      "active_tasks": [
+        "step_v2_round02_20261105"
+      ],
+      "active_training_commit": "728cef16811766fa3441a06ab43204bc0ee396af",
+      "next_iteration_requirement": "Round02 running two random512x500 seeds onGPU0/1;do not edit frozen inputs or load engineering/old weights. TensorBoard first;terminal64 independent2ms episodes each,continue same completion/error event chain.",
       "body_pitch_requirement_status": "World lower_body pitch is a secondary full-episode soft objective;single flight and actual platform stopping are primary. Not yet capability accepted.",
       "baseline_commit": "30fd5886271f7d70ed23a923647f824feb7c1f5f",
       "lineage": "docs/refactor_validation.json",
       "series": "step_refactor_v2_20261104",
-      "last_training_commit": "cdd6c95f23a96d4462f3f7755f4898603736ecd5",
+      "last_training_commit": "728cef16811766fa3441a06ab43204bc0ee396af",
       "local_archive_bundle": "history/remote_archives_20261104/archive__step_pre_refactor_20261104.bundle",
       "latest_result_document": "docs/step_v2_round01_20261104.md",
       "active_execution_document": "docs/step_v2_round02_20261105.md"

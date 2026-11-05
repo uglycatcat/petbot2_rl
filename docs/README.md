@@ -14,7 +14,7 @@
 | 固定姿态恢复及参考来源 | [MuJoCo固定恢复](fixed_pose_recovery.md)、[参考项目选择](reference_selection.md)、[已关闭参考recovery](reference_recovery_validation.md) |
 | 跳跃预研与早期调查 | [跳跃预研](jump_prestudy.md)、[历史资料](reports/) |
 
-- Step当前：[v2第2批越沿奖励修正](step_v2_round02_20261105.md)。源码728cef16工程通过，下一批GPU0/1两种子512×500独立随机训练；上批完整0/128，无合法落顶/STOP。
+- Step当前：[v2第2批越沿奖励修正](step_v2_round02_20261105.md)。源码728cef16工程通过，第2批GPU0/1两种子512×500独立随机训练已启动；上批完整0/128，无合法落顶/STOP。
 
 - Step历史回退：[暂停/回退证据](step_rollback14_20261103.md)，[第20轮终局](step_round20_results.md)、[第21轮取消记录](step_round21_execution.md)保留追溯；旧15–21均已废弃，不再作为优化基线。
 
