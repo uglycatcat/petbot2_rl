@@ -84,15 +84,13 @@
         "demo"
       ],
       "shallow": false,
-      "status": "v2_round02_training_from_random_gpu0_gpu1",
+      "status": "v2_round02_cancelled_by_user_training_and_auto_iteration_paused",
       "local_validation": "57 container tests;3 real full routes with single flight/net15cm/2.5s hold and repeated-flight rejection;512x8 PPO with4to8 restore and independent16 reload valid. Short policy0/16 collision. Task acceptance and source physics unchanged;no transfer.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [
-        "step_v2_round02_20261105"
-      ],
-      "active_training_commit": "728cef16811766fa3441a06ab43204bc0ee396af",
-      "next_iteration_requirement": "Round02 running two random512x500 seeds onGPU0/1;do not edit frozen inputs or load engineering/old weights. TensorBoard first;terminal64 independent2ms episodes each,continue same completion/error event chain.",
+      "active_tasks": [],
+      "active_training_commit": null,
+      "next_iteration_requirement": "User paused STEP on2026-11-05 to discuss task issues. No training,automatic iteration or engineering restart until explicit reauthorization. Ignore old completion events; preserve round02 source/logs/checkpoints.",
       "body_pitch_requirement_status": "World lower_body pitch is a secondary full-episode soft objective;single flight and actual platform stopping are primary. Not yet capability accepted.",
       "baseline_commit": "30fd5886271f7d70ed23a923647f824feb7c1f5f",
       "lineage": "docs/refactor_validation.json",
