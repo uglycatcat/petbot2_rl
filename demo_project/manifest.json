@@ -79,22 +79,22 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/step_rl_demo",
-      "verified_commit": "f43cee99944ff61e6c4092455e7187286a5b6b98",
+      "verified_commit": "720d59737f33a3c8af50113aeb64f0b21c650ffe",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "v2_gpu2_gpu3_two_slots_each_4096x128x1000_ready;training_not_authorized",
+      "status": "v2_round03_authorized_preparing;gpu2_gpu3_two_slots_each_4096x128x1000",
       "local_validation": "Targeted container-side CPU orchestration checks passed: paired-slot admission, per-container memory ownership/pressure selection, separate train/eval commands, pause/events/video regressions. Four deployment containers have matching runtime packages and read-only source model mounts. No simulator, PPO, weights or training used for this deployment change. Actual128-step peak and shared-card throughput remain unmeasured.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [],
-      "active_training_commit": null,
-      "next_iteration_requirement": "User explicitly has not authorized starting training. Keep controls disabled. Prepared A/B x seeds70/71, each4096x128x1000 random initialization. Formal batch completion records its best evaluated checkpoint to artifacts/step/videos/<batch>/best.mp4; do not transfer engineering weights or trajectories.",
+      "active_training_commit": "720d59737f33a3c8af50113aeb64f0b21c650ffe",
+      "next_iteration_requirement": "User authorized training and continuous automatic iteration on 2026-11-05. GPU2/3 only, two slots each, every job4096x128x1000 from random initialization. Read TensorBoard first, use necessary real-trajectory checks, analyze and modify before publishing/freezing the next fresh batch. Stop continuation when disabled/paused. Each completed batch records its best evaluated checkpoint MP4; never resume cancelled/historical rounds.",
       "series": "step_refactor_v2_20261104",
       "last_training_commit": "728cef16811766fa3441a06ab43204bc0ee396af",
       "latest_result_document": "docs/step_current.md",
-      "active_execution_document": null,
+      "active_execution_document": "docs/step_current.md",
       "current_document": "docs/step_current.md",
       "scope_document": "docs/step_scope.md",
       "history_document": "docs/step_history.md",
@@ -161,7 +161,8 @@
         "peak_budget_is_estimate": true,
         "memory_fraction": 0.95,
         "reserve_mib_per_card": 1024,
-        "training_started": false
+        "training_started": false,
+        "training_authorized": true
       }
     },
     {
