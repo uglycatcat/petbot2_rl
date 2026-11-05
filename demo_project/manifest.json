@@ -164,7 +164,14 @@
         "memory_fraction": 0.95,
         "reserve_mib_per_card": 1024,
         "training_started": true,
-        "training_authorized": true
+        "training_authorized": true,
+        "initial_observed_peak_mib": {
+          "a_seed70": 7456.0,
+          "b_seed70": 9816.0,
+          "a_seed71": 7456.0,
+          "b_seed71": 9936.0
+        },
+        "next_batch_memory_budget_note": "Initial B peaks exceeded8192MiB; revise per-group reservations from actual telemetry before next launch. Do not edit current frozen inputs; actual-card guards remain active."
       }
     },
     {
