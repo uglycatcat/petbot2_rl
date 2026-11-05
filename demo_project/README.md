@@ -5,7 +5,7 @@
 | 项目 | 职责 | 当前开发状态 |
 |---|---|---|
 | [upright_rl_demo](upright_rl_demo/README.md) | 辅助存档，保持当前源码版本。 | upright已冻结；当前有效21r5 seed102训练代码在[1104工程](../rl_project/train_upright_project_1104/README.md)，状态见[冻结说明](../docs/upright_1104.md)。 |
-| [step_rl_demo](step_rl_demo/README.md) | 固定2cm/30cm、同步髋轮；单次抬轮、归髋净行15cm后停稳。 | 用户授权v2第1批完整从零训练，固定`cdd6c95`、GPU0/1两路512×500；能力待终局评估，见[执行](../docs/step_v2_round01_20261104.md)。 |
+| [step_rl_demo](step_rl_demo/README.md) | 固定2cm/30cm、同步髋轮；单次抬轮、归髋净行15cm后停稳。 | 越沿/落顶奖励修正`728cef16`工程通过，下一批两种子512×500独立随机学习；见[执行](../docs/step_v2_round02_20261105.md)。 |
 | [recovery_rl_demo](recovery_rl_demo/README.md) | 重新设计分阶段跌倒恢复。 | 仅登记与需求说明，尚无训练代码。 |
 | [recovery_agile_01](recovery_agile_01/PETBOT.md) | 基于AGILE的早期恢复原型。 | 历史实验，不能直接作为新恢复任务的设计或成功基线。 |
 | [jump_rl_demo](jump_rl_demo/README.md) | 跳跃可行性预研。 | 完整跳跃已放弃，保留历史入口。 |
