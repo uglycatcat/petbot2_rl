@@ -79,26 +79,30 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/step_rl_demo",
-      "verified_commit": "728cef16811766fa3441a06ab43204bc0ee396af",
+      "verified_commit": "0641179b06a86c7cf4fa0cb6c0e1d1a88fbe77e3",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "v2_round02_cancelled_by_user_training_and_auto_iteration_paused",
-      "local_validation": "57 container tests;3 real full routes with single flight/net15cm/2.5s hold and repeated-flight rejection;512x8 PPO with4to8 restore and independent16 reload valid. Short policy0/16 collision. Task acceptance and source physics unchanged;no transfer.",
+      "status": "v2_paused_by_user;pre_v2_history_archived;documentation_separated_from_runtime",
+      "local_validation": "Runtime728cef16:57 container checks and physical/restore/reload engineering passed; full capability unproven. V2 round01 0/128; round02 cancelled12/12 updates. Documentation-only cleanup preserves code/configs.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [],
       "active_training_commit": null,
-      "next_iteration_requirement": "User paused STEP on2026-11-05 to discuss task issues. No training,automatic iteration or engineering restart until explicit reauthorization. Ignore old completion events; preserve round02 source/logs/checkpoints.",
-      "body_pitch_requirement_status": "World lower_body pitch is a secondary full-episode soft objective;single flight and actual platform stopping are primary. Not yet capability accepted.",
-      "baseline_commit": "30fd5886271f7d70ed23a923647f824feb7c1f5f",
-      "lineage": "docs/refactor_validation.json",
+      "next_iteration_requirement": "Paused by user. Explicit reauthorization required for training/engineering. Discuss STEP independently; management conventions may reference upright, algorithms may not be assumed. Existing512x500 config does not meet new minimum.",
       "series": "step_refactor_v2_20261104",
       "last_training_commit": "728cef16811766fa3441a06ab43204bc0ee396af",
-      "local_archive_bundle": "history/remote_archives_20261104/archive__step_pre_refactor_20261104.bundle",
-      "latest_result_document": "docs/step_v2_round01_20261104.md",
-      "active_execution_document": "docs/step_v2_round02_20261105.md"
+      "latest_result_document": "docs/step_current.md",
+      "active_execution_document": null,
+      "current_document": "docs/step_current.md",
+      "scope_document": "docs/step_scope.md",
+      "history_document": "docs/step_history.md",
+      "minimum_full_training": {
+        "num_envs": 2048,
+        "iterations": 1000,
+        "implemented": false
+      }
     },
     {
       "name": "recovery_rl_demo",

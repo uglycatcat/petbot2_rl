@@ -12,4 +12,4 @@
 
 版本、已知问题与冻结边界见[1104说明](../docs/upright_1104.md)，完整要求见[需求基线](../docs/current_scope.md)，详细历史见[服务器定位](../docs/upright_history.md)。
 
-Step独立项目：[std_s2s_step_project](std_s2s_step_project/README.md)按用户最新澄清保留第20轮seed71 ONNX供观察；训练代码回退第14轮且自动迭代暂停，不连带回退sim2sim。用户桌面观察到接近时一次抬头，但碰沿、上平台又抬头且不停，不能作完整通过。启动静止、Space/R及独立绘制保持，旧第14/13轮可显式选择。见[范围澄清与反馈](../docs/step_rollback14_20261103.md)。`std_train_step_project/`保持空，两正式项目仍由同名`rlproj/`分支管理。
+STEP独立项目：[std_s2s_step_project](std_s2s_step_project/README.md)保持原第20轮seed71 ONNX预览，未同步当前v2，也未通过完整任务验收。本次不修改程序或策略。当前训练源码仍在`demo_project/step_rl_demo`，状态见[STEP交接](../docs/step_current.md)；`std_train_step_project/`保持空，两正式目录由各自`rlproj/`分支管理。旧预览发布证据仅按[STEP历史定位](../docs/step_history.md)追查，不作为当前训练基线。
