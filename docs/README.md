@@ -9,9 +9,10 @@
 | STEP当前状态、结果与待讨论问题 | [STEP交接](step_current.md)；v2已暂停 |
 | STEP当前实现与管理 | [实现说明](../demo_project/step_rl_demo/docs/architecture.md)、[管理流程](../demo_project/step_rl_demo/docs/automation.md) |
 | STEP旧轮次与旧说明在哪里 | [STEP history定位](step_history.md)；仅服务器本地、按需查指定文件 |
-| upright当前版本、效果与未解决问题 | [1104冻结说明](upright_1104.md)；21r5 seed102，全部upright训练停止 |
+| upright当前版本、效果与未解决问题 | [1104当前说明](upright_1104.md)；4096×5000单次训练完成，后续训练停用 |
 | upright完整可复现训练代码 | [临时1104工程](../rl_project/train_upright_project_1104/README.md)；std_train仍预留为空 |
-| upright现有MuJoCo体验 | [sim2sim使用](../rl_project/std_s2s_upright_project/README.md)；保持21r5，未因归档修改 |
+| upright现有MuJoCo体验 | [sim2sim使用](../rl_project/std_s2s_upright_project/README.md)；默认`upright1104_5000_s102`，原21r5保留对照 |
+| upright本次5000更新日志和检查点 | [1104运行记录](../rl_project/train_upright_project_1104/README.md#本次运行与日志)；项目内logs/outputs，仅服务器保存 |
 | upright逐轮文档、runs、archive分支在哪里 | [服务器history定位](upright_history.md)；全部仅本地保存、按需检索 |
 | repo、容器、独立分支与双端协作 | [工程管理](engineering_handoff.md)、[demo索引](../demo_project/README.md)、[正式项目索引](../rl_project/README.md) |
 | 固定姿态恢复及参考来源 | [MuJoCo固定恢复](fixed_pose_recovery.md)、[参考项目选择](reference_selection.md)、[已关闭参考recovery](reference_recovery_validation.md) |

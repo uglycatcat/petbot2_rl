@@ -1,6 +1,8 @@
 # upright服务器本地历史
 
-2026-11-04冻结收尾。**需要upright历史记录，请去服务器仓库的`history/`下面找；桌面与Git不再同步这些历史文件。** 当前有效训练代码是[1104工程](../rl_project/train_upright_project_1104/README.md)，当前结论见[冻结说明](upright_1104.md)。
+2026-11-04冻结归档；当前版本已包含随后单独完成的5000更新训练。**需要upright历史记录，请去服务器仓库的`history/`下面找；桌面与Git不再同步这些历史文件。** 当前有效训练代码是[1104工程](../rl_project/train_upright_project_1104/README.md)，当前结论见[冻结说明](upright_1104.md)。
+
+本次1104长训是例外：日志和检查点保留在`rl_project/train_upright_project_1104/logs/`及`outputs/gpu3_4096x5000_s102_20261104/`；当前MuJoCo原始轨迹在`rl_project/std_s2s_upright_project/outputs/1104_5000_20261105/`。这些也不进Git，不移动回旧runs；默认ONNX与验证JSON随sim2sim发布。
 
 | 本地路径（相对仓库根目录） | 内容 |
 |---|---|

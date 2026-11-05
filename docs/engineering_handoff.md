@@ -26,7 +26,7 @@
 
 ### 版本管理与双端协作
 
-正式项目由同一repo清单物化，远程独立`rlproj/<项目名>`分支。upright临时`train_upright_project_1104`保存21r5 seed102完整训练代码，默认冻结；`std_train_upright_project`继续留空，`std_s2s_upright_project`保持现有ONNX程序与策略，demo原样作辅助存档。main维护索引和manifest，源码不依赖history。全部upright历史文档/runs及原archive分支备份仅在忽略的服务器`history/`；远程archive分支已删除，不得重推。见[当前版本](upright_1104.md)及[归档定位](upright_history.md)。
+正式项目由同一repo清单物化，远程独立`rlproj/<项目名>`分支。upright临时`train_upright_project_1104`保存21r5完整训练代码，当前4096×5000配置已完成一次GPU3从零训练；`std_train_upright_project`继续留空，`std_s2s_upright_project`默认其5000更新ONNX，demo原样作辅助存档。单次执行授权已结束，不自动继续训练；日志在1104项目logs/outputs且不入Git。main维护索引和manifest，源码不依赖history。冻结前upright历史文档/runs及原archive分支备份仅在忽略的服务器`history/`；远程archive分支已删除，不得重推。见[当前版本](upright_1104.md)及[归档定位](upright_history.md)。
 
 根目录`tools/`是已退役且忽略的宿主辅助目录，旧周期续接保持停用。upright没有当前运行队列；未来重新授权后，从`rl_project/train_upright_project_1104/train.py`按其说明独立从零运行。宿主只编排，Isaac训练和评估仅专用容器GPU2/3；旧源码和队列不作为当前入口。
 

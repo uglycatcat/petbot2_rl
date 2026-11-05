@@ -2,15 +2,15 @@
 
 更新：2026-11-05。upright已冻结；step状态与授权单独见下方，不因upright收尾改变。
 
-## upright：1104冻结版本
+## upright：1104长训与当前默认策略
 
-用户选定**21r5 seed102**作为阶段最终版本，完整训练源码和原配置在[rl_project/train_upright_project_1104](../rl_project/train_upright_project_1104/README.md)。这是临时保存工程，`std_train_upright_project`继续留空。sim2sim已是21r5，保持`9920177`；demo保持`a821990`原样作为辅助存档，不能把其21r6代码当作1104。
+当前完整训练工程为[train_upright_project_1104](../rl_project/train_upright_project_1104/README.md)，源码基线为21r5 seed102。用户单独授权的GPU3、4096环境×5000更新已完成，训练提交`7ce7bc50`，随机初始化，无显存中断或恢复。默认MuJoCo包已发布为`upright1104_5000_s102`，取自`update_005000.pt`；原21r5包保留。demo仍为`a821990`辅助存档，其21r6代码不是当前训练源码；正式std_train目录仍为空。
 
-基本起落流程和当前运动获用户认可；主要问题是落地后再抬头、残余移动，次要问题是运动能力提升有限、双向连续±0.75m/s未达。21r6落地局部收益伴随运动退步，未采用。已发现LAND接地确认期髋往复与奖励/验收缺口，但框架仍需将来完整审查，不能宣称问题已解决。
+5000更新开发验证32/32进入两轮、完整/基本遥控31/32；1507份真实观测ONNX/PT最大差异8.35e-7，静止和混合MuJoCo各完成一循环。两轮跟踪有改善，约2000更新后收益放缓；新包尚无桌面验收，落地多余抬头/残余移动、双向连续±0.75m/s及宽初态不能据此认定通过。细节与证据集中在[1104说明](upright_1104.md)。
 
-**全部upright训练、评估和自动迭代冻结，不启动下一轮、不响应旧事件恢复队列。** 新实验从随机初始化、同次受迫中断才可恢复；仅GPU2/3、模型只读、无周期定时器或goal等约束保持。将来恢复须用户明确授权。
+**单次训练与发布已结束，没有运行队列，不启动下一轮或自动迭代。** `project.json`仍保留该次`training_enabled=true`，不是新训练授权；工程/评估及自动迭代开关为false。仅同次受迫中断可恢复，已完成运行不得续训；GPU2/3、源模型只读、无周期定时器或goal保持。
 
-当前细节与有效证据见[1104说明](upright_1104.md)，完整目标见[需求基线](current_scope.md)。全部upright旧文档、runs及原archive分支备份仅保存在服务器history，日常不读；需要追因时按[历史定位](upright_history.md)查找。1104源码不依赖这些历史文件；本次仅验包，未重新训练或修改sim2sim。
+本次日志/检查点在1104项目的`logs/gpu3_4096x5000_s102_20261104/`与`outputs/gpu3_4096x5000_s102_20261104/`，均不进Git；MuJoCo原始轨迹在sim2sim的`outputs/1104_5000_20261105/`。旧轮次仅在服务器history，按[历史定位](upright_history.md)查找。当前身份见各项目README、release/selection及[主清单](../rl_project/manifest.json)；源码不依赖历史文件。
 
 ## 独立STEP v2
 
