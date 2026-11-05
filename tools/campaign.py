@@ -10,6 +10,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+from threading import Lock
 import time
 import traceback
 
@@ -18,6 +19,7 @@ sys.path.insert(0,str(PROJECT))
 from step_demo.runtime import load_training
 from step_demo.review import summarize
 from step_demo.video_selection import select_best
+from tools.gpu_resources import memory_by_container
 
 
 def read(path):return json.loads(Path(path).read_text())
@@ -34,15 +36,22 @@ def safe_relative(base,value):
     return path
 
 
+def job_container(job):
+    return job.get('container',f'petbot-step-gpu{job["gpu"]}')
+
+
 def validate_plan(plan,folder):
     if plan.get('schema')!='step_batch_v2' or plan.get('kind') not in ('engineering','formal','diagnostic'):
         raise ValueError('Unknown plan schema/kind')
     if not plan.get('hypothesis') or not plan.get('jobs'): raise ValueError('A plan needs a hypothesis and jobs')
-    ids=set();gpus=set()
+    ids=set();containers=set();gpus={}
     for job in plan['jobs']:
         if job['gpu'] not in range(4):raise ValueError('Step may use only physical GPU 0/1/2/3')
-        if job['gpu'] in gpus or job['id'] in ids:raise ValueError('One job per GPU and unique job IDs required')
-        gpus.add(job['gpu']);ids.add(job['id']);safe_relative(folder,job['id'])
+        container=job_container(job)
+        if container in containers or job['id'] in ids:raise ValueError('Unique containers and job IDs required')
+        gpus[job['gpu']]=gpus.get(job['gpu'],0)+1
+        if gpus[job['gpu']]>2:raise ValueError('At most two jobs per physical GPU')
+        containers.add(container);ids.add(job['id']);safe_relative(folder,job['id'])
         config=safe_relative(Path(folder)/'source',job['training_config'])
         training=load_training(config)
         if plan['kind']=='formal' and (training['num_envs'],training['num_steps_per_env'],training['iterations'])!=(4096,128,1000):
@@ -90,38 +99,60 @@ def gpu_ready(gpu,minimum_free_mib=3400,memory_fraction=.78,reserve_mib=2048):
     return min(memory_fraction*total-used,free-reserve_mib)>=minimum_free_mib
 
 
+class GpuReservations:
+    """Account for admitted jobs before their CUDA contexts allocate memory."""
+    def __init__(self):
+        self.lock=Lock();self.jobs={}
+
+    def claim(self,job):
+        with self.lock:
+            peers=[j for j in self.jobs.values() if j['gpu']==job['gpu']]
+            usage=memory_by_container(job['gpu'],[job_container(j) for j in peers]) if peers else {}
+            pending=sum(max(0,j.get('expected_peak_mib',3400)-usage[job_container(j)]) for j in peers)
+            if not gpu_ready(job['gpu'],job.get('expected_peak_mib',3400)+pending,
+                             job.get('memory_fraction',.78),job.get('reserve_mib',2048)):
+                return False
+            self.jobs[job['id']]=job
+            return True
+
+    def release(self,job):
+        with self.lock:self.jobs.pop(job['id'],None)
+
+
 def container_directory(folder,control):
     host=Path(read(control)['runs_root']).resolve()
     relative=Path(folder).resolve().relative_to(host)
     return str(Path('/workspace/runs')/relative/'source')
 
 
-def job_run(job,folder,control):
+def job_run(job,folder,control,reservations,peers):
     folder=Path(folder);job_dir=safe_relative(folder,job['id']);job_dir.mkdir(exist_ok=True)
     state_path=job_dir/'job_status.json'
     if state_path.exists() and read(state_path).get('status')=='complete':return read(state_path)
-    state=dict(job=job['id'],gpu=job['gpu'],status='waiting_for_gpu',updated_at=stamp())
+    state=dict(job=job['id'],gpu=job['gpu'],container=job_container(job),status='waiting_for_gpu',updated_at=stamp())
     write(state_path,state)
-    while enabled(control) and not gpu_ready(job['gpu'],job.get('expected_peak_mib',3400),
-            job.get('memory_fraction',.78),job.get('reserve_mib',2048)):time.sleep(15.)
-    if not enabled(control):state.update(status='cancelled_by_user');write(state_path,state);return state
     source=folder/'source';guard=source/'tools/run_guard.py';train=job_dir/'train'
-    working=container_directory(folder,control)
     common=['--asset-dir','../asset','--model-dir','../../../robot_description','--headless']
     def guarded(phase,command,status):
         attempt=1
         while (job_dir/f'{phase}_{attempt:02}.log').exists():attempt+=1
         log=job_dir/f'{phase}_{attempt:02}.log'
         state.update(status=phase,updated_at=stamp(),log=str(log));write(state_path,state)
-        args=[sys.executable,str(guard),'--gpu',str(job['gpu']),'--workdir',working,
-              '--timeout','86400','--memory-fraction',str(job.get('memory_fraction',.78)),
-              '--reserve-mib',str(job.get('reserve_mib',2048)),'--control',str(control),'--log',str(log),'--status',str(status),'--',*command]
+        peer_args=[arg for peer in peers for arg in ('--memory-peer',job_container(peer))]
+        args=[sys.executable,str(guard),'--gpu',str(job['gpu']),'--container',job_container(job),'--workdir',working,
+              '--timeout','0' if phase=='training' else '1800','--memory-fraction',str(job.get('memory_fraction',.78)),
+              '--reserve-mib',str(job.get('reserve_mib',2048)),'--control',str(control),'--log',str(log),'--status',str(status),
+              *peer_args,'--',*command]
         result=subprocess.run(args,cwd=source)
         guard_result=read(log.with_suffix('.log.guard.json')) if log.with_suffix('.log.guard.json').exists() else dict(valid=False,reason='guard_start_failed')
         if result.returncode or not guard_result.get('valid'):
             raise RuntimeError(json.dumps(dict(phase=phase,guard=guard_result),ensure_ascii=False))
         return guard_result
     try:
+        while enabled(control) and not reservations.claim(job):time.sleep(15.)
+        if not enabled(control):
+            state.update(status='cancelled_by_user');write(state_path,state);return state
+        working=container_directory(folder,control)
         train_status=read(train/'status.json') if (train/'status.json').exists() else {}
         if train_status.get('status')!='complete':
             command=['-m','step_demo','train','--run-dir',f'../{job["id"]}/train',
@@ -145,6 +176,8 @@ def job_run(job,folder,control):
                      analysis=str(job_dir/'analysis.json'))
     except Exception:
         state.update(status='failed' if enabled(control) else 'cancelled_by_user',updated_at=stamp(),error=traceback.format_exc())
+    finally:
+        reservations.release(job)
     write(state_path,state);return state
 
 
@@ -176,6 +209,7 @@ def record_best_video(folder,control,plan):
     try:
         working=container_directory(folder,control)
         command=[sys.executable,str(folder/'source/tools/run_guard.py'),'--gpu',str(job['gpu']),
+            '--container',job_container(job),
             '--workdir',working,'--timeout','900','--memory-fraction',str(job.get('memory_fraction',.78)),
             '--reserve-mib',str(job.get('reserve_mib',2048)),'--control',str(control),
             '--log',str(log),'--status',str(output/'status.json'),'--','-m','step_demo','evaluate',
@@ -215,8 +249,10 @@ def run(folder,control):
     state=dict(status='running',started_at=stamp(),plan_sha256=hashlib.sha256((folder/'plan.json').read_bytes()).hexdigest(),jobs=[])
     write(folder/'batch_status.json',state)
     try:
+        reservations=GpuReservations()
         with ThreadPoolExecutor(max_workers=len(plan['jobs'])) as pool:
-            futures=[pool.submit(job_run,job,folder,control) for job in plan['jobs']]
+            futures=[pool.submit(job_run,job,folder,control,reservations,
+                [other for other in plan['jobs'] if other['gpu']==job['gpu'] and other['id']!=job['id']]) for job in plan['jobs']]
             for future in as_completed(futures):
                 result=future.result()
                 state['jobs'].append(result);write(folder/'batch_status.json',state)
@@ -225,7 +261,7 @@ def run(folder,control):
                         f'[step单路结果事件] {folder}/{result["job"]}/job_status.json已有结果。'
                         f'先读取{control.parent}/active.json、{folder}/agent_review.json（若有）、{folder}/batch_status.json及{control}。'
                         '若是已处理旧事件且更新批次已运行，只补记接收，不重复发批或中止新训练。'
-                        '仅GPU0/1/2/3；先确认当前用户授权范围和暂停状态，再审查真实轨迹/analysis.json与失败原因；'
+                        f'物理GPU仅{allowed}；先确认当前用户授权范围和暂停状态，再审查真实轨迹/analysis.json与失败原因；'
                         '同批其它路仍可运行，不能修改固定副本或重复发批。等整批完成事件后汇总并验证、推送下一轮。')
         if plan['kind']=='formal' and enabled(control):
             state.update(status='recording_video');write(folder/'batch_status.json',state)
@@ -242,7 +278,7 @@ def run(folder,control):
             message=(f'[step自动迭代事件：{event_kind}] 固定目录 {folder}；控制文件 {control}。'
                 f'先核对{control.parent}/active.json、enabled、agent_review.json（若有）、batch_status.json、每路analysis.json、日志和实际进程。'
                 '若事件属于已处理的旧轮次且更新批次已运行，只补记接收，不重复发批或中止新训练。'
-                '只负责step，物理GPU仅0/1/2/3。按当前用户授权范围处理；完成事件不构成新的训练授权。'
+                f'只负责step，物理GPU仅{allowed}。按当前用户授权范围处理；完成事件不构成新的训练授权。'
                 '批次视频见video_status.json和video_selection.json；录制失败只处理视频，不重复训练。'
                 '先读TensorBoard趋势，再按需检查真实阶段、请求/执行/实测关节、接触、运动和成功/失败轨迹，记录结论与下一轮修改假设；'
                 '任何无效物理或失败工程不得作策略结论。新配置/源码先过容器门槛、提交推送、冻结，再启动下一批并延续同一事件链。'
@@ -254,7 +290,7 @@ def run(folder,control):
         state.update(status='controller_failed',error=traceback.format_exc(),finished_at=stamp())
         write(folder/'batch_status.json',state)
         if enabled(control):queue_event(control,folder/'controller_failure_event.json',
-            f'[step控制器异常] 检查{folder}/batch_status.json和{control}，仅step/GPU0/1/2/3；先核对用户是否仍授权迭代，避免重复运行。')
+            f'[step控制器异常] 检查{folder}/batch_status.json和{control}，仅step/GPU{allowed}；先核对用户是否仍授权迭代，避免重复运行。')
         raise
     finally:
         write(control.parent/'active.json',dict(round=str(folder),pid=os.getpid(),finished_at=stamp(),status=state['status']))
@@ -273,7 +309,7 @@ def main():
         if not thread or not shutil.which('codex'):raise RuntimeError('Current session identity and codex queue are required')
         control.parent.mkdir(parents=True,exist_ok=True)
         root=PROJECT.parents[1]
-        write(control,dict(project='step',enabled=False,paused_by_user=True,execution_schema='petbot_step_ppo_v2',allowed_gpus=[0,1,2,3],video_root='artifacts/step/videos',thread=thread,codex=shutil.which('codex'),
+        write(control,dict(project='step',enabled=False,paused_by_user=True,execution_schema='petbot_step_ppo_v2',allowed_gpus=[2,3],video_root='artifacts/step/videos',thread=thread,codex=shutil.which('codex'),
             cwd=str(root),runs_root=str(root/'demo_project/runs'),created_at=stamp(),authorization='Not authorized to launch; obtain explicit user restart instruction before enabling'))
     elif a.command=='stop':
         cfg=read(control);cfg.update(enabled=False,stopped_at=stamp());write(control,cfg)

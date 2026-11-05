@@ -1,0 +1,47 @@
+{
+  "schema": "step_batch_v2",
+  "kind": "formal",
+  "hypothesis": "Compare initial hip exploration std 0.03 versus 0.10; paired seeds on the same physical GPU, with task, reward and acceptance unchanged.",
+  "jobs": [
+    {
+      "id": "a_seed70",
+      "gpu": 2,
+      "container": "petbot-step-gpu2",
+      "training_config": "configs/train.json",
+      "eval_envs": 64,
+      "expected_peak_mib": 8192,
+      "memory_fraction": 0.95,
+      "reserve_mib": 1024
+    },
+    {
+      "id": "b_seed70",
+      "gpu": 2,
+      "container": "petbot-step-gpu2-b",
+      "training_config": "configs/train_explore.json",
+      "eval_envs": 64,
+      "expected_peak_mib": 8192,
+      "memory_fraction": 0.95,
+      "reserve_mib": 1024
+    },
+    {
+      "id": "a_seed71",
+      "gpu": 3,
+      "container": "petbot-step-gpu3",
+      "training_config": "configs/train_seed71.json",
+      "eval_envs": 64,
+      "expected_peak_mib": 8192,
+      "memory_fraction": 0.95,
+      "reserve_mib": 1024
+    },
+    {
+      "id": "b_seed71",
+      "gpu": 3,
+      "container": "petbot-step-gpu3-b",
+      "training_config": "configs/train_explore_seed71.json",
+      "eval_envs": 64,
+      "expected_peak_mib": 8192,
+      "memory_fraction": 0.95,
+      "reserve_mib": 1024
+    }
+  ]
+}
