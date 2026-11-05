@@ -79,13 +79,13 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/step_rl_demo",
-      "verified_commit": "3c3d2a9654c7ac81f30c44a96b46269066de5415",
+      "verified_commit": "f43cee99944ff61e6c4092455e7187286a5b6b98",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "v2_4096x128x1000_and_batch_video_ready;training_not_authorized",
-      "local_validation": "Targeted video-selection/automation tests and one fixed-command Isaac renderer check passed;H2641280x72025fps MP4 decoded and inspected. No PPO, weights, training or short training used. Prior32-step throughput is historical, not current128-step resource evidence.",
+      "status": "v2_gpu2_gpu3_two_slots_each_4096x128x1000_ready;training_not_authorized",
+      "local_validation": "Targeted container-side CPU orchestration checks passed: paired-slot admission, per-container memory ownership/pressure selection, separate train/eval commands, pause/events/video regressions. Four deployment containers have matching runtime packages and read-only source model mounts. No simulator, PPO, weights or training used for this deployment change. Actual128-step peak and shared-card throughput remain unmeasured.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [],
@@ -104,8 +104,6 @@
         "implemented": true
       },
       "authorized_physical_gpus": [
-        0,
-        1,
         2,
         3
       ],
@@ -135,6 +133,35 @@
         ],
         "config_key": "video_root",
         "validation": "Fixed-motor renderer probe only; no completed formal batch yet"
+      },
+      "deployment": {
+        "plan": "demo_project/step_rl_demo/configs/batch_dual_gpu.json",
+        "physical_gpus": [
+          2,
+          3
+        ],
+        "jobs_per_gpu": 2,
+        "placement": {
+          "2": [
+            "a_seed70",
+            "b_seed70"
+          ],
+          "3": [
+            "a_seed71",
+            "b_seed71"
+          ]
+        },
+        "containers": [
+          "petbot-step-gpu2",
+          "petbot-step-gpu2-b",
+          "petbot-step-gpu3",
+          "petbot-step-gpu3-b"
+        ],
+        "expected_peak_mib_per_job": 8192,
+        "peak_budget_is_estimate": true,
+        "memory_fraction": 0.95,
+        "reserve_mib_per_card": 1024,
+        "training_started": false
       }
     },
     {

@@ -47,7 +47,7 @@
            remote="ours"
            revision="demoproj/upright_rl_demo"
            groups="demo" />
-  <!-- STEP v2：4096×128×1000与批次MP4已配置，训练未获启动授权；需求与授权见docs/step_current.md；版本见demo_project/manifest.json。 -->
+  <!-- STEP v2：GPU2/3各两路，4096×128×1000与批次MP4已配置；训练未获启动授权；版本见demo_project/manifest.json。 -->
   <project name="petbot2_rl"
            path="demo_project/step_rl_demo"
            remote="ours"
