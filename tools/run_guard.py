@@ -19,8 +19,9 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--container')
     p.add_argument('--workdir',default='/workspace/demo_project/step_rl_demo')
-    p.add_argument('--gpu',type=int,choices=(0,1),default=1)
+    p.add_argument('--gpu',type=int,choices=range(4),default=1)
     p.add_argument('--memory-fraction',type=float,default=.78)
+    p.add_argument('--reserve-mib',type=int,default=2048)
     p.add_argument('--timeout',type=float,default=1800.)
     p.add_argument('--log',type=Path,required=True)
     p.add_argument('--status',type=Path,required=True,help='Host path to expected JSON artifact')
@@ -31,19 +32,24 @@ def main():
     if not command: p.error('Provide Python module/script arguments after --')
     if a.log.exists(): p.error('Use a fresh log path')
     if not 0<a.memory_fraction<1: p.error('memory-fraction must be between 0 and 1')
+    if a.reserve_mib < 1024: p.error('Keep at least 1024 MiB free for shared-server headroom')
     container=json.loads(subprocess.check_output(['docker','inspect',a.container],text=True))[0]
     if not container['State']['Running']:p.error('Dedicated step container is not running')
     requests=container['HostConfig'].get('DeviceRequests') or []
     devices=[item for request in requests for item in (request.get('DeviceIDs') or [])]
     expected_uuid=subprocess.check_output(['nvidia-smi',f'--id={a.gpu}','--query-gpu=uuid','--format=csv,noheader'],text=True).strip()
     if len(devices)!=1 or devices[0] not in (str(a.gpu),expected_uuid):
-        p.error('Container GPU exposure must exactly match the selected physical GPU 0/1')
+        p.error('Container GPU exposure must exactly match the selected physical GPU')
     if container['Config'].get('Labels',{}).get('petbot.project')!='step': p.error('Use a dedicated step container')
     if a.control and not control_enabled(a.control): p.error('Campaign is disabled or paused')
+    if a.control and a.gpu not in json.loads(a.control.read_text()).get('allowed_gpus',[]):
+        p.error('Selected GPU is outside this control file authorization')
     gpu_out=subprocess.check_output(['nvidia-smi',f'--id={a.gpu}',
-        '--query-gpu=memory.used,memory.total','--format=csv,noheader,nounits'],text=True)
-    used,total=map(float,gpu_out.strip().split(','))
-    if used/total>=a.memory_fraction: p.error('Selected GPU already exceeds memory threshold')
+        '--query-gpu=memory.used,memory.total,memory.free','--format=csv,noheader,nounits'],text=True)
+    used,total,free=map(float,gpu_out.strip().split(','))
+    if used/total>=a.memory_fraction or free<a.reserve_mib:
+        p.error('Selected GPU already exceeds memory threshold or free reserve')
+    baseline_used=used;baseline_free=free
     token=uuid.uuid4().hex;pidfile=f'/tmp/step-{token}.pid'
     bootstrap=('import os,sys;from pathlib import Path;os.setpgid(0,0);'
                'Path(sys.argv[1]).write_text(str(os.getpid()));'
@@ -55,8 +61,9 @@ def main():
           'valid=pid>1 and env.exists() and ("STEP_RUN_TOKEN="+sys.argv[2]).encode() in env.read_bytes().split(b"\\0");'
           'os.killpg(pid,signal.SIGTERM) if valid else None')
     a.log.parent.mkdir(parents=True,exist_ok=True)
-    reason=None;started=time.monotonic();peak=used
-    with a.log.open('w') as log:
+    reason=None;started=time.monotonic();peak=used;owned_peak=0.;util=[]
+    telemetry=a.log.with_suffix(a.log.suffix+'.resources.jsonl')
+    with a.log.open('w') as log,telemetry.open('x') as resources:
         # Recurrent trajectory lengths vary. This allocator setting completed
         # the v2 round01 same-run recovery without cache growth/guard trips.
         # Set it before importing torch; task/PPO/physical limits are unchanged.
@@ -69,9 +76,21 @@ def main():
                 if time.monotonic()-started>a.timeout: reason='timeout';break
                 if FATAL.search(a.log.read_text(errors='replace')): reason='physical_or_python_error';break
                 gpu_out=subprocess.check_output(['nvidia-smi',f'--id={a.gpu}',
-                    '--query-gpu=memory.used,memory.total','--format=csv,noheader,nounits'],text=True)
-                used,total=map(float,gpu_out.strip().split(','));peak=max(peak,used)
-                if used/total>=a.memory_fraction: reason='gpu_memory_threshold';break
+                    '--query-gpu=memory.used,memory.total,memory.free,utilization.gpu','--format=csv,noheader,nounits'],text=True)
+                used,total,free,gpu_util=map(float,gpu_out.strip().split(','));peak=max(peak,used);util.append(gpu_util)
+                # Attribute memory to this dedicated container, not other card users.
+                pids=set(subprocess.check_output(['docker','top',a.container,'-eo','pid'],text=True).splitlines()[1:])
+                pids={p.strip() for p in pids}
+                apps=subprocess.check_output(['nvidia-smi',f'--id={a.gpu}',
+                    '--query-compute-apps=pid,used_gpu_memory','--format=csv,noheader,nounits'],text=True)
+                owned=sum(float(row.split(',')[1]) for row in apps.splitlines()
+                          if row.split(',')[0].strip() in pids and row.split(',')[1].strip().isdigit())
+                owned_peak=max(owned_peak,owned)
+                resources.write(json.dumps(dict(elapsed_s=time.monotonic()-started,
+                    card_used_mib=used,card_total_mib=total,card_free_mib=free,card_util_percent=gpu_util,
+                    step_container_mib=owned))+'\n');resources.flush()
+                if used/total>=a.memory_fraction or free<a.reserve_mib:
+                    reason='gpu_memory_threshold';break
                 time.sleep(2.)
         except BaseException:
             reason='supervisor_interrupted'
@@ -92,6 +111,9 @@ def main():
     valid=(reason is None and child.returncode==0 and not matches and artifact.get('status') in ('complete','interrupted','passed'))
     result=dict(valid=valid,exit_code=child.returncode,reason=reason,physical_or_python_errors=matches,
                 artifact_status=artifact.get('status'),gpu_peak_mib=peak,elapsed_s=time.monotonic()-started,
+                gpu_baseline_mib=baseline_used,gpu_baseline_free_mib=baseline_free,step_container_peak_mib=owned_peak,
+                card_util_mean_percent=sum(util)/len(util) if util else None,
+                memory_fraction=a.memory_fraction,reserve_mib=a.reserve_mib,telemetry=str(telemetry),
                 pytorch_alloc_conf='expandable_segments:True')
     a.log.with_suffix(a.log.suffix+'.guard.json').write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result,ensure_ascii=False))

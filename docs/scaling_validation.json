@@ -1,0 +1,143 @@
+{
+  "date": "2026-11-05",
+  "evidence": "demo_project/runs/step_scale_audit_20261105",
+  "code_compared_to_fixed_candidate": "candidate_c: all step_demo/*.py byte-identical",
+  "container_tests": 61,
+  "four_gpu_container_scope": "Each dedicated STEP container exposes exactly its own physical GPU; robot mount read-only",
+  "geometry_comparison": {
+    "poses": 8192,
+    "max_error_m": 7.450580596923828e-09,
+    "flight_threshold_disagreements": 0
+  },
+  "physical_routes": {
+    "total": 54,
+    "successes": [
+      28,
+      33,
+      42
+    ],
+    "before_after_terminal_records_identical": true,
+    "source_robot_unchanged": true,
+    "weights_or_traces_transferred": false
+  },
+  "throughput": [
+    {
+      "case": "baseline512",
+      "num_envs": 512,
+      "rollout_steps": 128,
+      "compiled_geometry": false,
+      "measured_updates": 4,
+      "steady_mean_update_s": 61.62821626663208,
+      "steady_median_update_s": 61.43967938423157,
+      "control_transitions_per_s": 1063.4090027279233,
+      "container_peak_mib": 3470.0,
+      "baseline_card_mib": 8263.0,
+      "whole_run_card_util_mean_percent": 24.361538461538462,
+      "note": "First update excluded for compiler/startup; three timed updates only; card utilization includes other users and startup"
+    },
+    {
+      "case": "scale2048",
+      "num_envs": 2048,
+      "rollout_steps": 32,
+      "compiled_geometry": false,
+      "measured_updates": 4,
+      "steady_mean_update_s": 35.13371125857035,
+      "steady_median_update_s": 33.06477403640747,
+      "control_transitions_per_s": 1865.330978491874,
+      "container_peak_mib": 5946.0,
+      "baseline_card_mib": 6147.0,
+      "whole_run_card_util_mean_percent": 53.2183908045977,
+      "note": "First update excluded for compiler/startup; three timed updates only; card utilization includes other users and startup"
+    },
+    {
+      "case": "scale4096",
+      "num_envs": 4096,
+      "rollout_steps": 32,
+      "compiled_geometry": false,
+      "measured_updates": 4,
+      "steady_mean_update_s": 43.95392354329427,
+      "steady_median_update_s": 43.71670985221863,
+      "control_transitions_per_s": 2982.0318513976367,
+      "container_peak_mib": 9266.0,
+      "baseline_card_mib": 1270.0,
+      "whole_run_card_util_mean_percent": 44.21238938053097,
+      "note": "First update excluded for compiler/startup; three timed updates only; card utilization includes other users and startup"
+    },
+    {
+      "case": "fused4096",
+      "num_envs": 4096,
+      "rollout_steps": 32,
+      "compiled_geometry": true,
+      "measured_updates": 4,
+      "steady_mean_update_s": 24.31227167447408,
+      "steady_median_update_s": 24.277904987335205,
+      "control_transitions_per_s": 5391.186876938983,
+      "container_peak_mib": 5348.0,
+      "baseline_card_mib": 14860.0,
+      "whole_run_card_util_mean_percent": 16.11904761904762,
+      "note": "First update excluded for compiler/startup; three timed updates only; card utilization includes other users and startup"
+    },
+    {
+      "case": "fused8192",
+      "num_envs": 8192,
+      "rollout_steps": 32,
+      "compiled_geometry": true,
+      "measured_updates": 4,
+      "steady_mean_update_s": 32.60081831614176,
+      "steady_median_update_s": 32.718528032302856,
+      "control_transitions_per_s": 8041.025150285988,
+      "container_peak_mib": 7438.0,
+      "baseline_card_mib": 1270.0,
+      "whole_run_card_util_mean_percent": 16.433333333333334,
+      "note": "First update excluded for compiler/startup; three timed updates only; card utilization includes other users and startup"
+    },
+    {
+      "case": "explore4096",
+      "num_envs": 4096,
+      "rollout_steps": 32,
+      "compiled_geometry": true,
+      "measured_updates": 4,
+      "steady_mean_update_s": 27.80258361498515,
+      "steady_median_update_s": 27.675702810287476,
+      "control_transitions_per_s": 4714.382009064592,
+      "container_peak_mib": 5368.0,
+      "baseline_card_mib": 1541.0,
+      "whole_run_card_util_mean_percent": 24.735849056603772,
+      "note": "First update excluded for compiler/startup; three timed updates only; card utilization includes other users and startup"
+    }
+  ],
+  "selected": {
+    "num_envs": 4096,
+    "iterations": 1000,
+    "rollout": 32,
+    "transitions": 131072000,
+    "groups": {
+      "A": {
+        "hip_initial_std": 0.03,
+        "seeds": [
+          70,
+          71
+        ]
+      },
+      "B": {
+        "hip_initial_std": 0.1,
+        "seeds": [
+          70,
+          71
+        ]
+      }
+    }
+  },
+  "checkpoint": {
+    "short_training": "4096 environments,4 updates then same-run4->8 resume",
+    "optimizer_verified": true,
+    "independent_reload": "16 episodes; physical replay checked separately; not a capability gate"
+  },
+  "limitations": [
+    "Measured only a few updates; long-run time and memory can change.",
+    "Full-task capability remains unproven; no formal training launched.",
+    "Narrow versus broader hip exploration is a hypothesis, not an established fix.",
+    "Whole-card utilization includes startup and external users."
+  ],
+  "formal_training_started": false
+}

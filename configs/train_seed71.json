@@ -1,8 +1,8 @@
 {
   "schema": "petbot_step_ppo_v2",
   "seed": 71,
-  "num_envs": 512,
-  "iterations": 500,
+  "num_envs": 4096,
+  "iterations": 1000,
   "save_interval": 50,
   "decimation": 10,
   "hip_kp": 8.0,
@@ -13,7 +13,7 @@
   "ear_kd": 0.02,
   "hip_target_rate_rad_s": 20.0,
   "wheel_target_accel_rad_s2": 100.0,
-  "num_steps_per_env": 128,
+  "num_steps_per_env": 32,
   "hidden_dims": [
     128,
     128
@@ -32,5 +32,7 @@
   "initial_std": [
     0.03,
     0.15
-  ]
+  ],
+  "trace_interval_steps": 10,
+  "compiled_geometry": true
 }

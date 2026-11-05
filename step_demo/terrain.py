@@ -16,8 +16,7 @@ def convex_edges(vertices):
                    for a, b in ((f[0], f[1]), (f[1], f[2]), (f[2], f[0]))})
 
 
-@torch.jit.script
-def wheel_terrain_clearance(points: torch.Tensor, edges: torch.Tensor,
+def _wheel_terrain_clearance(points: torch.Tensor, edges: torch.Tensor,
                             edge_x: torch.Tensor, center_y: torch.Tensor,
                             height: float, length: float, half_width: float):
     """Distance certificate in metres; retain the existing 0.1 mm geometry pad.
@@ -58,6 +57,14 @@ reward, actor observation or physical parameter is changed here.
     lateral = torch.maximum(y.amin(1)-half_width, -half_width-y.amax(1)).clamp_min(0.)
     platform = (distance2+lateral.square()).sqrt()
     return (torch.minimum(floor, platform)-.0001).clamp_min(0.)
+
+
+wheel_terrain_clearance = torch.jit.script(_wheel_terrain_clearance)
+
+
+def compiled_clearance():
+    """Fuse the same geometry algebra without changing meshes or thresholds."""
+    return torch.compile(_wheel_terrain_clearance, fullgraph=True)
 
 
 def rear_airborne(clearance, force):

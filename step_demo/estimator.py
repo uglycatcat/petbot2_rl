@@ -20,6 +20,7 @@ class InertialEstimator:
         self.fixed = [(torch.tensor(b['pos'], device=device), torch.tensor(b['com'], device=device),
                        torch.tensor(b['axis'], device=device)) for b in source_bodies]
         self.initial_offset = self.com_offset(torch.zeros(num_envs, len(joint_names), device=device))
+        self.initial_rear_offset = self.rear_offset.clone()
         self.previous_offset = self.initial_offset.clone()
         self.rear_ids = [i for i,b in enumerate(source_bodies) if b.get('name') in ('left_rear_wheel','right_rear_wheel')]
         self.encoder_ids = [joint_names.index(n) for n in ('left_frame','right_frame','left_rear_wheel','right_rear_wheel')
@@ -54,8 +55,7 @@ class InertialEstimator:
         self.position[ids] = 0.; self.velocity[ids] = 0.
         self.com_position[ids] = 0.; self.com_velocity[ids] = 0.
         self.previous_offset[ids] = self.initial_offset[ids]; self.samples[ids] = 0
-        zero = self.com_offset(torch.zeros(len(self.q),len(self.joint_names),device=self.q.device))
-        self.previous_rear_offset[ids] = self.rear_offset[ids]
+        self.previous_rear_offset[ids] = self.initial_rear_offset[ids]
 
     def update(self, acceleration, gyro, joint_pos, dt, joint_vel=None):
         stationary=None

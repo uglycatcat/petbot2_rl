@@ -31,7 +31,7 @@ def load_training(path):
         'wheel_target_accel_rad_s2','num_steps_per_env','hidden_dims','memory_dim','learning_rate',
         'num_learning_epochs','num_mini_batches','initialization','pretrained_models','entropy_coef',
         'initial_mean','initial_std'}
-    if set(t) != expected or t['schema'] != 'petbot_step_ppo_v2':
+    if set(t) - {'trace_interval_steps','compiled_geometry'} != expected or t['schema'] != 'petbot_step_ppo_v2':
         raise ValueError('Only the refactored petbot_step_ppo_v2 schema is accepted; historical configs are not runnable here')
     if t['initialization'] != 'random' or t['pretrained_models']:
         raise ValueError('Only random initialization is allowed')
@@ -43,8 +43,17 @@ def load_training(path):
         raise ValueError('Control is fixed at 50Hz; task checks run at 500Hz')
     if t['num_envs'] % t['num_mini_batches']:
         raise ValueError('Recurrent minibatches must divide the environment count')
-    if t['num_steps_per_env'] < 128:
-        raise ValueError('A rollout must cover at least the 2.5 second hold')
+    # Rollout boundaries are PPO storage boundaries, not episode boundaries.
+    # RSL-RL bootstraps nonterminal returns and carries actor GRU state forward.
+    # The environment's physical hold timer continues until a real reset.
+    if t['num_steps_per_env'] < 16:
+        raise ValueError('Use at least 16 control steps per PPO rollout')
+    t.setdefault('trace_interval_steps', 10)
+    t.setdefault('compiled_geometry', False)
+    if type(t['compiled_geometry']) is not bool:
+        raise ValueError('compiled_geometry must be boolean')
+    if type(t['trace_interval_steps']) is not int or t['trace_interval_steps'] < 1:
+        raise ValueError('trace_interval_steps must be a positive integer')
     for name in ('hip_kp','hip_kd','head_kp','head_kd','ear_kp','ear_kd','hip_target_rate_rad_s',
                  'wheel_target_accel_rad_s2','learning_rate'):
         if type(t[name]) not in (float,int) or not math.isfinite(t[name]) or t[name] <= 0:
@@ -120,6 +129,7 @@ def main(argv):
         if args.command=='evaluate':
             actual['num_envs']=args.eval_envs
         env=StepEnv(task,actual,args.asset_dir,args.device)
+        env.trace_interval_steps=t['trace_interval_steps'] if args.command=='train' else 1
         env.trace_ids=list(range(min(actual['num_envs'],8))) if args.command=='train' else list(range(actual['num_envs']))
         attempt=uuid.uuid4().hex[:12]
         trace_file=(output/(f'trace_resume_{attempt}.jsonl' if args.resume else 'trace.jsonl')).open('x')

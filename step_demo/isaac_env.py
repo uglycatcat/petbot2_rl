@@ -18,9 +18,10 @@ from isaaclab_physx.physics import PhysxCfg
 from .config import StepConfig
 from .estimator import InertialEstimator
 from .tensor_math import rotate, heading
-from .terrain import convex_edges, wheel_terrain_clearance
+from .terrain import convex_edges, wheel_terrain_clearance, compiled_clearance
 from .task import StepTask, PhysicsSample, Phase, Failure
 from .kinematics import body_pitch
+from .recording import records_from_tensors
 
 
 def tensor(value):
@@ -66,6 +67,7 @@ class StepEnv(DirectRLEnv):
         self.vertices = [torch.tensor(self.asset['wheel_vertices'][n], device=self.device) for n in self.wheel_names]
         self.edges = [torch.tensor(convex_edges(self.asset['wheel_vertices'][n]), dtype=torch.long,
                                   device=self.device) for n in self.wheel_names]
+        self.clearance_function = compiled_clearance() if training.get('compiled_geometry', False) else wheel_terrain_clearance
         n, d = self.num_envs, self.device
         self.origin_com = self.scene.env_origins + torch.tensor(self.asset['initial_com'], device=d)
         self.edge_x = self.origin_com[:, 0]+task.terrain.initial_distance_m
@@ -87,6 +89,7 @@ class StepEnv(DirectRLEnv):
         self.wheel_speed_peak = self.pending_reward.clone()
         self.trace_ids = None; self.physics_trace_ids = None
         self.trace_writer = None; self.physics_trace_writer = None; self.episode_writer = None
+        self.trace_interval_steps = 1
         self._capture_counter = self._sim_step_counter; self.captured_substeps = 0
         self.episode_serial = torch.zeros(n, dtype=torch.long, device=d)
         self.totals = dict(episodes=0, successes=0, front_collisions=0, rear_air=0, falls=0,
@@ -208,7 +211,7 @@ class StepEnv(DirectRLEnv):
             axes = rotate(body_q[:,body,None,:].expand(-1,3,-1), basis)
             points = torch.matmul(self.vertices[i], axes)+body_p[:,body,None,:]
             self.minimum[:,i] = points.amin(1)-.0001; self.maximum[:,i] = points.amax(1)+.0001
-            self.clearance[:,i] = wheel_terrain_clearance(points, self.edges[i], self.edge_x,
+            self.clearance[:,i] = self.clearance_function(points, self.edges[i], self.edge_x,
                 self.scene.env_origins[:,1], self.task.terrain.height_m,
                 self.task.terrain.platform_length_m, self.task.terrain.platform_width_m/2)
         for name, sensor in self.contacts:
@@ -246,7 +249,7 @@ class StepEnv(DirectRLEnv):
     def _get_rewards(self):
         for key, value in zip(self.learning_coverage, self._coverage_delta.tolist()):
             self.learning_coverage[key] += value
-        if self.trace_ids is not None:
+        if self.trace_ids is not None and self.common_step_counter % self.trace_interval_steps == 0:
             self.last_trace = self.trace(self.trace_ids)
             if self.trace_writer:
                 self.trace_writer.write(json.dumps(self.last_trace)+'\n')
@@ -281,21 +284,23 @@ class StepEnv(DirectRLEnv):
         if env_ids is None: env_ids = torch.arange(self.num_envs,device=self.device)
         env_ids = torch.as_tensor(env_ids,device=self.device,dtype=torch.long)
         if hasattr(self, 'objective'):
-            for i in env_ids[self.episode_length_buf[env_ids] > 0].tolist():
-                record = dict(attempt=self.attempt_id, env=i, episode=int(self.episode_serial[i]),
-                    success=bool(self.objective.completed[i]), failure=int(self.objective.failure[i]),
-                    timeout=int(self.objective.failure[i]) == Failure.TIMEOUT, phase=int(self.objective.phase[i]),
-                    front_flight_count=self.objective.flight_count[i].tolist(),
-                    front_landed=self.objective.landed_top[i].tolist(), drive_distance=float(self.objective.drive_distance[i]),
-                    hold_s=float(self.objective.hold_s[i]), elapsed_s=float(self.objective.elapsed_s[i]),
-                    return_sum=float(self.episode_return[i]), quality_cost=float(self.objective.quality_cost[i]),
-                    actual_wheel_peak=float(self.wheel_speed_peak[i]), estimator_error_m=float(
-                        (self.estimator.com_position[i]-(self.com[i]-self.origin_com[i])).norm()))
-                self.terminal_records.append(record)
-                if self.episode_writer: self.episode_writer.write(json.dumps(record)+'\n')
+            ids = env_ids[self.episode_length_buf[env_ids] > 0]
+            records = records_from_tensors(dict(env=ids, episode=self.episode_serial[ids],
+                success=self.objective.completed[ids], failure=self.objective.failure[ids],
+                timeout=self.objective.failure[ids] == Failure.TIMEOUT, phase=self.objective.phase[ids],
+                front_flight_count=self.objective.flight_count[ids], front_landed=self.objective.landed_top[ids],
+                drive_distance=self.objective.drive_distance[ids], hold_s=self.objective.hold_s[ids],
+                elapsed_s=self.objective.elapsed_s[ids], return_sum=self.episode_return[ids],
+                quality_cost=self.objective.quality_cost[ids], actual_wheel_peak=self.wheel_speed_peak[ids],
+                estimator_error_m=(self.estimator.com_position[ids]-(self.com[ids]-self.origin_com[ids])).norm(dim=-1)))
+            for record in records:
+                record['attempt'] = self.attempt_id
                 self.totals['episodes'] += 1; self.totals['successes'] += int(record['success'])
                 for key, code in [('front_collisions',1),('rear_air',2),('falls',3),('quality_failures',5),('platform_exits',6),('timeouts',7)]:
                     self.totals[key] += int(record['failure'] == code)
+            self.terminal_records.extend(records)
+            if self.episode_writer and records:
+                self.episode_writer.write(''.join(json.dumps(record)+'\n' for record in records))
             self.terminal_records = self.terminal_records[-4096:]
             self.extras['log'] = {f'Step/{k}':float(v) for k,v in self.totals.items()}
         super()._reset_idx(env_ids)

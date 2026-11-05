@@ -19,6 +19,7 @@ def main():
     p.add_argument('--asset-dir', type=Path, required=True)
     p.add_argument('--model-dir', type=Path, required=True)
     p.add_argument('--mode', choices=('standstill','routes'), default='routes')
+    p.add_argument('--compiled-geometry', action='store_true')
     AppLauncher.add_app_launcher_args(p)
     a = p.parse_args(); a.output.mkdir(parents=True, exist_ok=False)
     app = AppLauncher(a).app
@@ -36,6 +37,7 @@ def main():
         if a.mode == 'standstill': cases = [dict(wheel=0.,delay=0.,hip=0.,duration=0.,preload=0.,stop_s=0.)]*4
         config = load_training(PROJECT_ROOT/'configs/engineering.json')
         config['num_envs'] = len(cases)
+        config['compiled_geometry'] = a.compiled_geometry
         contract = load_config(model_dir=a.model_dir)
         before = source_fingerprint(contract.model_dir)
         env = StepEnv(contract, config, a.asset_dir, a.device)

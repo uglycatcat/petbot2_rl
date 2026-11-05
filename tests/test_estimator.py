@@ -52,4 +52,15 @@ class EstimatorTests(unittest.TestCase):
             p=Path(directory)/'foreign.pt';torch.save({'origin':{'run_id':'old'}},p)
             with self.assertRaises(ValueError): runner.restore(p,training=True)
 
+    def test_reset_uses_default_encoder_geometry_without_changing_other_rows(self):
+        from step_demo.estimator import InertialEstimator
+        bodies=[dict(parent=-1,mass=1.,pos=[0.,0.,0.],com=[0.,0.,0.],axis=[0.,1.,0.],joint=None),
+                dict(parent=0,mass=.1,pos=[.1,0.,0.],com=[.02,0.,0.],axis=[0.,1.,0.],joint='hip',name='left_rear_wheel')]
+        e=InertialEstimator(2,'cpu',bodies,['hip']); default=e.initial_rear_offset.clone()
+        e.update(torch.tensor([[1.,0.,9.81]]).repeat(2,1),torch.tensor([[0.,1.,0.]]).repeat(2,1),torch.ones(2,1),.02)
+        unaffected={k:v[1].clone() for k,v in vars(e).items() if isinstance(v,torch.Tensor) and len(v)==2}
+        e.reset(torch.tensor([0]))
+        torch.testing.assert_close(e.previous_rear_offset[0],default[0])
+        for k,v in unaffected.items():torch.testing.assert_close(getattr(e,k)[1],v)
+
 if __name__=='__main__': unittest.main()

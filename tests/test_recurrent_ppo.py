@@ -74,5 +74,29 @@ class RecurrentPolicyTests(unittest.TestCase):
             torch.testing.assert_close(d.log_prob(raw), expected)
             self.assertTrue(((raw.clamp(-1,1)[:,1]+1.)*12.5 == 0.).all())
 
+    def test_short_rollout_bootstraps_and_preserves_nonterminal_gru(self):
+        self.make()
+        storage = RolloutStorage('rl', 4, 16, self.obs, [2])
+        cfg = deepcopy(self.cfg['algorithm']); cfg.pop('class_name')
+        cfg.update(num_learning_epochs=1, num_mini_batches=2)
+        alg = PPO(self.actor, self.critic, storage, **cfg)
+        with torch.inference_mode():
+            for _ in range(16):
+                alg.act(self.obs)
+                alg.process_env_step(self.obs, torch.ones(4), torch.zeros(4,dtype=torch.bool), {})
+            state = self.actor.get_hidden_state().clone()
+            last_value = self.critic(self.obs).clone()
+            alg.compute_returns(self.obs)
+            torch.testing.assert_close(storage.returns[-1], 1.+last_value)
+            torch.testing.assert_close(self.actor.get_hidden_state(), state)
+        alg.update()
+        torch.testing.assert_close(self.actor.get_hidden_state(), state)
+        with torch.inference_mode():
+            alg.act(self.obs)
+            self.assertFalse(torch.equal(self.actor.get_hidden_state(),state))
+            alg.process_env_step(self.obs,torch.ones(4),torch.tensor([True,False,False,False]),{})
+            self.assertEqual(float(self.actor.get_hidden_state()[:,0].abs().sum()),0.)
+            self.assertGreater(float(self.actor.get_hidden_state()[:,1:].abs().sum()),0.)
+
 
 if __name__ == '__main__': unittest.main()

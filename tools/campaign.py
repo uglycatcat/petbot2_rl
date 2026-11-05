@@ -39,11 +39,16 @@ def validate_plan(plan,folder):
     if not plan.get('hypothesis') or not plan.get('jobs'): raise ValueError('A plan needs a hypothesis and jobs')
     ids=set();gpus=set()
     for job in plan['jobs']:
-        if job['gpu'] not in (0,1):raise ValueError('Step may use only physical GPU 0/1')
+        if job['gpu'] not in range(4):raise ValueError('Step may use only physical GPU 0/1/2/3')
         if job['gpu'] in gpus or job['id'] in ids:raise ValueError('One job per GPU and unique job IDs required')
         gpus.add(job['gpu']);ids.add(job['id']);safe_relative(folder,job['id'])
         config=safe_relative(Path(folder)/'source',job['training_config'])
         training=load_training(config)
+        if plan['kind']=='formal' and (training['num_envs']<2048 or training['iterations']<1000):
+            raise ValueError('Formal STEP training requires at least 2048 environments and 1000 updates')
+        if not .5<=job.get('memory_fraction',.78)<=.95:raise ValueError('Invalid memory threshold')
+        if job.get('reserve_mib',2048)<1024 or job.get('expected_peak_mib',3400)<1024:
+            raise ValueError('Invalid resource budget')
         if 'hold_after_success_s' in job: raise ValueError('The full 2.5s hold is fixed in both training and evaluation')
         if type(job['eval_envs']) is not int or not 1<=job['eval_envs']<=512:raise ValueError('Invalid evaluation size')
     if plan.get('round_number',0)>1:
@@ -77,11 +82,11 @@ def enabled(control):
     return bool(cfg.get('enabled')) and not cfg.get('paused_by_user',False)
 
 
-def gpu_ready(gpu,minimum_free_mib=3400):
+def gpu_ready(gpu,minimum_free_mib=3400,memory_fraction=.78,reserve_mib=2048):
     result=subprocess.check_output(['nvidia-smi',f'--id={gpu}',
-        '--query-gpu=memory.used,memory.total','--format=csv,noheader,nounits'],text=True)
-    used,total=map(float,result.strip().split(','))
-    return .78*total-used>=minimum_free_mib
+        '--query-gpu=memory.used,memory.total,memory.free','--format=csv,noheader,nounits'],text=True)
+    used,total,free=map(float,result.strip().split(','))
+    return min(memory_fraction*total-used,free-reserve_mib)>=minimum_free_mib
 
 
 def container_directory(folder,control):
@@ -96,7 +101,8 @@ def job_run(job,folder,control):
     if state_path.exists() and read(state_path).get('status')=='complete':return read(state_path)
     state=dict(job=job['id'],gpu=job['gpu'],status='waiting_for_gpu',updated_at=stamp())
     write(state_path,state)
-    while enabled(control) and not gpu_ready(job['gpu']):time.sleep(15.)
+    while enabled(control) and not gpu_ready(job['gpu'],job.get('expected_peak_mib',3400),
+            job.get('memory_fraction',.78),job.get('reserve_mib',2048)):time.sleep(15.)
     if not enabled(control):state.update(status='cancelled_by_user');write(state_path,state);return state
     source=folder/'source';guard=source/'tools/run_guard.py';train=job_dir/'train'
     working=container_directory(folder,control)
@@ -107,7 +113,8 @@ def job_run(job,folder,control):
         log=job_dir/f'{phase}_{attempt:02}.log'
         state.update(status=phase,updated_at=stamp(),log=str(log));write(state_path,state)
         args=[sys.executable,str(guard),'--gpu',str(job['gpu']),'--workdir',working,
-              '--timeout','86400','--control',str(control),'--log',str(log),'--status',str(status),'--',*command]
+              '--timeout','86400','--memory-fraction',str(job.get('memory_fraction',.78)),
+              '--reserve-mib',str(job.get('reserve_mib',2048)),'--control',str(control),'--log',str(log),'--status',str(status),'--',*command]
         result=subprocess.run(args,cwd=source)
         guard_result=read(log.with_suffix('.log.guard.json')) if log.with_suffix('.log.guard.json').exists() else dict(valid=False,reason='guard_start_failed')
         if result.returncode or not guard_result.get('valid'):
@@ -142,18 +149,21 @@ def job_run(job,folder,control):
 
 def run(folder,control):
     folder=Path(folder).resolve();control=Path(control).resolve();cfg=read(control)
-    if cfg.get('project')!='step' or cfg.get('allowed_gpus')!=[0,1]:raise ValueError('Invalid campaign scope')
+    allowed=cfg.get('allowed_gpus',[])
+    if cfg.get('project')!='step' or not allowed or len(set(allowed))!=len(allowed) or any(g not in range(4) for g in allowed):
+        raise ValueError('Invalid campaign scope')
     if not enabled(control):raise ValueError('Campaign disabled')
     if cfg.get('execution_schema') != 'petbot_step_ppo_v2': raise ValueError('Explicit authorization for the refactored campaign is required')
     if (folder/'disposition.json').exists() and read(folder/'disposition.json').get('disposition') == 'invalidated_by_user':
         raise ValueError('Discarded rounds cannot be restarted')
     plan=read(folder/'plan.json');validate_plan(plan,folder)
+    if any(job['gpu'] not in allowed for job in plan['jobs']):raise ValueError('Plan exceeds authorized GPUs')
     lock=(control.parent/'active.lock').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     write(control.parent/'active.json',dict(round=str(folder),pid=os.getpid(),started_at=stamp(),status='running'))
     state=dict(status='running',started_at=stamp(),plan_sha256=hashlib.sha256((folder/'plan.json').read_bytes()).hexdigest(),jobs=[])
     write(folder/'batch_status.json',state)
     try:
-        with ThreadPoolExecutor(max_workers=2) as pool:
+        with ThreadPoolExecutor(max_workers=len(plan['jobs'])) as pool:
             futures=[pool.submit(job_run,job,folder,control) for job in plan['jobs']]
             for future in as_completed(futures):
                 result=future.result()
@@ -163,7 +173,7 @@ def run(folder,control):
                         f'[step单路结果事件] {folder}/{result["job"]}/job_status.json已有结果。'
                         f'先读取{control.parent}/active.json、{folder}/agent_review.json（若有）、{folder}/batch_status.json及{control}。'
                         '若是已处理旧事件且更新批次已运行，只补记接收，不重复发批或中止新训练。'
-                        '仅GPU0/1；先确认当前用户授权范围和暂停状态，再审查真实轨迹/analysis.json与失败原因；'
+                        '仅GPU0/1/2/3；先确认当前用户授权范围和暂停状态，再审查真实轨迹/analysis.json与失败原因；'
                         '同批其它路仍可运行，不能修改固定副本或重复发批。等整批完成事件后汇总并验证、推送下一轮。')
         state.update(status='complete' if all(job['status']=='complete' for job in state['jobs']) else 'failed',finished_at=stamp())
         if not enabled(control):state['status']='cancelled_by_user'
@@ -173,8 +183,8 @@ def run(folder,control):
             message=(f'[step自动迭代事件：{event_kind}] 固定目录 {folder}；控制文件 {control}。'
                 f'先核对{control.parent}/active.json、enabled、agent_review.json（若有）、batch_status.json、每路analysis.json、日志和实际进程。'
                 '若事件属于已处理的旧轮次且更新批次已运行，只补记接收，不重复发批或中止新训练。'
-                '只负责step，物理GPU仅0/1。按当前用户授权范围处理；完成事件不构成新的训练授权。'
-                '检查真实阶段、请求/执行/实测关节、接触、运动和成功/失败轨迹，记录结论与下一轮修改假设；'
+                '只负责step，物理GPU仅0/1/2/3。按当前用户授权范围处理；完成事件不构成新的训练授权。'
+                '先读TensorBoard趋势，再按需检查真实阶段、请求/执行/实测关节、接触、运动和成功/失败轨迹，记录结论与下一轮修改假设；'
                 '任何无效物理或失败工程不得作策略结论。新配置/源码先过容器门槛、提交推送、冻结，再启动下一批并延续同一事件链。'
                 '不得加载历史权重、修改源机器人、使用其它GPU、启动sim2sim或其它项目。'
                 '当前为重构v2；不可恢复旧轮次或迁移任何旧权重。单次离地与2.5s真实子步保持须独立复核。'
@@ -184,7 +194,7 @@ def run(folder,control):
         state.update(status='controller_failed',error=traceback.format_exc(),finished_at=stamp())
         write(folder/'batch_status.json',state)
         if enabled(control):queue_event(control,folder/'controller_failure_event.json',
-            f'[step控制器异常] 检查{folder}/batch_status.json和{control}，仅step/GPU0/1；先核对用户是否仍授权迭代，避免重复运行。')
+            f'[step控制器异常] 检查{folder}/batch_status.json和{control}，仅step/GPU0/1/2/3；先核对用户是否仍授权迭代，避免重复运行。')
         raise
     finally:
         write(control.parent/'active.json',dict(round=str(folder),pid=os.getpid(),finished_at=stamp(),status=state['status']))
@@ -203,7 +213,7 @@ def main():
         if not thread or not shutil.which('codex'):raise RuntimeError('Current session identity and codex queue are required')
         control.parent.mkdir(parents=True,exist_ok=True)
         root=PROJECT.parents[1]
-        write(control,dict(project='step',enabled=False,paused_by_user=True,execution_schema='petbot_step_ppo_v2',allowed_gpus=[0,1],thread=thread,codex=shutil.which('codex'),
+        write(control,dict(project='step',enabled=False,paused_by_user=True,execution_schema='petbot_step_ppo_v2',allowed_gpus=[0,1,2,3],thread=thread,codex=shutil.which('codex'),
             cwd=str(root),runs_root=str(root/'demo_project/runs'),created_at=stamp(),authorization='Not authorized to launch; obtain explicit user restart instruction before enabling'))
     elif a.command=='stop':
         cfg=read(control);cfg.update(enabled=False,stopped_at=stamp());write(control,cfg)

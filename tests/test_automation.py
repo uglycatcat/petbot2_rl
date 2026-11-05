@@ -12,17 +12,33 @@ from tools.campaign import queue_event,safe_relative,validate_plan
 class AutomationTests(unittest.TestCase):
     def plan_directory(self,directory):
         root=Path(directory);(root/'source/configs').mkdir(parents=True)
-        (root/'source/configs/train.json').write_text((PROJECT_ROOT/'configs/train.json').read_text())
+        cfg=json.loads((PROJECT_ROOT/'configs/train.json').read_text());cfg.update(num_envs=2048,iterations=1000)
+        (root/'source/configs/train.json').write_text(json.dumps(cfg))
         return root,dict(schema='step_batch_v2',kind='formal',round_number=1,hypothesis='baseline',
             jobs=[dict(id='seed70',gpu=0,training_config='configs/train.json',eval_envs=64)])
 
     def test_gpu_restriction_and_one_job_per_gpu(self):
         with tempfile.TemporaryDirectory(prefix='step-plan-') as directory:
             root,plan=self.plan_directory(directory);validate_plan(plan,root)
-            plan['jobs'][0]['gpu']=2
+            plan['jobs'][0]['gpu']=3
+            validate_plan(plan,root)
+            plan['jobs'][0]['gpu']=4
             with self.assertRaises(ValueError):validate_plan(plan,root)
             plan['jobs'][0]['gpu']=0;plan['jobs'].append(dict(plan['jobs'][0],id='seed71'))
             with self.assertRaises(ValueError):validate_plan(plan,root)
+
+    def test_formal_budget_and_resource_readiness(self):
+        from tools.campaign import gpu_ready
+        with tempfile.TemporaryDirectory(prefix="step-plan-") as directory:
+            root,plan=self.plan_directory(directory)
+            path=root/"source/configs/train.json";c=json.loads(path.read_text())
+            c["num_envs"]=512;path.write_text(json.dumps(c))
+            with self.assertRaises(ValueError):validate_plan(plan,root)
+            c["num_envs"]=2048;c["iterations"]=500;path.write_text(json.dumps(c))
+            with self.assertRaises(ValueError):validate_plan(plan,root)
+        with patch("tools.campaign.subprocess.check_output",return_value="14860,24564,9224"):
+            self.assertTrue(gpu_ready(0,6000,.92,2048))
+            self.assertFalse(gpu_ready(0,8000,.92,2048))
 
     def test_next_round_requires_optimization_decision(self):
         with tempfile.TemporaryDirectory(prefix='step-plan-') as directory:

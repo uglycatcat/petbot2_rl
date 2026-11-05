@@ -7,7 +7,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--image',default='petbot-step-runtime:20261030')
     p.add_argument('--name')
-    p.add_argument('--gpu',type=int,choices=(0,1),default=1)
+    p.add_argument('--gpu',type=int,choices=range(4),default=1)
     args=p.parse_args()
     args.name=args.name or f'petbot-step-gpu{args.gpu}'
     project=Path(__file__).resolve().parents[1]; root=project.parents[1]
