@@ -1,0 +1,31 @@
+{
+  "policy_training_commit": "7ce7bc5062d90dc0eb63e53d2ea2bc6a4a9050c9",
+  "controller_source_commit": "7ce7bc5062d90dc0eb63e53d2ea2bc6a4a9050c9",
+  "policy": "upright1104_5000_s102",
+  "cases": {
+    "source_parity": {
+      "cases": 180,
+      "observation_max_error": 0.0,
+      "target_max_error": 0.0,
+      "source_files_exact": true
+    },
+    "mjcf_geometry": {
+      "poses": 27,
+      "max_gap_error_m": 2.59638171518084e-08
+    },
+    "operator_ownership": {
+      "forward_measured": 0.7363874912261963,
+      "reverse_measured": -0.7390544414520264,
+      "qe_target": 0.1500000000000001,
+      "qe_four_fraction": 1.0,
+      "takeover_keeps_state": true,
+      "history_reset_at_space": true,
+      "onnx_only": true
+    },
+    "failure_exit": {
+      "ordinary_after_failure": true,
+      "new_space_required": true
+    }
+  },
+  "passed": true
+}

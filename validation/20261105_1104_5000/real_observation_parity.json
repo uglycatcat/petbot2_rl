@@ -1,0 +1,21 @@
+{
+  "cases": [
+    {
+      "scenario": "stationary",
+      "observations": 753,
+      "numeric_max_abs_error": 4.76837158203125e-07,
+      "tolerance": 1e-05,
+      "onnxruntime": "1.23.2",
+      "passed": true
+    },
+    {
+      "scenario": "mixed",
+      "observations": 754,
+      "numeric_max_abs_error": 8.344650268554688e-07,
+      "tolerance": 1e-05,
+      "onnxruntime": "1.23.2",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

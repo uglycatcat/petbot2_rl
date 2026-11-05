@@ -1,0 +1,71 @@
+{
+  "kind": "user_requested_1104_final_checkpoint_release",
+  "policy": "upright1104_5000_s102",
+  "training_commit": "7ce7bc5062d90dc0eb63e53d2ea2bc6a4a9050c9",
+  "checkpoint": "update_005000.pt",
+  "checkpoint_sha256": "75d737e1f01a23380d4a528975c1a337f48126f1d1a16d2d593aa138b4211f5f",
+  "onnx_sha256": "83fb16ce0e635952894c2659423e3a3bb4a3afa4a70e6ee54818b063020ad01e",
+  "updates_completed": 5000,
+  "num_envs": 4096,
+  "seed": 102,
+  "initialization": "random",
+  "default_policy_verified": true,
+  "export_validation": "export.json",
+  "real_observation_parity": "real_observation_parity.json",
+  "source_parity": "source_port.json",
+  "controller_contract": "restart_v21r5",
+  "controller_source_exact": true,
+  "control_config_exact_to_training": true,
+  "closed_loop": {
+    "stationary": {
+      "completed_cycles": 1,
+      "interrupted_calls": 0,
+      "frames": 753,
+      "all_finite": true,
+      "target_limit_pass": true,
+      "effort_limit_pass": true,
+      "max_target_rad_s": 24.783611297607422,
+      "max_actual_wheel_rad_s": 30.658092498779297,
+      "post_first_four_contact_body_path_m": 0.001290643163183374,
+      "post_first_four_contact_body_backward_m": 7.006325429046871e-05,
+      "post_first_four_contact_body_path_scope": "Body origin at 30ms sampling until handoff completion; includes body pitch translation,not rear-axle displacement or a full standstill acceptance.",
+      "final_request": [
+        0.0,
+        0.0
+      ],
+      "final_motion": [
+        -3.941347313229926e-05,
+        9.348842286271974e-05
+      ],
+      "final_ordinary_control": true
+    },
+    "mixed": {
+      "completed_cycles": 1,
+      "interrupted_calls": 0,
+      "frames": 754,
+      "all_finite": true,
+      "target_limit_pass": true,
+      "effort_limit_pass": true,
+      "max_target_rad_s": 24.762325286865234,
+      "max_actual_wheel_rad_s": 32.85716247558594,
+      "post_first_four_contact_body_path_m": 0.089849555418233,
+      "post_first_four_contact_body_backward_m": 0.0,
+      "post_first_four_contact_body_path_scope": "Body origin at 30ms sampling until handoff completion; includes body pitch translation,not rear-axle displacement or a full standstill acceptance.",
+      "final_request": [
+        0.15000000596046448,
+        0.0
+      ],
+      "final_motion": [
+        0.14301198720932007,
+        2.4904263682401506e-06
+      ],
+      "final_ordinary_control": true
+    }
+  },
+  "closed_loop_scope": "Two finite MuJoCo deployment checks; not a capability-range or desktop acceptance.",
+  "raw_evidence_server": "rl_project/std_s2s_upright_project/outputs/1104_5000_20261105",
+  "desktop_acceptance": false,
+  "full_policy_acceptance": false,
+  "previous_default": "restart21r5_s102",
+  "training_started": false
+}

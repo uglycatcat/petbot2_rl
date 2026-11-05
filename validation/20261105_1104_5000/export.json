@@ -1,0 +1,45 @@
+{
+  "checkpoint": "update_005000.pt",
+  "checkpoint_sha256": "75d737e1f01a23380d4a528975c1a337f48126f1d1a16d2d593aa138b4211f5f",
+  "onnx_sha256": "83fb16ce0e635952894c2659423e3a3bb4a3afa4a70e6ee54818b063020ad01e",
+  "source_commit": "7ce7bc5062d90dc0eb63e53d2ea2bc6a4a9050c9",
+  "run_id": "4ab949ad-ddfa-4531-b236-6b9bddca57ec",
+  "updates_completed": 5000,
+  "num_envs": 4096,
+  "seed": 102,
+  "initialization": "random",
+  "source_and_checkpoint_identity_pass": true,
+  "exporter_32_sample_error": 7.271766662597656e-06,
+  "stress_cases": [
+    {
+      "input_scale": "zero",
+      "count": 1,
+      "max_abs_error": 1.1920928955078125e-07
+    },
+    {
+      "input_scale": "0.1",
+      "count": 1024,
+      "max_abs_error": 2.6226043701171875e-06
+    },
+    {
+      "input_scale": "1.0",
+      "count": 1024,
+      "max_abs_error": 1.233816146850586e-05
+    },
+    {
+      "input_scale": "3.0",
+      "count": 1024,
+      "max_abs_error": 2.014636993408203e-05
+    }
+  ],
+  "numeric_max_abs_error": 2.014636993408203e-05,
+  "numeric_tolerance": 0.0001,
+  "tolerance_basis": "Existing sim2sim checks/export_onnx.py float32 parity tolerance; 1e-4 normalized action is at most 0.0025 rad/s wheel or 0.00011 rad hip.",
+  "initial_stress_check": {
+    "tolerance": 1e-05,
+    "passed": false,
+    "reason": "Large random input batches exceeded the stricter threshold; finite bounded outputs and errors preserved above."
+  },
+  "passed": true,
+  "simulation_acceptance": false
+}

@@ -1,0 +1,25 @@
+{
+  "selected": "restart21r5_s102",
+  "checkpoint": "update_001000.pt",
+  "batch": "upright_restart_round21r5",
+  "seed": 102,
+  "training_updates": 1000,
+  "task_commit": "8cac727a270fa670b182bc385b0066330b13ad42",
+  "checkpoint_sha256": "5300e3ce8a4661c95394cc9ecc242e163706917f16cd0d610f6c61e04b51c62b",
+  "previous_default": "restart20_s102",
+  "previous_selection": "selection_restart20_handoff.json",
+  "inference_backend": "onnxruntime_cpu",
+  "status": "user_requested_round21r5_preview_pending_desktop_acceptance",
+  "criterion": "Better seed in completed21r5:low complete32/basic31,high complete30/basic30 per32. Not full acceptance or uniform improvement over20.",
+  "recommended_keyboard": {
+    "forward_mps": 0.15,
+    "yaw_radps": 0.5
+  },
+  "source_results": "docs/upright_restart_round21r5_results.md",
+  "limitations": "Zero-input landing residual,full bidirectional0.75m/s,broad hips,mirror behavior and actual wheel overspeed remain unproven/unresolved.",
+  "mujoco_evidence": "validation/20261104_restart21r5/review.json",
+  "latest_runtime_validation": "validation/20261104_restart21r5/review.json",
+  "runtime_revision": "round21r5_trained_controller",
+  "controller_contract": "restart_v21r5",
+  "controller_source_commit": "8cac727a270fa670b182bc385b0066330b13ad42"
+}
