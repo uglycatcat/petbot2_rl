@@ -84,15 +84,17 @@
         "demo"
       ],
       "shallow": false,
-      "status": "v2_round03_authorized_preparing;gpu2_gpu3_two_slots_each_4096x128x1000",
+      "status": "v2_round03_running;gpu2_gpu3_two_slots_each_4096x128x1000;automatic_iteration_authorized",
       "local_validation": "Targeted container-side CPU orchestration checks passed: paired-slot admission, per-container memory ownership/pressure selection, separate train/eval commands, pause/events/video regressions. Four deployment containers have matching runtime packages and read-only source model mounts. No simulator, PPO, weights or training used for this deployment change. Actual128-step peak and shared-card throughput remain unmeasured.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [],
+      "active_tasks": [
+        "step_v2_round03_20261105"
+      ],
       "active_training_commit": "720d59737f33a3c8af50113aeb64f0b21c650ffe",
       "next_iteration_requirement": "User authorized training and continuous automatic iteration on 2026-11-05. GPU2/3 only, two slots each, every job4096x128x1000 from random initialization. Read TensorBoard first, use necessary real-trajectory checks, analyze and modify before publishing/freezing the next fresh batch. Stop continuation when disabled/paused. Each completed batch records its best evaluated checkpoint MP4; never resume cancelled/historical rounds.",
       "series": "step_refactor_v2_20261104",
-      "last_training_commit": "728cef16811766fa3441a06ab43204bc0ee396af",
+      "last_training_commit": "720d59737f33a3c8af50113aeb64f0b21c650ffe",
       "latest_result_document": "docs/step_current.md",
       "active_execution_document": "docs/step_current.md",
       "current_document": "docs/step_current.md",
@@ -120,7 +122,7 @@
         "num_steps_per_env": 128,
         "groups": 2,
         "seeds_per_group": 2,
-        "started": false
+        "started": true
       },
       "batch_video": {
         "enabled_in_formal_workflow": true,
@@ -161,7 +163,7 @@
         "peak_budget_is_estimate": true,
         "memory_fraction": 0.95,
         "reserve_mib_per_card": 1024,
-        "training_started": false,
+        "training_started": true,
         "training_authorized": true
       }
     },

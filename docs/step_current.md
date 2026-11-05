@@ -9,11 +9,13 @@
 | 项目 | 当前值 |
 |---|---|
 | 源码 | `demo_project/step_rl_demo`，分支 `demoproj/step_rl_demo` |
-| 最近训练的代码版本 | `728cef16811766fa3441a06ab43204bc0ee396af`；新批采用`720d5973`（仅授权文档更新，训练实现与f43cee99一致）；含双卡四路编排、128步配置和批次录像 |
+| 当前训练代码版本 | 新批采用`720d5973`（仅授权文档更新，训练实现与f43cee99一致）；含双卡四路编排、128步配置和批次录像 |
 | 控制入口 | `demo_project/runs/_step_refactor_campaign_20261104/`；新授权恢复执行，enabled/paused_by_user及active.json为实际状态开关 |
-| 最新批次 | `demo_project/runs/step_v2_round03_20261105/`；旧round02保持cancelled_by_user |
+| 最新批次 | `demo_project/runs/step_v2_round03_20261105/`，四路已启动；旧round02保持cancelled_by_user |
 | 训练资源 | 当前仅GPU2/3，每卡两个独立容器：GPU2为A/B seed70，GPU3为A/B seed71；GPU0/1不部署STEP |
 | 预览与预留 | sim2sim仍是旧预览，未同步v2；`rl_project/std_train_step_project`为空 |
+
+18:25（本地时间）已启动四个专用容器内的独立训练进程，四路origin均为random、pretrained_models为空；实际完成更新数以各路train/progress.json与TensorBoard为准。控制enabled=true、paused_by_user=false，启动连通事件已投递；本批尚无终局结果。
 
 ## 有效结果与限制
 
