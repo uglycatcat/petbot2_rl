@@ -1,6 +1,6 @@
 # STEP agent 入口
 
-**2026-11-05：用户新授权算法/任务复查及扩容工程测量；用户明确未授权启动训练，自动迭代仍关闭。** 不因文档、旧事件或历史授权自动重启。当前为11月4日重构后的v2；旧系列只在服务器history中按需追溯。
+**2026-11-05：用户明确授权启动训练和持续自动迭代。** 当前限GPU2/3各两路、每路4096×128×1000；以控制文件enabled/paused_by_user为运行开关，暂停后旧事件不得重启。当前为11月4日重构后的v2；旧系列只在服务器history中按需追溯。
 
 先读主仓库[STEP当前交接](../../docs/step_current.md)及[STEP需求](../../docs/step_scope.md)。涉及代码再读[架构](docs/architecture.md)，涉及编排再读[管理流程](docs/automation.md)；不要遍历旧docs/runs。
 
@@ -12,7 +12,7 @@
 - Isaac训练/仿真仅专用容器；当前部署只用物理GPU2/3，每卡两路、独立容器，GPU0/1不部署STEP。宿主只编排与读数据。源机器人及物理参数只读，不动他人进程。sim2sim本次不改。
 - 先看TensorBoard，再按实际问题做必要验证；只验证受改动影响的路径；普通超参数迭代不固定附加短训、恢复或整套测试。工程通过不等于策略能力通过。
 - 本目录由repo管理，分支`demoproj/step_rl_demo`；main只维护索引和manifest。改前同步并保全他人改动，完整修改提交推送后冻结，固定输入不可热改。
-- 正式状态入口为`demo_project/runs/_step_refactor_campaign_20261104/`；当前enabled=false、paused_by_user=true。本次工程证据另存`runs/step_scale_audit_20261105/`，不接旧事件队列。旧campaign归档，不恢复；无周期定时器或goal。
+- 正式状态入口为`demo_project/runs/_step_refactor_campaign_20261104/`；新授权批次为`step_v2_round03_20261105`，运行状态看control/active及实际进程；既有工程证据在`runs/step_scale_audit_20261105/`，不恢复被取消的批次。旧campaign归档，不恢复；无周期定时器或goal。
 
 历史定位见主仓库[STEP history](../../docs/step_history.md)。旧文档只作待复核资料，不是当前规范、算法基线或执行授权。
 

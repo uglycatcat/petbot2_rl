@@ -28,6 +28,6 @@ RSL-RL PPO，GRU actor输入27维自身信息：一次性地形包、IMU/编码�
 
 `review.py`从连续2ms原始物理流重算任务、运动峰值和阶段计数，包含终止子步、排除其后的重置回合，记录峰值位置。独立评估保留20ms控制轨迹和2ms物理流；训练控制日志每10步记录一次，终端记录保留所有环境。稀疏训练日志不能代替子步接触与停稳验证。
 
-几何距离采用torch.compile融合原公式，不减网格或变阈值；保留TorchScript后端作对照。reset批量读取终端信息，复用默认传感器几何。guard设置`PYTORCH_ALLOC_CONF=expandable_segments:True`，支持GPU0–3并检查control白名单；记录整卡显存/计算利用率与专用容器进程显存，保留至少2GiB空闲。整卡利用率含其他用户，不能冒充STEP独占指标。
+几何距离采用torch.compile融合原公式，不减网格或变阈值；保留TorchScript后端作对照。reset批量读取终端信息，复用默认传感器几何。guard设置`PYTORCH_ALLOC_CONF=expandable_segments:True`，支持GPU0–3并检查control白名单；记录整卡显存/计算利用率与专用容器进程显存。当前GPU2/3双路计划保留实际空闲至少1GiB、整卡阈值95%，每路8GiB为待实测预算。整卡利用率含其他用户，不能冒充STEP独占指标。
 
 已完成的工程摘要见`refactor_validation.json`和`v2_reward_validation.json`，仅在核查相关代码时读取。有限电机正例、CPU/物理检查、短训恢复与重载证明工程链路，不是已学会策略；其权重、状态和轨迹不得迁移。未来按改动范围做必要验证，不固定重复历史整套流程。
