@@ -79,18 +79,18 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/step_rl_demo",
-      "verified_commit": "032ab6549b662d18b61c43cfe6c2759bac4b88b9",
+      "verified_commit": "e4865e66af05f9cba9faba1cd6faccc26a2fa0bd",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "v2_paused_by_user;pre_v2_history_archived;documentation_separated_from_runtime",
-      "local_validation": "Runtime728cef16:57 container checks and physical/restore/reload engineering passed; full capability unproven. V2 round01 0/128; round02 cancelled12/12 updates. Documentation-only cleanup preserves code/configs.",
+      "status": "v2_scaling_engineering_validated;formal_training_not_started",
+      "local_validation": "61 container tests;8192 geometry comparisons max7.45e-9m;54 physical routes identical before/after with3 complete;4096-env4->8 same-run restore and16 independent physical replays valid. Short policy0/16 is not a capability conclusion. Fused4096x32 steady24.31s/update,5348MiB own peak;full task remains unproven.",
       "task": null,
       "usage": "README.md",
       "active_tasks": [],
       "active_training_commit": null,
-      "next_iteration_requirement": "Current request is analysis; no training launched. User authorizes STEP GPUs0/1/2/3 and minimum2048x1000 per full run. Implement four-GPU orchestration and define learning comparisons before deployment; preserve random initialization and final physical acceptance.",
+      "next_iteration_requirement": "Prepared two groups x seeds70/71;each4096x1000x32 random initialization. A/B hip std .03/.10 only;fixed task and acceptance. Four GPU containers and guards implemented. Formal control remains disabled; no engineering weights/trajectories may transfer.",
       "series": "step_refactor_v2_20261104",
       "last_training_commit": "728cef16811766fa3441a06ab43204bc0ee396af",
       "latest_result_document": "docs/step_current.md",
@@ -101,7 +101,7 @@
       "minimum_full_training": {
         "num_envs": 2048,
         "iterations": 1000,
-        "implemented": false
+        "implemented": true
       },
       "authorized_physical_gpus": [
         0,
@@ -111,8 +111,19 @@
       ],
       "implemented_physical_gpus": [
         0,
-        1
-      ]
+        1,
+        2,
+        3
+      ],
+      "engineering_validation_document": "demo_project/step_rl_demo/docs/scaling_validation.json",
+      "prepared_full_training": {
+        "num_envs": 4096,
+        "iterations": 1000,
+        "num_steps_per_env": 32,
+        "groups": 2,
+        "seeds_per_group": 2,
+        "started": false
+      }
     },
     {
       "name": "recovery_rl_demo",
