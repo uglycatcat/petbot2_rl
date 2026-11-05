@@ -257,9 +257,25 @@ class StepTask:
     def potential(self, s):
         approach = 2.*(s.forward/.16).clamp(0., 1.)
         proximity = ((.08-(self.edge_x[:, None]-s.maximum[:, :2, 0]))/.08).clamp(0., 1.)
-        lift = (proximity*(s.minimum[:, :2, 2]/.025).clamp(0., 1.)).sum(-1)
-        value = approach+lift
-        rear = 4.+(s.minimum[:, 2:, 2]/self.t.height_m).clamp(0., 1.).sum(-1)
+        lift = (s.minimum[:, :2, 2]/(self.t.height_m+.005)).clamp(0., 1.)
+        # A near-edge vertical hop used to exhaust the same four-point band
+        # as a real front landing. Keep a small lift signal, then pay for
+        # horizontal crossing while both fronts clear the edge and the rear
+        # wheels remain close to their supporting terrain. These quantities
+        # shape reward only; contact/landing acceptance above is unchanged.
+        rear_support = (1.-s.clearance[:, 2:]/.004).clamp(0., 1.).amin(-1)
+        width = (s.maximum[:, :2, 0]-s.minimum[:, :2, 0]).clamp_min(.001)
+        crossing = ((s.maximum[:, :2, 0]-self.edge_x[:, None])/width).clamp(0., 1.)
+        clearance = ((s.minimum[:, :2, 2]-(self.t.height_m-.004))/.009).clamp(0., 1.)
+        single_flight = ((self.flight_count == 1).all(-1)
+                         & ~self.returned_floor.any(-1) & ~self.front_hit)
+        lift_credit = .5*(proximity*lift).mean(-1)
+        crossing_credit = 1.5*(crossing*clearance).amin(-1)*single_flight
+        value = approach+rear_support*(lift_credit+crossing_credit)  # <= 4
+        # Actual qualified front landing is worth at least one more point
+        # than ANY pre-landing pose. Rear ascent then fills [5, 6], joining
+        # the unchanged alignment/drive/STOP bands at 6/7/8.
+        rear = 5.+(s.minimum[:, 2:, 2]/self.t.height_m).clamp(0., 1.).mean(-1)
         value = torch.where(self.phase >= Phase.REAR_ASCENT, rear, value)
         home = 6.+(1.-s.hip.abs().amax(-1)/.8).clamp(0., 1.)
         value = torch.where(self.phase >= Phase.ALIGN, home, value)

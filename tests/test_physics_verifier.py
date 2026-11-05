@@ -22,6 +22,27 @@ def row(t, s, k):
 
 
 class PhysicalVerifierTests(unittest.TestCase):
+    def test_metrics_include_between_control_ticks_and_terminal_spikes(self):
+        t,s=task(),sample(); rows=[]
+        for k in range(1,11):
+            if k==9:s.body_invalid[:]=True
+            t.advance(s);r=row(t,s,k)
+            r.update(elapsed=[k*.002],world_pitch=[0.],world_pitch_rate=[7. if k==5 else 0.],
+                     wheel_target=[1.],joint_velocity=[[0.]*9])
+            r['joint_velocity'][0][6]=40. if k==9 else 100. if k==10 else 1.
+            rows.append(r)
+        with tempfile.TemporaryDirectory(prefix='step-physical-peaks-') as directory:
+            path=Path(directory)/'physics.jsonl'
+            path.write_text(''.join(json.dumps(r)+'\n' for r in rows))
+            result=verify_physics(path,[17],[1,2],rear_wheel_indices=[6,8])
+        self.assertTrue(result['all_terminal'])
+        metrics=result['physical_metrics']
+        self.assertEqual(metrics['maxima']['pitch_rate'],7.)  # 10 ms transient
+        self.assertEqual(metrics['maxima']['wheel_actual'],40.)  # terminal included
+        self.assertEqual(metrics['peak_samples']['wheel_actual']['env'],17)
+        self.assertEqual(metrics['peak_samples']['wheel_actual']['physics_step'],9)
+        self.assertEqual(sum(metrics['phase_frames'].values()),9)  # postterminal ignored
+
     def test_full_route_support_gap_substep_spike_and_actual_hold(self):
         t,s=task(),sample(); rows=[]
         def emit():

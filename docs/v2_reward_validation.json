@@ -1,0 +1,158 @@
+{
+  "status": "passed",
+  "date": "2026-11-05",
+  "gate": "step_v2_reward_gate_20261105_a",
+  "base_commit": "cdd6c95f23a96d4462f3f7755f4898603736ecd5",
+  "cpu_tests": 57,
+  "guard_results": {
+    "routes": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "passed",
+      "gpu_peak_mib": 17570.0,
+      "elapsed_s": 117.63221951387823,
+      "pytorch_alloc_conf": "expandable_segments:True"
+    },
+    "train4": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "interrupted",
+      "gpu_peak_mib": 11740.0,
+      "elapsed_s": 273.7202510731295,
+      "pytorch_alloc_conf": "expandable_segments:True"
+    },
+    "resume8": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "complete",
+      "gpu_peak_mib": 11740.0,
+      "elapsed_s": 271.55572554655373,
+      "pytorch_alloc_conf": "expandable_segments:True"
+    },
+    "reload": {
+      "valid": true,
+      "exit_code": 0,
+      "reason": null,
+      "physical_or_python_errors": [],
+      "artifact_status": "complete",
+      "gpu_peak_mib": 10934.0,
+      "elapsed_s": 76.48082723096013,
+      "pytorch_alloc_conf": "expandable_segments:True"
+    }
+  },
+  "source_sha256": "de1862d58f9989ae7eb0de5b20188e2ffc7052d2b9d5588446eef4b166b5f53f",
+  "code_sha256": "721943c89663f2f497bccbddec645cd3cc4d2bb37d1e7d7c2a505ef083dee318",
+  "random_initialization": {
+    "initialization": "random",
+    "pretrained_models": [],
+    "actor_sha256": "525be8870c0984f0a3571d5ecab6c9cc93d5d4bea44a8f92b9cc161f9fc6579c",
+    "critic_sha256": "33a2ecf27d71f75331827f4398ff304ca760f9bbe4cb9f06b8b3ec95f3cb509b",
+    "optimizer_states": 0,
+    "frozen_parameters": 0
+  },
+  "restore": {
+    "checkpoint": "model_3.pt",
+    "completed_updates": 4,
+    "actor_sha256": "97a4e669dae3565f68ff15082baa560ea1690cc638f4205c95ebc0173f27ee70",
+    "critic_sha256": "eee08a51bcb3a9e88072f77a3079aff2480b64dd3bd0a6f2c8ece3bf34d1a973",
+    "optimizer_states": 16,
+    "optimizer_sha256": "7b545f5bed53650be0dd330774e164687b8f2b19a4fffc44327f4b37774a6ca7",
+    "learning_rate": 0.0003,
+    "physics_episodes_restarted": true
+  },
+  "reload": {
+    "checkpoint": "model_7.pt",
+    "completed_updates": 8,
+    "actor_sha256": "250df72b4d1630498855c5fb316b51b1d329669f6e472fae26b42ff675de27ce",
+    "critic_sha256": "0ac213048a65adf37d03010c696eca0829ff8a4c092c29356c77169f88dd0ffa",
+    "optimizer_states": 16,
+    "optimizer_sha256": "41b981f73b63157baf1763010c5fa0392379ca9805159f3ec4019c8c8e0de170",
+    "learning_rate": 0.0003,
+    "physics_episodes_restarted": true
+  },
+  "short_run_updates": 8,
+  "short_run_outcomes": {
+    "total": 16,
+    "successes": 0,
+    "failures": {
+      "1": 16
+    }
+  },
+  "physics_success_cases": [
+    42,
+    28,
+    33
+  ],
+  "independent_route_outcomes": {
+    "22": {
+      "success": false,
+      "failure": 5,
+      "phase": 7,
+      "front_flight_count": [
+        1,
+        2
+      ],
+      "drive_distance": 0.0,
+      "hold_s": 0.0,
+      "elapsed_s": 0.5740000000000001
+    },
+    "28": {
+      "success": true,
+      "failure": 0,
+      "phase": 6,
+      "front_flight_count": [
+        1,
+        1
+      ],
+      "drive_distance": 0.15,
+      "hold_s": 2.5,
+      "elapsed_s": 3.904
+    },
+    "33": {
+      "success": true,
+      "failure": 0,
+      "phase": 6,
+      "front_flight_count": [
+        1,
+        1
+      ],
+      "drive_distance": 0.15,
+      "hold_s": 2.5,
+      "elapsed_s": 4.098
+    },
+    "42": {
+      "success": true,
+      "failure": 0,
+      "phase": 6,
+      "front_flight_count": [
+        1,
+        1
+      ],
+      "drive_distance": 0.15,
+      "hold_s": 2.5,
+      "elapsed_s": 3.896
+    }
+  },
+  "physical_acceptance_unchanged": true,
+  "training_config_unchanged": true,
+  "actor_dim": 27,
+  "critic_dim": 134,
+  "old_failure_new_best": {
+    "seed70": 2.5841034054756165,
+    "seed71": 2.7090613022446632
+  },
+  "legal_landing_increments": [
+    2.7134580612182617,
+    2.792518138885498,
+    2.870492696762085,
+    2.7678425312042236
+  ],
+  "no_engineering_transfer": true,
+  "policy_ability_passed": false
+}

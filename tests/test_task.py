@@ -65,6 +65,62 @@ def route_to_stop(t, s):
 
 
 class TaskContractTests(unittest.TestCase):
+    def edge_flight(self):
+        t, s = task(), sample()
+        s.forward[:] = .16
+        s.minimum[:, :2, 0] = .21
+        s.maximum[:, :2, 0] = .30
+        s.force[:, 2:, 2] = 1.
+        fly_front(s)
+        t.advance(s)
+        return t, s
+
+    def test_vertical_hop_does_not_exhaust_crossing_progress(self):
+        t, s = self.edge_flight()
+        hop = t.potential(s).item()
+        self.assertLess(hop, 3.)
+        s.minimum[:, :2, 2] = .10  # Extra height without crossing cannot pay.
+        self.assertAlmostEqual(t.potential(s).item(), hop, places=5)
+        s.minimum[:, :2, 0] += .045; s.maximum[:, :2, 0] += .045
+        self.assertGreater(t.potential(s).item(), hop+.5)
+
+    def test_crossing_requires_both_fronts_clear_and_rear_support(self):
+        t, s = self.edge_flight()
+        s.minimum[:, :2, 0] += .045; s.maximum[:, :2, 0] += .045
+        supported = t.potential(s).item()
+        s.clearance[:, 2] = .002
+        self.assertLess(t.potential(s).item(), supported)
+        s.clearance[:, 2] = .005; s.force[:, 2] = 0.
+        self.assertAlmostEqual(t.potential(s).item(), 2., places=5)
+        best = t.best_legal_potential.item()
+        t.advance(s)
+        self.assertEqual(t.failure.item(), Failure.REAR_AIR)
+        self.assertEqual(t.best_legal_potential.item(), best)
+        t, s = self.edge_flight()
+        s.minimum[:, :2, 0] += .045; s.maximum[:, :2, 0] += .045
+        s.minimum[:, 0, 2] = .002  # One low wheel must not earn crossing credit.
+        self.assertLess(t.potential(s).item(), 2.5)
+
+    def test_actual_front_landing_strictly_exceeds_any_airborne_pose(self):
+        t, s = self.edge_flight()
+        s.minimum[:, :2, 0] = .40; s.maximum[:, :2, 0] = .49
+        t.advance(s)
+        airborne = t.potential(s).item()
+        self.assertAlmostEqual(airborne, 4., places=5)
+        s.minimum[:, :2, 2] = .02
+        s.force[:, :2, 2] = 1.; s.platform_force[:, :2, 2] = 1.
+        s.contact_point[:, :2] = torch.tensor([.44, 0., .02])
+        t.advance(s)
+        self.assertEqual(t.phase.item(), Phase.REAR_ASCENT)
+        self.assertGreaterEqual(t.potential(s).item()-airborne, .99)
+        self.assertAlmostEqual(t.potential(s).item(), 5., places=5)
+
+    def test_rolling_forward_without_flight_cannot_earn_crossing_credit(self):
+        t, s = task(), sample()
+        s.forward[:] = .16
+        s.minimum[:, :2, 0] = .40; s.maximum[:, :2, 0] = .49
+        self.assertAlmostEqual(t.potential(s).item(), 2., places=5)
+
     def test_loaded_contact_not_rejected_by_aabb_penetration(self):
         t, s = task(), sample()
         route_to_stop(t, s)

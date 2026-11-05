@@ -57,7 +57,11 @@ def main():
     a.log.parent.mkdir(parents=True,exist_ok=True)
     reason=None;started=time.monotonic();peak=used
     with a.log.open('w') as log:
-        child=subprocess.Popen(['docker','exec','-w',a.workdir,a.container,'/isaac-sim/python.sh','-c',bootstrap,pidfile,token,*command],stdout=log,stderr=subprocess.STDOUT)
+        # Recurrent trajectory lengths vary. This allocator setting completed
+        # the v2 round01 same-run recovery without cache growth/guard trips.
+        # Set it before importing torch; task/PPO/physical limits are unchanged.
+        child=subprocess.Popen(['docker','exec','-e','PYTORCH_ALLOC_CONF=expandable_segments:True',
+            '-w',a.workdir,a.container,'/isaac-sim/python.sh','-c',bootstrap,pidfile,token,*command],stdout=log,stderr=subprocess.STDOUT)
         try:
             while child.poll() is None:
                 if a.control and not control_enabled(a.control):
@@ -87,7 +91,8 @@ def main():
     artifact=json.loads(a.status.read_text()) if a.status.exists() else {}
     valid=(reason is None and child.returncode==0 and not matches and artifact.get('status') in ('complete','interrupted','passed'))
     result=dict(valid=valid,exit_code=child.returncode,reason=reason,physical_or_python_errors=matches,
-                artifact_status=artifact.get('status'),gpu_peak_mib=peak,elapsed_s=time.monotonic()-started)
+                artifact_status=artifact.get('status'),gpu_peak_mib=peak,elapsed_s=time.monotonic()-started,
+                pytorch_alloc_conf='expandable_segments:True')
     a.log.with_suffix(a.log.suffix+'.guard.json').write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result,ensure_ascii=False))
     return 0 if valid else 82
