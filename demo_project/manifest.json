@@ -79,7 +79,7 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/step_rl_demo",
-      "verified_commit": "0641179b06a86c7cf4fa0cb6c0e1d1a88fbe77e3",
+      "verified_commit": "032ab6549b662d18b61c43cfe6c2759bac4b88b9",
       "groups": [
         "demo"
       ],
@@ -90,7 +90,7 @@
       "usage": "README.md",
       "active_tasks": [],
       "active_training_commit": null,
-      "next_iteration_requirement": "Paused by user. Explicit reauthorization required for training/engineering. Discuss STEP independently; management conventions may reference upright, algorithms may not be assumed. Existing512x500 config does not meet new minimum.",
+      "next_iteration_requirement": "Current request is analysis; no training launched. User authorizes STEP GPUs0/1/2/3 and minimum2048x1000 per full run. Implement four-GPU orchestration and define learning comparisons before deployment; preserve random initialization and final physical acceptance.",
       "series": "step_refactor_v2_20261104",
       "last_training_commit": "728cef16811766fa3441a06ab43204bc0ee396af",
       "latest_result_document": "docs/step_current.md",
@@ -102,7 +102,17 @@
         "num_envs": 2048,
         "iterations": 1000,
         "implemented": false
-      }
+      },
+      "authorized_physical_gpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "implemented_physical_gpus": [
+        0,
+        1
+      ]
     },
     {
       "name": "recovery_rl_demo",

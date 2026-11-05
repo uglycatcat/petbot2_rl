@@ -10,7 +10,7 @@
 - **upright阅读边界：** upright会话只读本页的当前工作与全局规则、当前交接、[1104说明](docs/upright_1104.md)和相关需求；upright接手可跳过其他任务的里程碑及历史链接。全部旧upright轮次文档与runs已放服务器`history/`，不进Git、不默认加载；原远程archive分支已本地备份后删除，禁止重新推送。细节按[历史定位](docs/upright_history.md)查找。
 
 - **STEP当前为独立重构v2，已暂停。** 先读[STEP交接](docs/step_current.md)和[STEP需求](docs/step_scope.md)，只在改代码时读其实现说明。用户要求先同步问题，训练/自动迭代/工程实验均不重启；旧事件不构成授权。
-- **STEP管理与阅读边界：** 仅参考upright的项目管理方式，不继承算法结构。后续完整训练至少2048环境、1000次iteration，现有配置尚未修改；仅GPU0/1，随机初始化，源模型只读。先看TensorBoard，再做必要验证。重构前资料已移入服务器history，按[STEP历史定位](docs/step_history.md)单文件追查，不默认加载旧轮次、旧假设或旧授权。
+- **STEP管理与阅读边界：** 仅参考upright的项目管理方式，不继承算法结构。后续完整训练至少2048环境、1000次iteration，现有配置尚未修改；用户11月5日已授权STEP使用物理GPU0/1/2/3，当前容器/编排仍仅实现0/1，尚未部署四卡。随机初始化，源模型只读。先看TensorBoard，再做必要验证。重构前资料已移入服务器history，按[STEP历史定位](docs/step_history.md)单文件追查，不默认加载旧轮次、旧假设或旧授权。
 
 ## 设备与阅读路径
 
