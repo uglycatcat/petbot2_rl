@@ -85,8 +85,14 @@ def main(argv):
     parser.add_argument('--stop-after',type=int,help='Stop after this many new PPO updates, preserving the total budget')
     parser.add_argument('--output',type=Path,help='Fresh evaluation output directory')
     parser.add_argument('--eval-envs',type=int,default=32)
+    parser.add_argument('--video',action='store_true',help='Record one deterministic evaluation episode as best.mp4')
+    parser.add_argument('--video-label',default='STEP')
     AppLauncher.add_app_launcher_args(parser)
     args=parser.parse_args(argv)
+    if args.video:
+        if args.command != 'evaluate' or args.eval_envs != 1:
+            parser.error('Video requires evaluate --eval-envs 1')
+        args.enable_cameras = True
     from .ppo import write_json, state_digest, runner_config, StepRunner
     task=load_config(args.config,args.model_dir)
     if json.loads((args.asset_dir/'asset.json').read_text())['source_sha256']!=source_fingerprint(task.model_dir):
@@ -118,7 +124,7 @@ def main(argv):
     if output is None: parser.error('Evaluation requires --output')
     if args.command=='evaluate': output.mkdir(parents=True,exist_ok=False)
     write_json(output/'status.json',dict(status='starting',command=args.command))
-    app=None; env=None
+    app=None; env=None; video=None
     try:
         app=AppLauncher(args).app
         import torch
@@ -128,7 +134,7 @@ def main(argv):
         actual=t.copy()
         if args.command=='evaluate':
             actual['num_envs']=args.eval_envs
-        env=StepEnv(task,actual,args.asset_dir,args.device)
+        env=StepEnv(task,actual,args.asset_dir,args.device,render_mode='rgb_array' if args.video else None)
         env.trace_interval_steps=t['trace_interval_steps'] if args.command=='train' else 1
         env.trace_ids=list(range(min(actual['num_envs'],8))) if args.command=='train' else list(range(actual['num_envs']))
         attempt=uuid.uuid4().hex[:12]
@@ -172,10 +178,16 @@ def main(argv):
         else:
             policy=runner.get_inference_policy(args.device); obs=wrapped.get_observations()
             records={}
+            if args.video:
+                from .video import PolicyVideo
+                video=PolicyVideo(env,output/'best.mp4',args.video_label)
+                video.begin()
             with torch.inference_mode():
                 for step in range(env.max_episode_length+1):
                     obs,_,dones,_=wrapped.step(policy(obs))
                     runner.alg.actor.reset(dones)
+                    if video is not None:
+                        video.step(step+1)
                     for record in env.terminal_records:
                         records.setdefault(record['env'],record)
                     env.terminal_records.clear()
@@ -183,8 +195,14 @@ def main(argv):
             if len(records)!=actual['num_envs']: raise RuntimeError('Evaluation did not terminate every initial episode')
             write_json(output/'result.json',dict(status='complete',episodes=list(records.values()),
                 successes=sum(r['success'] for r in records.values()),num_envs=actual['num_envs'],
+                checkpoint=basename,
                 completed_updates=runner.current_learning_iteration,scene='full',hold_after_success_s=env.objective.extra_hold_s,
                 independent_randomization=False))
+            if video is not None:
+                metadata=video.finish(next(iter(records.values())))
+                metadata.update(checkpoint=basename,run_id=origin['run_id'],
+                    actor_sha256=restored['actor_sha256'],completed_updates=runner.current_learning_iteration)
+                write_json(output/'video.json',metadata)
             write_json(output/'status.json',dict(status='complete',command='evaluate'))
         trace_file.close();episode_file.close()
         if env.physics_trace_writer is not None:
@@ -194,6 +212,7 @@ def main(argv):
         raise
     finally:
         try:
+            if video is not None: video.close()
             if env is not None: env.close()
         finally:
             # Kit may exit during app.close; explicitly unlock before shutdown so

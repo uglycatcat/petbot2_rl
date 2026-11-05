@@ -17,6 +17,7 @@ PROJECT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(PROJECT))
 from step_demo.runtime import load_training
 from step_demo.review import summarize
+from step_demo.video_selection import select_best
 
 
 def read(path):return json.loads(Path(path).read_text())
@@ -44,8 +45,8 @@ def validate_plan(plan,folder):
         gpus.add(job['gpu']);ids.add(job['id']);safe_relative(folder,job['id'])
         config=safe_relative(Path(folder)/'source',job['training_config'])
         training=load_training(config)
-        if plan['kind']=='formal' and (training['num_envs']<2048 or training['iterations']<1000):
-            raise ValueError('Formal STEP training requires at least 2048 environments and 1000 updates')
+        if plan['kind']=='formal' and (training['num_envs'],training['num_steps_per_env'],training['iterations'])!=(4096,128,1000):
+            raise ValueError('Current STEP training contract is 4096 environments,128 rollout steps,1000 updates')
         if not .5<=job.get('memory_fraction',.78)<=.95:raise ValueError('Invalid memory threshold')
         if job.get('reserve_mib',2048)<1024 or job.get('expected_peak_mib',3400)<1024:
             raise ValueError('Invalid resource budget')
@@ -147,6 +148,57 @@ def job_run(job,folder,control):
     write(state_path,state);return state
 
 
+def record_best_video(folder,control,plan):
+    """Record once after the batch; video failure never invalidates trained policies."""
+    folder=Path(folder);index=folder/'video_status.json'
+    if index.exists():
+        previous=read(index)
+        target=Path(previous.get('file',''))
+        if previous.get('status')=='complete' and target.is_file():
+            if hashlib.sha256(target.read_bytes()).hexdigest()==previous.get('sha256'):
+                return previous
+    if not enabled(control):return dict(status='cancelled_by_user')
+    selection=select_best(folder,plan['jobs']);write(folder/'video_selection.json',selection)
+    if selection['selected'] is None:
+        result=dict(status='skipped',reason='No independently evaluated policy in this batch')
+        write(index,result);return result
+    best=selection['selected'];job=next(j for j in plan['jobs'] if j['id']==best['job'])
+    cfg=read(control);root=Path(cfg.get('video_root','artifacts/step/videos'))
+    if not root.is_absolute():root=Path(cfg['cwd'])/root
+    destination=root/folder.name
+    captures=folder/'video_capture';captures.mkdir(exist_ok=True)
+    attempt=1
+    while (captures/f'attempt{attempt:02}').exists():attempt+=1
+    capture=captures/f'attempt{attempt:02}';capture.mkdir()
+    output=capture/'output';log=capture/'record.log'
+    result=dict(status='recording',selected=best,output=str(output),destination=str(destination))
+    write(index,result)
+    try:
+        working=container_directory(folder,control)
+        command=[sys.executable,str(folder/'source/tools/run_guard.py'),'--gpu',str(job['gpu']),
+            '--workdir',working,'--timeout','900','--memory-fraction',str(job.get('memory_fraction',.78)),
+            '--reserve-mib',str(job.get('reserve_mib',2048)),'--control',str(control),
+            '--log',str(log),'--status',str(output/'status.json'),'--','-m','step_demo','evaluate',
+            '--run-dir',f'../{job["id"]}/train','--checkpoint',best['checkpoint'],
+            '--output',f'../video_capture/attempt{attempt:02}/output','--eval-envs','1','--video',
+            '--video-label',f'{folder.name} / {job["id"]}',
+            '--asset-dir','../asset','--model-dir','../../../robot_description','--headless']
+        completed=subprocess.run(command,cwd=folder/'source')
+        guard=read(log.with_suffix('.log.guard.json'))
+        if completed.returncode or not guard['valid']:raise RuntimeError('Recording process failed; see record.log')
+        metadata=read(output/'video.json')
+        destination.mkdir(parents=True,exist_ok=True)
+        target=destination/'best.mp4'
+        # Final publication is atomic; retain the original capture beside its logs.
+        temporary=destination/'best.mp4.tmp';shutil.copy2(output/'best.mp4',temporary);temporary.replace(target)
+        write(destination/'best.json',dict(batch=folder.name,selection=selection,video=metadata))
+        result.update(status='complete',file=str(target),sha256=metadata['sha256'],
+            video_success=metadata['success'],video_failure=metadata['failure'])
+    except Exception:
+        result.update(status='failed' if enabled(control) else 'cancelled_by_user',error=traceback.format_exc())
+    write(index,result);return result
+
+
 def run(folder,control):
     folder=Path(folder).resolve();control=Path(control).resolve();cfg=read(control)
     allowed=cfg.get('allowed_gpus',[])
@@ -175,6 +227,13 @@ def run(folder,control):
                         '若是已处理旧事件且更新批次已运行，只补记接收，不重复发批或中止新训练。'
                         '仅GPU0/1/2/3；先确认当前用户授权范围和暂停状态，再审查真实轨迹/analysis.json与失败原因；'
                         '同批其它路仍可运行，不能修改固定副本或重复发批。等整批完成事件后汇总并验证、推送下一轮。')
+        if plan['kind']=='formal' and enabled(control):
+            state.update(status='recording_video');write(folder/'batch_status.json',state)
+            try:
+                state['video']=record_best_video(folder,control,plan)
+            except Exception:
+                state['video']=dict(status='failed',error=traceback.format_exc())
+                write(folder/'video_status.json',state['video'])
         state.update(status='complete' if all(job['status']=='complete' for job in state['jobs']) else 'failed',finished_at=stamp())
         if not enabled(control):state['status']='cancelled_by_user'
         write(folder/'batch_status.json',state)
@@ -184,6 +243,7 @@ def run(folder,control):
                 f'先核对{control.parent}/active.json、enabled、agent_review.json（若有）、batch_status.json、每路analysis.json、日志和实际进程。'
                 '若事件属于已处理的旧轮次且更新批次已运行，只补记接收，不重复发批或中止新训练。'
                 '只负责step，物理GPU仅0/1/2/3。按当前用户授权范围处理；完成事件不构成新的训练授权。'
+                '批次视频见video_status.json和video_selection.json；录制失败只处理视频，不重复训练。'
                 '先读TensorBoard趋势，再按需检查真实阶段、请求/执行/实测关节、接触、运动和成功/失败轨迹，记录结论与下一轮修改假设；'
                 '任何无效物理或失败工程不得作策略结论。新配置/源码先过容器门槛、提交推送、冻结，再启动下一批并延续同一事件链。'
                 '不得加载历史权重、修改源机器人、使用其它GPU、启动sim2sim或其它项目。'
@@ -213,7 +273,7 @@ def main():
         if not thread or not shutil.which('codex'):raise RuntimeError('Current session identity and codex queue are required')
         control.parent.mkdir(parents=True,exist_ok=True)
         root=PROJECT.parents[1]
-        write(control,dict(project='step',enabled=False,paused_by_user=True,execution_schema='petbot_step_ppo_v2',allowed_gpus=[0,1,2,3],thread=thread,codex=shutil.which('codex'),
+        write(control,dict(project='step',enabled=False,paused_by_user=True,execution_schema='petbot_step_ppo_v2',allowed_gpus=[0,1,2,3],video_root='artifacts/step/videos',thread=thread,codex=shutil.which('codex'),
             cwd=str(root),runs_root=str(root/'demo_project/runs'),created_at=stamp(),authorization='Not authorized to launch; obtain explicit user restart instruction before enabling'))
     elif a.command=='stop':
         cfg=read(control);cfg.update(enabled=False,stopped_at=stamp());write(control,cfg)

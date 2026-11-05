@@ -43,7 +43,7 @@ class StepEnvCfg(DirectRLEnvCfg):
 
 
 class StepEnv(DirectRLEnv):
-    def __init__(self, task: StepConfig, training: dict, asset_dir: Path, device='cuda:0'):
+    def __init__(self, task: StepConfig, training: dict, asset_dir: Path, device='cuda:0', render_mode=None):
         self.task, self.training = task, training
         self.asset_dir = asset_dir.resolve()
         self.asset = json.loads((asset_dir/'asset.json').read_text())
@@ -55,7 +55,10 @@ class StepEnv(DirectRLEnv):
         cfg.seed = training['seed']; cfg.scene.num_envs = training['num_envs']
         cfg.decimation = training['decimation']; cfg.sim.render_interval = cfg.decimation
         cfg.sim.device = device; cfg.episode_length_s = task.acceptance.timeout_s
-        super().__init__(cfg)
+        if render_mode == 'rgb_array':
+            cfg.viewer.eye = (.8, -1.25, .65)
+            cfg.viewer.lookat = (.35, 0., .12)
+        super().__init__(cfg, render_mode=render_mode)
         self.hips = self.robot.find_joints(['left_frame_1','right_frame_1'], preserve_order=True)[0]
         self.wheels = self.robot.find_joints(['left_rear_wheel_1','right_rear_wheel_1'], preserve_order=True)[0]
         self.front_joints = self.robot.find_joints(['left_front_wheel_1','right_front_wheel_1'], preserve_order=True)[0]
@@ -90,6 +93,7 @@ class StepEnv(DirectRLEnv):
         self.trace_ids = None; self.physics_trace_ids = None
         self.trace_writer = None; self.physics_trace_writer = None; self.episode_writer = None
         self.trace_interval_steps = 1
+        self.terminal_frame_callback = None
         self._capture_counter = self._sim_step_counter; self.captured_substeps = 0
         self.episode_serial = torch.zeros(n, dtype=torch.long, device=d)
         self.totals = dict(episodes=0, successes=0, front_collisions=0, rear_air=0, falls=0,
@@ -299,6 +303,9 @@ class StepEnv(DirectRLEnv):
                 for key, code in [('front_collisions',1),('rear_air',2),('falls',3),('quality_failures',5),('platform_exits',6),('timeouts',7)]:
                     self.totals[key] += int(record['failure'] == code)
             self.terminal_records.extend(records)
+            if records and self.terminal_frame_callback is not None:
+                # Capture before auto-reset teleports the robot to its initial pose.
+                self.terminal_frame_callback(records)
             if self.episode_writer and records:
                 self.episode_writer.write(''.join(json.dumps(record)+'\n' for record in records))
             self.terminal_records = self.terminal_records[-4096:]

@@ -2,7 +2,7 @@
 
 独立训练机器人直行登上2cm平台：前轮只抬一次且不撞边，后轮滚上，恢复默认髋角、沿原线短行后停稳。输出左右共同髋角和共同后轮速度；地形信息仅开始传入一次。
 
-**本次已按新授权复查设计并验证四卡扩容，正式长训尚未启动。** 最新状态与结果只维护在[STEP交接](../../docs/step_current.md)，完整目标见[STEP需求](../../docs/step_scope.md)。正式候选为每路4096环境×1000更新、32步采样；两组初始髋探索强度，各两个种子。
+**用户明确尚未授权启动训练；当前仅完成参数与录像功能修改。** 最新状态与结果只维护在[STEP交接](../../docs/step_current.md)，完整目标见[STEP需求](../../docs/step_scope.md)。正式候选为每路4096环境×1000更新、128步采样；两组初始髋探索强度，各两个种子。
 
 | 入口 | 职责 |
 |---|---|
@@ -17,3 +17,5 @@
 项目由repo物化，代码在`demoproj/step_rl_demo`，主仓库只管理索引和manifest。模型默认相对路径`../../robot_description`，只读。专用容器`petbot-step-gpu0`至`petbot-step-gpu3`各仅暴露对应一张物理GPU；四卡资源与编排已实现。已有容器不重复创建。`std_train_step_project`仍为空，sim2sim旧预览不是v2策略。
 
 不启动仿真的静态检查：`python3 -m step_demo check`。开发/工程入口见`tools/`与`python3 -m step_demo --help`；命令存在不构成执行授权。历史文档与旧训练产物已移出当前入口，见[history定位](../../docs/step_history.md)。
+
+正式批次结束后自动选择本批已评估最佳策略，输出`artifacts/step/videos/<批次名>/best.mp4`及来源说明；控制文件`video_root`可改保存位置。成功与失败均如实显示，录像失败不会重训。手动录制同次检查点可用`evaluate --eval-envs 1 --video`，其余参数沿用该固定运行副本；不启动PPO训练。

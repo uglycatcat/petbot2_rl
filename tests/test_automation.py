@@ -12,7 +12,7 @@ from tools.campaign import queue_event,safe_relative,validate_plan
 class AutomationTests(unittest.TestCase):
     def plan_directory(self,directory):
         root=Path(directory);(root/'source/configs').mkdir(parents=True)
-        cfg=json.loads((PROJECT_ROOT/'configs/train.json').read_text());cfg.update(num_envs=2048,iterations=1000)
+        cfg=json.loads((PROJECT_ROOT/'configs/train.json').read_text());cfg.update(num_envs=4096,iterations=1000,num_steps_per_env=128)
         (root/'source/configs/train.json').write_text(json.dumps(cfg))
         return root,dict(schema='step_batch_v2',kind='formal',round_number=1,hypothesis='baseline',
             jobs=[dict(id='seed70',gpu=0,training_config='configs/train.json',eval_envs=64)])
@@ -34,7 +34,9 @@ class AutomationTests(unittest.TestCase):
             path=root/"source/configs/train.json";c=json.loads(path.read_text())
             c["num_envs"]=512;path.write_text(json.dumps(c))
             with self.assertRaises(ValueError):validate_plan(plan,root)
-            c["num_envs"]=2048;c["iterations"]=500;path.write_text(json.dumps(c))
+            c["num_envs"]=4096;c["iterations"]=500;path.write_text(json.dumps(c))
+            with self.assertRaises(ValueError):validate_plan(plan,root)
+            c["iterations"]=1000;c["num_steps_per_env"]=32;path.write_text(json.dumps(c))
             with self.assertRaises(ValueError):validate_plan(plan,root)
         with patch("tools.campaign.subprocess.check_output",return_value="14860,24564,9224"):
             self.assertTrue(gpu_ready(0,6000,.92,2048))

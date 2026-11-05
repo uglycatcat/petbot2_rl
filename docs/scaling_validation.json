@@ -106,7 +106,19 @@
       "note": "First update excluded for compiler/startup; three timed updates only; card utilization includes other users and startup"
     }
   ],
-  "selected": {
+  "checkpoint": {
+    "short_training": "4096 environments,4 updates then same-run4->8 resume",
+    "optimizer_verified": true,
+    "independent_reload": "16 episodes; physical replay checked separately; not a capability gate"
+  },
+  "limitations": [
+    "Measured only a few updates; long-run time and memory can change.",
+    "Full-task capability remains unproven; no formal training launched.",
+    "Narrow versus broader hip exploration is a hypothesis, not an established fix.",
+    "Whole-card utilization includes startup and external users."
+  ],
+  "formal_training_started": false,
+  "benchmarked_candidate": {
     "num_envs": 4096,
     "iterations": 1000,
     "rollout": 32,
@@ -128,16 +140,10 @@
       }
     }
   },
-  "checkpoint": {
-    "short_training": "4096 environments,4 updates then same-run4->8 resume",
-    "optimizer_verified": true,
-    "independent_reload": "16 episodes; physical replay checked separately; not a capability gate"
-  },
-  "limitations": [
-    "Measured only a few updates; long-run time and memory can change.",
-    "Full-task capability remains unproven; no formal training launched.",
-    "Narrow versus broader hip exploration is a hypothesis, not an established fix.",
-    "Whole-card utilization includes startup and external users."
-  ],
-  "formal_training_started": false
+  "current_formal_parameters": {
+    "num_envs": 4096,
+    "rollout": 128,
+    "iterations": 1000,
+    "source": "User instruction after benchmark; not trained"
+  }
 }
