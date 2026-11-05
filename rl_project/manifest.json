@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-04",
+  "updated_at": "2026-11-05",
   "repositories": [
     {
       "name": "train_upright_project_1104",
@@ -7,14 +7,14 @@
       "remote": "ours",
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "branch": "rlproj/train_upright_project_1104",
-      "verified_commit": "5c3e381067eb693a0b77ce7834dc42b559dcdeb6",
-      "status": "frozen_by_user;complete_scratch_training_source;not_full_capability_acceptance",
+      "verified_commit": "7ce7bc5062d90dc0eb63e53d2ea2bc6a4a9050c9",
+      "status": "single_authorized_4096x5000_run_completed;no_additional_training_or_automatic_iteration;full_capability_not_accepted",
       "release": "1104",
       "source_commit": "8cac727a270fa670b182bc385b0066330b13ad42",
-      "selected_policy": "restart21r5_s102",
+      "selected_policy": "upright1104_5000_s102",
       "seed": 102,
-      "num_envs": 2048,
-      "iterations": 1000,
+      "num_envs": 4096,
+      "iterations": 5000,
       "training_enabled": false,
       "automatic_iteration_enabled": false,
       "usage": "README.md",
@@ -22,7 +22,11 @@
       "validation": "docs/validation.json",
       "current_document": "docs/upright_1104.md",
       "history_document": "docs/upright_history.md",
-      "local_validation": "26 source/config files audited; original effective config and source model exact; CPU checks and training-disabled rejection passed. No new PPO or physics validation during freeze."
+      "local_validation": "GPU3 seed102 random initialization completed5000 updates;no logged OOM/runtime/physics error. Development final32cases:entered32,complete/basic31. Exported5000 checkpoint matches source identity;not independent capability acceptance.",
+      "baseline_policy": "restart21r5_s102",
+      "last_completed_run": "outputs/gpu3_4096x5000_s102_20261104",
+      "last_completed_checkpoint": "update_005000.pt",
+      "current_release_manifest": "rl_project/std_s2s_upright_project/policies/selection.json"
     },
     {
       "name": "std_train_upright_project",
@@ -39,19 +43,20 @@
       "remote": "ours",
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "branch": "rlproj/std_s2s_upright_project",
-      "verified_commit": "99201770b7aae28e58ed8b8eb66a56ca80230788",
-      "status": "frozen1104_selection;21r5_seed102_ONNX_unchanged;user_accepts_basic_flow_and_motion;landing_quality_and_full_speed_unmet",
+      "verified_commit": "234794cd72d55d9ac856ee1b72cd1333bb529afe",
+      "status": "user_selected_1104_5000_seed102_ONNX_default;desktop_and_full_capability_acceptance_pending",
       "usage": "README.md",
-      "local_validation": "180source obs/targets exact,27geometry,ordinary full range/QE/ONNX-only;default mixed1cycle0interruptions755finite frames,target/effort valid;4s GUI startup. Prior8native closed loops complete;static rear travel1.067cm,endpoint+0.468/-0.520m/s. No21r6 hip intervention.",
-      "validation": "validation/20261104_restart21r5/review.json",
+      "local_validation": "180source observation/target cases exact;27geometry and operator/exit checks pass. 1507real observations ONNX/PT maximum difference8.35e-7. Default stationary/mixed each1cycle0interruptions;finite,target/effort limits pass. No full capability or landing-quality acceptance.",
+      "validation": "validation/20261105_1104_5000/review.json",
       "inference_backend": "onnxruntime_cpu",
-      "runtime_controls_validation": "validation/20261104_restart21r5/source_port.json",
-      "default_policy": "restart21r5_s102",
-      "previous_policy": "restart20_s102",
+      "runtime_controls_validation": "validation/20261105_1104_5000/source_port.json",
+      "default_policy": "upright1104_5000_s102",
+      "previous_policy": "restart21r5_s102",
       "controller_contract": "restart_v21r5",
       "runtime_revision": "round21r5_trained_controller",
       "history_document": "docs/upright_history.md",
-      "current_document": "docs/upright_1104.md"
+      "current_document": "docs/upright_1104.md",
+      "current_release_manifest": "policies/selection.json"
     },
     {
       "name": "std_s2s_step_project",
