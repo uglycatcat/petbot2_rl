@@ -14,6 +14,6 @@
 | `step_demo/evaluation.py` / `review.py` | 原始2ms物理轨迹的独立复核 |
 | `configs/step_v1.json` / `train*.json` | 当前场景/验收参数及训练配置 |
 
-项目由repo物化，代码在`demoproj/step_rl_demo`，主仓库只管理索引和manifest。模型默认相对路径`../../robot_description`，只读。专用容器`petbot-step-gpu0/1`对应物理GPU0/1；已有容器不重复创建。`std_train_step_project`仍为空，sim2sim旧预览不是v2策略。
+项目由repo物化，代码在`demoproj/step_rl_demo`，主仓库只管理索引和manifest。模型默认相对路径`../../robot_description`，只读。现有专用容器`petbot-step-gpu0/1`对应物理GPU0/1；用户已授权扩展至四卡，GPU2/3的STEP部署及编排支持尚未实施。已有容器不重复创建。`std_train_step_project`仍为空，sim2sim旧预览不是v2策略。
 
 不启动仿真的静态检查：`python3 -m step_demo check`。开发/工程入口见`tools/`与`python3 -m step_demo --help`；命令存在不构成执行授权。历史文档与旧训练产物已移出当前入口，见[history定位](../../docs/step_history.md)。
