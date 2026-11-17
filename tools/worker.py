@@ -80,6 +80,7 @@ def main():
                '--action-mode',job.get('action_mode','absolute'),
                '--delta-scale',str(job.get('delta_scale',.12)),
                '--noise-rho',str(job.get('noise_rho',0.)),
+               '--upright-reward',str(job.get('upright_reward',0.)),
                '--save-every','100','--run-dir',str(run/'train')]
         interruption=execute('train',train)
         if interruption:

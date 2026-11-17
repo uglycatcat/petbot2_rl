@@ -13,7 +13,8 @@
       "expected_peak_mib": 10000,
       "reserve_mib": 2048,
       "action_mode": "absolute",
-      "noise_rho": 0.95
+      "noise_rho": 0.95,
+      "upright_reward": 0.005
     },
     {
       "name": "c_seed802",
@@ -27,7 +28,8 @@
       "expected_peak_mib": 10000,
       "reserve_mib": 2048,
       "action_mode": "absolute",
-      "noise_rho": 0.95
+      "noise_rho": 0.95,
+      "upright_reward": 0.005
     }
   ]
 }

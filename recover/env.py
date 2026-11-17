@@ -41,12 +41,15 @@ class EnvCfg(DirectRLEnvCfg):
     action_mode = 'absolute'
     delta_scale = 0.12
     capture_witnesses = False
+    upright_reward = 0.
     # The task has an explicit finite time budget, included in the observation.
     is_finite_horizon = True
 
 
 class RecoverEnv(DirectRLEnv):
     def __init__(self, cfg):
+        if not 0 <= cfg.upright_reward <= .005:
+            raise ValueError('upright_reward must stay within the audited small auxiliary range [0, 0.005]')
         _, metadata = prepared_asset()
         if cfg.scene.num_envs * metadata.get('physics_material_count', 14) + 4 >= 64000:
             raise ValueError('Environment count exceeds the audited PhysX material capacity')
@@ -178,8 +181,11 @@ class RecoverEnv(DirectRLEnv):
         next_potential=torch.where(done, 0., s['potential'])
         # Potential shaping does not prescribe a support sequence or penalize a
         # temporary roll away from upright. Four-wheel/stability terms are small.
+        # The optional upright term adds an explicit, bounded search preference;
+        # potential-only A/B runs remain the comparison for that bias.
         reward = (2*(GAMMA*next_potential-self.previous_potential)-.01
-                  + .02*s['four'] + .08*s['stable'] + 40*s['success'] - 5*s['invalid'])
+                  + .02*s['four'] + .08*s['stable'] + 40*s['success'] - 5*s['invalid']
+                  + self.cfg.upright_reward*(s['up']+1).clamp(0,2))
         reward = torch.nan_to_num(reward, nan=-5., posinf=-5., neginf=-5.)
         self.previous_potential.copy_(s['potential'])
         self.episode_return += reward

@@ -18,6 +18,7 @@ parser.add_argument('--width',type=int,default=128)
 parser.add_argument('--action-mode',choices=['absolute','delta'],default='absolute')
 parser.add_argument('--delta-scale',type=float,default=.12)
 parser.add_argument('--noise-rho',type=float,default=0.)
+parser.add_argument('--upright-reward',type=float,default=0.)
 parser.add_argument('--no-capture-witnesses',dest='capture_witnesses',action='store_false',default=True)
 parser.add_argument('--save-every',type=int,default=100)
 parser.add_argument('--resume')
@@ -41,6 +42,7 @@ try:
     cfg=EnvCfg(); cfg.scene.num_envs=args.num_envs; cfg.seed=args.seed
     cfg.action_mode=args.action_mode; cfg.delta_scale=args.delta_scale
     cfg.capture_witnesses=args.capture_witnesses
+    cfg.upright_reward=args.upright_reward
     env=RecoverEnv(cfg); env.render_enabled=False
     model=Policy(width=args.width,action_mode=args.action_mode,noise_rho=args.noise_rho).to(env.device)
     optimizer=torch.optim.Adam(model.parameters(),lr=args.learning_rate,eps=1e-5)
