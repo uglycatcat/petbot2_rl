@@ -76,7 +76,7 @@ try:
                 super().log(locs,*a,**kw)
                 write_json('status.json',{'status':'training','iteration':int(locs['it'])+1,
                     'target_iterations':config['iterations'],'elapsed_seconds':time.time()-started,
-                    'episodes':env.total_episodes,'successes':env.total_success,'max_wheels_on_top':env.max_top,
+                    'episodes':env.total_episodes,'successes':env.total_success,'max_simultaneous_wheels_on_top':env.max_top,'max_distinct_wheels_reached':env.max_distinct_top,
                     'torch_peak_mib':torch.cuda.max_memory_reserved()/2**20,'updated_at':time.time()})
                 if stop_requested:
                     self.save(str(args.output/'interrupted.pt'))
@@ -104,7 +104,7 @@ try:
             runner.save(str(args.output/'final.pt'))
             write_json('status.json',{'status':'trained','iterations':config['iterations'],
                 'elapsed_seconds':time.time()-started,'episodes':env.total_episodes,'successes':env.total_success,
-                'max_wheels_on_top':env.max_top,'torch_peak_mib':torch.cuda.max_memory_reserved()/2**20,'updated_at':time.time()})
+                'max_simultaneous_wheels_on_top':env.max_top,'max_distinct_wheels_reached':env.max_distinct_top,'torch_peak_mib':torch.cuda.max_memory_reserved()/2**20,'updated_at':time.time()})
         else:
             runner.load(str(args.checkpoint),load_optimizer=False)
         if args.mode=='evaluate':

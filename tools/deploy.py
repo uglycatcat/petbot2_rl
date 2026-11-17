@@ -6,10 +6,11 @@ import subprocess
 
 p=argparse.ArgumentParser()
 p.add_argument('--gpu',type=int,choices=[0,1],required=True)
+p.add_argument('--role',choices=['train','eval'],default='train')
 a=p.parse_args()
 project=Path(__file__).resolve().parents[1]
 root=project.parents[1]
-name=f'petbot-step-explore-gpu{a.gpu}'
+name=f'petbot-step-explore-gpu{a.gpu}' if a.role=='train' else f'petbot-step-explore-eval-gpu{a.gpu}'
 image='nvcr.io/nvidia/isaac-lab:2.3.2'
 existing=subprocess.run(['docker','inspect',name],capture_output=True,text=True)
 if existing.returncode==0:

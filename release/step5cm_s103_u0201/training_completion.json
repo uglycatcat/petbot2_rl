@@ -1,0 +1,36 @@
+{
+  "status": "completed_after_verified_delivery",
+  "release": "release/step5cm_s103_u0201",
+  "completed_at": 1794921270.8749695,
+  "jobs": [
+    {
+      "gpu": 0,
+      "completed_updates": 448,
+      "initial_budget_updates": 1000,
+      "elapsed_seconds": 2009.64,
+      "final_checkpoint": "gpu0/interrupted.pt",
+      "low_level_status": "interrupted",
+      "end_reason": "verified_delivery_achieved",
+      "resume_allowed": false
+    },
+    {
+      "gpu": 1,
+      "completed_updates": 439,
+      "initial_budget_updates": 1000,
+      "elapsed_seconds": 2013.72,
+      "final_checkpoint": "gpu1/interrupted.pt",
+      "low_level_status": "interrupted",
+      "end_reason": "verified_delivery_achieved",
+      "resume_allowed": false
+    }
+  ],
+  "campaign_exited": true,
+  "containers": {
+    "petbot-step-explore-gpu0": "idle; no training or evaluation process",
+    "petbot-step-explore-gpu1": "idle; no training or evaluation process",
+    "petbot-step-explore-eval-gpu1": "idle; no training or evaluation process"
+  },
+  "automatic_iteration_enabled": false,
+  "resume_allowed": false,
+  "note": "Training ended deliberately at update boundaries after selected update201 passed physical validation; original1000-update budgets were not exhausted. Preserved interrupted.pt is terminal archival state, not a forced-interruption resume authorization."
+}

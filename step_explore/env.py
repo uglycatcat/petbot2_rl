@@ -59,11 +59,13 @@ class ExploreEnv(DirectRLEnv):
         self.wheel_vertices = torch.stack([torch.cat((v, v[:1].repeat(k-len(v),1))) for v in verts])
         self.best_progress = torch.zeros(self.num_envs, device=self.device)
         self.seen_top = torch.zeros(self.num_envs,4,dtype=torch.bool,device=self.device)
+        self.peak_top = torch.zeros(self.num_envs,dtype=torch.long,device=self.device)
         self.success = torch.zeros(self.num_envs,dtype=torch.bool,device=self.device)
         self.outside = self.success.clone()
         self.total_episodes = 0
         self.total_success = 0
         self.max_top = 0
+        self.max_distinct_top = 0
         self.last_transition = {}
         self.episode_return = torch.zeros(self.num_envs, device=self.device)
         self.init_phi = None
@@ -159,6 +161,7 @@ class ExploreEnv(DirectRLEnv):
 
     def _get_dones(self):
         self._geometry()
+        self.peak_top = torch.maximum(self.peak_top,self.top.sum(-1))
         root = self.robot.data.root_pos_w - self.scene.env_origins
         self.outside = (root[:,0]<-1.) | (root[:,0]>self.cfg.edge+self.cfg.platform_length+.2) | (root[:,1].abs()>1.3) | (root[:,2]<-.2)
         # No termination for pitching, body contact, wheel lift, reversing or touching the step face.
@@ -201,14 +204,17 @@ class ExploreEnv(DirectRLEnv):
     def _reset_idx(self, env_ids):
         if env_ids is None:
             env_ids = self.robot._ALL_INDICES
-        if hasattr(self,'seen_top') and len(env_ids):
-            succ = int(self.success[env_ids].sum().item())
-            self.total_episodes += len(env_ids);self.total_success += succ
-            self.max_top = max(self.max_top,int(self.seen_top[env_ids].sum(-1).max().item()))
-            self.extras['log'] = {'Task/success':self.success[env_ids].float().mean(),
-                'Task/max_wheels_on_top':self.seen_top[env_ids].float().sum(-1).mean(),
-                'Task/progress':self.best_progress[env_ids].mean(),
-                'Task/return':self.episode_return[env_ids].mean()}
+        ended = env_ids[self.episode_length_buf[env_ids]>0]
+        if hasattr(self,'seen_top') and len(ended):
+            succ = int(self.success[ended].sum().item())
+            self.total_episodes += len(ended);self.total_success += succ
+            self.max_top = max(self.max_top,int(self.peak_top[ended].max().item()))
+            self.max_distinct_top = max(self.max_distinct_top,int(self.seen_top[ended].sum(-1).max().item()))
+            self.extras['log'] = {'Task/success':self.success[ended].float().mean(),
+                'Task/max_simultaneous_wheels_on_top':self.peak_top[ended].float().mean(),
+                'Task/distinct_wheels_reached':self.seen_top[ended].float().sum(-1).mean(),
+                'Task/progress':self.best_progress[ended].mean(),
+                'Task/return':self.episode_return[ended].mean()}
         super()._reset_idx(env_ids)
         root = self.robot.data.default_root_state[env_ids].clone()
         root[:,:3] += self.scene.env_origins[env_ids]
@@ -217,6 +223,6 @@ class ExploreEnv(DirectRLEnv):
         self.robot.write_joint_state_to_sim(self.robot.data.default_joint_pos[env_ids],
                                             self.robot.data.default_joint_vel[env_ids],env_ids=env_ids)
         if hasattr(self,'actions'):
-            self.actions[env_ids]=0.;self.targets[env_ids]=0.;self.seen_top[env_ids]=False
+            self.actions[env_ids]=0.;self.targets[env_ids]=0.;self.seen_top[env_ids]=False;self.peak_top[env_ids]=0
             self.episode_return[env_ids]=0.;self.success[env_ids]=False
             self.best_progress[env_ids]=self.init_phi[env_ids] if self.init_phi is not None else 0.

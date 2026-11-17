@@ -1,0 +1,41 @@
+{
+  "checkpoint_sha256": "7603f438c5816980cf7c8247ef285006605bcc6d8daae70af7471473bcec1781",
+  "completed_updates": 201,
+  "input_shape": [
+    "batch",
+    40
+  ],
+  "raw_output_shape": [
+    "batch",
+    5
+  ],
+  "target_order": [
+    "head",
+    "left_frame",
+    "right_frame",
+    "left_rear_wheel",
+    "right_rear_wheel"
+  ],
+  "target_units": [
+    "rad",
+    "rad",
+    "rad",
+    "rad/s",
+    "rad/s"
+  ],
+  "control_dt": 0.02,
+  "normalization_included": true,
+  "parity_samples": 126,
+  "parity_input_source": "runs/round001_20261117_203823/candidate201_video/policy_inputs.npz",
+  "raw_max_abs_error": 0.0,
+  "torchscript_parity_passed": true,
+  "task_success_verified_by_export": false,
+  "onnx_max_abs_error": 1.1444091796875e-05,
+  "onnx_reference_parity_passed": true,
+  "files_sha256": {
+    "policy_raw.onnx": "3821f270fc99a1cbce20916ef385983fac397073d7b73dbdb3f4b66706c479e7",
+    "policy_raw.pt": "76ede69d984db3b4fc3cef60081c12d1ad8744d2d4de1e5a54fd6d09bf672233",
+    "policy_targets.pt": "e2bf1d6218aff07c1cbb159ea5a631917965392a3819f6713fdda63acb82aae5"
+  },
+  "verified_existing_artifacts": true
+}
