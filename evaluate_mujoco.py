@@ -77,10 +77,11 @@ def main():
                     last=np.clip(last+checkpoint['args'].get('delta_scale',.12)*requested,-1,1)
                 else: last=requested.copy()
             pos=low+(last[:,:5]+1)*.5*(high-low); speed=last[:,5:]*25
-            subforces=[]
+            subforces=[];subground=[]
             baseline_pos=np.zeros((4,5)); baseline_speed=np.zeros((4,2))
             for sub in range(decimation):
                 forces=np.zeros((4,model.nbody,3))
+                groundforces=np.zeros_like(forces)
                 for i,data in enumerate(states):
                     if args.baseline:
                         control=controls[i]
@@ -101,7 +102,10 @@ def main():
                         force=info.frame.reshape(3,3).T@vel[:3]
                         b1=model.geom_bodyid[info.geom1]; b2=model.geom_bodyid[info.geom2]
                         forces[i,b1]-=force; forces[i,b2]+=force
+                        if b1==0: groundforces[i,b2]+=force
+                        if b2==0: groundforces[i,b1]-=force
                 subforces.append(forces)
+                subground.append(groundforces)
             history=np.stack(subforces,axis=1)
             contact=(history[:,:,wb,2]>.05).mean(1)>=.8
             otherforce=np.linalg.norm(history[:,:,other,:],axis=-1).max((1,2))
@@ -127,6 +131,7 @@ def main():
                 effort=np.stack([d.actuator_force.copy() for d in states]),
                 eligible=eligible.copy(),invalid=invalid.copy(),
                 force=history,contacts=contact.copy(),other=otherforce,up=up.numpy(),four=four.numpy(),
+                ground_force=np.stack(subground,axis=1),
                 stable=stable.numpy(),hold=hold.copy()))
     output=Path(args.output); output.parent.mkdir(parents=True,exist_ok=True)
     arrays={k:np.stack([t[k] for t in trace]) for k in trace[0]}
