@@ -79,6 +79,7 @@ def main():
                '--seed',str(job['seed']),'--entropy',str(job['entropy']),
                '--action-mode',job.get('action_mode','absolute'),
                '--delta-scale',str(job.get('delta_scale',.12)),
+               '--noise-rho',str(job.get('noise_rho',0.)),
                '--save-every','100','--run-dir',str(run/'train')]
         interruption=execute('train',train)
         if interruption:

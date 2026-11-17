@@ -16,8 +16,13 @@ class GroupLinear(nn.Module):
 
 
 class Policy(nn.Module):
-    def __init__(self, groups=4, width=128, action_mode='absolute'):
+    def __init__(self, groups=4, width=128, action_mode='absolute', noise_rho=0.):
         super().__init__()
+        if not 0 <= noise_rho < 1:
+            raise ValueError('noise_rho must be in [0, 1)')
+        if noise_rho and action_mode != 'absolute':
+            raise ValueError('Correlated exploration currently requires absolute targets')
+        self.noise_rho=float(noise_rho)
         self.groups=groups; self.width=width
         self.actor=nn.Sequential(GroupLinear(groups,OBS_DIM,width),nn.ELU(),
                                  GroupLinear(groups,width,width),nn.ELU(),GroupLinear(groups,width,ACTION_DIM,.01))
@@ -26,12 +31,25 @@ class Policy(nn.Module):
         self.log_std=nn.Parameter(torch.full((groups,1,ACTION_DIM),-.2))
         low=torch.tensor(POSITION_LOW); high=torch.tensor(POSITION_HIGH)
         home=2*(0-low)/(high-low)-1
+        center=torch.zeros(1,1,ACTION_DIM); center[:,:,:5]=torch.atanh(home)
+        self.register_buffer('action_center',center,persistent=False)
         if action_mode=='absolute':
             with torch.no_grad(): self.actor[-1].bias[:,:, :5].copy_(torch.atanh(home).reshape(1,1,5))
         elif action_mode!='delta': raise ValueError(action_mode)
 
+    def mean(self,obs):
+        mean=self.actor(obs)
+        if self.noise_rho:
+            # Last applied absolute target is already part of the observation.
+            # This is a conditional Markov distribution, so PPO evaluates the
+            # same likelihood used to collect each action (no hidden noise state).
+            previous=torch.atanh(obs[:,:,18:25].clamp(-.99999,.99999))
+            mean=mean+self.noise_rho*(previous-self.action_center)
+        return mean
+
     def distribution(self,obs):
-        return torch.distributions.Normal(self.actor(obs),self.log_std.clamp(-2.5,.5).exp())
+        scale=self.log_std.clamp(-2.5,.5).exp()*math.sqrt(1-self.noise_rho**2)
+        return torch.distributions.Normal(self.mean(obs),scale)
 
     def value(self,obs): return self.critic(obs).squeeze(-1)
 
@@ -48,4 +66,4 @@ class Policy(nn.Module):
         entropy=(dist.entropy()+log_jac).sum(-1)
         return dist.log_prob(raw).sum(-1),entropy,self.value(obs)
 
-    def act(self,obs): return torch.tanh(self.actor(obs))
+    def act(self,obs): return torch.tanh(self.mean(obs))

@@ -24,7 +24,8 @@ try:
     cfg.action_mode=checkpoint['args'].get('action_mode','absolute')
     cfg.delta_scale=checkpoint['args'].get('delta_scale',.12)
     env=RecoverEnv(cfg); env.render_enabled=False; env.auto_reset=False
-    policy=Policy(width=checkpoint['args']['width']).to(env.device)
+    policy=Policy(width=checkpoint['args']['width'],action_mode=cfg.action_mode,
+                  noise_rho=checkpoint['args'].get('noise_rho',0.)).to(env.device)
     policy.load_state_dict(checkpoint['model']); policy.eval()
     obs=env.reset()[0]['policy'].reshape(4,-1,OBS_DIM)
     initial_fidelity=check_initial_body_poses(env)

@@ -62,7 +62,9 @@ def main():
     else:
         checkpoint=torch.load(args.checkpoint,map_location='cpu',weights_only=False)
         if source_fingerprint()!=checkpoint['source_hash']: raise ValueError('Source model changed')
-        policy=Policy(width=checkpoint['args']['width'])
+        policy=Policy(width=checkpoint['args']['width'],
+                      action_mode=checkpoint['args'].get('action_mode','absolute'),
+                      noise_rho=checkpoint['args'].get('noise_rho',0.))
         policy.load_state_dict(checkpoint['model']); policy.eval()
     last=np.zeros((4,7),dtype=np.float32); last[:,:5]=2*(poses[:,jp]-low)/(high-low)-1
     contact=np.zeros((4,4),dtype=bool); hold=np.zeros(4); best=np.zeros(4); first=np.full(4,-1.)

@@ -17,6 +17,7 @@ parser.add_argument('--entropy',type=float,default=.02)
 parser.add_argument('--width',type=int,default=128)
 parser.add_argument('--action-mode',choices=['absolute','delta'],default='absolute')
 parser.add_argument('--delta-scale',type=float,default=.12)
+parser.add_argument('--noise-rho',type=float,default=0.)
 parser.add_argument('--save-every',type=int,default=100)
 parser.add_argument('--resume')
 from isaaclab.app import AppLauncher
@@ -39,7 +40,7 @@ try:
     cfg=EnvCfg(); cfg.scene.num_envs=args.num_envs; cfg.seed=args.seed
     cfg.action_mode=args.action_mode; cfg.delta_scale=args.delta_scale
     env=RecoverEnv(cfg); env.render_enabled=False
-    model=Policy(width=args.width,action_mode=args.action_mode).to(env.device)
+    model=Policy(width=args.width,action_mode=args.action_mode,noise_rho=args.noise_rho).to(env.device)
     optimizer=torch.optim.Adam(model.parameters(),lr=args.learning_rate,eps=1e-5)
     n=args.num_envs//4; T=args.steps; device=env.device
     shapes={'obs':(OBS_DIM,), 'raw':(ACTION_DIM,), 'logp':(), 'value':(), 'reward':(), 'done':()}
@@ -116,6 +117,8 @@ try:
             writer.add_scalar(f'pose_{i+1:02d}/success_rate',report['success_rate'][i],update)
             writer.add_scalar(f'pose_{i+1:02d}/max_stable_seconds',report['max_stable_seconds'][i],update)
             writer.add_scalar(f'pose_{i+1:02d}/reward',report['reward'][i],update)
+            writer.add_scalar(f'pose_{i+1:02d}/max_uprightness',report['max_uprightness'][i],update)
+            writer.add_scalar(f'pose_{i+1:02d}/max_wheels_in_contact',report['max_wheels_in_contact'][i],update)
         for k in ('loss','kl','gradient_peak','samples_per_second','update_seconds'):
             writer.add_scalar(f'train/{k}',report[k],update)
         with (run/'metrics.jsonl').open('a') as f: f.write(json.dumps(report)+'\n')

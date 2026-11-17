@@ -76,6 +76,8 @@ class RecoverEnv(DirectRLEnv):
         self.completed = torch.zeros(4, device=self.device)
         self.succeeded = torch.zeros(4, device=self.device)
         self.best_hold = torch.zeros(4, device=self.device)
+        self.best_up = torch.full((4,),-1.,device=self.device)
+        self.best_contacts = torch.zeros(4,device=self.device)
         self.last_step = {}; self.record_ids = None; self.record = None
         self.standing_probe = False
         self.auto_reset = True
@@ -117,16 +119,18 @@ class RecoverEnv(DirectRLEnv):
         root,q,qd,wheel,contacts,other = self.state()
         up,four,stable,potential = posture(root,contacts,other,wheel)
         self.hold = torch.where(stable, self.hold+self.step_dt, 0.)
-        success = self.hold >= HOLD_S
         invalid = (~torch.isfinite(root).all(-1) | ~torch.isfinite(q).all(-1)
                    | ~torch.isfinite(qd).all(-1) | (root[:, 2] < -.1)
                    | (root[:, :2].norm(dim=-1) > 3.))
+        success = (self.hold >= HOLD_S) & ~invalid
         timeout = self.episode_length_buf >= self.max_episode_length
         terminated = success | invalid
         self.last_step = dict(root=root, q=q, qd=qd, wheel=wheel, contacts=contacts, other=other,
                               up=up, four=four, stable=stable, potential=potential,
                               success=success, invalid=invalid, timeout=timeout, hold=self.hold.clone())
-        self.best_hold = torch.maximum(self.best_hold, self.hold.reshape(4,-1).amax(-1))
+        self.best_hold = torch.maximum(self.best_hold,torch.where(invalid,0.,self.hold).reshape(4,-1).amax(-1))
+        self.best_up = torch.maximum(self.best_up,torch.where(invalid,-1.,up).reshape(4,-1).amax(-1))
+        self.best_contacts = torch.maximum(self.best_contacts,torch.where(invalid,0,contacts.sum(-1)).reshape(4,-1).amax(-1))
         if self.record_ids is not None:
             ids = self.record_ids
             self.record = {k:v[ids].detach().cpu().numpy() for k,v in self.last_step.items()}
@@ -184,4 +188,6 @@ class RecoverEnv(DirectRLEnv):
     def summary(self):
         return dict(episodes=self.completed.detach().cpu().tolist(), successes=self.succeeded.detach().cpu().tolist(),
                     max_stable_seconds=self.best_hold.detach().cpu().tolist(),
+                    max_uprightness=self.best_up.detach().cpu().tolist(),
+                    max_wheels_in_contact=self.best_contacts.detach().cpu().tolist(),
                     success_rate=(self.succeeded/self.completed.clamp_min(1)).detach().cpu().tolist())
