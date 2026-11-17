@@ -16,7 +16,7 @@ class GroupLinear(nn.Module):
 
 
 class Policy(nn.Module):
-    def __init__(self, groups=4, width=128):
+    def __init__(self, groups=4, width=128, action_mode='absolute'):
         super().__init__()
         self.groups=groups; self.width=width
         self.actor=nn.Sequential(GroupLinear(groups,OBS_DIM,width),nn.ELU(),
@@ -26,7 +26,9 @@ class Policy(nn.Module):
         self.log_std=nn.Parameter(torch.full((groups,1,ACTION_DIM),-.2))
         low=torch.tensor(POSITION_LOW); high=torch.tensor(POSITION_HIGH)
         home=2*(0-low)/(high-low)-1
-        with torch.no_grad(): self.actor[-1].bias[:,:, :5].copy_(torch.atanh(home).reshape(1,1,5))
+        if action_mode=='absolute':
+            with torch.no_grad(): self.actor[-1].bias[:,:, :5].copy_(torch.atanh(home).reshape(1,1,5))
+        elif action_mode!='delta': raise ValueError(action_mode)
 
     def distribution(self,obs):
         return torch.distributions.Normal(self.actor(obs),self.log_std.clamp(-2.5,.5).exp())

@@ -6,6 +6,7 @@ from pathlib import Path
 parser=argparse.ArgumentParser()
 parser.add_argument('--num-envs',type=int,default=64)
 parser.add_argument('--steps',type=int,default=400)
+parser.add_argument('--action-mode',choices=['absolute','delta'],default='absolute')
 parser.add_argument('--output',default='artifacts/engineering/physics')
 from isaaclab.app import AppLauncher
 AppLauncher.add_app_launcher_args(parser)
@@ -16,9 +17,12 @@ try:
     import torch
     from recover.env import RecoverEnv,EnvCfg,tensor
     from recover.contract import POSITION_LOW,POSITION_HIGH
+    from recover.fidelity import check_initial_body_poses
     cfg=EnvCfg(); cfg.scene.num_envs=args.num_envs
+    cfg.action_mode=args.action_mode
     env=RecoverEnv(cfg); env.render_enabled=False
     obs,_=env.reset()
+    fidelity=check_initial_body_poses(env)
     materials=torch.from_numpy(env.robot.root_view.get_material_properties().numpy())
     assert materials.shape[1:]==(10,3),materials.shape
     actual_friction=materials[:,:,1]
@@ -33,6 +37,7 @@ try:
     env.reset()
     home=torch.zeros(args.num_envs,7,device=env.device)
     home[:,:5]=2*(0-env.low)/(env.high-env.low)-1
+    if args.action_mode=='delta': home.zero_()
     for _ in range(150): env.step(home)
     s=env.last_step
     standing={k:v.detach().cpu().tolist() for k,v in s.items() if k in ('up','four','stable','hold','other','contacts')}
@@ -55,6 +60,7 @@ try:
                 sensor_bodies=env.sensor.body_names,random_steps=args.steps,
                 random_torque_peak=max(peaks),num_envs=args.num_envs,
                 runtime_shape_materials=materials[0].tolist(),
+                initial_body_pose_fidelity=fidelity,action_mode=args.action_mode,
                 device=env.device,success_contract='four_wheels_upright_quiet_0.5s',status='passed')
     output.with_suffix('.json').write_text(json.dumps(report,indent=2)+'\n')
     np.savez_compressed(output.with_suffix('.npz'),**{k:np.stack([t[k] for t in traces]) for k in traces[0]})

@@ -1,0 +1,61 @@
+{
+  "name": "round02_20261117",
+  "jobs": [
+    {
+      "name": "a_seed601",
+      "gpu": 2,
+      "container": "petbot-recover-explore-gpu2",
+      "num_envs": 8192,
+      "iterations": 1000,
+      "steps": 64,
+      "seed": 601,
+      "entropy": 0.02,
+      "expected_peak_mib": 10000,
+      "reserve_mib": 2048,
+      "action_mode": "absolute",
+      "delta_scale": 0.12
+    },
+    {
+      "name": "b_seed601",
+      "gpu": 2,
+      "container": "petbot-recover-explore-gpu2-b",
+      "num_envs": 8192,
+      "iterations": 1000,
+      "steps": 64,
+      "seed": 601,
+      "entropy": 0.06,
+      "expected_peak_mib": 10000,
+      "reserve_mib": 2048,
+      "action_mode": "delta",
+      "delta_scale": 0.12
+    },
+    {
+      "name": "a_seed602",
+      "gpu": 3,
+      "container": "petbot-recover-explore-gpu3",
+      "num_envs": 8192,
+      "iterations": 1000,
+      "steps": 64,
+      "seed": 602,
+      "entropy": 0.02,
+      "expected_peak_mib": 10000,
+      "reserve_mib": 2048,
+      "action_mode": "absolute",
+      "delta_scale": 0.12
+    },
+    {
+      "name": "b_seed602",
+      "gpu": 3,
+      "container": "petbot-recover-explore-gpu3-b",
+      "num_envs": 8192,
+      "iterations": 1000,
+      "steps": 64,
+      "seed": 602,
+      "entropy": 0.06,
+      "expected_peak_mib": 10000,
+      "reserve_mib": 2048,
+      "action_mode": "delta",
+      "delta_scale": 0.12
+    }
+  ]
+}

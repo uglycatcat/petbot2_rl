@@ -17,13 +17,17 @@ try:
     from recover.policy import Policy
     from recover.contract import OBS_DIM
     from recover.model import source_fingerprint
+    from recover.fidelity import check_initial_body_poses
     cfg=EnvCfg(); cfg.scene.num_envs=args.num_envs
-    env=RecoverEnv(cfg); env.render_enabled=False; env.auto_reset=False
-    checkpoint=torch.load(args.checkpoint,map_location=env.device,weights_only=False)
+    checkpoint=torch.load(args.checkpoint,map_location='cpu',weights_only=False)
     if checkpoint['source_hash']!=source_fingerprint(): raise ValueError('Source model changed')
+    cfg.action_mode=checkpoint['args'].get('action_mode','absolute')
+    cfg.delta_scale=checkpoint['args'].get('delta_scale',.12)
+    env=RecoverEnv(cfg); env.render_enabled=False; env.auto_reset=False
     policy=Policy(width=checkpoint['args']['width']).to(env.device)
     policy.load_state_dict(checkpoint['model']); policy.eval()
     obs=env.reset()[0]['policy'].reshape(4,-1,OBS_DIM)
+    initial_fidelity=check_initial_body_poses(env)
     env.record_ids=torch.arange(args.num_envs,device=env.device)
     traces=[]; succeeded=torch.zeros(args.num_envs,dtype=torch.bool,device=env.device)
     first=torch.full((args.num_envs,),-1.,device=env.device); max_hold=torch.zeros_like(first)
@@ -50,6 +54,7 @@ try:
                 final_stable=(env.last_step['stable']&eligible).reshape(4,-1).cpu().tolist(),
                 joint_names=env.robot.joint_names,sensor_bodies=env.sensor.body_names,
                 placement=env.placement,control_dt=env.step_dt,
+                initial_fidelity=initial_fidelity,
                 source_hash=checkpoint['source_hash'],status='completed',
                 note='Deterministic replicas of four exact starts; not a random initial-state success rate.')
     out.with_suffix('.json').write_text(json.dumps(report,indent=2)+'\n')

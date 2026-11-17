@@ -15,6 +15,8 @@ parser.add_argument('--run-dir',required=True)
 parser.add_argument('--learning-rate',type=float,default=3e-4)
 parser.add_argument('--entropy',type=float,default=.02)
 parser.add_argument('--width',type=int,default=128)
+parser.add_argument('--action-mode',choices=['absolute','delta'],default='absolute')
+parser.add_argument('--delta-scale',type=float,default=.12)
 parser.add_argument('--save-every',type=int,default=100)
 parser.add_argument('--resume')
 from isaaclab.app import AppLauncher
@@ -29,13 +31,15 @@ try:
     from recover.policy import Policy
     from recover.contract import OBS_DIM,ACTION_DIM,GAMMA
     from recover.model import task_implementation_fingerprint,source_fingerprint
+    from recover.fidelity import check_initial_body_poses
     torch.set_num_threads(4)
     random.seed(args.seed); np.random.seed(args.seed); torch.manual_seed(args.seed)
     torch.backends.cuda.matmul.allow_tf32=True
     run=Path(args.run_dir); run.mkdir(parents=True,exist_ok=True)
     cfg=EnvCfg(); cfg.scene.num_envs=args.num_envs; cfg.seed=args.seed
+    cfg.action_mode=args.action_mode; cfg.delta_scale=args.delta_scale
     env=RecoverEnv(cfg); env.render_enabled=False
-    model=Policy(width=args.width).to(env.device)
+    model=Policy(width=args.width,action_mode=args.action_mode).to(env.device)
     optimizer=torch.optim.Adam(model.parameters(),lr=args.learning_rate,eps=1e-5)
     n=args.num_envs//4; T=args.steps; device=env.device
     shapes={'obs':(OBS_DIM,), 'raw':(ACTION_DIM,), 'logp':(), 'value':(), 'reward':(), 'done':()}
@@ -54,6 +58,8 @@ try:
         policy_count=4,independent_policies=True,init='resume_same_run' if args.resume else 'random_scratch'),indent=2)+'\n')
     writer=SummaryWriter(str(run/'tensorboard'))
     obs=env.reset()[0]['policy'].reshape(4,n,OBS_DIM)
+    initial_fidelity=check_initial_body_poses(env)
+    (run/'initial_fidelity.json').write_text(json.dumps(initial_fidelity,indent=2)+'\n')
     start=time.monotonic(); samples=0
     def save(iteration,name):
         path=run/name; temp=path.with_suffix('.tmp')

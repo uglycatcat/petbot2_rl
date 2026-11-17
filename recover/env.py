@@ -38,6 +38,8 @@ class EnvCfg(DirectRLEnvCfg):
     observation_space = OBS_DIM
     state_space = 0
     seed = 501
+    action_mode = 'absolute'
+    delta_scale = 0.12
     # The task has an explicit finite time budget, included in the observation.
     is_finite_horizon = True
 
@@ -81,6 +83,8 @@ class RecoverEnv(DirectRLEnv):
     def state(self):
         data = self.robot.data
         root = tensor(data.root_state_w).clone()
+        # Isaac Lab 3 stores xyzw; snapshots, rewards and MuJoCo use wxyz.
+        root[:, 3:7] = root[:, [6, 3, 4, 5]]
         root[:, :3] -= tensor(self.scene.env_origins)
         forces = tensor(self.sensor.data.net_forces_w_history)
         # At least 8/10 physics samples must carry positive force at each wheel.
@@ -90,7 +94,13 @@ class RecoverEnv(DirectRLEnv):
                 tensor(data.joint_vel)[:, self.jw], contact, other)
 
     def _pre_physics_step(self, actions):
-        self.applied.copy_(actions.clamp(-1,1))
+        self.requested=actions.clamp(-1,1)
+        if self.cfg.action_mode == 'absolute':
+            self.applied.copy_(self.requested)
+        elif self.cfg.action_mode == 'delta':
+            self.applied.add_(self.cfg.delta_scale*self.requested).clamp_(-1,1)
+        else:
+            raise ValueError(f'Unknown action mode: {self.cfg.action_mode}')
         self.position.copy_(self.low + (self.applied[:, :5]+1)*.5*(self.high-self.low))
         self.velocity.copy_(25*self.applied[:, 5:])
 
@@ -121,6 +131,7 @@ class RecoverEnv(DirectRLEnv):
             ids = self.record_ids
             self.record = {k:v[ids].detach().cpu().numpy() for k,v in self.last_step.items()}
             self.record.update(action=self.applied[ids].detach().cpu().numpy(),
+                               policy_action=self.requested[ids].detach().cpu().numpy(),
                                joint_all=tensor(self.robot.data.joint_pos)[ids].detach().cpu().numpy(),
                                effort=tensor(self.robot.data.applied_torque)[ids].detach().cpu().numpy(),
                                force=tensor(self.sensor.data.net_forces_w_history)[ids].detach().cpu().numpy())
@@ -153,12 +164,15 @@ class RecoverEnv(DirectRLEnv):
         pose=self.pose_ids[env_ids]
         if self.standing_probe:
             root=tensor(self.robot.data.default_root_state)[env_ids].clone()
+            root[:,3:7]=root[:,[6,3,4,5]]
             q=tensor(self.robot.data.default_joint_pos)[env_ids].clone()
         else:
             root=self.initial_root[pose].clone(); q=self.initial_joint[pose].clone()
         root[:, :3] += tensor(self.scene.env_origins)[env_ids]
         root[:,7:]=0
-        self.robot.write_root_state_to_sim(root,env_ids=env_ids)
+        simulator_root=root.clone()
+        simulator_root[:,3:7]=root[:,[4,5,6,3]]
+        self.robot.write_root_state_to_sim(simulator_root,env_ids=env_ids)
         self.robot.write_joint_state_to_sim(q,torch.zeros_like(q),env_ids=env_ids)
         self.position[env_ids]=q[:,self.jp]; self.velocity[env_ids]=0
         self.applied[env_ids,:5]=2*(self.position[env_ids]-self.low)/(self.high-self.low)-1

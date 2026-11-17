@@ -70,7 +70,12 @@ def main():
             r,q,qd,wheel=state_arrays()
             obs=observation(torch.from_numpy(r),torch.from_numpy(q),torch.from_numpy(qd),torch.from_numpy(wheel),
                             torch.from_numpy(last),torch.from_numpy(contact),torch.full((4,),1-step/count))
-            if not args.baseline: last=policy.act(obs[:,None,:])[:,0].numpy()
+            requested=np.zeros_like(last)
+            if not args.baseline:
+                requested=policy.act(obs[:,None,:])[:,0].numpy()
+                if checkpoint['args'].get('action_mode','absolute')=='delta':
+                    last=np.clip(last+checkpoint['args'].get('delta_scale',.12)*requested,-1,1)
+                else: last=requested.copy()
             pos=low+(last[:,:5]+1)*.5*(high-low); speed=last[:,5:]*25
             subforces=[]
             baseline_pos=np.zeros((4,5)); baseline_speed=np.zeros((4,2))
@@ -118,6 +123,7 @@ def main():
             hit=(hold>=HOLD_S)&(first<0)&eligible; first[hit]=(step+1)*CONTROL_DT
             trace.append(dict(qpos=np.stack([d.qpos.copy() for d in states]),qvel=np.stack([d.qvel.copy() for d in states]),
                 root=r,q=q,qd=qd,wheel=wheel,action=last.copy(),ctrl=np.stack([d.ctrl.copy() for d in states]),
+                policy_action=requested.copy(),
                 effort=np.stack([d.actuator_force.copy() for d in states]),
                 eligible=eligible.copy(),invalid=invalid.copy(),
                 force=history,contacts=contact.copy(),other=otherforce,up=up.numpy(),four=four.numpy(),

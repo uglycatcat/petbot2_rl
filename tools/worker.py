@@ -77,6 +77,8 @@ def main():
         train=[sys.executable,'train.py','--headless','--num-envs',str(job['num_envs']),
                '--iterations',str(job['iterations']),'--steps',str(job['steps']),
                '--seed',str(job['seed']),'--entropy',str(job['entropy']),
+               '--action-mode',job.get('action_mode','absolute'),
+               '--delta-scale',str(job.get('delta_scale',.12)),
                '--save-every','100','--run-dir',str(run/'train')]
         interruption=execute('train',train)
         if interruption:
