@@ -13,7 +13,8 @@ for path in reports:
     r=json.loads(path.read_text()); trajectory=np.load(path.with_suffix('.npz'))
     # Success first. For failures, preserve the most upright actually visited state for review.
     scores=[(bool(r['success'][i]),bool(r['final_stable'][i]),r['max_stable_s'][i],
-             float(trajectory['up'][:,i].max()),-r['first_success_s'][i] if r['success'][i] else 0)
+             float(np.where(trajectory['eligible'][:,i],trajectory['up'][:,i],-1).max()),
+             -r['first_success_s'][i] if r['success'][i] else 0)
             for i in range(4)]
     entries.append((r,scores))
 selected=[max(range(len(entries)),key=lambda j:entries[j][1][i]) for i in range(4)]

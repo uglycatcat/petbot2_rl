@@ -55,6 +55,7 @@ def main():
         policy.load_state_dict(checkpoint['model']); policy.eval()
     last=np.zeros((4,7),dtype=np.float32); last[:,:5]=2*(poses[:,jp]-low)/(high-low)-1
     contact=np.zeros((4,4),dtype=bool); hold=np.zeros(4); best=np.zeros(4); first=np.full(4,-1.)
+    eligible=np.ones(4,dtype=bool); first_invalid=np.full(4,-1.)
     trace=[]; dt=model.opt.timestep; count=round(args.seconds/CONTROL_DT)
     vel=np.zeros(6)
     def state_arrays():
@@ -102,12 +103,23 @@ def main():
             for data in states: mujoco.mj_forward(model,data)
             r,q,qd,wheel=state_arrays()
             up,four,stable,potential=posture(torch.from_numpy(r),torch.from_numpy(contact),torch.from_numpy(otherforce),torch.from_numpy(wheel))
+            invalid=(np.linalg.norm(r[:,:2],axis=-1)>3.) | (r[:,2]<-.1)
+            newly_invalid=invalid & eligible
+            first_invalid[newly_invalid]=(step+1)*CONTROL_DT; eligible &= ~invalid
+            for data in states:
+                if not np.isfinite(data.qvel).all(): raise RuntimeError('Nonfinite MuJoCo velocity')
+                for name in ('mjWARN_BADQPOS','mjWARN_BADQVEL','mjWARN_BADQACC','mjWARN_BADCTRL'):
+                    if data.warning[getattr(mujoco.mjtWarning,name)].number:
+                        raise RuntimeError(f'MuJoCo numerical failure: {name}')
             if args.baseline:
                 last[:,:5]=2*(baseline_pos-low)/(high-low)-1; last[:,5:]=baseline_speed/25
-            hold=np.where(stable.numpy(),hold+CONTROL_DT,0.); best=np.maximum(best,hold)
-            hit=(hold>=HOLD_S)&(first<0); first[hit]=(step+1)*CONTROL_DT
+            hold=np.where(stable.numpy(),hold+CONTROL_DT,0.)
+            best=np.maximum(best,np.where(eligible,hold,0.))
+            hit=(hold>=HOLD_S)&(first<0)&eligible; first[hit]=(step+1)*CONTROL_DT
             trace.append(dict(qpos=np.stack([d.qpos.copy() for d in states]),qvel=np.stack([d.qvel.copy() for d in states]),
                 root=r,q=q,qd=qd,wheel=wheel,action=last.copy(),ctrl=np.stack([d.ctrl.copy() for d in states]),
+                effort=np.stack([d.actuator_force.copy() for d in states]),
+                eligible=eligible.copy(),invalid=invalid.copy(),
                 force=history,contacts=contact.copy(),other=otherforce,up=up.numpy(),four=four.numpy(),
                 stable=stable.numpy(),hold=hold.copy()))
     output=Path(args.output); output.parent.mkdir(parents=True,exist_ok=True)
@@ -116,7 +128,8 @@ def main():
     report=dict(backend='original_mujoco',mujoco_version=mujoco.__version__,
                 integrator=int(model.opt.integrator),integrator_choice=args.integrator,source_hash=source_fingerprint(),
                 checkpoint=args.checkpoint,baseline=args.baseline,success=(first>=0).tolist(),
-                first_success_s=first.tolist(),max_stable_s=best.tolist(),final_stable=trace[-1]['stable'].tolist(),
+                first_success_s=first.tolist(),first_invalid_s=first_invalid.tolist(),
+                max_stable_s=best.tolist(),final_stable=(trace[-1]['stable']&eligible).tolist(),
                 control_dt=CONTROL_DT,placement=placement,status='completed',
                 body_names=[model.body(i).name for i in range(model.nbody)],
                 note='Four exact recorded starts; deterministic validation, not broad initial-state coverage.')
