@@ -79,29 +79,99 @@
       "url": "https://github.com/uglycatcat/petbot2_rl.git",
       "remote": "ours",
       "branch": "demoproj/step_rl_demo",
-      "verified_commit": "0641179b06a86c7cf4fa0cb6c0e1d1a88fbe77e3",
+      "verified_commit": "720d59737f33a3c8af50113aeb64f0b21c650ffe",
       "groups": [
         "demo"
       ],
       "shallow": false,
-      "status": "v2_paused_by_user;pre_v2_history_archived;documentation_separated_from_runtime",
-      "local_validation": "Runtime728cef16:57 container checks and physical/restore/reload engineering passed; full capability unproven. V2 round01 0/128; round02 cancelled12/12 updates. Documentation-only cleanup preserves code/configs.",
+      "status": "v2_round03_running;gpu2_gpu3_two_slots_each_4096x128x1000;automatic_iteration_authorized",
+      "local_validation": "Targeted container-side CPU orchestration checks passed: paired-slot admission, per-container memory ownership/pressure selection, separate train/eval commands, pause/events/video regressions. Four deployment containers have matching runtime packages and read-only source model mounts. No simulator, PPO, weights or training used for this deployment change. Actual128-step peak and shared-card throughput remain unmeasured.",
       "task": null,
       "usage": "README.md",
-      "active_tasks": [],
-      "active_training_commit": null,
-      "next_iteration_requirement": "Paused by user. Explicit reauthorization required for training/engineering. Discuss STEP independently; management conventions may reference upright, algorithms may not be assumed. Existing512x500 config does not meet new minimum.",
+      "active_tasks": [
+        "step_v2_round03_20261105"
+      ],
+      "active_training_commit": "720d59737f33a3c8af50113aeb64f0b21c650ffe",
+      "next_iteration_requirement": "User authorized training and continuous automatic iteration on 2026-11-05. GPU2/3 only, two slots each, every job4096x128x1000 from random initialization. Read TensorBoard first, use necessary real-trajectory checks, analyze and modify before publishing/freezing the next fresh batch. Stop continuation when disabled/paused. Each completed batch records its best evaluated checkpoint MP4; never resume cancelled/historical rounds.",
       "series": "step_refactor_v2_20261104",
-      "last_training_commit": "728cef16811766fa3441a06ab43204bc0ee396af",
+      "last_training_commit": "720d59737f33a3c8af50113aeb64f0b21c650ffe",
       "latest_result_document": "docs/step_current.md",
-      "active_execution_document": null,
+      "active_execution_document": "docs/step_current.md",
       "current_document": "docs/step_current.md",
       "scope_document": "docs/step_scope.md",
       "history_document": "docs/step_history.md",
       "minimum_full_training": {
         "num_envs": 2048,
         "iterations": 1000,
-        "implemented": false
+        "implemented": true
+      },
+      "authorized_physical_gpus": [
+        2,
+        3
+      ],
+      "implemented_physical_gpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "engineering_validation_document": "demo_project/step_rl_demo/docs/scaling_validation.json",
+      "prepared_full_training": {
+        "num_envs": 4096,
+        "iterations": 1000,
+        "num_steps_per_env": 128,
+        "groups": 2,
+        "seeds_per_group": 2,
+        "started": true
+      },
+      "batch_video": {
+        "enabled_in_formal_workflow": true,
+        "default_root": "artifacts/step/videos",
+        "format": "mp4",
+        "fps": 25,
+        "resolution": [
+          1280,
+          720
+        ],
+        "config_key": "video_root",
+        "validation": "Fixed-motor renderer probe only; no completed formal batch yet"
+      },
+      "deployment": {
+        "plan": "demo_project/step_rl_demo/configs/batch_dual_gpu.json",
+        "physical_gpus": [
+          2,
+          3
+        ],
+        "jobs_per_gpu": 2,
+        "placement": {
+          "2": [
+            "a_seed70",
+            "b_seed70"
+          ],
+          "3": [
+            "a_seed71",
+            "b_seed71"
+          ]
+        },
+        "containers": [
+          "petbot-step-gpu2",
+          "petbot-step-gpu2-b",
+          "petbot-step-gpu3",
+          "petbot-step-gpu3-b"
+        ],
+        "expected_peak_mib_per_job": 8192,
+        "peak_budget_is_estimate": true,
+        "memory_fraction": 0.95,
+        "reserve_mib_per_card": 1024,
+        "training_started": true,
+        "training_authorized": true,
+        "initial_observed_peak_mib": {
+          "a_seed70": 7456.0,
+          "b_seed70": 9816.0,
+          "a_seed71": 7456.0,
+          "b_seed71": 9936.0
+        },
+        "next_batch_memory_budget_note": "Initial B peaks exceeded8192MiB; revise per-group reservations from actual telemetry before next launch. Do not edit current frozen inputs; actual-card guards remain active."
       }
     },
     {
