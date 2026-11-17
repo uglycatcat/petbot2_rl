@@ -170,24 +170,32 @@ def main():
     if args.video: render_video(model,arrays,output)
 
 
-def render_video(model,arrays,output):
+def render_video(model,arrays,output,pose_labels=None):
     import imageio.v2 as imageio
     from PIL import Image,ImageDraw
     data=mujoco.MjData(model); camera=mujoco.MjvCamera()
     camera.distance=.7; camera.azimuth=135; camera.elevation=-22
     renderer=mujoco.Renderer(model,height=480,width=640)
+    count=arrays['qpos'].shape[1];cols=min(count,2);rows=(count+cols-1)//cols
+    pose_labels=pose_labels or [f'pose_{i+1:02d}' for i in range(count)]
     writer=imageio.get_writer(str(output.with_suffix('.mp4')),fps=25,codec='libx264',quality=7)
     try:
         for t in range(0,len(arrays['qpos']),2):
-            canvas=Image.new('RGB',(1280,960))
-            for i in range(4):
+            canvas=Image.new('RGB',(640*cols,480*rows))
+            for i in range(count):
                 data.qpos[:]=arrays['qpos'][t,i]; mujoco.mj_forward(model,data)
                 camera.lookat[:]=[data.qpos[0],data.qpos[1],.09]
                 renderer.update_scene(data,camera=camera)
                 frame=Image.fromarray(renderer.render().copy()); draw=ImageDraw.Draw(frame)
                 draw.rectangle((0,0,640,30),fill=(0,0,0))
-                draw.text((8,8),f'pose_{i+1:02d}  t={(t+1)*CONTROL_DT:.2f}s  stable_hold={arrays["hold"][t,i]:.2f}s',fill='white')
-                canvas.paste(frame,((i%2)*640,(i//2)*480))
+                draw.text((8,8),f'{pose_labels[i]}  t={(t+1)*CONTROL_DT:.2f}s  stable_hold={arrays["hold"][t,i]:.2f}s',fill='white')
+                if 'recorded_sequence' in arrays and not arrays['recorded_sequence'][t,i]:
+                    draw.rectangle((0,30,640,55),fill=(90,60,0))
+                    draw.text((8,37),'Post-sequence hold: last recorded target',fill='white')
+                if 'eligible' in arrays and not arrays['eligible'][t,i]:
+                    draw.rectangle((0,450,640,480),fill=(110,0,0))
+                    draw.text((8,458),'Outside task bounds: later states are not eligible for success',fill='white')
+                canvas.paste(frame,((i%cols)*640,(i//cols)*480))
             writer.append_data(np.asarray(canvas))
     finally: writer.close(); renderer.close()
 

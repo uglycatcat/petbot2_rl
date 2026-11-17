@@ -22,7 +22,8 @@ def analyze(prefix,output):
     wheel_names=['left_front_wheel','right_front_wheel',*REAR_WHEELS]
     nonwheel=[i for i,n in enumerate(bodies) if n not in ['world',*wheel_names]]
     rows=[];poses=[]
-    for pose in range(4):
+    pose_ids=report.get('pose_ids',[f'pose_{i+1:02d}' for i in range(len(report['success']))])
+    for pose,pose_id in enumerate(pose_ids):
         count=len(z['up']);time=np.arange(1,count+1)*dt
         valid=z['eligible'][:,pose] if 'eligible' in z else np.ones(count,dtype=bool)
         contact=z['contacts'][:,pose].astype(bool)
@@ -50,7 +51,7 @@ def analyze(prefix,output):
         if 'effort' in z:
             torque=z['effort'][:,pose,rear_act]
             power=(torque*z['wheel'][:,pose]).sum(-1)
-        summary=dict(pose_id=f'pose_{pose+1:02d}',success=bool(report['success'][pose]),
+        summary=dict(pose_id=pose_id,success=bool(report['success'][pose]),
             first_success_s=report['first_success_s'][pose],
             first_upright_s=float(time[hits[0]]) if len(hits) else None,
             peak_up=float(z['up'][peak,pose]),peak_up_s=float(time[peak]),

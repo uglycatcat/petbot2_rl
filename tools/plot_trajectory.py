@@ -25,15 +25,16 @@ def plot(prefix, output):
     output.parent.mkdir(parents=True, exist_ok=True)
     low, high = np.array(POSITION_LOW), np.array(POSITION_HIGH)
     targets = low + (z['action'][:, :, :5] + 1) * .5 * (high - low)
-    fig, axes = plt.subplots(4, 3, figsize=(16, 12), sharex=True)
-    for pose in range(4):
+    pose_ids=report.get('pose_ids',[f'pose_{i+1:02d}' for i in range(len(report['success']))])
+    fig, axes = plt.subplots(len(pose_ids), 3, figsize=(16, 3*len(pose_ids)), sharex=True,squeeze=False)
+    for pose,pose_id in enumerate(pose_ids):
         ax = axes[pose, 0]
         ax.plot(t, z['up'][:, pose], label='body up')
         ax.axhline(TILT_COS, color='gray', linestyle=':', label='upright threshold')
         ax.plot(t, np.minimum(z['hold'][:, pose], .5) / .5,
                 label='stable hold / 0.5 s', alpha=.65)
         ax.set_ylim(-1.05, 1.1)
-        ax.set_ylabel(f'pose_{pose+1:02d}\nposture / hold')
+        ax.set_ylabel(f'{pose_id}\nposture / hold')
         status = 'recovered' if report['success'][pose] else 'no recovery'
         ax.set_title(status)
         if pose == 0:
@@ -61,14 +62,14 @@ def plot(prefix, output):
                 ax.axvspan(report['first_invalid_s'][pose], t[-1], color='red', alpha=.12)
     for ax in axes[-1]:
         ax.set_xlabel('time (s)')
-    fig.suptitle(f'{prefix.name}: four recorded starts on original MuJoCo model')
+    fig.suptitle(f'{prefix.name}: recorded starts on original MuJoCo model')
     fig.tight_layout()
     overview = output.with_name(output.name + '_overview.png')
     fig.savefig(overview, dpi=140)
     plt.close(fig)
 
     paths = [str(overview)]
-    for pose in range(4):
+    for pose,pose_id in enumerate(pose_ids):
         fig, axes = plt.subplots(3, 2, figsize=(13, 9), sharex=True)
         for j, ax in enumerate(axes.flat):
             if j < 5:
@@ -87,9 +88,9 @@ def plot(prefix, output):
             ax.set_xlim(0, t[-1])
         for ax in axes[-1]:
             ax.set_xlabel('time (s)')
-        fig.suptitle(f'{prefix.name}: pose_{pose+1:02d} requested targets and measured motion')
+        fig.suptitle(f'{prefix.name}: {pose_id} requested targets and measured motion')
         fig.tight_layout()
-        path = output.with_name(output.name + f'_pose_{pose+1:02d}_joints.png')
+        path = output.with_name(output.name + f'_{pose_id}_joints.png')
         fig.savefig(path, dpi=140)
         plt.close(fig)
         paths.append(str(path))
