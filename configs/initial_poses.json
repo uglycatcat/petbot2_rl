@@ -1,0 +1,37 @@
+{
+  "format": "recover-explore-initial-poses-v1",
+  "path_base": "repository_root",
+  "source_manifest": "robot_controller_demo/test/pose_snapshot_demo/snapshots/manifest.json",
+  "source_main_commit": "be6ed1094b92b94643274ce2673403267a53de19",
+  "model_mjcf_sha256": "b599e75f15534c3661dc6fac57af685be54e62574c388da7f9814c67d6c6b2f3",
+  "poses": [
+    {
+      "id": "pose_01",
+      "sha256": "05434ecd22af008e8c28dedff9a9bb2119e18ef1dc30972306ab70f87d5a21b0"
+    },
+    {
+      "id": "pose_02",
+      "sha256": "bafdea45d35ff00873d2d763b635bc366d52cc6a31744461bde3e23612f8075d"
+    },
+    {
+      "id": "pose_03",
+      "sha256": "b67eaab6b4f7d884f6c9387e18c2371af4ee8f2ea0888240f008fadef7218c29"
+    },
+    {
+      "id": "pose_04",
+      "sha256": "a5983d27908fc537dd7cf40e5486cb75efa13260d7b68409f295e001931d44b0"
+    }
+  ],
+  "reset": {
+    "root_xy": "model_default",
+    "root_orientation": "recorded_wxyz",
+    "joint_positions": "all_recorded",
+    "height": "recorded_raise_only_for_clearance",
+    "minimum_floor_clearance_m": 0.001,
+    "velocities": "zero",
+    "external_forces": "zero",
+    "simulation_time_s": 0.0,
+    "settling_steps_before_policy": 0,
+    "initial_state_randomization": false
+  }
+}

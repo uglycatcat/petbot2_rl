@@ -1,0 +1,53 @@
+{
+  "name": "round01_20261117",
+  "jobs": [
+    {
+      "name": "a_seed501",
+      "gpu": 2,
+      "container": "petbot-recover-explore-gpu2",
+      "num_envs": 8192,
+      "iterations": 1000,
+      "steps": 64,
+      "seed": 501,
+      "entropy": 0.02,
+      "expected_peak_mib": 10000,
+      "reserve_mib": 2048
+    },
+    {
+      "name": "b_seed501",
+      "gpu": 2,
+      "container": "petbot-recover-explore-gpu2-b",
+      "num_envs": 8192,
+      "iterations": 1000,
+      "steps": 64,
+      "seed": 501,
+      "entropy": 0.06,
+      "expected_peak_mib": 10000,
+      "reserve_mib": 2048
+    },
+    {
+      "name": "a_seed502",
+      "gpu": 3,
+      "container": "petbot-recover-explore-gpu3",
+      "num_envs": 8192,
+      "iterations": 1000,
+      "steps": 64,
+      "seed": 502,
+      "entropy": 0.02,
+      "expected_peak_mib": 10000,
+      "reserve_mib": 2048
+    },
+    {
+      "name": "b_seed502",
+      "gpu": 3,
+      "container": "petbot-recover-explore-gpu3-b",
+      "num_envs": 8192,
+      "iterations": 1000,
+      "steps": 64,
+      "seed": 502,
+      "entropy": 0.06,
+      "expected_peak_mib": 10000,
+      "reserve_mib": 2048
+    }
+  ]
+}
