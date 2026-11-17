@@ -16,6 +16,7 @@
 | upright逐轮文档、runs、archive分支在哪里 | [服务器history定位](upright_history.md)；全部仅本地保存、按需检索 |
 | repo、容器、独立分支与双端协作 | [工程管理](engineering_handoff.md)、[demo索引](../demo_project/README.md)、[正式项目索引](../rl_project/README.md) |
 | 固定姿态恢复及参考来源 | [MuJoCo固定恢复](fixed_pose_recovery.md)、[参考项目选择](reference_selection.md)、[已关闭参考recovery](reference_recovery_validation.md) |
+| 手动翻倒、IMU快照与其他程序加载初态 | [姿态快照demo](../robot_controller_demo/test/pose_snapshot_demo/README.md)；四份原始JSON、固定pose编号和无窗口PoseLoader |
 | 跳跃预研与早期调查 | [跳跃预研](jump_prestudy.md)、[历史资料](reports/) |
 
 ## 写入规则

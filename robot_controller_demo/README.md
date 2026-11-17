@@ -11,6 +11,7 @@
 | [test/rear_wheel_inverted_pendulum/](test/rear_wheel_inverted_pendulum/) | 前轮离地的一次约束动力学测试，不开窗口 |
 | [test/rear_wheel_liftoff/](test/rear_wheel_liftoff/) | jump_demo 后轮支撑姿态上，车架力矩能否让后轮离地。一次约束动力学，不开窗口 |
 | [test/fall_pose_statistics/](test/fall_pose_statistics/) | 执行器关闭后的被动沉降。结果见同一篇文档的[被动沉降](../docs/fixed_pose_recovery.md#被动沉降) |
+| [test/pose_snapshot_demo/](test/pose_snapshot_demo/README.md) | 中文小面板记录摔倒姿态，加载水平归中并防穿地；四份原始JSON版本化，提供其他程序可用的无窗口PoseLoader |
 | [driver_demo/](driver_demo/README.md) | 早期终端键盘驾驶。历史记录 |
 
 ## pose_recover_demo

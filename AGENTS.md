@@ -52,6 +52,7 @@
 
 | 日期 | 关键节点 | 结论与证据 |
 |---|---|---|
+| 2026-11-17 | 本机摔倒姿态快照与四份重要录制保全 | 中文小UI；加载水平归中并防穿地。用户授权test及四份原始JSON版本管理，固定pose_01—04，无窗口PoseLoader供其他程序直接加载；10项测试及四姿态UI检查通过。原件/本机只读备份均不得覆盖或删除；见[快照demo](robot_controller_demo/test/pose_snapshot_demo/README.md)。无训练或服务器操作。 |
 | 2026-11-05 | upright单次长训完成并发布5000更新默认ONNX | GPU3独立4096×5000，无显存/运行失败；开发验证31/32，1507真实观测ONNX对照及两个MuJoCo基本闭环有效。默认`upright1104_5000_s102`，额外训练与自动迭代仍停用；见[当前交付](docs/upright_1104.md)。 |
 | 2026-11-05 | STEP暂停并独立整理v2入口 | 旧轮次与旧任务说明归档；当前只保留需求、实现、有效结果和问题。后续至少2048×1000，尚未改配置或恢复训练，见[STEP交接](docs/step_current.md)。 |
 | 2026-11-04 | upright冻结并保留1104版本 | 用户选择21r5 seed102；完整训练源码迁入临时rl工程，demo/sim2sim原样保留，std训练仍空。落地质量及能力目标未全过；历史仅本地，训练停止，见[交接](docs/upright_1104.md)。 |
@@ -72,7 +73,7 @@
 | `rl_project/<项目名>/` | `repo`管理、独立`rlproj/`分支；包含upright临时1104训练源码、sim2sim与空的std训练预留目录，职责见[索引](rl_project/README.md)。 |
 | `history/` | 服务器本地历史归档，不进Git；按[upright定位](docs/upright_history.md)或[STEP定位](docs/step_history.md)查指定资料，不默认读取。 |
 | `reference_project/` | 上游快照及产物，不在主线重复跟踪。 |
-| `robot_controller_demo/` | MuJoCo 恢复、跳跃前轮离地演示与姿态统计，不是策略训练仓。 |
+| `robot_controller_demo/` | MuJoCo 恢复、跳跃前轮离地演示、姿态统计与手动姿态快照，不是策略训练仓。 |
 | `docs/` | [当前交接](docs/current_handoff.md)、需求、工程与当前结果索引；upright逐轮证据在history，按需读取。 |
 
 涉及重要变化时先更新对应主题文档，再视收录原则追加本表；无实质变化不写。旧研究资料在 `docs/reports/`，不作当前模型或训练基线。

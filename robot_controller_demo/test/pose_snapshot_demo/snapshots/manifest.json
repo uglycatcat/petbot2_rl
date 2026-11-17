@@ -1,0 +1,38 @@
+{
+  "format": "petbot-fallen-pose-library-v1",
+  "description": "Four important original user recordings. Preserve bytes. Load via pose_io.PoseLoader to center horizontally and prevent floor penetration.",
+  "poses": [
+    {
+      "id": "pose_01",
+      "file": "pose_20261117T113831_986420Z_l7x5slh2.json",
+      "sha256": "05434ecd22af008e8c28dedff9a9bb2119e18ef1dc30972306ab70f87d5a21b0",
+      "bytes": 2816,
+      "recorded_at": "2026-11-17T11:38:31.986116+00:00",
+      "imu_tilt_deg": 102.52760043057573
+    },
+    {
+      "id": "pose_02",
+      "file": "pose_20261117T113953_350782Z_441crrkq.json",
+      "sha256": "bafdea45d35ff00873d2d763b635bc366d52cc6a31744461bde3e23612f8075d",
+      "bytes": 2813,
+      "recorded_at": "2026-11-17T11:39:53.350518+00:00",
+      "imu_tilt_deg": 117.09009339126118
+    },
+    {
+      "id": "pose_03",
+      "file": "pose_20261117T114056_589513Z__q1lqz9v.json",
+      "sha256": "b67eaab6b4f7d884f6c9387e18c2371af4ee8f2ea0888240f008fadef7218c29",
+      "bytes": 2824,
+      "recorded_at": "2026-11-17T11:40:56.589247+00:00",
+      "imu_tilt_deg": 110.94408964984807
+    },
+    {
+      "id": "pose_04",
+      "file": "pose_20261117T114246_876400Z_8mnowzob.json",
+      "sha256": "a5983d27908fc537dd7cf40e5486cb75efa13260d7b68409f295e001931d44b0",
+      "bytes": 2797,
+      "recorded_at": "2026-11-17T11:42:46.875955+00:00",
+      "imu_tilt_deg": 109.0942696928506
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+# User-authorized original pose library; future captures stay local by default.
+snapshots/*
+!snapshots/manifest.json
+!snapshots/pose_20261117T113831_986420Z_l7x5slh2.json
+!snapshots/pose_20261117T113953_350782Z_441crrkq.json
+!snapshots/pose_20261117T114056_589513Z__q1lqz9v.json
+!snapshots/pose_20261117T114246_876400Z_8mnowzob.json
+# Extra local read-only backup; originals above are tracked without duplication.
+protected_poses/
