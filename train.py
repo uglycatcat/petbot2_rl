@@ -18,6 +18,7 @@ parser.add_argument('--width',type=int,default=128)
 parser.add_argument('--action-mode',choices=['absolute','delta'],default='absolute')
 parser.add_argument('--delta-scale',type=float,default=.12)
 parser.add_argument('--noise-rho',type=float,default=0.)
+parser.add_argument('--no-capture-witnesses',dest='capture_witnesses',action='store_false',default=True)
 parser.add_argument('--save-every',type=int,default=100)
 parser.add_argument('--resume')
 from isaaclab.app import AppLauncher
@@ -39,6 +40,7 @@ try:
     run=Path(args.run_dir); run.mkdir(parents=True,exist_ok=True)
     cfg=EnvCfg(); cfg.scene.num_envs=args.num_envs; cfg.seed=args.seed
     cfg.action_mode=args.action_mode; cfg.delta_scale=args.delta_scale
+    cfg.capture_witnesses=args.capture_witnesses
     env=RecoverEnv(cfg); env.render_enabled=False
     model=Policy(width=args.width,action_mode=args.action_mode,noise_rho=args.noise_rho).to(env.device)
     optimizer=torch.optim.Adam(model.parameters(),lr=args.learning_rate,eps=1e-5)
@@ -58,6 +60,8 @@ try:
     (run/'config.json').write_text(json.dumps(dict(vars(args),code_hash=code_hash,source_hash=source_hash,
         policy_count=4,independent_policies=True,init='resume_same_run' if args.resume else 'random_scratch'),indent=2)+'\n')
     writer=SummaryWriter(str(run/'tensorboard'))
+    saved_witnesses=set()
+    witness_segment=time.time_ns()
     obs=env.reset()[0]['policy'].reshape(4,n,OBS_DIM)
     initial_fidelity=check_initial_body_poses(env)
     (run/'initial_fidelity.json').write_text(json.dumps(initial_fidelity,indent=2)+'\n')
@@ -89,6 +93,31 @@ try:
             adv=(adv-adv.mean(-1,keepdim=True))/(adv.std(-1,keepdim=True)+1e-8)
             ret=returns.permute(1,0,2).reshape(4,-1)
             flat={k:v.permute(1,0,2,*range(3,v.ndim)).reshape(4,T*n,*v.shape[3:]) for k,v in buf.items()}
+        if args.capture_witnesses:
+            counts=env.witness_count.detach().cpu().tolist()
+            for pose,count in enumerate(counts):
+                for slot in range(count):
+                    key=(pose,slot)
+                    if key in saved_witnesses: continue
+                    length=int(env.witness_lengths[pose,slot])
+                    training_env_id=int(env.witness_env_ids[pose,slot])
+                    directory=run/'witnesses'/f'segment_{witness_segment}';directory.mkdir(parents=True,exist_ok=True)
+                    prefix=directory/f'update_{update:06d}_pose_{pose+1:02d}_sample_{slot+1:02d}'
+                    actions=env.witness_actions[pose,slot,:length].detach().cpu().numpy()
+                    np.savez_compressed(prefix.with_suffix('.npz'),actions=actions,
+                                        initial_root=env.initial_root[pose].detach().cpu().numpy(),
+                                        initial_joint=env.initial_joint[pose].detach().cpu().numpy())
+                    prefix.with_suffix('.json').write_text(json.dumps(dict(pose_id=f'pose_{pose+1:02d}',
+                        seed=args.seed,collection_update=update,collection_policy_update=update-1,
+                        control_dt=env.step_dt,steps=length,duration_s=length*env.step_dt,
+                        training_env_id=training_env_id,training_num_envs=args.num_envs,
+                        action_semantics='applied_absolute_normalized_targets',source_hash=source_hash,
+                        code_hash=code_hash,robot_joint_names=env.robot.joint_names,
+                        status='training_success_requires_independent_replay',
+                        note='One actually sampled episode; not a deterministic policy success.'),indent=2)+'\n')
+                    saved_witnesses.add(key)
+            if update%100==0:
+                env.witness_count.zero_();saved_witnesses.clear()
         losses=[]; kls=[]; grad_peak=0.
         for epoch in range(4):
             order=torch.randperm(T*n,device=device)

@@ -1,0 +1,33 @@
+{
+  "name": "round03_correlated_20261117",
+  "jobs": [
+    {
+      "name": "c_seed801",
+      "gpu": 2,
+      "container": "petbot-recover-explore-gpu2-c",
+      "num_envs": 8192,
+      "iterations": 1000,
+      "steps": 64,
+      "seed": 801,
+      "entropy": 0.02,
+      "expected_peak_mib": 10000,
+      "reserve_mib": 2048,
+      "action_mode": "absolute",
+      "noise_rho": 0.95
+    },
+    {
+      "name": "c_seed802",
+      "gpu": 3,
+      "container": "petbot-recover-explore-gpu3-c",
+      "num_envs": 8192,
+      "iterations": 1000,
+      "steps": 64,
+      "seed": 802,
+      "entropy": 0.02,
+      "expected_peak_mib": 10000,
+      "reserve_mib": 2048,
+      "action_mode": "absolute",
+      "noise_rho": 0.95
+    }
+  ]
+}

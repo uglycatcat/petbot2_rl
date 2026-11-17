@@ -40,6 +40,7 @@ class EnvCfg(DirectRLEnvCfg):
     seed = 501
     action_mode = 'absolute'
     delta_scale = 0.12
+    capture_witnesses = False
     # The task has an explicit finite time budget, included in the observation.
     is_finite_horizon = True
 
@@ -81,6 +82,16 @@ class RecoverEnv(DirectRLEnv):
         self.last_step = {}; self.record_ids = None; self.record = None
         self.standing_probe = False
         self.auto_reset = True
+        if cfg.capture_witnesses:
+            # Applied target sequences, not policy averages. Keep two actual
+            # successful episodes per pose/window so discoveries can be replayed.
+            self.action_history=torch.zeros(self.max_episode_length,self.num_envs,7,device=self.device)
+            self.witness_actions=torch.zeros(4,2,self.max_episode_length,7,device=self.device)
+            self.witness_lengths=torch.zeros(4,2,dtype=torch.long,device=self.device)
+            self.witness_env_ids=torch.full((4,2),-1,dtype=torch.long,device=self.device)
+            self.witness_count=torch.zeros(4,dtype=torch.long,device=self.device)
+            self.history_ids=torch.arange(self.num_envs,device=self.device)
+            self.witness_pose_ids=torch.arange(4,device=self.device)
 
     def state(self):
         data = self.robot.data
@@ -105,6 +116,11 @@ class RecoverEnv(DirectRLEnv):
             raise ValueError(f'Unknown action mode: {self.cfg.action_mode}')
         self.position.copy_(self.low + (self.applied[:, :5]+1)*.5*(self.high-self.low))
         self.velocity.copy_(25*self.applied[:, 5:])
+        if self.cfg.capture_witnesses:
+            # This is before DirectRLEnv increments episode_length_buf, and
+            # before any auto-reset can replace the final applied target.
+            step=self.episode_length_buf.clamp_max(self.max_episode_length-1)
+            self.action_history[step,self.history_ids]=self.applied
 
     def _apply_action(self):
         self.robot.set_joint_position_target(self.position, joint_ids=self.jp)
@@ -123,6 +139,19 @@ class RecoverEnv(DirectRLEnv):
                    | ~torch.isfinite(qd).all(-1) | (root[:, 2] < -.1)
                    | (root[:, :2].norm(dim=-1) > 3.))
         success = (self.hold >= HOLD_S) & ~invalid
+        if self.cfg.capture_witnesses:
+            found=success.reshape(4,-1).any(-1) & (self.witness_count<2)
+            local=success.reshape(4,-1).long().argmax(-1)
+            chosen=local+self.witness_pose_ids*(self.num_envs//4)
+            slot=self.witness_count.clamp_max(1)
+            old=self.witness_actions[self.witness_pose_ids,slot]
+            actions=self.action_history[:,chosen].permute(1,0,2)
+            self.witness_actions[self.witness_pose_ids,slot]=torch.where(found[:,None,None],actions,old)
+            lengths=self.witness_lengths[self.witness_pose_ids,slot]
+            self.witness_lengths[self.witness_pose_ids,slot]=torch.where(found,self.episode_length_buf[chosen],lengths)
+            old_ids=self.witness_env_ids[self.witness_pose_ids,slot]
+            self.witness_env_ids[self.witness_pose_ids,slot]=torch.where(found,chosen,old_ids)
+            self.witness_count+=found.long()
         timeout = self.episode_length_buf >= self.max_episode_length
         terminated = success | invalid
         self.last_step = dict(root=root, q=q, qd=qd, wheel=wheel, contacts=contacts, other=other,
