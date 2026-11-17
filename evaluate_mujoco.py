@@ -10,7 +10,8 @@ import mujoco
 import numpy as np
 import torch
 
-from recover.model import workspace_root,POSITION_JOINTS,POSITION_KP,POSITION_KD,FRONT_WHEELS,REAR_WHEELS,source_fingerprint
+from recover.model import (workspace_root,POSITION_JOINTS,POSITION_KP,POSITION_KD,
+                           FRONT_WHEELS,REAR_WHEELS,source_fingerprint,task_implementation_fingerprint)
 from recover.poses import load_poses
 from recover.policy import Policy
 from recover.contract import observation,posture,POSITION_LOW,POSITION_HIGH,CONTROL_DT,HOLD_S
@@ -24,10 +25,20 @@ def main():
     parser.add_argument('--seconds',type=float,default=16.)
     parser.add_argument('--video',action='store_true')
     parser.add_argument('--integrator',choices=['source','implicitfast'],default='implicitfast')
+    parser.add_argument('--physics-dt',type=float,
+                        help='Optional integration-resolution check; source XML and control period stay unchanged')
     args=parser.parse_args()
+    evaluation_code_hash=task_implementation_fingerprint()
     if bool(args.checkpoint)==args.baseline: parser.error('Select checkpoint OR baseline')
     root=workspace_root(); model=mujoco.MjModel.from_xml_path(str(root/'robot_description/mjcf/scene.xml'))
+    source_dt=float(model.opt.timestep)
     if args.integrator=='implicitfast': model.opt.integrator=mujoco.mjtIntegrator.mjINT_IMPLICITFAST
+    if args.physics_dt is not None:
+        if not 0 < args.physics_dt <= source_dt:
+            parser.error('--physics-dt must be positive and no larger than the source timestep')
+        if abs(round(CONTROL_DT/args.physics_dt)*args.physics_dt-CONTROL_DT)>1e-10:
+            parser.error('--physics-dt must divide the control period exactly')
+        model.opt.timestep=args.physics_dt
     states=[mujoco.MjData(model) for _ in range(4)]
     poses,addresses,placement=load_poses()
     for i,data in enumerate(states): data.qpos[:]=poses[i]; mujoco.mj_forward(model,data)
@@ -77,7 +88,7 @@ def main():
                     last=np.clip(last+checkpoint['args'].get('delta_scale',.12)*requested,-1,1)
                 else: last=requested.copy()
             pos=low+(last[:,:5]+1)*.5*(high-low); speed=last[:,5:]*25
-            subforces=[];subground=[]
+            subforces=[];subground=[];subwheel=[];subeffort=[]
             baseline_pos=np.zeros((4,5)); baseline_speed=np.zeros((4,2))
             for sub in range(decimation):
                 forces=np.zeros((4,model.nbody,3))
@@ -106,6 +117,8 @@ def main():
                         if b2==0: groundforces[i,b1]-=force
                 subforces.append(forces)
                 subground.append(groundforces)
+                subwheel.append(np.stack([d.qvel[wd].copy() for d in states]))
+                subeffort.append(np.stack([d.actuator_force.copy() for d in states]))
             history=np.stack(subforces,axis=1)
             contact=(history[:,:,wb,2]>.05).mean(1)>=.8
             otherforce=np.linalg.norm(history[:,:,other,:],axis=-1).max((1,2))
@@ -132,6 +145,8 @@ def main():
                 eligible=eligible.copy(),invalid=invalid.copy(),
                 force=history,contacts=contact.copy(),other=otherforce,up=up.numpy(),four=four.numpy(),
                 ground_force=np.stack(subground,axis=1),
+                wheel_substeps=np.stack(subwheel,axis=1),
+                actuator_substeps=np.stack(subeffort,axis=1),
                 stable=stable.numpy(),hold=hold.copy()))
     output=Path(args.output); output.parent.mkdir(parents=True,exist_ok=True)
     arrays={k:np.stack([t[k] for t in trace]) for k in trace[0]}
@@ -139,9 +154,13 @@ def main():
     report=dict(backend='original_mujoco',mujoco_version=mujoco.__version__,
                 integrator=int(model.opt.integrator),integrator_choice=args.integrator,source_hash=source_fingerprint(),
                 checkpoint=args.checkpoint,baseline=args.baseline,success=(first>=0).tolist(),
+                evaluation_code_hash=evaluation_code_hash,
+                policy_code_hash=checkpoint.get('code_hash') if checkpoint else None,
                 first_success_s=first.tolist(),first_invalid_s=first_invalid.tolist(),
                 max_stable_s=best.tolist(),final_stable=(trace[-1]['stable']&eligible).tolist(),
                 control_dt=CONTROL_DT,placement=placement,status='completed',
+                source_physics_dt=source_dt,physics_dt=float(model.opt.timestep),
+                physics_samples_per_control=decimation,
                 body_names=[model.body(i).name for i in range(model.nbody)],
                 note='Four exact recorded starts; deterministic validation, not broad initial-state coverage.')
     output.with_suffix('.json').write_text(json.dumps(report,indent=2)+'\n')

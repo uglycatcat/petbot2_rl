@@ -34,6 +34,10 @@
 
 此记录增强发生在第二批冻结之后，不修改正在训练的副本；审查第二批候选时，用当前评估器重新生成地面接触记录，再检查支撑/驱动力/视频。
 
+`tools/plot_trajectory.py`已对原demo生成四初态总图与逐姿态关节目标—实测图，位于`artifacts/baseline/review_*.png`。图中发现悬空后轮速度的20 ms采样混叠，随后做了独立数值检查：`tools/check_native_servo.py`从pose_01保持初始关节角，双后轮+5 rad/s驱动0.2 s再归零0.8 s。2/1 ms积分步长在末0.1 s仍有约7.85/3.94 rad/s的正负交替振荡；0.5/0.25 ms降至约5—7e-8 rad/s。证据为`artifacts/engineering/native_servo_resolution.json`，源模型文件未修改。
+
+当前原MuJoCo评估器支持`--physics-dt`进行分辨率对照，记录源/实际步长及每个物理子步的后轮速度和执行器力矩。已知demo在0.5/0.25 ms下均为pose_02/03/04成功、pose_01失败，成功时刻均为10.24/6.24/10.24 s，见`artifacts/baseline/fine_dt_0005.*`和`fine_dt_00025.*`；短训增量策略在0.5 ms下仍0/4，见`fixed_delta_gate/fine_dt_0005.*`。后续候选需同时检查原步长与较细步长，区分真实动作和数值敏感性；不因此修改正在运行的训练副本。
+
 ## 执行和后续审查
 
 源码在独立`demoproj/recover_explore`分支，repo已物化，外层清单/索引登记；正式运行从干净且已推送的提交归档，禁止修改运行副本。外层main仅维护核心状态，本次不提交其他任务的主仓库改动。
