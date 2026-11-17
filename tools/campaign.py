@@ -107,7 +107,8 @@ def main():
         if subprocess.check_output(['git','status','--porcelain'],cwd=PROJECT,text=True).strip():
             raise RuntimeError('Publish a clean project commit before freezing a batch')
         commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=PROJECT,text=True).strip()
-        remote=subprocess.check_output(['git','ls-remote','origin','refs/heads/demoproj/step_explore'],cwd=PROJECT,text=True).split()[0]
+        remote_name=subprocess.check_output(['git','config','--get','branch.demoproj/step_explore.remote'],cwd=PROJECT,text=True).strip()
+        remote=subprocess.check_output(['git','ls-remote',remote_name,'refs/heads/demoproj/step_explore'],cwd=PROJECT,text=True).split()[0]
         if remote!=commit:raise RuntimeError('Local source has not been published')
         batch=PROJECT/'runs'/f'round{round_number:03d}_{time.strftime("%Y%m%d_%H%M%S")}'
         batch.mkdir(parents=True)
