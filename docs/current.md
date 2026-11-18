@@ -17,7 +17,7 @@ GPU1 seed102从随机初始化训练，选用第301更新`model_300.pt`。原检
 - **7cm策略周期50ms，物理/关节伺服2ms。回放必须传`--step-height 0.07 --control-dt 0.05`。** 当前play的通用周期默认仍20ms，原5cm策略使用20ms。
 - 批次内`checkpoint301_gpu1/`为原网络64次评估，`export301/`为导出，`export301_eval64/`为导出64次独立执行，`video301/`为实际视频。评估先读TensorBoard至索引300，再审查轨迹。
 - `release/step7cm_s102_u0301/selection.json`保存哈希和完整配置。12个源模型文件与44个冻结源码文件均复核未变；原5cm交付zip哈希保持`e50ddebaf053510783fd9ae7f0b6620a8dfd7d8c70e5f57c7719c58e87216807`。
-- 交付包`deliverables/step7cm_s102_u0301.zip`包含源码、资产、策略、原始评估轨迹、实际输入及视频。以包内`SOURCE_COMMIT`和`SHA256SUMS`为准。
+- 交付包`deliverables/step7cm_s102_u0301.zip`包含源码、资产、策略、原始评估轨迹、实际输入及视频。包内源码为`82a9a990`；80项SHA256全部通过，解压后另起进程回放1/1成功、1.85s完成。包哈希和验包结果见[验包记录](../release/step7cm_s102_u0301/bundle_verification.json)。50ms批次从冻结启动至训练退出约34.18分钟，不含此前失败对照。
 
 ## 执行状态与后续边界
 
