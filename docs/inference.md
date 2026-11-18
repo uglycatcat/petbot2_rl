@@ -9,7 +9,7 @@
 - `policy_raw.onnx`：可选ONNX原始动作版本，输入名 `observations`，输出名 `raw_actions`，opset17，动态batch维。
 - `export.json`：源检查点与导出文件哈希、更新数、数值对照样本和误差；不把导出校验写成登台验收。
 
-5cm已交付策略的控制周期为20ms；7cm的50ms对照按50ms下发目标。部署周期以对应 `export.json` 的 `control_dt` 为准；角度/速度跟随均由任务控制层每2ms执行。双耳固定默认构型，前轮被动。输出角度范围为头±1.3rad、双车架−1至+1.2rad；后轮速度目标±25rad/s。输入“上次动作”是上一周期原始策略输出的tanh值，不是实际关节反馈；回合开始清零。
+5cm已交付策略的控制周期为20ms；7cm交付策略按50ms下发目标。部署周期以对应 `export.json` 的 `control_dt` 为准；角度/速度跟随均由任务控制层每2ms执行。双耳固定默认构型，前轮被动。输出角度范围为头±1.3rad、双车架−1至+1.2rad；后轮速度目标±25rad/s。输入“上次动作”是上一周期原始策略输出的tanh值，不是实际关节反馈；回合开始清零。
 
 ```python
 import torch
@@ -44,7 +44,7 @@ with torch.inference_mode():
 
 ```bash
 /isaac-sim/python.sh tools/export_policy.py --checkpoint runs/<批次>/gpu1/final.pt --output runs/<批次>/export --onnx
-/workspace/isaaclab/isaaclab.sh -p play.py --policy runs/<批次>/export/policy_raw.pt --scripted --asset-dir runs/<批次>/assets --output runs/<批次>/playback --headless --device cuda:0 --video
+/workspace/isaaclab/isaaclab.sh -p play.py --policy runs/<批次>/export/policy_raw.pt --scripted --step-height 0.07 --control-dt 0.05 --asset-dir runs/<批次>/assets --output runs/<批次>/playback --headless --device cuda:0 --video
 ```
 
 录像直接采集PhysX执行中的图像，包含终止前的实际状态；`evaluation_traces.npz`保存物理轨迹，`policy_inputs.npz`保存真实策略输入。可再传 `--observations <policy_inputs.npz>` 给导出工具，验证实际输入上的推理一致性。单例录像与多环境独立评估共同用于交付复核。

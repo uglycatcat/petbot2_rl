@@ -4,7 +4,7 @@
 
 ## 交付结果
 
-选择首轮GPU1 seed103、从随机初始化完成201更新的检查点 `gpu1/tensorboard/model_200.pt`，训练固定源码 `04fcc2db`。文件名索引从0开始，实际完成201更新。包含观测归一化的TorchScript与ONNX文件已保存在 `release/step5cm_s103_u0201/`；运行说明见 [DELIVERY.md](../DELIVERY.md)。
+选择首轮GPU1 seed103、从随机初始化完成201更新的检查点 `gpu1/tensorboard/model_200.pt`，训练固定源码 `04fcc2db`。文件名索引从0开始，实际完成201更新。包含观测归一化的TorchScript与ONNX文件已保存在 `release/step5cm_s103_u0201/`；运行说明见 [DELIVERY.md](delivery5cm.md)。
 
 | 验证 | 结果 | 证据（首轮目录内） |
 |---|---|---|

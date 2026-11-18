@@ -1,0 +1,62 @@
+{
+  "release": "step7cm_s102_u0301",
+  "training_commit": "0bdd718533aad2d8e3026ce930646dbbd1307817",
+  "batch": "runs/height7cm_hold50_20261118_163741",
+  "seed": 102,
+  "physical_gpu": 1,
+  "completed_updates": 301,
+  "checkpoint": "gpu1/tensorboard/model_300.pt",
+  "checkpoint_index_note": "RSL-RL filenames use zero-based iteration; index300 has completed301 updates.",
+  "checkpoint_sha256": "4b091299d84c346bcc7e2745f5cce72dd09d35fbd7b3c4bdd04d3e9508a13818",
+  "from_scratch": true,
+  "task": "all four wheels simultaneously supported on a7cm platform from default flat-ground state",
+  "training_config": {
+    "step_height": 0.07,
+    "control_dt": 0.05,
+    "num_envs": 1024,
+    "iterations": 1000,
+    "num_steps_per_env": 32,
+    "episode_seconds": 10.0,
+    "seed": 102,
+    "initial_std": 0.65,
+    "entropy_coef": 0.01,
+    "learning_rate": 0.0003,
+    "exploration_bonus": 10.0,
+    "eval_episodes": 64
+  },
+  "source_sha256": {
+    "meshes/下身.STL": "155d4ad2937d94de679783c3acad82edfc444ae3120bc2fe77c718e701712057",
+    "meshes/右前轮.STL": "caf79afda520cf11d43f81fe27029c8b18ab8bfd0fc9ec715a7db9258b0fe7d3",
+    "meshes/右后轮.STL": "46366fd5a9f4afe5e1d39d69626388e0975eaeeadd59427a2f6a12712c3bf17b",
+    "meshes/右耳.STL": "daa8bd8dcd77555c1eb4c68a4b69a5c93f1d5cdb47838e6433657d7b2f286200",
+    "meshes/右车架.STL": "fd9e7c140f90ac23fe63d3353cb5e4921bf2736bdfe40af9d3e4c7eb498931f3",
+    "meshes/头.STL": "7d14169b8fa24765b9a92fe66f37beb88fc6c52b94715741f8f6e58275807c9d",
+    "meshes/左前轮.STL": "e6d152d082083181824ad1645a49d7ccd9925c1fb986c6bc4fde27d607c5662e",
+    "meshes/左后轮.STL": "07be618e88eee239dfb1f40f35d21bf270834934d4353d1e15e0d62da3c8bd28",
+    "meshes/左耳.STL": "3c711ff1b591591efc78d09fceda0cbfcd8ed9813df981de6aee16abf96ca4da",
+    "meshes/左车架.STL": "270bfa2fb005ba6305eada80971aba3827dec1347bce8dd4385410e44f3e97be",
+    "mjcf/robot_description.xml": "8e87392ebfd0cb81d02becf1dea4bdd962ce4df5f14ec6c11cf3e6434dd4736b",
+    "mjcf/scene.xml": "7a11a61af60023b9a3f527aa737479d6d8823577520ed21fcf086cd072cdf712"
+  },
+  "asset_sha256": "61c0b6fe72048d1a4aadb9feb075ef4840afc8fb9873a813b380b1943d41e445",
+  "frozen_source_archive_sha256": "e87bfbf507084f2865560f350220f8b3af8f2760a5dc0a89a78f8d30a1a7a26b",
+  "source_model_hashes_verified": true,
+  "frozen_source_files_verified": 44,
+  "primary_policy": "policy_raw.pt",
+  "task_success_verified": true,
+  "evaluation_scope": "fixed default initial pose and platform geometry in PhysX; not random-pose, MuJoCo or hardware validation",
+  "inference_source_sha256": {
+    "play.py": "573f3dd704c13f572b18ad4e03c3330df9e2524a4fba227427f89be051e1ca1d",
+    "step_explore/env.py": "1766a486911a58381dcb179a618301f6497a0e1cd9307461897174e2f2a61b3c",
+    "step_explore/evaluate.py": "5e660fce790d44a38a38d5afa531bf44f9449686d8e95efb478a786b3439b6e6",
+    "step_explore/policy.py": "4ecea8d57d914de750a388723623a2439a00fffa2ca92efd9396c8046c0fac94",
+    "step_explore/rewards.py": "e42eafd602307f43c351dd05233594d450e0ce25f62696b03a53392211008117"
+  },
+  "evidence": {
+    "checkpoint_eval": "checkpoint301_gpu1",
+    "export_eval": "export301_eval64",
+    "video": "video301",
+    "earlier_failure": "export201_eval64"
+  },
+  "onnx_validation": "Numerical parity on4032 actual simulation inputs; not ONNX closed-loop execution. TorchScript closed-loop64/64."
+}

@@ -1,0 +1,42 @@
+{
+  "checkpoint_sha256": "4b091299d84c346bcc7e2745f5cce72dd09d35fbd7b3c4bdd04d3e9508a13818",
+  "completed_updates": 301,
+  "training_step_height_m": 0.07,
+  "input_shape": [
+    "batch",
+    40
+  ],
+  "raw_output_shape": [
+    "batch",
+    5
+  ],
+  "target_order": [
+    "head",
+    "left_frame",
+    "right_frame",
+    "left_rear_wheel",
+    "right_rear_wheel"
+  ],
+  "target_units": [
+    "rad",
+    "rad",
+    "rad",
+    "rad/s",
+    "rad/s"
+  ],
+  "control_dt": 0.05,
+  "normalization_included": true,
+  "parity_samples": 4032,
+  "parity_input_source": "runs/height7cm_hold50_20261118_163741/checkpoint301_gpu1/policy_inputs.npz",
+  "raw_max_abs_error": 0.0,
+  "torchscript_parity_passed": true,
+  "task_success_verified_by_export": false,
+  "onnx_max_abs_error": 2.384185791015625e-06,
+  "onnx_reference_parity_passed": true,
+  "files_sha256": {
+    "policy_raw.onnx": "3a121fa6cc82af171d006009c6727bc0db76715cce8b4e4077c7415ebe264d9a",
+    "policy_raw.pt": "4cf84c204977009233105e425c962fcd944fcb76bd3b49603c590af345bb5c6b",
+    "policy_targets.pt": "c2169fadd682ab73dd623a782c41c7c9f9d35df17a3e6d1854f5f57024c2853e"
+  },
+  "verified_existing_artifacts": false
+}

@@ -1,0 +1,16 @@
+{
+  "status": "complete",
+  "reason": "goal_achieved",
+  "target_height_m": 0.07,
+  "selected_release": "step7cm_s102_u0301",
+  "selected_completed_updates": 301,
+  "training_completed_updates": 337,
+  "resume_allowed": false,
+  "training_process_exited": true,
+  "watchdog_exited": true,
+  "checkpoint_successes": 64,
+  "export_successes": 64,
+  "evaluation_episodes": 64,
+  "video_successes": 1,
+  "completed_at": 1794993198.6273658
+}
