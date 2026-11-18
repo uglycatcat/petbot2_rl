@@ -12,20 +12,26 @@ import zipfile
 
 PROJECT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser()
-parser.add_argument('--release', default='step5cm_s103_u0201')
+parser.add_argument('--release', required=True)
 args = parser.parse_args()
 release = PROJECT / 'release' / args.release
 selection = json.loads((release / 'selection.json').read_text())
+height = json.loads((release / 'evaluation.json').read_text())['step_height']
+evidence_paths = selection['evidence']
+output = PROJECT / 'deliverables' / (args.release + '.zip')
+if output.exists():
+    raise FileExistsError('Preserve the existing delivery bundle; use a new release name')
 if subprocess.check_output(['git', 'status', '--porcelain'], cwd=PROJECT, text=True).strip():
     raise RuntimeError('Commit a clean project before packaging its source')
 commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=PROJECT, text=True).strip()
 batch = PROJECT / selection['batch']
 digest = lambda data: hashlib.sha256(data).hexdigest()
 raw_hash = digest((release / 'policy_raw.pt').read_bytes())
-for directory in ['candidate201_eval64', 'candidate201_video']:
+for directory in [evidence_paths['export_eval'], evidence_paths['video']]:
     result = json.loads((batch / directory / 'playback.json').read_text())
     assert result['policy_sha256'] == raw_hash
     assert result['result']['success_rate'] == 1.0
+    assert abs(result['result']['step_height'] - height) < 1e-9
 assert digest((batch / 'assets/robot.usda').read_bytes()) == selection['asset_sha256']
 
 files = {}
@@ -37,10 +43,10 @@ with tarfile.open(fileobj=io.BytesIO(archive)) as source:
 for name in ['robot.usda', 'model.json']:
     files['assets/' + name] = (batch / 'assets' / name).read_bytes()
 evidence = {
-    'exported64': ('candidate201_eval64', ['evaluation.json', 'evaluation_traces.npz',
+    'exported64': (evidence_paths['export_eval'], ['evaluation.json', 'evaluation_traces.npz',
                     'policy_inputs.npz', 'playback.json', 'trajectory_review.json', 'tensorboard_review.json']),
-    'checkpoint64': ('early201_gpu1', ['evaluation.json', 'evaluation_traces.npz']),
-    'video': ('candidate201_video', ['execution.mp4', 'evaluation.json', 'evaluation_traces.npz',
+    'checkpoint64': (evidence_paths['checkpoint_eval'], ['evaluation.json', 'evaluation_traces.npz']),
+    'video': (evidence_paths['video'], ['execution.mp4', 'evaluation.json', 'evaluation_traces.npz',
                     'policy_inputs.npz', 'playback.json', 'success.png']),
 }
 for target, (directory, names) in evidence.items():
@@ -48,7 +54,6 @@ for target, (directory, names) in evidence.items():
         files[f'evidence/{target}/{name}'] = (batch / directory / name).read_bytes()
 files['SOURCE_COMMIT'] = (commit + '\n').encode()
 files['SHA256SUMS'] = ''.join(f'{digest(data)}  {name}\n' for name, data in sorted(files.items())).encode()
-output = PROJECT / 'deliverables' / (args.release + '.zip')
 output.parent.mkdir(exist_ok=True)
 temporary = output.with_suffix('.pending')
 with zipfile.ZipFile(temporary, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as bundle:

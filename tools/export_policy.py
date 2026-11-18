@@ -52,7 +52,8 @@ with torch.inference_mode():
     assert ((targets[:,1:3]>=-1.000001)&(targets[:,1:3]<=1.200001)).all()
     assert (targets[:,3:].abs()<=25.000001).all()
 report={'checkpoint_sha256':hashlib.sha256(a.checkpoint.read_bytes()).hexdigest(),
-        'completed_updates':saved['infos']['completed_updates'],'input_shape':['batch',40],
+        'completed_updates':saved['infos']['completed_updates'],
+        'training_step_height_m':saved['infos']['config'].get('step_height',0.05),'input_shape':['batch',40],
         'raw_output_shape':['batch',5],'target_order':['head','left_frame','right_frame','left_rear_wheel','right_rear_wheel'],
         'target_units':['rad','rad','rad','rad/s','rad/s'],'control_dt':.02,
         'normalization_included':True,'parity_samples':len(obs),'parity_input_source':source,
