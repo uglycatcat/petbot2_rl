@@ -62,3 +62,5 @@ C检查点的动作条件均值依赖noise_rho；只用支持该参数的评估�
 `recover/sequence_native.cpp`只把逐物理步的源限幅PD及MuJoCo调用移到C++，每回合独立mjData、每进程最多4个CPU线程；模型、摩擦、惯量与执行器不变，使用0.5 ms数值积分、20 ms控制。控制方式对应[MuJoCo官方仿真循环](https://mujoco.readthedocs.io/en/stable/programming/simulation.html#simulation-loop)中在mj_step前设置ctrl的接口。编译产物按源码和MuJoCo版本摘要隔离；双进程编译通过临时文件原子替换，正式搜索仍使用冻结源码。
 
 每代保存分布、完整随机数状态与最优动作，第一次成功另存不覆盖。随机状态重载后核对下一批随机数，避免把恢复当成重新抽样；只允许同次受迫中断恢复，完成或实现失败的搜索不得续跑。候选必须经独立Python重放、积分步长对照、PhysX和实际轨迹/视频审查；短训和已知demo仅作工程检查，不用作正式搜索种子。
+
+PhysX并行入口为`search_sequences_physx.py`，复用同一CEM分布更新和完整动作展开，按原PhysX判据计算成功、连续稳定和越界，不修改材质或控制增益。每代核对实际初态，最多8192环境，每50控制步查2 GiB实际空闲保护；原MuJoCo和PhysX的backend进入运行元数据，断点恢复不得跨后端。发批通过`tools/launch_sequence_batch.py`检查专用容器/GPU归属、空闲预算、干净已推送源码并固定归档。
