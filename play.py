@@ -16,6 +16,7 @@ p.add_argument('--video',action='store_true')
 p.add_argument('--num-envs',type=int,default=1)
 p.add_argument('--seed',type=int,default=9901)
 p.add_argument('--step-height',type=float,default=0.07,help='Platform height in metres; use0.05 for the original release')
+p.add_argument('--control-dt',type=float,default=0.02,help='Policy command interval in seconds; physics remains2ms')
 from isaaclab.app import AppLauncher
 AppLauncher.add_app_launcher_args(p)
 a=p.parse_args()
@@ -33,6 +34,10 @@ frames=[];observations=[]
 writer=None
 try:
     cfg=ExploreCfg();cfg.seed=a.seed;cfg.scene.num_envs=a.num_envs;cfg.height=a.step_height
+    cfg.decimation=round(a.control_dt/cfg.sim.dt)
+    if cfg.decimation<1 or abs(cfg.decimation*cfg.sim.dt-a.control_dt)>1e-9:
+        raise ValueError('control_dt must be a positive multiple of the2ms physics step')
+    cfg.sim.render_interval=cfg.decimation
     cfg.sim.device=a.device;cfg.asset_dir=str(a.asset_dir.resolve())
     cfg.viewer.eye=(1.25,-1.3,.8);cfg.viewer.lookat=(.6,0.,.12)
     cfg.viewer.resolution=(960,640)
@@ -72,7 +77,7 @@ try:
         actor=model.act_inference
     if a.video:
         import imageio.v2 as imageio
-        writer=imageio.get_writer(str(a.output/'execution.mp4'),fps=50,codec='libx264',quality=8,
+        writer=imageio.get_writer(str(a.output/'execution.mp4'),fps=1./env.step_dt,codec='libx264',quality=8,
                                   macro_block_size=16)
         env.frame_sink=writer.append_data
     def policy(obs):

@@ -29,10 +29,24 @@ def container_path(path):return str(CONTAINER_ROOT/path.resolve().relative_to(PR
 def free_mib(gpu):
     return int(subprocess.check_output(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits',f'--id={gpu}'],text=True).strip())
 
-def run_job(gpu,batch,config):
+def run_job(gpu,batch,config,resume=False):
     out=batch/f'gpu{gpu}'
-    out.mkdir()
-    atomic(out/'config.json',config)
+    suffix=''
+    if resume:
+        if (batch/'completion.json').exists() or (out/'completion.json').exists():
+            raise RuntimeError('Completed runs cannot resume')
+        status=json.loads((out/'status.json').read_text())
+        request=json.loads((out/'stop_request.json').read_text())
+        if status['status']!='interrupted' or request['reason']!='memory_pressure':
+            raise RuntimeError('Only a genuinely resource-interrupted run can resume here')
+        if json.loads((out/'config.json').read_text())!=config:
+            raise RuntimeError('Resume configuration changed')
+        top=subprocess.check_output(['docker','top',f'petbot-step-explore-gpu{gpu}','-eo','pid,args'],text=True)
+        if 'python3 train.py' in top:raise RuntimeError('Training container is already busy')
+        suffix='_resume_'+time.strftime('%Y%m%d_%H%M%S')
+    else:
+        out.mkdir()
+        atomic(out/'config.json',config)
     if free_mib(gpu)<6500:
         return {'gpu':gpu,'status':'resource_wait','reason':'less_than6500MiB_free'}
     if not settings()['enabled']:
@@ -41,9 +55,10 @@ def run_job(gpu,batch,config):
         f'petbot-step-explore-gpu{gpu}','/workspace/isaaclab/isaaclab.sh','-p','train.py',
         '--config',container_path(out/'config.json'),'--output',container_path(out),
         '--asset-dir',container_path(batch/'assets'),'--headless','--device','cuda:0']
-    with (out/'console.log').open('w') as log:
+    if resume:cmd+=['--resume',container_path(out/'interrupted.pt')]
+    with (out/f'console{suffix}.log').open('w') as log:
         proc=subprocess.Popen(cmd,stdout=log,stderr=subprocess.STDOUT)
-        atomic(out/'process.json',{'pid':proc.pid,'gpu':gpu,'command':cmd,'started_at':time.time()})
+        atomic(out/f'process{suffix}.json',{'pid':proc.pid,'gpu':gpu,'command':cmd,'started_at':time.time()})
         # Wait on the child handle while recording this job's actual GPU memory.
         stop_sent=False
         while True:
@@ -75,6 +90,8 @@ def run_job(gpu,batch,config):
     if not code and checkpoint.exists():
         ev=out/'eval'
         eval_cmd=cmd.copy()
+        if '--resume' in eval_cmd:
+            ri=eval_cmd.index('--resume');del eval_cmd[ri:ri+2]
         oi=eval_cmd.index('--output');eval_cmd[oi+1]=container_path(ev)
         eval_cmd+=['--mode','evaluate','--checkpoint',container_path(checkpoint),
                    '--num-envs',str(config['eval_episodes'])]

@@ -13,6 +13,7 @@ parser.add_argument('--num-envs',type=int)
 parser.add_argument('--iterations',type=int)
 parser.add_argument('--seed',type=int)
 parser.add_argument('--step-height',type=float)
+parser.add_argument('--control-dt',type=float)
 parser.add_argument('--asset-dir',type=Path,default=Path(__file__).parent/'assets')
 parser.add_argument('--mode',choices=['train','evaluate','probe'],default='train')
 parser.add_argument('--checkpoint',type=Path)
@@ -23,7 +24,7 @@ AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
 args.output.mkdir(parents=True,exist_ok=True)
 config=json.loads(args.config.read_text())
-for k in ('num_envs','iterations','seed','step_height'):
+for k in ('num_envs','iterations','seed','step_height','control_dt'):
     if getattr(args,k) is not None:config[k]=getattr(args,k)
 if not 0<config.get('step_height',0.05)<1:parser.error('step_height must be between0 and1 metre')
 (args.output/'config.json').write_text(json.dumps(config,indent=2))
@@ -63,6 +64,11 @@ try:
     cfg.seed=config['seed'];cfg.sim.device=args.device
     # Legacy5cm configurations remain reproducible; new runs record their height explicitly.
     cfg.height=config.get('step_height',0.05)
+    control_dt=config.get('control_dt',0.02)
+    cfg.decimation=round(control_dt/cfg.sim.dt)
+    if cfg.decimation<1 or abs(cfg.decimation*cfg.sim.dt-control_dt)>1e-9:
+        raise ValueError('control_dt must be a positive multiple of the2ms physics step')
+    cfg.sim.render_interval=cfg.decimation
     cfg.scene.num_envs=config['num_envs'];cfg.episode_length_s=config['episode_seconds']
     cfg.asset_dir=str(args.asset_dir.resolve());cfg.exploration_bonus=config['exploration_bonus']
     env=ExploreEnv(cfg)

@@ -5,11 +5,11 @@ import numpy as np
 import torch
 
 def run_probe(env,wrapped,output):
-    checks={'step_height':env.cfg.height}
+    checks={'step_height':env.cfg.height,'control_dt':env.step_dt}
     obs,_=wrapped.reset()
     assert torch.isfinite(obs['policy']).all()
     zero=torch.zeros(env.num_envs,5,device=env.device)
-    for _ in range(75):wrapped.step(zero)
+    for _ in range(max(1,round(1.5/env.step_dt))):wrapped.step(zero)
     root=env.robot.data.root_pos_w-env.scene.env_origins
     checks['neutral_root_height_range']=[float(root[:,2].min()),float(root[:,2].max())]
     checks['neutral_joint_abs_max']=float(env.robot.data.joint_pos.abs().max())
@@ -29,7 +29,7 @@ def run_probe(env,wrapped,output):
     state[:,2]+=env.cfg.height
     env.robot.write_root_pose_to_sim(state[:,:7]);env.robot.write_root_velocity_to_sim(state[:,7:])
     observed=torch.zeros(env.num_envs,dtype=torch.bool,device=env.device)
-    for _ in range(25):
+    for _ in range(max(1,round(.5/env.step_dt))):
         wrapped.step(zero)
         observed |= env.last_transition['success']
     checks['positive_successes']=int(observed.sum())
@@ -47,7 +47,7 @@ def run_probe(env,wrapped,output):
     state=env.robot.data.default_root_state.clone();state[:,:3]+=env.scene.env_origins
     state[:,2]+=.6
     env.robot.write_root_pose_to_sim(state[:,:7]);env.robot.write_root_velocity_to_sim(state[:,7:])
-    for _ in range(10):wrapped.step(actions)
+    for _ in range(max(1,round(.2/env.step_dt))):wrapped.step(actions)
     checks['independent_joint_targets']=env.targets[0].cpu().tolist()
     checks['actual_joint_positions']=env.robot.data.joint_pos[0].cpu().tolist()
     checks['actual_joint_velocities']=env.robot.data.joint_vel[0].cpu().tolist()

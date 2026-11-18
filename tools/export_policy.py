@@ -55,7 +55,7 @@ report={'checkpoint_sha256':hashlib.sha256(a.checkpoint.read_bytes()).hexdigest(
         'completed_updates':saved['infos']['completed_updates'],
         'training_step_height_m':saved['infos']['config'].get('step_height',0.05),'input_shape':['batch',40],
         'raw_output_shape':['batch',5],'target_order':['head','left_frame','right_frame','left_rear_wheel','right_rear_wheel'],
-        'target_units':['rad','rad','rad','rad/s','rad/s'],'control_dt':.02,
+        'target_units':['rad','rad','rad','rad/s','rad/s'],'control_dt':saved['infos']['config'].get('control_dt',.02),
         'normalization_included':True,'parity_samples':len(obs),'parity_input_source':source,
         'raw_max_abs_error':float((actual-ref).abs().max()),'torchscript_parity_passed':True,
         'task_success_verified_by_export':False}
