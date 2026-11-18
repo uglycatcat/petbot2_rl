@@ -1,14 +1,14 @@
-# step_explore：5cm台阶探索
+# step_explore：7cm台阶探索
 
-更新：2026-11-17。
+更新：2026-11-18。
 
-独立使用强化学习探索机器人登上5cm平台的能力。本项目与 `step_rl_demo` 的任务设计不同，需求、实现、实验和执行授权独立管理。
+当前目标是使用强化学习探索机器人登上7cm平台的能力。本项目与 `step_rl_demo` 的任务设计不同，需求、实现、实验和执行授权独立管理。
 
-**已得到可完成当前仿真任务的策略：[step5cm_s103_u0201](release/step5cm_s103_u0201/README.md)。** 原始检查点及导出TorchScript各自独立评估64/64成功；录像单例1/1成功。策略从默认平地初态登上5cm平台，四轮同时有台面支撑即结束。使用方式见[交付说明](DELIVERY.md)，40维观测及5维控制接口见[推理说明](docs/inference.md)。
+**已有5cm任务策略：[step5cm_s103_u0201](release/step5cm_s103_u0201/README.md)。** 原始检查点及导出TorchScript各自独立评估64/64成功；录像单例1/1成功。策略从默认平地初态登上5cm平台，四轮同时有台面支撑即结束。使用方式见[交付说明](DELIVERY.md)，40维观测及5维控制接口见[推理说明](docs/inference.md)。
 
 ## 已确认需求
 
-- 机器人出现在平地，前方放置5cm高的平台，目标是登上平台。
+- 机器人出现在平地，前方放置7cm高的平台，目标是登上平台。用户2026-11-18将原5cm目标提高到7cm，其余要求不变。
 - **成功判据：四个轮子都到达台面即可。** 不额外要求稳定保持一段时间、恢复默认姿态或停车。
 - **地形观测：允许策略读取台阶的相对位置和距离。** 可直接使用仿真中的对应信息。
 - 两个耳朵锁住，保持默认位置，不参与策略动作；其余可控关节可以自由活动。
@@ -40,12 +40,12 @@
 
 ## 场景与训练安排
 
-- **训练安排：** GPU0/1，各独立容器、每卡一路；首轮配置见 `configs/round01.json`，工程验证与结果见 `runs/` 和本项目后续交接。
+- **训练安排：** GPU0/1，各独立容器、每卡一路；当前7cm配置见 `configs/step7cm.json`，原5cm配置保留在 `configs/round01.json`，工程验证与结果见 `runs/` 和本项目后续交接。
 - **当前场景：** 默认站姿正对台阶，台沿在初始基座前0.65m（约为整机最前端前0.5m），平台2m×2m。这些尺寸和初态是本项目工程选择。
 
 ## 当前状态与文档维护
 
-独立分支为 `demoproj/step_explore`。已完成环境、控制、从零训练及策略物理验证，交付选择GPU1 seed103第201更新；达到交付目标后结束本轮训练和自动发批。实际停止记录、验收范围及证据见[当前交接](docs/current.md)和 `control/active.json`。没有宣称随机初态泛化、MuJoCo迁移或实机验证通过。
+独立分支为 `demoproj/step_explore`。5cm任务已交付GPU1 seed103第201更新策略；当前按新要求提高到7cm并验证策略，7cm效果以[当前交接](docs/current.md)和实际评估为准。没有宣称随机初态泛化、MuJoCo迁移或实机验证通过。
 
 详细需求、设计、实验记录与交接在本项目内维护。外层文档只保留入口、核心信息及重要里程碑；项目内信息更新时，同步修正受影响的外层摘要，不在外层重复展开。
 
@@ -54,7 +54,7 @@
 - [Agent入口](AGENTS.md)、[实现说明](docs/design.md)、[当前交接](docs/current.md)。
 - `python3 tools/deploy.py --gpu 0`（另一路为1）准备专用容器；依赖固定版本见 `requirements.txt`，安装包缓存在忽略的 `assets/wheels/`。缓存缺失时先在容器内按requirements安装。
 - 在容器的本项目目录运行 `python tools/prepare_asset.py --headless --device cuda:0`，生成任务自有资产；不得覆盖在用的冻结资产。
-- 单次训练入口：`python train.py --config configs/round01.json --output runs/<运行名> --headless --device cuda:0`。正式批次由 `python3 tools/campaign.py` 从已发布提交冻结后启动。
+- 单次训练入口：`python train.py --config configs/step7cm.json --output runs/<运行名> --headless --device cuda:0`。正式批次由 `python3 tools/campaign.py` 从已发布提交冻结后启动。
 - 独立加载验证：`python train.py --mode evaluate --checkpoint runs/<运行名>/final.pt --num-envs 64 --output runs/<运行名>/eval --headless --device cuda:0`。
 
 以上 `python` 指容器中 `/workspace/isaaclab/isaaclab.sh -p` 提供的环境。训练与仿真不在宿主运行；宿主只运行部署和campaign脚本。模型与资产由相对项目位置或CLI参数解析，不依赖宿主绝对路径。

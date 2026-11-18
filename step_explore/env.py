@@ -1,4 +1,4 @@
-"""Physics and task for unrestricted 5cm ascent. All lengths are metres."""
+"""Physics and task for unrestricted platform ascent. All lengths are metres."""
 from pathlib import Path
 import json
 import torch
@@ -30,7 +30,7 @@ class ExploreCfg(DirectRLEnvCfg):
     scene: InteractiveSceneCfg = InteractiveSceneCfg(num_envs=1024, env_spacing=4.0, replicate_physics=True)
     asset_dir: str = str(PROJECT / 'assets')
     edge: float = 0.65
-    height: float = 0.05
+    height: float = 0.07
     platform_length: float = 2.0
     platform_width: float = 2.0
     exploration_bonus: float = 10.0

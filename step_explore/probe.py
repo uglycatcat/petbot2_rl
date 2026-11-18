@@ -5,7 +5,7 @@ import numpy as np
 import torch
 
 def run_probe(env,wrapped,output):
-    checks={}
+    checks={'step_height':env.cfg.height}
     obs,_=wrapped.reset()
     assert torch.isfinite(obs['policy']).all()
     zero=torch.zeros(env.num_envs,5,device=env.device)

@@ -31,7 +31,7 @@ with torch.inference_mode():
 | 12–18 | head、left_frame、right_frame、left_front_wheel、left_rear_wheel、right_front_wheel、right_rear_wheel速度 | rad/s ×0.04 |
 | 19–21 | 台阶前沿中心点相对基座的位置，转到本体坐标 | m；目标点为(edge,0,height) |
 | 22–24 | 世界+x方向转到本体坐标 | 单位向量 |
-| 25 | 台阶高度 | 0.05m |
+| 25 | 台阶高度 | 当前0.07m；原5cm策略验证为0.05m |
 | 26–33 | 左前、右前、左后、右后轮各自的水平距台沿、最低点距台面 | 每轮2值：(edge−wheel_x, height−wheel_bottom)，m |
 | 34–38 | 上一次原始动作的tanh | 每回合初始为0 |
 | 39 | 回合控制步计数/最大控制步数 | 当前最大500步 |

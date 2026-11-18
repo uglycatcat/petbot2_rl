@@ -117,7 +117,7 @@ def main():
         with archive.open('wb') as f:subprocess.run(['git','archive',commit],cwd=PROJECT,stdout=f,check=True)
         with tarfile.open(archive) as t:t.extractall(batch/'source',filter='data')
         for n in ['robot.usda','model.json']:shutil.copy2(PROJECT/'assets'/n,batch/'assets'/n)
-        baseline=json.loads((PROJECT/'configs/round01.json').read_text())
+        baseline=json.loads((PROJECT/settings().get('config','configs/step7cm.json')).read_text())
         jobs={}
         for gpu in [0,1]:
             c=dict(baseline)

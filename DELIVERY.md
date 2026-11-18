@@ -1,6 +1,8 @@
 # 5cm台阶策略交付
 
-交付版本为 `step5cm_s103_u0201`，在GPU1从随机初始化训练得到，完成201次PPO更新。双耳固定默认构型，头及双车架跟随角度，左右后轮跟随速度，前轮被动。
+本页保留5cm交付说明；2026-11-18起当前任务高度已提高到7cm，进展见[当前交接](docs/current.md)。
+
+5cm交付版本为 `step5cm_s103_u0201`，在GPU1从随机初始化训练得到，完成201次PPO更新。双耳固定默认构型，头及双车架跟随角度，左右后轮跟随速度，前轮被动。
 
 ## 策略与验证
 
@@ -21,7 +23,7 @@
 ```bash
 /workspace/isaaclab/isaaclab.sh -p play.py \
   --policy release/step5cm_s103_u0201/policy_raw.pt --scripted \
-  --asset-dir assets --output runs/delivery_playback \
+  --step-height 0.05 --asset-dir assets --output runs/delivery_playback \
   --video --headless --device cuda:0
 ```
 
