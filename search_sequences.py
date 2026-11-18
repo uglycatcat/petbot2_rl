@@ -16,6 +16,9 @@ from recover.sequence_native import NativeSequences
 
 ACTIVE_OUTPUT=None
 
+class ResourceInterruption(RuntimeError):
+    """A forced resource stop; the last complete generation remains resumable."""
+
 def expand_targets(parameters, initial_targets, wheel_mode, steps=800, blend_steps=10):
     """Equal-duration target holds, with short linear transitions; no support script."""
     population,knots,dimensions=parameters.shape
@@ -48,7 +51,7 @@ def save_witness(prefix,actions,pose,poses,addresses,placement,metadata):
     prefix.with_suffix('.json').write_text(json.dumps(description,indent=2)+'\n')
 
 
-def main():
+def main(engine_factory=NativeSequences):
     global ACTIVE_OUTPUT
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output',required=True)
@@ -75,12 +78,14 @@ def main():
     mean=np.zeros((4,args.knots,dimensions));std=np.full_like(mean,1.5)
     best=np.full(4,-np.inf);found=np.zeros(4,dtype=bool);first_generation=0
     metadata=dict(source_hash=source_hash,code_hash=code_hash,seed=args.seed,wheel_mode=args.wheel_mode,
-                  method='cross_entropy_episode_policy_search',args=vars(args),initialization='scratch_no_demo_or_weights')
+                  method='cross_entropy_episode_policy_search',args=vars(args),initialization='scratch_no_demo_or_weights',
+                  backend=engine_factory.backend,physics_dt=engine_factory.physics_dt)
     if args.resume:
         if (output/'failure.json').exists():raise ValueError('A failed search is not eligible for forced-interruption recovery')
         previous=json.loads((output/'run.json').read_text());status=json.loads((output/'status.json').read_text())
         if status['status'] not in ('running','resource_stopped'):raise ValueError('Only a forcibly interrupted search may resume')
         if previous['source_hash']!=source_hash or previous['code_hash']!=code_hash:raise ValueError('Resume source differs')
+        if previous.get('backend')!=engine_factory.backend:raise ValueError('Resume backend differs')
         expected=dict(previous['args'],resume=True)
         if expected!=vars(args):raise ValueError('Resume configuration differs')
         if (output/'state.npz').exists():
@@ -91,8 +96,15 @@ def main():
     (output/'status.json').write_text(json.dumps(dict(status='running',pid=os.getpid(),generation=first_generation,
                                                      total_generations=args.generations),indent=2)+'\n')
     start=time.monotonic();elite_count=max(4,population//4)
-    with NativeSequences(threads=args.threads) as engine:
+    with engine_factory(threads=args.threads,seed=args.seed) as engine:
+        metadata['backend']=engine.backend;metadata['physics_dt']=engine.physics_dt
         for generation in range(first_generation,args.generations):
+            control=output.parent/'control.json'
+            if control.exists() and not json.loads(control.read_text()).get('enabled',False):
+                status=dict(status='control_stopped',pid=os.getpid(),generation=generation,
+                            total_generations=args.generations,success_found=found.tolist())
+                (output/'status.json').write_text(json.dumps(status,indent=2)+'\n');print(json.dumps(status),flush=True)
+                return
             available=int(next(line.split()[1] for line in Path('/proc/meminfo').read_text().splitlines() if line.startswith('MemAvailable:')))
             if available<2*1024*1024:
                 status=dict(status='resource_stopped',pid=os.getpid(),generation=generation,
@@ -108,7 +120,13 @@ def main():
             # This is the only action schedule: random goals, generic interpolation, optional zero drive.
             actions=np.concatenate([expand_targets(parameters[p],np.repeat(initial_targets[p,None],population,axis=0),args.wheel_mode) for p in range(4)])
             state=np.repeat(poses,population,axis=0)
-            summary,_=engine.run(state,actions);summary=summary.reshape(4,population,10)
+            try:summary,_=engine.run(state,actions)
+            except ResourceInterruption as error:
+                status=dict(status='resource_stopped',pid=os.getpid(),generation=generation,
+                            total_generations=args.generations,reason=str(error),success_found=found.tolist())
+                (output/'status.json').write_text(json.dumps(status,indent=2)+'\n');print(json.dumps(status),flush=True)
+                return
+            summary=summary.reshape(4,population,10)
             for pose in range(4):
                 rank=np.argsort(summary[pose,:,0])[::-1];elite=parameters[pose,rank[:elite_count]]
                 mean[pose]=.4*mean[pose]+.6*elite.mean(0)

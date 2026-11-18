@@ -13,7 +13,10 @@ from .model import PROJECT_ROOT,workspace_root,POSITION_JOINTS,POSITION_KP,POSIT
 
 
 class NativeSequences:
-    def __init__(self, physics_dt=.0005, threads=4):
+    backend='original_mujoco'
+    physics_dt=.0005
+    def __init__(self, physics_dt=.0005, threads=4, seed=None):
+        self.physics_dt=physics_dt
         if not 1<=threads<=4:raise ValueError('This auxiliary search is limited to four CPU threads')
         self.threads=threads
         source=Path(__file__).with_suffix('.cpp')

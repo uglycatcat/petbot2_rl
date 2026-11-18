@@ -1,0 +1,60 @@
+{
+  "source_hash": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+  "code_hash": "cc816ba55aa3f78e960854f3c8c4e34905b3751598d65463fcc7484040c496b3",
+  "seed": 901,
+  "wheel_mode": "zero",
+  "method": "cross_entropy_episode_policy_search",
+  "args": {
+    "output": "../zero_seed901",
+    "seed": 901,
+    "wheel_mode": "zero",
+    "population_per_pose": 32,
+    "generations": 40,
+    "knots": 8,
+    "threads": 4,
+    "resume": false
+  },
+  "initialization": "scratch_no_demo_or_weights",
+  "generation": 2,
+  "kernel_sha256": "62e26ff9b98b37b522d67dd6a4c1fa7db7b6e4b177ceb30d752cbb93bab558da",
+  "metrics": [
+    107.47517416119575,
+    7.0600000000000005,
+    1.4800000000000009,
+    0.9999544620513916,
+    211.0,
+    -1.0,
+    -0.5322916507720947,
+    0.0,
+    0.0,
+    5.999806523323059
+  ],
+  "pose_id": "pose_03",
+  "steps": 353,
+  "control_dt": 0.02,
+  "action_semantics": "applied_absolute_normalized_targets",
+  "robot_joint_names": [
+    "head",
+    "left_ear",
+    "right_ear",
+    "left_frame",
+    "right_frame",
+    "left_rear_wheel",
+    "right_rear_wheel",
+    "left_front_wheel",
+    "right_front_wheel"
+  ],
+  "placement": {
+    "id": "pose_03",
+    "sha256": "b67eaab6b4f7d884f6c9387e18c2371af4ee8f2ea0888240f008fadef7218c29",
+    "source_height_m": 0.07444919002929386,
+    "height_m": 0.0759486536027314,
+    "height_adjustment_m": 0.00149946357343754,
+    "floor_clearance_m": 0.000999999999999994
+  },
+  "action_sha256": "25217d85445e5d526a42a951f255f06767b195411f127e5c9d1d724f1815f8e6",
+  "status": "validated_original_mujoco_recovery;physx6of16;exact_pose03_only",
+  "derived_from": "runs/sequence_round01_20261118/zero_seed901/first_success_pose_03",
+  "termination_rule": "Stop changing the target after the first native stable-success event; independently verify subsequent final-target hold",
+  "source_commit": "6237de6e84e4351b18f9a9b397dac61c63c6959d"
+}

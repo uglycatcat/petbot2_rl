@@ -1,0 +1,18 @@
+{
+  "batch": "sequence_physx_round01_20261118",
+  "backend": "physx",
+  "population_per_pose": 2048,
+  "generations": 40,
+  "knots": 8,
+  "threads": 4,
+  "expected_peak_mib_per_job": 10000,
+  "reserve_mib_per_card": 2048,
+  "jobs": [
+    {"name": "zero_seed1001", "gpu": 2, "container": "petbot-recover-explore-gpu2", "seed": 1001, "wheel_mode": "zero"},
+    {"name": "free_seed1001", "gpu": 2, "container": "petbot-recover-explore-gpu2-b", "seed": 1001, "wheel_mode": "free"},
+    {"name": "zero_seed1002", "gpu": 3, "container": "petbot-recover-explore-gpu3", "seed": 1002, "wheel_mode": "zero"},
+    {"name": "free_seed1002", "gpu": 3, "container": "petbot-recover-explore-gpu3-b", "seed": 1002, "wheel_mode": "free"}
+  ],
+  "initialization": "scratch; no demo, no previous native search parameters, no gate state",
+  "note": "Maximum 81920 episodes per pose per job; candidates require independent native replay and mechanism review."
+}

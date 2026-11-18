@@ -1,0 +1,98 @@
+{
+  "evaluation": "../zero_seed901/validation/pose03_hold_dt0005",
+  "source_hash": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+  "poses": [
+    {
+      "pose_id": "pose_03",
+      "success": true,
+      "first_success_s": 7.0600000000000005,
+      "first_upright_s": 6.1000000000000005,
+      "peak_up": 0.9999544620513916,
+      "peak_up_s": 6.24,
+      "described_interval_end_s": 6.1000000000000005,
+      "described_interval": "start_to_first_upright",
+      "both_rear_contact_s": 5.0600000000000005,
+      "rear_only_contact_s": 2.08,
+      "nonwheel_support_s": 2.2800000000000002,
+      "nonwheel_support_by_body_s": {
+        "base_link": 0.0,
+        "lower_body": 0.0,
+        "head": 0.0,
+        "left_ear": 2.2800000000000002,
+        "right_ear": 0.0,
+        "left_frame": 1.58,
+        "right_frame": 0.0
+      },
+      "wheel_support_sequence": [
+        {
+          "start_s": 0.0,
+          "end_s": 0.02,
+          "wheel_mask": 0
+        },
+        {
+          "start_s": 0.02,
+          "end_s": 0.38,
+          "wheel_mask": 8
+        },
+        {
+          "start_s": 0.38,
+          "end_s": 0.5,
+          "wheel_mask": 4
+        },
+        {
+          "start_s": 0.5,
+          "end_s": 2.02,
+          "wheel_mask": 12
+        },
+        {
+          "start_s": 2.02,
+          "end_s": 2.28,
+          "wheel_mask": 4
+        },
+        {
+          "start_s": 2.28,
+          "end_s": 2.84,
+          "wheel_mask": 12
+        },
+        {
+          "start_s": 2.84,
+          "end_s": 2.88,
+          "wheel_mask": 3
+        },
+        {
+          "start_s": 2.88,
+          "end_s": 4.02,
+          "wheel_mask": 15
+        },
+        {
+          "start_s": 4.02,
+          "end_s": 4.12,
+          "wheel_mask": 14
+        },
+        {
+          "start_s": 4.12,
+          "end_s": 4.36,
+          "wheel_mask": 6
+        },
+        {
+          "start_s": 4.36,
+          "end_s": 6.1,
+          "wheel_mask": 14
+        }
+      ],
+      "rear_peak_abs_torque_nm": [
+        0.3234237852242791,
+        0.308381997359139
+      ],
+      "rear_positive_work_sample_estimate_j": 0.0,
+      "conclusion": "recovery_witness_pending_mechanism_review"
+    }
+  ],
+  "wheel_mask_bits": {
+    "left_front_wheel": 1,
+    "right_front_wheel": 2,
+    "left_rear_wheel": 4,
+    "right_rear_wheel": 8
+  },
+  "interpretation": "Support durations and sampled motor work describe evidence, not causation or novelty. Motor work uses one actuator-force sample per control step and may miss substep peaks. Review full trajectories/video and controlled comparisons before identifying a new mechanism."
+}
