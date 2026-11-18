@@ -114,7 +114,7 @@ def prepared_asset() -> tuple[Path, dict]:
 
 def task_implementation_fingerprint() -> str:
     """Behavioral code identity independent of documentation-only commits."""
-    files = sorted([*PROJECT_ROOT.glob('*.py'), *PROJECT_ROOT.glob('recover/*.py'), *PROJECT_ROOT.glob('tools/*.py'),
+    files = sorted([*PROJECT_ROOT.glob('*.py'), *PROJECT_ROOT.glob('recover/*.py'), *PROJECT_ROOT.glob('recover/*.cpp'), *PROJECT_ROOT.glob('tools/*.py'),
                     *PROJECT_ROOT.glob('environment/*.txt'), *PROJECT_ROOT.glob('environment/*.json')])
     payload = {str(path.relative_to(PROJECT_ROOT)): hashlib.sha256(path.read_bytes()).hexdigest() for path in files}
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()

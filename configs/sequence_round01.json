@@ -1,0 +1,19 @@
+{
+  "batch": "sequence_round01_20261118",
+  "method": "cross_entropy_episode_policy_search",
+  "backend": "original_mujoco",
+  "container": "petbot-recover-explore-check-gpu3",
+  "physics_dt": 0.0005,
+  "control_dt": 0.02,
+  "seconds": 16,
+  "knots": 8,
+  "population_per_pose": 32,
+  "generations": 40,
+  "threads_per_job": 4,
+  "jobs": [
+    {"name": "zero_seed901", "seed": 901, "wheel_mode": "zero"},
+    {"name": "free_seed902", "seed": 902, "wheel_mode": "free"}
+  ],
+  "initialization": "scratch; no demo targets, no gate state, no old weights",
+  "verification": "Independent native replay, finer integration and PhysX before accepting any candidate"
+}
