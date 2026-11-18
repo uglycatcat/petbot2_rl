@@ -1,0 +1,127 @@
+{
+  "peak50_probe": {
+    "step_height": 0.07,
+    "control_dt": 0.05,
+    "top_reward_mode": "simultaneous_peak",
+    "neutral_root_height_range": [
+      0.08407924324274063,
+      0.08408108353614807
+    ],
+    "neutral_joint_abs_max": 0.010354358702898026,
+    "source_mass": 1.6525400000000003,
+    "physx_mass": 1.6525399684906006,
+    "positive_successes": 8,
+    "airborne_negative": true,
+    "independent_joint_targets": [
+      0.3183942437171936,
+      0.23685039579868317,
+      -0.1973753273487091,
+      4.934383392333984,
+      -4.934383392333984
+    ],
+    "actual_joint_positions": [
+      0.3121178150177002,
+      0.23076263070106506,
+      -0.19148576259613037,
+      -0.04247032105922699,
+      0.9647652506828308,
+      0.03441726043820381,
+      -0.9647667407989502
+    ],
+    "actual_joint_velocities": [
+      0.015319055877625942,
+      0.03372475504875183,
+      -0.010366943664848804,
+      -0.042680852115154266,
+      4.9273271560668945,
+      -0.08782320469617844,
+      -4.927516460418701
+    ],
+    "rear_velocity_error_max": 0.00705718994140625,
+    "joint_names": [
+      "head",
+      "left_frame",
+      "right_frame",
+      "left_front_wheel",
+      "left_rear_wheel",
+      "right_front_wheel",
+      "right_rear_wheel"
+    ],
+    "rear_ids": [
+      4,
+      6
+    ],
+    "drive_damping": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.14000000059604645,
+      0.0,
+      0.14000000059604645
+    ],
+    "drive_max_force": [
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      0.3799999952316284,
+      4.0,
+      0.3799999952316284
+    ],
+    "passed": true
+  },
+  "peak50_short02": {
+    "status": "trained",
+    "iterations": 2,
+    "elapsed_seconds": 15.235335111618042,
+    "episodes": 0,
+    "successes": 0,
+    "max_simultaneous_wheels_on_top": 0,
+    "max_distinct_wheels_reached": 0,
+    "torch_peak_mib": 296.0,
+    "updated_at": 1794992122.2998602
+  },
+  "peak50_reload16": {
+    "episodes": 16,
+    "successes": 0,
+    "success_rate": 0.0,
+    "max_simultaneous_wheels_on_top": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "steps": 171,
+    "initial_state": "default_on_flat",
+    "step_height": 0.07,
+    "step_edge": 0.65,
+    "independent_geometry_check": true,
+    "joint_names": [
+      "head",
+      "left_frame",
+      "right_frame",
+      "left_front_wheel",
+      "left_rear_wheel",
+      "right_front_wheel",
+      "right_rear_wheel"
+    ],
+    "body_contact_allowed": true,
+    "hold_required": false,
+    "trace_dt": 0.05
+  },
+  "reward_semantics_tests": "3 tests passed: alternating pairs, no repeat rewards, independent environment progress",
+  "formal_training_started": false
+}

@@ -10,6 +10,7 @@ from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sensors import ContactSensor, ContactSensorCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.math import quat_apply, quat_apply_inverse
+from step_explore.rewards import TOP_PEAK_VALUES, simultaneous_top_bonus
 
 PROJECT = Path(__file__).resolve().parents[1]
 WHEELS = ['left_front_wheel', 'right_front_wheel', 'left_rear_wheel', 'right_rear_wheel']
@@ -34,9 +35,12 @@ class ExploreCfg(DirectRLEnvCfg):
     platform_length: float = 2.0
     platform_width: float = 2.0
     exploration_bonus: float = 10.0
+    top_reward_mode: str = 'distinct_wheels'
 
 class ExploreEnv(DirectRLEnv):
     def __init__(self, cfg, **kwargs):
+        if cfg.top_reward_mode not in ('distinct_wheels','simultaneous_peak'):
+            raise ValueError('Unknown top_reward_mode')
         self.meta = json.loads((Path(cfg.asset_dir) / 'model.json').read_text())
         super().__init__(cfg, **kwargs)
         self.angle_ids, _ = self.robot.find_joints(ANGLE, preserve_order=True)
@@ -60,6 +64,8 @@ class ExploreEnv(DirectRLEnv):
         self.best_progress = torch.zeros(self.num_envs, device=self.device)
         self.seen_top = torch.zeros(self.num_envs,4,dtype=torch.bool,device=self.device)
         self.peak_top = torch.zeros(self.num_envs,dtype=torch.long,device=self.device)
+        self.rewarded_top_peak = torch.zeros_like(self.peak_top)
+        self.top_peak_values = torch.tensor(TOP_PEAK_VALUES,device=self.device)
         self.success = torch.zeros(self.num_envs,dtype=torch.bool,device=self.device)
         self.outside = self.success.clone()
         self.total_episodes = 0
@@ -174,7 +180,11 @@ class ExploreEnv(DirectRLEnv):
         self.best_progress = torch.maximum(self.best_progress,progress)
         new_top = self.top & ~self.seen_top
         self.seen_top |= self.top
-        reward = self.cfg.exploration_bonus*delta + 3.*new_top.float().sum(-1) + 50.*self.success.float() - .005 - 3.*self.outside.float()
+        if self.cfg.top_reward_mode == 'simultaneous_peak':
+            top_bonus,self.rewarded_top_peak=simultaneous_top_bonus(self.top,self.rewarded_top_peak,self.top_peak_values)
+        else:
+            top_bonus=3.*new_top.float().sum(-1)
+        reward = self.cfg.exploration_bonus*delta + top_bonus + 50.*self.success.float() - .005 - 3.*self.outside.float()
         self.episode_return += reward
         self.last_transition = {k:v.clone() for k,v in {
             'success':self.success,'top':self.top,'bottom':self.bottom,'wheel_pos':self.wheel_pos,
@@ -224,5 +234,6 @@ class ExploreEnv(DirectRLEnv):
                                             self.robot.data.default_joint_vel[env_ids],env_ids=env_ids)
         if hasattr(self,'actions'):
             self.actions[env_ids]=0.;self.targets[env_ids]=0.;self.seen_top[env_ids]=False;self.peak_top[env_ids]=0
+            self.rewarded_top_peak[env_ids]=0
             self.episode_return[env_ids]=0.;self.success[env_ids]=False
             self.best_progress[env_ids]=self.init_phi[env_ids] if self.init_phi is not None else 0.

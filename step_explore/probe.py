@@ -5,8 +5,9 @@ import numpy as np
 import torch
 
 def run_probe(env,wrapped,output):
-    checks={'step_height':env.cfg.height,'control_dt':env.step_dt}
+    checks={'step_height':env.cfg.height,'control_dt':env.step_dt,'top_reward_mode':env.cfg.top_reward_mode}
     obs,_=wrapped.reset()
+    assert not env.rewarded_top_peak.any()
     assert torch.isfinite(obs['policy']).all()
     zero=torch.zeros(env.num_envs,5,device=env.device)
     for _ in range(max(1,round(1.5/env.step_dt))):wrapped.step(zero)

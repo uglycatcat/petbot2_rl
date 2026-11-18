@@ -64,6 +64,7 @@ try:
     cfg.seed=config['seed'];cfg.sim.device=args.device
     # Legacy5cm configurations remain reproducible; new runs record their height explicitly.
     cfg.height=config.get('step_height',0.05)
+    cfg.top_reward_mode=config.get('top_reward_mode','distinct_wheels')
     control_dt=config.get('control_dt',0.02)
     cfg.decimation=round(control_dt/cfg.sim.dt)
     if cfg.decimation<1 or abs(cfg.decimation*cfg.sim.dt-control_dt)>1e-9:
