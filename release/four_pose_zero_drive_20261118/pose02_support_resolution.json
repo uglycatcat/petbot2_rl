@@ -1,0 +1,23 @@
+[
+  {
+    "physics_dt": 0.002,
+    "first_upright_s": 6.140000000000001,
+    "simultaneous_rear_ground_substeps": 0,
+    "simultaneous_rear_ground_duration_s": 0.0,
+    "right_rear_peak_ground_force_n": 0.0
+  },
+  {
+    "physics_dt": 0.0005,
+    "first_upright_s": 6.140000000000001,
+    "simultaneous_rear_ground_substeps": 0,
+    "simultaneous_rear_ground_duration_s": 0.0,
+    "right_rear_peak_ground_force_n": 0.0
+  },
+  {
+    "physics_dt": 0.00025,
+    "first_upright_s": 6.140000000000001,
+    "simultaneous_rear_ground_substeps": 0,
+    "simultaneous_rear_ground_duration_s": 0.0,
+    "right_rear_peak_ground_force_n": 0.0
+  }
+]

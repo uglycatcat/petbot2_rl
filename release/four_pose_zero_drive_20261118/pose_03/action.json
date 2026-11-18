@@ -1,0 +1,69 @@
+{
+  "source_hash": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+  "code_hash": "6b4923cde5c7d4ac9459d3fa80d6eed470d3d682dad646757888aefd95374b03",
+  "seed": 886,
+  "wheel_mode": "zero",
+  "method": "cross_entropy_episode_policy_search",
+  "args": {
+    "output": "artifacts/engineering/sequence_physx_capacity",
+    "seed": 886,
+    "wheel_mode": "zero",
+    "population_per_pose": 2048,
+    "generations": 1,
+    "knots": 8,
+    "threads": 4,
+    "resume": false
+  },
+  "initialization": "scratch_no_demo_or_weights",
+  "backend": "physx",
+  "physics_dt": 0.002,
+  "generation": 0,
+  "kernel_sha256": "6b4923cde5c7d4ac9459d3fa80d6eed470d3d682dad646757888aefd95374b03",
+  "metrics": [
+    111.50518798828125,
+    2.759999990463257,
+    1.7399989366531372,
+    0.9999989867210388,
+    230.0,
+    -1.0,
+    0.8768073916435242,
+    3.0,
+    0.0,
+    5.999945640563965
+  ],
+  "pose_id": "pose_03",
+  "steps": 138,
+  "control_dt": 0.02,
+  "action_semantics": "applied_absolute_normalized_targets",
+  "robot_joint_names": [
+    "head",
+    "left_ear",
+    "right_ear",
+    "left_frame",
+    "right_frame",
+    "left_rear_wheel",
+    "right_rear_wheel",
+    "left_front_wheel",
+    "right_front_wheel"
+  ],
+  "placement": {
+    "id": "pose_03",
+    "sha256": "b67eaab6b4f7d884f6c9387e18c2371af4ee8f2ea0888240f008fadef7218c29",
+    "source_height_m": 0.07444919002929386,
+    "height_m": 0.0759486536027314,
+    "height_adjustment_m": 0.00149946357343754,
+    "floor_clearance_m": 0.000999999999999994
+  },
+  "action_sha256": "025cd0094bd43ffcf241d6c1cc851b0dcf98a9cc196e4f694412792ae0f44e4e",
+  "status": "independently_validated_fixed_start_action",
+  "derived_from": "first_success_pose_03",
+  "termination_rule": "Hold target after both original-episode success times have elapsed",
+  "validation_reports": [
+    "native_dt0002.json",
+    "native_dt0005.json",
+    "native_dt00025.json",
+    "../physx.json"
+  ],
+  "physx_success_count": 16,
+  "physx_fixed_replicas": 16
+}

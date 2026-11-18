@@ -1,5 +1,6 @@
 """Replay an actually sampled target sequence on the unchanged source model."""
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -31,6 +32,8 @@ def main():
     archive=np.load(prefix.with_suffix('.npz'));actions=np.asarray(archive['actions'],dtype=np.float32)
     if actions.shape!=(metadata['steps'],7) or not len(actions):raise ValueError('Invalid action sequence shape')
     if not np.isfinite(actions).all() or np.abs(actions).max()>1:raise ValueError('Invalid action targets')
+    if hashlib.sha256(actions.tobytes()).hexdigest()!=metadata['action_sha256']:
+        raise ValueError('Recorded action checksum mismatch')
     pose_id=metadata['pose_id'];pose_ids=[f'pose_{i:02d}' for i in range(1,5)]
     if pose_id not in pose_ids:raise ValueError('Unknown recorded initial pose')
     pose=pose_ids.index(pose_id);poses,addresses,placement=load_poses()

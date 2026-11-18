@@ -1,0 +1,154 @@
+{
+  "evaluation": "runs/sequence_physx_round01_20261118/early_review_0002/held/pose_02_dt0005",
+  "source_hash": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+  "poses": [
+    {
+      "pose_id": "pose_02",
+      "success": true,
+      "first_success_s": 6.86,
+      "first_upright_s": 6.140000000000001,
+      "peak_up": 0.9988942742347717,
+      "peak_up_s": 6.2,
+      "described_interval_end_s": 6.140000000000001,
+      "described_interval": "start_to_first_upright",
+      "both_rear_contact_s": 0.0,
+      "rear_only_contact_s": 0.0,
+      "nonwheel_support_s": 4.08,
+      "nonwheel_support_by_body_s": {
+        "base_link": 0.0,
+        "lower_body": 0.0,
+        "head": 1.72,
+        "left_ear": 0.0,
+        "right_ear": 3.6,
+        "left_frame": 0.0,
+        "right_frame": 0.0
+      },
+      "wheel_support_sequence": [
+        {
+          "start_s": 0.0,
+          "end_s": 0.02,
+          "wheel_mask": 0
+        },
+        {
+          "start_s": 0.02,
+          "end_s": 0.06,
+          "wheel_mask": 1
+        },
+        {
+          "start_s": 0.06,
+          "end_s": 0.26,
+          "wheel_mask": 0
+        },
+        {
+          "start_s": 0.26,
+          "end_s": 2.1,
+          "wheel_mask": 2
+        },
+        {
+          "start_s": 2.1,
+          "end_s": 2.14,
+          "wheel_mask": 3
+        },
+        {
+          "start_s": 2.14,
+          "end_s": 2.16,
+          "wheel_mask": 2
+        },
+        {
+          "start_s": 2.16,
+          "end_s": 2.2,
+          "wheel_mask": 0
+        },
+        {
+          "start_s": 2.2,
+          "end_s": 2.24,
+          "wheel_mask": 1
+        },
+        {
+          "start_s": 2.24,
+          "end_s": 4.02,
+          "wheel_mask": 3
+        },
+        {
+          "start_s": 4.02,
+          "end_s": 4.08,
+          "wheel_mask": 1
+        },
+        {
+          "start_s": 4.08,
+          "end_s": 4.16,
+          "wheel_mask": 3
+        },
+        {
+          "start_s": 4.16,
+          "end_s": 4.18,
+          "wheel_mask": 1
+        },
+        {
+          "start_s": 4.18,
+          "end_s": 4.2,
+          "wheel_mask": 3
+        },
+        {
+          "start_s": 4.2,
+          "end_s": 4.22,
+          "wheel_mask": 0
+        },
+        {
+          "start_s": 4.22,
+          "end_s": 4.24,
+          "wheel_mask": 1
+        },
+        {
+          "start_s": 4.24,
+          "end_s": 4.32,
+          "wheel_mask": 0
+        },
+        {
+          "start_s": 4.32,
+          "end_s": 4.34,
+          "wheel_mask": 5
+        },
+        {
+          "start_s": 4.34,
+          "end_s": 4.42,
+          "wheel_mask": 6
+        },
+        {
+          "start_s": 4.42,
+          "end_s": 6.04,
+          "wheel_mask": 7
+        },
+        {
+          "start_s": 6.04,
+          "end_s": 6.06,
+          "wheel_mask": 5
+        },
+        {
+          "start_s": 6.06,
+          "end_s": 6.08,
+          "wheel_mask": 7
+        },
+        {
+          "start_s": 6.08,
+          "end_s": 6.14,
+          "wheel_mask": 5
+        }
+      ],
+      "rear_peak_abs_torque_nm": [
+        0.23419186818091384,
+        0.007720702567440706
+      ],
+      "rear_positive_work_sample_estimate_j": 0.0,
+      "conclusion": "recovery_witness_pending_mechanism_review"
+    }
+  ],
+  "contact_basis": "Ground-only upward force > 0.05 N in at least 80% of physical substeps",
+  "wheel_mask_bits": {
+    "left_front_wheel": 1,
+    "right_front_wheel": 2,
+    "left_rear_wheel": 4,
+    "right_rear_wheel": 8
+  },
+  "interpretation": "Support durations and sampled motor work describe evidence, not causation or novelty. Motor work uses one actuator-force sample per control step and may miss substep peaks. Review full trajectories/video and controlled comparisons before identifying a new mechanism."
+}

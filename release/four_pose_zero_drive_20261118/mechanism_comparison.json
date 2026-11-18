@@ -1,0 +1,49 @@
+{
+  "poses": [
+    {
+      "pose_id": "pose_01",
+      "evaluation": "runs/sequence_physx_round01_20261118/early_review_0002/held/pose_01_dt0005",
+      "first_success_s": 14.88,
+      "first_upright_s": 14.14,
+      "rear_target_peak_rad_s": 0.0,
+      "rear_net_work_j": -0.12490391520533617,
+      "rear_positive_work_j": 1.9444453304871e-06,
+      "both_rear_ground_substep_duration_before_first_upright_s": 3.5535,
+      "final_four_ground_support": true
+    },
+    {
+      "pose_id": "pose_02",
+      "evaluation": "runs/sequence_physx_round01_20261118/early_review_0002/held/pose_02_dt0005",
+      "first_success_s": 6.86,
+      "first_upright_s": 6.140000000000001,
+      "rear_target_peak_rad_s": 0.0,
+      "rear_net_work_j": -0.014942888760297677,
+      "rear_positive_work_j": 7.908072520778288e-07,
+      "both_rear_ground_substep_duration_before_first_upright_s": 0.0,
+      "final_four_ground_support": true
+    },
+    {
+      "pose_id": "pose_03",
+      "evaluation": "artifacts/engineering/sequence_physx_capacity/pose03_hold_dt0005",
+      "first_success_s": 2.7600000000000002,
+      "first_upright_s": 2.16,
+      "rear_target_peak_rad_s": 0.0,
+      "rear_net_work_j": -0.07220996323829788,
+      "rear_positive_work_j": 1.8887738652136573e-06,
+      "both_rear_ground_substep_duration_before_first_upright_s": 1.798,
+      "final_four_ground_support": true
+    },
+    {
+      "pose_id": "pose_04",
+      "evaluation": "runs/sequence_physx_round01_20261118/early_review_0002/held/pose_04_dt0005",
+      "first_success_s": 4.76,
+      "first_upright_s": 4.16,
+      "rear_target_peak_rad_s": 0.0,
+      "rear_net_work_j": -0.06892521942854535,
+      "rear_positive_work_j": 1.8393087030775849e-06,
+      "both_rear_ground_substep_duration_before_first_upright_s": 2.968,
+      "final_four_ground_support": true
+    }
+  ],
+  "note": "Ground-only support. Work is post-step velocity times actual motor torque; a numerical estimate, not causal isolation. All rear velocity targets are zero, so these are actively braked wheels, not disabled motors."
+}

@@ -26,7 +26,11 @@ def analyze(prefix,output):
     for pose,pose_id in enumerate(pose_ids):
         count=len(z['up']);time=np.arange(1,count+1)*dt
         valid=z['eligible'][:,pose] if 'eligible' in z else np.ones(count,dtype=bool)
-        contact=z['contacts'][:,pose].astype(bool)
+        # Mechanism evidence must exclude wheel self-contacts. The task's net
+        # contact mask is retained in the trace, but is not a ground-support mask.
+        wheel_ids=[bodies.index(n) for n in wheel_names]
+        wheel_ground=np.take(z['ground_force'][:,pose,:,:,2],wheel_ids,axis=2)
+        contact=(wheel_ground>.05).mean(1)>=.8
         upright=(z['up'][:,pose]>np.cos(np.deg2rad(25))) & valid
         hits=np.flatnonzero(upright)
         stable=(z['hold'][:,pose]>=.5)&valid
@@ -36,7 +40,7 @@ def analyze(prefix,output):
         end=int(hits[0]) if len(hits) else peak
         interval=slice(0,end+1)
         support_codes=(contact*np.array([1,2,4,8])).sum(-1)
-        # Mean upward force across ten physics samples; negative forces are not support.
+        # Mean upward force across all physics samples; negative forces are not support.
         vertical=np.maximum(z['ground_force'][:,pose,:,:,2],0).mean(1)
         other_support=vertical[:,nonwheel].sum(-1)
         total_support=vertical[:,[bodies.index(n) for n in wheel_names]].sum(-1)+other_support
@@ -73,6 +77,7 @@ def analyze(prefix,output):
                 rear_left_speed_rad_s=float(z['wheel'][t,pose,0]),rear_right_speed_rad_s=float(z['wheel'][t,pose,1]),
                 rear_sampled_motor_power_w=float(power[t]) if power is not None else None))
     result=dict(evaluation=str(prefix),source_hash=report['source_hash'],poses=poses,
+        contact_basis='Ground-only upward force > 0.05 N in at least 80% of physical substeps',
         wheel_mask_bits=dict(zip(wheel_names,[1,2,4,8])),
         interpretation='Support durations and sampled motor work describe evidence, not causation or novelty. '
                        'Motor work uses one actuator-force sample per control step and may miss substep peaks. '

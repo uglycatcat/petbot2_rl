@@ -1,0 +1,63 @@
+{
+  "backend": "original_mujoco",
+  "evaluation_mode": "sampled_action_replay",
+  "pose_ids": [
+    "pose_01"
+  ],
+  "witness": "runs/sequence_physx_round01_20261118/early_review_0002/held/pose_01",
+  "source_hash": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+  "evaluation_code_hash": "d7e14b5be174e022556161695839e4d2255e54a35cb86580e11da878a32ac6f4",
+  "policy_code_hash": "1829bbbcabc062427c9c038ad77761741bbce019cd5ae6464948cec83d375da8",
+  "mujoco_version": "3.8.1",
+  "integrator_choice": "implicitfast",
+  "source_physics_dt": 0.002,
+  "physics_dt": 0.002,
+  "physics_samples_per_control": 10,
+  "control_dt": 0.02,
+  "recorded_steps": 744,
+  "hold_final_seconds": 1.12,
+  "success": [
+    true
+  ],
+  "success_during_recorded_sequence": [
+    false
+  ],
+  "first_success_s": [
+    14.9
+  ],
+  "first_invalid_s": [
+    -1.0
+  ],
+  "max_stable_s": [
+    1.600000000000001
+  ],
+  "final_stable": [
+    true
+  ],
+  "placement": [
+    {
+      "id": "pose_01",
+      "sha256": "05434ecd22af008e8c28dedff9a9bb2119e18ef1dc30972306ab70f87d5a21b0",
+      "source_height_m": 0.0935726665393146,
+      "height_m": 0.09457857722150173,
+      "height_adjustment_m": 0.001005910682187125,
+      "floor_clearance_m": 0.00099999999999998
+    }
+  ],
+  "body_names": [
+    "world",
+    "base_link",
+    "lower_body",
+    "head",
+    "left_ear",
+    "right_ear",
+    "left_frame",
+    "left_front_wheel",
+    "left_rear_wheel",
+    "right_frame",
+    "right_front_wheel",
+    "right_rear_wheel"
+  ],
+  "status": "completed",
+  "note": "Exact recorded start and actually applied targets; any appended final-target hold is reported separately."
+}

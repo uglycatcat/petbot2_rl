@@ -1,0 +1,23 @@
+{
+  "release": "four_pose_zero_drive_20261118",
+  "initial_states": "configs/initial_poses.json",
+  "source_hash": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+  "control_dt": 0.02,
+  "hold_until_s": 16,
+  "kind": "four fixed-start open-loop action policies, not a trained feedback network",
+  "initialization": "All search distributions initialized from scratch; no demonstration or previous weights",
+  "search_sources": {
+    "pose_01": "PhysX zero_seed1001, generation0, frozen0af50800902f0020d3da66d793ac4e12298c686c",
+    "pose_02": "PhysX zero_seed1002, generation0, frozen0af50800902f0020d3da66d793ac4e12298c686c",
+    "pose_03": "Engineering capacity search seed886, generation0, code fingerprint6b4923cde5c7d4ac9459d3fa80d6eed470d3d682dad646757888aefd95374b03; no frozen formal search commit claimed",
+    "pose_04": "PhysX zero_seed1002, generation1, frozen0af50800902f0020d3da66d793ac4e12298c686c"
+  },
+  "physx_success_counts": [
+    14,
+    16,
+    16,
+    16
+  ],
+  "per_pose_fixed_replicas": 16,
+  "limitation": "Exact recorded starts only; no robustness or hardware claim; pose01 has two PhysX replicas with intermittent left-rear support"
+}

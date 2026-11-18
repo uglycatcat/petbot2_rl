@@ -1,0 +1,15 @@
+{
+  "candidate": {
+    "first_success_s": 2.7600000000000002,
+    "wheel_target_peak_rad_s": 0.0,
+    "rear_net_work_j": -0.07220996323829788,
+    "rear_positive_work_j": 1.8887738652136573e-06
+  },
+  "known_demo_same_interface": {
+    "first_success_s": 6.22,
+    "wheel_target_peak_rad_s": 7.0,
+    "rear_net_work_j": 0.19527092217023745,
+    "rear_positive_work_j": 0.2728732543528535
+  },
+  "note": "Post-step angular velocity times actuator torque, integrated over physical substeps; numerical work estimate, not causal isolation. The zero-target action still uses rear-wheel support and braking."
+}

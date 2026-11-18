@@ -1,0 +1,76 @@
+{
+  "source_hash": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+  "code_hash": "1829bbbcabc062427c9c038ad77761741bbce019cd5ae6464948cec83d375da8",
+  "seed": 1002,
+  "wheel_mode": "zero",
+  "method": "cross_entropy_episode_policy_search",
+  "args": {
+    "output": "../zero_seed1002",
+    "seed": 1002,
+    "wheel_mode": "zero",
+    "population_per_pose": 2048,
+    "generations": 40,
+    "knots": 8,
+    "threads": 4,
+    "resume": false
+  },
+  "initialization": "scratch_no_demo_or_weights",
+  "backend": "physx",
+  "physics_dt": 0.002,
+  "generation": 1,
+  "kernel_sha256": "1829bbbcabc062427c9c038ad77761741bbce019cd5ae6464948cec83d375da8",
+  "metrics": [
+    110.7965316772461,
+    5.260000228881836,
+    0.8999996781349182,
+    0.9986427426338196,
+    176.0,
+    -1.0,
+    0.5732985734939575,
+    2.0,
+    0.0,
+    5.99728536605835
+  ],
+  "pose_id": "pose_04",
+  "steps": 263,
+  "control_dt": 0.02,
+  "action_semantics": "applied_absolute_normalized_targets",
+  "robot_joint_names": [
+    "head",
+    "left_ear",
+    "right_ear",
+    "left_frame",
+    "right_frame",
+    "left_rear_wheel",
+    "right_rear_wheel",
+    "left_front_wheel",
+    "right_front_wheel"
+  ],
+  "placement": {
+    "id": "pose_04",
+    "sha256": "a5983d27908fc537dd7cf40e5486cb75efa13260d7b68409f295e001931d44b0",
+    "source_height_m": 0.10183948660615517,
+    "height_m": 0.10284285066526441,
+    "height_adjustment_m": 0.001003364059109238,
+    "floor_clearance_m": 0.001000000000000006
+  },
+  "action_sha256": "92190a0670954e98a0687096940940bf5b6c3f44b646ce1e38f066998c879bb2",
+  "status": "independently_validated_fixed_start_action",
+  "derived_from": "runs/sequence_physx_round01_20261118/early_review_0002/zero_seed1002_first_success_pose_04",
+  "derivation": {
+    "method": "hold_last_target_after_success_in_search_and_native_replay",
+    "evidence": "runs/sequence_physx_round01_20261118/early_review_0002/zero_seed1002_first_success_pose_04_native",
+    "cutoff_s": 5.26,
+    "source_action_sha256": "19343de0387f00bf02b82ef04c1ea057b19cd8dc67f8f333ccd3d6e725296511",
+    "script_sha256": "1e4340f43df181867d18f82e6f40fdf09488b5da0bcac094a12f66605aa07181"
+  },
+  "metrics_scope": "Original full searched sequence; derived prefix requires its own reports",
+  "validation_reports": [
+    "native_dt0002.json",
+    "native_dt0005.json",
+    "native_dt00025.json",
+    "../physx.json"
+  ],
+  "physx_success_count": 16,
+  "physx_fixed_replicas": 16
+}

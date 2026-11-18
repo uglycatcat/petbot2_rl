@@ -1,0 +1,13 @@
+{
+  "source_hash": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+  "steps": 800,
+  "control_dt": 0.02,
+  "action_semantics": "applied_absolute_normalized_targets",
+  "action_sha256": "08027fc05a8edc5f4f6a04b880e5520ee006d865510bc64b04cc19a97bf7818a",
+  "provenance": [
+    "runs/sequence_physx_round01_20261118/early_review_0002/held/pose_01",
+    "runs/sequence_physx_round01_20261118/early_review_0002/held/pose_02",
+    "artifacts/engineering/sequence_physx_capacity/pose03_stop_on_success",
+    "runs/sequence_physx_round01_20261118/early_review_0002/held/pose_04"
+  ]
+}

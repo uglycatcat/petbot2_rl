@@ -1,0 +1,169 @@
+{
+  "evaluation": "runs/sequence_physx_round01_20261118/early_review_0002/held/pose_01_dt0005",
+  "source_hash": "b82c59dbe240f8177e48a907a3c671bf288ee210589bbfee83845f4f0dafc72f",
+  "poses": [
+    {
+      "pose_id": "pose_01",
+      "success": true,
+      "first_success_s": 14.88,
+      "first_upright_s": 14.14,
+      "peak_up": 0.9924094676971436,
+      "peak_up_s": 14.18,
+      "described_interval_end_s": 14.14,
+      "described_interval": "start_to_first_upright",
+      "both_rear_contact_s": 3.46,
+      "rear_only_contact_s": 0.34,
+      "nonwheel_support_s": 10.22,
+      "nonwheel_support_by_body_s": {
+        "base_link": 0.0,
+        "lower_body": 0.0,
+        "head": 5.22,
+        "left_ear": 6.7,
+        "right_ear": 3.3200000000000003,
+        "left_frame": 7.76,
+        "right_frame": 1.16
+      },
+      "wheel_support_sequence": [
+        {
+          "start_s": 0.0,
+          "end_s": 0.32,
+          "wheel_mask": 0
+        },
+        {
+          "start_s": 0.32,
+          "end_s": 2.0,
+          "wheel_mask": 8
+        },
+        {
+          "start_s": 2.0,
+          "end_s": 2.08,
+          "wheel_mask": 0
+        },
+        {
+          "start_s": 2.08,
+          "end_s": 2.3,
+          "wheel_mask": 4
+        },
+        {
+          "start_s": 2.3,
+          "end_s": 4.5,
+          "wheel_mask": 0
+        },
+        {
+          "start_s": 4.5,
+          "end_s": 4.68,
+          "wheel_mask": 4
+        },
+        {
+          "start_s": 4.68,
+          "end_s": 4.82,
+          "wheel_mask": 0
+        },
+        {
+          "start_s": 4.82,
+          "end_s": 6.24,
+          "wheel_mask": 4
+        },
+        {
+          "start_s": 6.24,
+          "end_s": 8.36,
+          "wheel_mask": 0
+        },
+        {
+          "start_s": 8.36,
+          "end_s": 10.06,
+          "wheel_mask": 4
+        },
+        {
+          "start_s": 10.06,
+          "end_s": 10.12,
+          "wheel_mask": 8
+        },
+        {
+          "start_s": 10.12,
+          "end_s": 10.2,
+          "wheel_mask": 0
+        },
+        {
+          "start_s": 10.2,
+          "end_s": 10.34,
+          "wheel_mask": 4
+        },
+        {
+          "start_s": 10.34,
+          "end_s": 10.36,
+          "wheel_mask": 12
+        },
+        {
+          "start_s": 10.36,
+          "end_s": 10.38,
+          "wheel_mask": 8
+        },
+        {
+          "start_s": 10.38,
+          "end_s": 10.6,
+          "wheel_mask": 12
+        },
+        {
+          "start_s": 10.6,
+          "end_s": 10.62,
+          "wheel_mask": 3
+        },
+        {
+          "start_s": 10.62,
+          "end_s": 10.66,
+          "wheel_mask": 7
+        },
+        {
+          "start_s": 10.66,
+          "end_s": 12.04,
+          "wheel_mask": 15
+        },
+        {
+          "start_s": 12.04,
+          "end_s": 12.1,
+          "wheel_mask": 13
+        },
+        {
+          "start_s": 12.1,
+          "end_s": 12.32,
+          "wheel_mask": 9
+        },
+        {
+          "start_s": 12.32,
+          "end_s": 14.0,
+          "wheel_mask": 13
+        },
+        {
+          "start_s": 14.0,
+          "end_s": 14.1,
+          "wheel_mask": 12
+        },
+        {
+          "start_s": 14.1,
+          "end_s": 14.12,
+          "wheel_mask": 5
+        },
+        {
+          "start_s": 14.12,
+          "end_s": 14.14,
+          "wheel_mask": 4
+        }
+      ],
+      "rear_peak_abs_torque_nm": [
+        0.22215059181918764,
+        0.35811507314886787
+      ],
+      "rear_positive_work_sample_estimate_j": 0.0,
+      "conclusion": "recovery_witness_pending_mechanism_review"
+    }
+  ],
+  "contact_basis": "Ground-only upward force > 0.05 N in at least 80% of physical substeps",
+  "wheel_mask_bits": {
+    "left_front_wheel": 1,
+    "right_front_wheel": 2,
+    "left_rear_wheel": 4,
+    "right_rear_wheel": 8
+  },
+  "interpretation": "Support durations and sampled motor work describe evidence, not causation or novelty. Motor work uses one actuator-force sample per control step and may miss substep peaks. Review full trajectories/video and controlled comparisons before identifying a new mechanism."
+}

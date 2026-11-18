@@ -1,0 +1,30 @@
+[
+  {
+    "pose_id": "pose_01",
+    "action_sha256": "342b499996a17f50cdfd7601a9bab83650561798db2b931cf2e4424f09523185",
+    "steps": 744,
+    "initial_state_match": true,
+    "independent_physx_input_exact": true
+  },
+  {
+    "pose_id": "pose_02",
+    "action_sha256": "e28b578ad3e67806213ee7910ced651b561653050eb1f621add44e5e4c93cdd8",
+    "steps": 343,
+    "initial_state_match": true,
+    "independent_physx_input_exact": true
+  },
+  {
+    "pose_id": "pose_03",
+    "action_sha256": "025cd0094bd43ffcf241d6c1cc851b0dcf98a9cc196e4f694412792ae0f44e4e",
+    "steps": 138,
+    "initial_state_match": true,
+    "independent_physx_input_exact": true
+  },
+  {
+    "pose_id": "pose_04",
+    "action_sha256": "92190a0670954e98a0687096940940bf5b6c3f44b646ce1e38f066998c879bb2",
+    "steps": 263,
+    "initial_state_match": true,
+    "independent_physx_input_exact": true
+  }
+]
