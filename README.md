@@ -1,4 +1,4 @@
-# step_explore：7cm台阶探索
+# step_explore：台阶强化学习探索
 
 更新：2026-11-22。
 

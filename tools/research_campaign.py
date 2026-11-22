@@ -164,6 +164,7 @@ class Campaign:
                 args+=['--resume',container_path(out/'interrupted.pt')]
             reason=self.execute(lane,out,'train.py',args,f'train_attempt{attempt}.log')
             status=read(out/'status.json')
+            self.state(lane['name'],training=status)
             if status['status']=='trained':break
             self.release(lane)
             if reason!='memory_pressure' or not self.enabled():
@@ -206,6 +207,7 @@ class Campaign:
             self.review(lane,out,out/'export_eval64',best['index'])
         video=self.play(lane,out,policy,cfg,out/'video',scripted=scripted,video=True)
         summary={'status':'reviewed','track':cfg['research_track'],'step_height':cfg['step_height'],
+            'training_config':cfg,
             'success_rate':min(best['success_rate'],export_result['success_rate']) if export_result else best['success_rate'],
             'raw_checkpoint_success_rate':best['success_rate'],'selected_checkpoint':str(checkpoint.relative_to(PROJECT)),
             'selected_update':best['index']+1,'checkpoint_sha256':sha(checkpoint),'from_scratch':True,

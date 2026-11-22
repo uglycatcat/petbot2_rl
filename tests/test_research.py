@@ -38,5 +38,13 @@ class ResearchTests(unittest.TestCase):
     def test_same_behavior_not_novel_just_due_to_seed(self):
         self.assertEqual(descriptor_distance([0,1,2],[0,1,2]),0.)
 
+    def test_quality_adapts_settings_without_loading_weights(self):
+        c={'seed':3,'research_track':'quality','head_default_weight':1.}
+        passed={'success_rate':1.,'quality_ratio_to_baseline':1.1,'training_config':c}
+        self.assertAlmostEqual(next_config(c,[passed],0)['head_default_weight'],1.35)
+        failed={'success_rate':0.,'training_config':c}
+        self.assertEqual(next_config(c,[failed],0)['head_default_weight'],.5)
+        self.assertNotIn('checkpoint',next_config(c,[passed],0))
+
 
 if __name__=='__main__':unittest.main()

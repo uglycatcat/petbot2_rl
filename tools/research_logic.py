@@ -22,9 +22,12 @@ def next_config(initial, history, lane_number, height_ceiling=.30):
         cfg['entropy_coef']=[.01,.015,.005][trial%3]
     elif track=='quality':
         # Compare from-scratch solutions; never use a successful policy as a teacher/initial state.
-        factor=.5 if last.get('success_rate',0)<.9 else [1.,1.4,.8][trial%3]
+        successful=[r for r in history if r.get('success_rate',0)>=.9 and r.get('quality_ratio_to_baseline') is not None]
+        reference=min(successful,key=lambda r:r['quality_ratio_to_baseline']) if successful else last
+        previous=reference.get('training_config',initial)
+        factor=.5 if last.get('success_rate',0)<.9 else (1.35 if reference.get('quality_ratio_to_baseline',1.)>.8 else [1.1,.85][trial%2])
         for k in ('head_default_weight','approach_frame_weight','action_rate_weight','joint_speed_weight'):
-            cfg[k]=initial.get(k,0.)*factor
+            cfg[k]=min(initial.get(k,0.)*4.,max(initial.get(k,0.)*.125,previous.get(k,initial.get(k,0.))*factor))
         cfg['entropy_coef']=.005 if last.get('success_rate',0)>=.9 else .01
     elif track=='height':
         previous=last['step_height'];rate=last.get('success_rate',0)
