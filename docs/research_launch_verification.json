@@ -1,0 +1,59 @@
+{
+  "verified_at": 1795348017.1126444,
+  "batch": "runs/research_20261122_20261122_194358",
+  "source_commit": "6775a814c693d9308908ec0a26fe528c01f1a45c",
+  "supervisor_pid": 2180535,
+  "all_trials_from_scratch": true,
+  "lanes": {
+    "diverse_a": {
+      "num_envs": 8192,
+      "seed": 201,
+      "height_m": 0.07,
+      "completed_updates_at_check": 18,
+      "own_compute_mib": 5963,
+      "card_free_mib": 3208
+    },
+    "diverse_b": {
+      "num_envs": 16384,
+      "seed": 202,
+      "height_m": 0.07,
+      "completed_updates_at_check": 8,
+      "own_compute_mib": 9861,
+      "card_free_mib": 5911
+    },
+    "quality_a": {
+      "num_envs": 16384,
+      "seed": 203,
+      "height_m": 0.07,
+      "completed_updates_at_check": 6,
+      "own_compute_mib": 9861,
+      "card_free_mib": 3796
+    },
+    "height_a": {
+      "num_envs": 16384,
+      "seed": 205,
+      "height_m": 0.08,
+      "completed_updates_at_check": 6,
+      "own_compute_mib": 9861,
+      "card_free_mib": 3002
+    },
+    "quality_b": {
+      "num_envs": 16384,
+      "seed": 204,
+      "height_m": 0.07,
+      "completed_updates_at_check": 6,
+      "own_compute_mib": 9861,
+      "card_free_mib": 3796
+    },
+    "height_b": {
+      "num_envs": 16384,
+      "seed": 206,
+      "height_m": 0.1,
+      "completed_updates_at_check": 6,
+      "own_compute_mib": 9863,
+      "card_free_mib": 3002
+    }
+  },
+  "total_envs": 90112,
+  "own_compute_mib_total": 55270
+}
