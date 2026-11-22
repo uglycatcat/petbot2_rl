@@ -10,7 +10,7 @@ from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sensors import ContactSensor, ContactSensorCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.math import quat_apply, quat_apply_inverse
-from step_explore.rewards import TOP_PEAK_VALUES, simultaneous_top_bonus
+from step_explore.rewards import TOP_PEAK_VALUES, simultaneous_top_bonus, motion_costs
 
 PROJECT = Path(__file__).resolve().parents[1]
 WHEELS = ['left_front_wheel', 'right_front_wheel', 'left_rear_wheel', 'right_rear_wheel']
@@ -36,6 +36,11 @@ class ExploreCfg(DirectRLEnvCfg):
     platform_width: float = 2.0
     exploration_bonus: float = 10.0
     top_reward_mode: str = 'distinct_wheels'
+    # Optional experiment-local preferences, never part of the success definition.
+    head_default_weight: float = 0.0
+    approach_frame_weight: float = 0.0
+    action_rate_weight: float = 0.0
+    joint_speed_weight: float = 0.0
 
 class ExploreEnv(DirectRLEnv):
     def __init__(self, cfg, **kwargs):
@@ -51,6 +56,7 @@ class ExploreEnv(DirectRLEnv):
         self.dtype = torch.float32
         self.actions = torch.zeros(self.num_envs, 5, device=self.device)
         self.targets = self.actions.clone()
+        self.previous_bounded_action = self.actions.clone()
         self.servo_torque = torch.zeros(self.num_envs, self.robot.num_joints, device=self.device)
         self.damping = torch.tensor([self.meta['joints'][n]['damping'] for n in self.robot.joint_names], device=self.device)
         self.friction = torch.tensor([self.meta['joints'][n]['frictionloss'] for n in self.robot.joint_names], device=self.device)
@@ -74,6 +80,9 @@ class ExploreEnv(DirectRLEnv):
         self.max_distinct_top = 0
         self.last_transition = {}
         self.episode_return = torch.zeros(self.num_envs, device=self.device)
+        self.quality_cost_sum = torch.zeros(self.num_envs,4,device=self.device)
+        self.motion_weights=torch.tensor([cfg.head_default_weight,cfg.approach_frame_weight,
+            cfg.action_rate_weight,cfg.joint_speed_weight],device=self.device)
         self.init_phi = None
         self._geometry()
         self.init_phi = self._progress().clone()
@@ -125,6 +134,7 @@ class ExploreEnv(DirectRLEnv):
 
     def _pre_physics_step(self, actions):
         self.extras.pop('log',None)
+        self.previous_bounded_action = torch.tanh(self.actions)
         self.actions = actions.clone()
         x = torch.tanh(self.actions)
         self.targets[:,0] = x[:,0]*1.3
@@ -185,12 +195,19 @@ class ExploreEnv(DirectRLEnv):
         else:
             top_bonus=3.*new_top.float().sum(-1)
         reward = self.cfg.exploration_bonus*delta + top_bonus + 50.*self.success.float() - .005 - 3.*self.outside.float()
+        costs=motion_costs(self.robot.data.joint_pos[:,self.angle_ids],
+            self.robot.data.joint_vel[:,self.angle_ids],torch.tanh(self.actions),
+            self.previous_bounded_action,self.cfg.edge-self.wheel_pos[:,:,0].max(-1).values,self.step_dt)
+        weighted_costs=costs*self.motion_weights
+        reward-=weighted_costs.sum(-1)
+        self.quality_cost_sum+=weighted_costs
         self.episode_return += reward
         self.last_transition = {k:v.clone() for k,v in {
             'success':self.success,'top':self.top,'bottom':self.bottom,'wheel_pos':self.wheel_pos,
             'root_pose':self.robot.data.root_state_w[:,:7]-torch.cat((self.scene.env_origins,torch.zeros(self.num_envs,4,device=self.device)),dim=-1),
             'joint_pos':self.robot.data.joint_pos,'joint_vel':self.robot.data.joint_vel,'targets':self.targets,
-            'forces':self.forces,'servo_torque':self.servo_torque,'outside':self.outside}.items()}
+            'forces':self.forces,'servo_torque':self.servo_torque,'outside':self.outside,
+            'bounded_action':torch.tanh(self.actions),'quality_costs':weighted_costs}.items()}
         return reward
 
     def _get_observations(self):
@@ -225,6 +242,8 @@ class ExploreEnv(DirectRLEnv):
                 'Task/distinct_wheels_reached':self.seen_top[ended].float().sum(-1).mean(),
                 'Task/progress':self.best_progress[ended].mean(),
                 'Task/return':self.episode_return[ended].mean()}
+            for i,name in enumerate(('head_default','approach_frame','action_rate','joint_speed')):
+                self.extras['log']['MotionCost/'+name]=self.quality_cost_sum[ended,i].mean()
         super()._reset_idx(env_ids)
         root = self.robot.data.default_root_state[env_ids].clone()
         root[:,:3] += self.scene.env_origins[env_ids]
@@ -235,5 +254,6 @@ class ExploreEnv(DirectRLEnv):
         if hasattr(self,'actions'):
             self.actions[env_ids]=0.;self.targets[env_ids]=0.;self.seen_top[env_ids]=False;self.peak_top[env_ids]=0
             self.rewarded_top_peak[env_ids]=0
+            self.previous_bounded_action[env_ids]=0.;self.quality_cost_sum[env_ids]=0.
             self.episode_return[env_ids]=0.;self.success[env_ids]=False
             self.best_progress[env_ids]=self.init_phi[env_ids] if self.init_phi is not None else 0.

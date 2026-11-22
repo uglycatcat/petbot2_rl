@@ -1,16 +1,18 @@
-"""Create this project's isolated GPU0/1 containers. Host orchestration only."""
+"""Create this project's isolated GPU containers. Host orchestration only."""
 from pathlib import Path
 import argparse
 import json
 import subprocess
 
 p=argparse.ArgumentParser()
-p.add_argument('--gpu',type=int,choices=[0,1],required=True)
+p.add_argument('--gpu',type=int,choices=[0,1,2,3],required=True)
 p.add_argument('--role',choices=['train','eval'],default='train')
+p.add_argument('--slot',choices=['a','b'],default='a')
 a=p.parse_args()
 project=Path(__file__).resolve().parents[1]
 root=project.parents[1]
 name=f'petbot-step-explore-gpu{a.gpu}' if a.role=='train' else f'petbot-step-explore-eval-gpu{a.gpu}'
+if a.slot!='a':name+='-'+a.slot
 image='nvcr.io/nvidia/isaac-lab:2.3.2'
 existing=subprocess.run(['docker','inspect',name],capture_output=True,text=True)
 if existing.returncode==0:

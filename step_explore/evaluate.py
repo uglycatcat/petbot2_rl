@@ -20,7 +20,7 @@ def evaluate(env,wrapped,policy,output,episodes):
             top=tr['top'][:episodes].sum(-1)
             max_top=torch.where(alive,torch.maximum(max_top,top),max_top)
             succeeded|=alive&tr['success'][:episodes]
-            # Keep all evaluated episodes; trace every 20ms, with per-frame validity across resets.
+            # Trace each policy step, with per-frame validity across resets.
             frames.append({**{k:v[:episodes].cpu().numpy() for k,v in tr.items()},
                            'alive':alive.cpu().numpy(),'reward':reward[:episodes].cpu().numpy(),
                            'done':done[:episodes].cpu().numpy()})

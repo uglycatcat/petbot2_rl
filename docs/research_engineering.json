@@ -1,0 +1,289 @@
+{
+  "date": "2026-11-22",
+  "scope": "PhysX engineering gates; short runs are not task success results",
+  "physics": {
+    "step_height": 0.07,
+    "control_dt": 0.05,
+    "top_reward_mode": "distinct_wheels",
+    "neutral_root_height_range": [
+      0.08407924324274063,
+      0.08408108353614807
+    ],
+    "neutral_joint_abs_max": 0.010354358702898026,
+    "source_mass": 1.6525400000000003,
+    "physx_mass": 1.6525399684906006,
+    "positive_successes": 8,
+    "airborne_negative": true,
+    "independent_joint_targets": [
+      0.3183942437171936,
+      0.23685039579868317,
+      -0.1973753273487091,
+      4.934383392333984,
+      -4.934383392333984
+    ],
+    "actual_joint_positions": [
+      0.3121178150177002,
+      0.23076263070106506,
+      -0.19148576259613037,
+      -0.04247032105922699,
+      0.9647652506828308,
+      0.03441726043820381,
+      -0.9647667407989502
+    ],
+    "actual_joint_velocities": [
+      0.015319055877625942,
+      0.03372475504875183,
+      -0.010366943664848804,
+      -0.042680852115154266,
+      4.9273271560668945,
+      -0.08782320469617844,
+      -4.927516460418701
+    ],
+    "rear_velocity_error_max": 0.00705718994140625,
+    "joint_names": [
+      "head",
+      "left_frame",
+      "right_frame",
+      "left_front_wheel",
+      "left_rear_wheel",
+      "right_front_wheel",
+      "right_rear_wheel"
+    ],
+    "rear_ids": [
+      4,
+      6
+    ],
+    "drive_damping": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.14000000059604645,
+      0.0,
+      0.14000000059604645
+    ],
+    "drive_max_force": [
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      0.3799999952316284,
+      4.0,
+      0.3799999952316284
+    ],
+    "passed": true
+  },
+  "scaling": {
+    "quality4096": {
+      "measurement": {
+        "returncode": 0,
+        "num_envs": 4096,
+        "gpu": 2,
+        "own_peak_mib": 3927,
+        "minimum_card_free_mib": 19633,
+        "memory_stop": false,
+        "samples": 36
+      },
+      "training": {
+        "status": "trained",
+        "iterations": 8,
+        "elapsed_seconds": 64.28097605705261,
+        "episodes": 4096,
+        "successes": 0,
+        "max_simultaneous_wheels_on_top": 1,
+        "max_distinct_wheels_reached": 1,
+        "torch_peak_mib": 1068.0,
+        "updated_at": 1795347000.6193151
+      }
+    },
+    "diverse8192": {
+      "measurement": {
+        "returncode": 0,
+        "num_envs": 8192,
+        "gpu": 1,
+        "own_peak_mib": 5963,
+        "minimum_card_free_mib": 9809,
+        "memory_stop": false,
+        "samples": 45
+      },
+      "training": {
+        "status": "trained",
+        "iterations": 8,
+        "elapsed_seconds": 83.54254078865051,
+        "episodes": 8192,
+        "successes": 0,
+        "max_simultaneous_wheels_on_top": 2,
+        "max_distinct_wheels_reached": 3,
+        "torch_peak_mib": 2108.0,
+        "updated_at": 1795347020.4812777
+      }
+    },
+    "diverse8192_gpu0": {
+      "measurement": {
+        "returncode": 0,
+        "num_envs": 8192,
+        "gpu": 0,
+        "own_peak_mib": 5963,
+        "minimum_card_free_mib": 3208,
+        "memory_stop": false,
+        "samples": 41
+      },
+      "training": {
+        "status": "trained",
+        "iterations": 8,
+        "elapsed_seconds": 74.92582702636719,
+        "episodes": 8192,
+        "successes": 0,
+        "max_simultaneous_wheels_on_top": 2,
+        "max_distinct_wheels_reached": 3,
+        "torch_peak_mib": 2108.0,
+        "updated_at": 1795347206.9700122
+      }
+    },
+    "pair16384a": {
+      "measurement": {
+        "returncode": 0,
+        "num_envs": 16384,
+        "gpu": 2,
+        "own_peak_mib": 9861,
+        "minimum_card_free_mib": 3792,
+        "memory_stop": false,
+        "samples": 90
+      },
+      "training": {
+        "status": "trained",
+        "iterations": 8,
+        "elapsed_seconds": 178.6234471797943,
+        "episodes": 16384,
+        "successes": 0,
+        "max_simultaneous_wheels_on_top": 2,
+        "max_distinct_wheels_reached": 3,
+        "torch_peak_mib": 4186.0,
+        "updated_at": 1795347311.1433115
+      }
+    },
+    "pair16384b": {
+      "measurement": {
+        "returncode": 0,
+        "num_envs": 16384,
+        "gpu": 2,
+        "own_peak_mib": 9865,
+        "minimum_card_free_mib": 3792,
+        "memory_stop": false,
+        "samples": 93
+      },
+      "training": {
+        "status": "trained",
+        "iterations": 8,
+        "elapsed_seconds": 181.56627297401428,
+        "episodes": 16384,
+        "successes": 0,
+        "max_simultaneous_wheels_on_top": 1,
+        "max_distinct_wheels_reached": 1,
+        "torch_peak_mib": 4190.0,
+        "updated_at": 1795347318.9634116
+      }
+    }
+  },
+  "reload": {
+    "reload_height16": {
+      "episodes": 16,
+      "successes": 0,
+      "success_rate": 0.0,
+      "max_simultaneous_wheels_on_top": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 147,
+      "initial_state": "default_on_flat",
+      "step_height": 0.1,
+      "step_edge": 0.65,
+      "independent_geometry_check": true,
+      "joint_names": [
+        "head",
+        "left_frame",
+        "right_frame",
+        "left_front_wheel",
+        "left_rear_wheel",
+        "right_front_wheel",
+        "right_rear_wheel"
+      ],
+      "body_contact_allowed": true,
+      "hold_required": false,
+      "trace_dt": 0.05
+    },
+    "reload_quality16": {
+      "episodes": 16,
+      "successes": 0,
+      "success_rate": 0.0,
+      "max_simultaneous_wheels_on_top": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 199,
+      "initial_state": "default_on_flat",
+      "step_height": 0.07,
+      "step_edge": 0.65,
+      "independent_geometry_check": true,
+      "joint_names": [
+        "head",
+        "left_frame",
+        "right_frame",
+        "left_front_wheel",
+        "left_rear_wheel",
+        "right_front_wheel",
+        "right_rear_wheel"
+      ],
+      "body_contact_allowed": true,
+      "hold_required": false,
+      "trace_dt": 0.05
+    }
+  },
+  "semantic_tests": 8,
+  "pipeline_validation": "pending published-source integration run",
+  "source_hashes": {
+    "train.py": "a2e080be8c9b2d80a3dc64f4012243d982158d78ab4e6d393049801d50b5fe29",
+    "play.py": "573f3dd704c13f572b18ad4e03c3330df9e2524a4fba227427f89be051e1ca1d",
+    "step_explore/__init__.py": "e3ebcffd87a8b69d81d07e5975f0c0886ed309504138f9b08e642856b4b741f9",
+    "step_explore/evaluate.py": "472d9d5c9b4631b88e3cebac3335acd22b02497217e2b110d2ad4aa292685677",
+    "step_explore/probe.py": "61acf5b7f547ea2e5160ae2047295443032ff239a7eb3dfcfd8a54d1b2c9b0bb",
+    "step_explore/policy.py": "4ecea8d57d914de750a388723623a2439a00fffa2ca92efd9396c8046c0fac94",
+    "step_explore/rewards.py": "a2888de7b8453c226fe566f94061fa1b89aa491c6d3094252bc18cdb88eb8364",
+    "step_explore/env.py": "bfe99e51eb1d062c2dc6f9ab1fae68b4f2d2bd40353d4327bc7bbce7fefa8f78",
+    "configs/research_20261122/quality_a.json": "dac564d3b45e5a3d6bbdb4f5a0d52dadbb9a5058ae7cd60bf1133c674991bde6",
+    "configs/research_20261122/height_a.json": "0e54c60d5e41a6e78b5e307333d1a8e8821ac6cb7d6cd942dd479ed3dd6b9d27",
+    "configs/research_20261122/diverse_b.json": "ac8a55a6bc026ad7ab980e7243d2a6e9410137d49a826906e787711aa9147e94",
+    "configs/research_20261122/plan.json": "e6c616907a7cfb62c09224a2fa37c730dcb691ed30362526159c3a0a559b2dcc",
+    "configs/research_20261122/quality_b.json": "7a63a3d44f0b421eab4a9cd6b2072c7b8ec53b3a4cca80c924b6aa2760d980a3",
+    "configs/research_20261122/diverse_a.json": "7c00ffcc25bf5a8d195df994327a4d7b8c9718556ad4a93e3bb254c5cb06a55d",
+    "configs/research_20261122/height_b.json": "91e87799ab8e664c7701beb709ed0fa3305c837e51e2259c1075a8b97893854e"
+  }
+}

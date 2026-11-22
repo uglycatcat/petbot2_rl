@@ -1,0 +1,20 @@
+{
+  "step_height": 0.07,
+  "control_dt": 0.05,
+  "num_envs": 16384,
+  "iterations": 1000,
+  "num_steps_per_env": 32,
+  "episode_seconds": 10.0,
+  "seed": 203,
+  "initial_std": 0.65,
+  "entropy_coef": 0.01,
+  "learning_rate": 0.0003,
+  "exploration_bonus": 10.0,
+  "eval_episodes": 64,
+  "save_interval": 100,
+  "head_default_weight": 0.6,
+  "approach_frame_weight": 1.2,
+  "action_rate_weight": 0.4,
+  "joint_speed_weight": 0.08,
+  "research_track": "quality"
+}

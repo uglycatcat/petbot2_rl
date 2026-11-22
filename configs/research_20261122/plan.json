@@ -1,0 +1,62 @@
+{
+  "series": "research_20261122",
+  "from_scratch": true,
+  "physical_gpus": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "reserve_mib": 1536,
+  "max_trials_per_lane": 8,
+  "height_ceiling_m": 0.3,
+  "height_success_rate": 0.9,
+  "minimum_height_m": 0.07,
+  "evaluation_episodes": 64,
+  "training_iterations": 1000,
+  "baseline_metrics": "docs/research_baseline_metrics.json",
+  "lanes": [
+    {
+      "name": "diverse_a",
+      "gpu": 0,
+      "slot": "a",
+      "config": "configs/research_20261122/diverse_a.json",
+      "estimated_peak_mib": 6600
+    },
+    {
+      "name": "diverse_b",
+      "gpu": 1,
+      "slot": "a",
+      "config": "configs/research_20261122/diverse_b.json",
+      "estimated_peak_mib": 10400
+    },
+    {
+      "name": "quality_a",
+      "gpu": 2,
+      "slot": "a",
+      "config": "configs/research_20261122/quality_a.json",
+      "estimated_peak_mib": 10400
+    },
+    {
+      "name": "quality_b",
+      "gpu": 2,
+      "slot": "b",
+      "config": "configs/research_20261122/quality_b.json",
+      "estimated_peak_mib": 10400
+    },
+    {
+      "name": "height_a",
+      "gpu": 3,
+      "slot": "a",
+      "config": "configs/research_20261122/height_a.json",
+      "estimated_peak_mib": 10400
+    },
+    {
+      "name": "height_b",
+      "gpu": 3,
+      "slot": "b",
+      "config": "configs/research_20261122/height_b.json",
+      "estimated_peak_mib": 10400
+    }
+  ]
+}

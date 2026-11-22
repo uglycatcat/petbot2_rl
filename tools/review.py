@@ -8,6 +8,7 @@ p=argparse.ArgumentParser();p.add_argument('--run',type=Path,required=True)
 p.add_argument('--evaluation',type=Path)
 p.add_argument('--output',type=Path)
 p.add_argument('--max-step',type=int,help='Only read training curves up to this checkpoint index')
+p.add_argument('--training-only',action='store_true',help='Read curves before dispatching physical evaluations')
 a=p.parse_args()
 run=a.run;evaluation=a.evaluation or run/'eval';output=a.output or run
 output.mkdir(parents=True,exist_ok=True)
@@ -21,6 +22,9 @@ for tag in acc.Tags().get('scalars',[]):
     curves[tag]={'points':len(vals),'first':float(vals[0]),'last':float(vals[-1]),
         'last100_mean':float(vals[-100:].mean()),'min':float(vals.min()),'max':float(vals.max())}
 (output/'tensorboard_review.json').write_text(json.dumps(curves,indent=2))
+if a.training_only:
+    print(json.dumps({'curve_tags':len(curves),'max_step':a.max_step}))
+    raise SystemExit(0)
 result=json.loads((evaluation/'evaluation.json').read_text())
 t=np.load(evaluation/'evaluation_traces.npz')
 valid=t['alive'];success=(t['success']&valid).any(0)

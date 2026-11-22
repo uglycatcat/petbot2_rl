@@ -1,0 +1,28 @@
+{
+  "series": "research_pipeline_check",
+  "from_scratch": true,
+  "physical_gpus": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "reserve_mib": 1536,
+  "max_trials_per_lane": 2,
+  "height_ceiling_m": 0.3,
+  "height_success_rate": 0.9,
+  "minimum_height_m": 0.07,
+  "evaluation_episodes": 16,
+  "training_iterations": 1000,
+  "baseline_metrics": "docs/research_baseline_metrics.json",
+  "lanes": [
+    {
+      "name": "pipeline_quality",
+      "gpu": 1,
+      "slot": "a",
+      "config": "configs/research_20261122/engineering_quality.json",
+      "estimated_peak_mib": 7000
+    }
+  ],
+  "iterations_override": 2
+}

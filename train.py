@@ -48,7 +48,7 @@ def write_json(name,value):
 
 def runner_config():
     return {'seed':config['seed'],'device':args.device,'num_steps_per_env':config['num_steps_per_env'],
-        'save_interval':100,'logger':'tensorboard','experiment_name':'step_explore',
+        'save_interval':config.get('save_interval',100),'logger':'tensorboard','experiment_name':'step_explore',
         'obs_groups':{'policy':['policy'],'critic':['policy']},
         'policy':{'class_name':'ActorCritic','init_noise_std':config['initial_std'],'noise_std_type':'log',
             'actor_obs_normalization':True,'critic_obs_normalization':True,
@@ -65,6 +65,10 @@ try:
     # Legacy5cm configurations remain reproducible; new runs record their height explicitly.
     cfg.height=config.get('step_height',0.05)
     cfg.top_reward_mode=config.get('top_reward_mode','distinct_wheels')
+    for key in ('head_default_weight','approach_frame_weight','action_rate_weight','joint_speed_weight'):
+        value=float(config.get(key,0.0))
+        if value<0:raise ValueError(f'{key} must be nonnegative')
+        setattr(cfg,key,value)
     control_dt=config.get('control_dt',0.02)
     cfg.decimation=round(control_dt/cfg.sim.dt)
     if cfg.decimation<1 or abs(cfg.decimation*cfg.sim.dt-control_dt)>1e-9:
