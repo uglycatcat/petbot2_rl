@@ -36,7 +36,9 @@ class Campaign:
         self.baseline=read(self.source/plan['baseline_metrics'])
         self.peak_observed={}
 
-    def enabled(self):return read(self.control).get('enabled',False)
+    def enabled(self):
+        flags=read(self.control)
+        return flags.get('enabled',False) and flags.get('automatic_iteration',True)
 
     def state(self,name,**data):
         with self.lock:
@@ -90,35 +92,46 @@ class Campaign:
         reason=None;stop_at=None;started=time.time()
         with (out/logfile).open('w') as log:
             proc=subprocess.Popen(command,stdout=log,stderr=subprocess.STDOUT)
-            while proc.poll() is None:
-                sample=self.sample(lane)
-                with (out/'resources.jsonl').open('a') as f:f.write(json.dumps(sample)+'\n')
-                with self.lock:
-                    peers=[(n,r) for n,r in self.running.items() if r['gpu']==lane['gpu']]
-                    if (sample['card_free_mib']<self.plan['reserve_mib'] or available_host_mib()<4096) and not any(r['pressure_stop'] for _,r in peers):
-                        # Only one victim per card; latest admitted job yields first.
-                        victim=max(peers,key=lambda item:item[1]['started'])[0]
-                        self.running[victim]['pressure_stop']=True
-                    pressure=self.running.get(name,{}).get('pressure_stop',False)
-                stop=read(self.control).get('stop_current',False)
-                heartbeat=(out/'status.json').stat().st_mtime if script=='train.py' and (out/'status.json').exists() else started
-                stalled=time.time()-heartbeat>(1200 if simulation else 300)
-                if reason is None and (pressure or stop or stalled):
-                    reason='memory_pressure' if pressure else ('engineering_timeout' if stalled else 'user_control')
-                    stop_at=time.time()
-                    # Pattern matches the exact invocation in our exclusive container only.
-                    pattern='python3 '+re.escape(script)+'.*'+re.escape(str(arguments[arguments.index('--output')+1]))+'( |$)' if '--output' in arguments else None
-                    if pattern:
-                        signal='-USR1' if script=='train.py' else '-TERM'
-                        subprocess.run(['docker','exec',container,'pkill',signal,'-f',pattern],check=False)
-                    atomic(out/(stage+'_stop.json'),{'reason':reason,**sample})
-                elif reason and stop_at and time.time()-stop_at>120 and pattern:
-                    # A wedged simulator may not reach a checkpoint boundary. Kill only this command.
-                    subprocess.run(['docker','exec',container,'pkill','-KILL','-f',pattern],check=False)
-                if script=='train.py' and (out/'status.json').exists():
-                    self.state(name,training=read(out/'status.json'),resource=sample)
-                try:proc.wait(timeout=5)
-                except subprocess.TimeoutExpired:pass
+            try:
+                while proc.poll() is None:
+                    sample=self.sample(lane)
+                    with (out/'resources.jsonl').open('a') as f:f.write(json.dumps(sample)+'\n')
+                    with self.lock:
+                        peers=[(n,r) for n,r in self.running.items() if r['gpu']==lane['gpu']]
+                        if (sample['card_free_mib']<self.plan['reserve_mib'] or available_host_mib()<4096) and not any(r['pressure_stop'] for _,r in peers):
+                            # Only one victim per card; latest admitted job yields first.
+                            victim=max(peers,key=lambda item:item[1]['started'])[0]
+                            self.running[victim]['pressure_stop']=True
+                        pressure=self.running.get(name,{}).get('pressure_stop',False)
+                    stop=read(self.control).get('stop_current',False)
+                    heartbeat=max(started,(out/'status.json').stat().st_mtime) if script=='train.py' and (out/'status.json').exists() else started
+                    stalled=time.time()-heartbeat>(1200 if simulation else 300)
+                    if reason is None and (pressure or stop or stalled):
+                        reason='memory_pressure' if pressure else ('engineering_timeout' if stalled else 'user_control')
+                        stop_at=time.time()
+                        # Pattern matches the exact invocation in our exclusive container only.
+                        pattern='python3 '+re.escape(script)+'.*'+re.escape(str(arguments[arguments.index('--output')+1]))+'( |$)' if '--output' in arguments else None
+                        if pattern:
+                            signal='-USR1' if script=='train.py' else '-TERM'
+                            subprocess.run(['docker','exec',container,'pkill',signal,'-f',pattern],check=False)
+                        atomic(out/(stage+'_stop.json'),{'reason':reason,**sample})
+                    elif reason and stop_at and time.time()-stop_at>120 and pattern:
+                        # A wedged simulator may not reach a checkpoint boundary. Kill only this command.
+                        subprocess.run(['docker','exec',container,'pkill','-KILL','-f',pattern],check=False)
+                    if script=='train.py' and (out/'status.json').exists():
+                        self.state(name,training=read(out/'status.json'),resource=sample)
+                    try:proc.wait(timeout=5)
+                    except subprocess.TimeoutExpired:pass
+            except BaseException:
+                # Do not orphan a simulator if host monitoring or a tool invocation fails.
+                if '--output' in arguments:
+                    pattern='python3 '+re.escape(script)+'.*'+re.escape(str(arguments[arguments.index('--output')+1]))+'( |$)'
+                    subprocess.run(['docker','exec',container,'pkill','-USR1' if script=='train.py' else '-TERM','-f',pattern],check=False)
+                    try:proc.wait(timeout=60)
+                    except subprocess.TimeoutExpired:
+                        subprocess.run(['docker','exec',container,'pkill','-KILL','-f',pattern],check=False)
+                        proc.wait(timeout=30)
+                raise
         if reason and script!='train.py':raise RuntimeError(stage+' stopped: '+reason)
         if proc.returncode:raise RuntimeError(f'{stage} exited{proc.returncode}; see{out/logfile}')
         return reason
