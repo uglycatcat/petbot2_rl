@@ -1,0 +1,129 @@
+{
+  "date": "2026-11-23",
+  "scope": "Three research stage packages; no training source or running configuration changes",
+  "archive_source_commit": "49565c23cbf78f9ed76c81fd2eda12d8f8da79ae",
+  "verification_environment": "Project Isaac Lab evaluation container on physical GPU1; PhysX; sequential one-environment deterministic TorchScript playback",
+  "checks": [
+    {
+      "release": "step7cm_quality_s1213_u1000",
+      "bundle_sha256": "155d5da8ebd7c5bbf225b7f0f3609d00d6663abfadba75c2a96915a0a81b5e96",
+      "bundle_bytes": 23148129,
+      "verified_checksums": 150,
+      "source_commit": "49565c23cbf78f9ed76c81fd2eda12d8f8da79ae",
+      "unpacked": "runs/research_publication_20261123/unpacked/step7cm_quality_s1213_u1000/step_explore",
+      "unpacked_playback": {
+        "policy_sha256": "819b66606a07573cfc81117614d6bb55e8e8584bfb14c439e71cf3158bdaa3a6",
+        "scripted": true,
+        "seed": 9901,
+        "result": {
+          "episodes": 1,
+          "successes": 1,
+          "success_rate": 1.0,
+          "max_simultaneous_wheels_on_top": [
+            4
+          ],
+          "steps": 30,
+          "initial_state": "default_on_flat",
+          "step_height": 0.07,
+          "step_edge": 0.65,
+          "independent_geometry_check": true,
+          "joint_names": [
+            "head",
+            "left_frame",
+            "right_frame",
+            "left_front_wheel",
+            "left_rear_wheel",
+            "right_front_wheel",
+            "right_rear_wheel"
+          ],
+          "body_contact_allowed": true,
+          "hold_required": false,
+          "trace_dt": 0.05
+        },
+        "video": null,
+        "video_note": "Actual post-physics frames are recorded before reset, including the terminal state."
+      }
+    },
+    {
+      "release": "step8cm_s1214_u1500",
+      "bundle_sha256": "cd0a0707d8b470dc991131a10d60eaf00f07afd3bf0963eab33dc1d2edd65d69",
+      "bundle_bytes": 25353974,
+      "verified_checksums": 150,
+      "source_commit": "49565c23cbf78f9ed76c81fd2eda12d8f8da79ae",
+      "unpacked": "runs/research_publication_20261123/unpacked/step8cm_s1214_u1500/step_explore",
+      "unpacked_playback": {
+        "policy_sha256": "8a5546cfec44cc58db84a68a1f50fe8f638baa6228a9b8f4e83a790db8ecfe50",
+        "scripted": true,
+        "seed": 9901,
+        "result": {
+          "episodes": 1,
+          "successes": 1,
+          "success_rate": 1.0,
+          "max_simultaneous_wheels_on_top": [
+            4
+          ],
+          "steps": 60,
+          "initial_state": "default_on_flat",
+          "step_height": 0.08,
+          "step_edge": 0.65,
+          "independent_geometry_check": true,
+          "joint_names": [
+            "head",
+            "left_frame",
+            "right_frame",
+            "left_front_wheel",
+            "left_rear_wheel",
+            "right_front_wheel",
+            "right_rear_wheel"
+          ],
+          "body_contact_allowed": true,
+          "hold_required": false,
+          "trace_dt": 0.05
+        },
+        "video": null,
+        "video_note": "Actual post-physics frames are recorded before reset, including the terminal state."
+      }
+    },
+    {
+      "release": "step7cm_flip_s1211_u1000",
+      "bundle_sha256": "0a41505c0c6a37ef742c42ef69a56bba472999b2410a2e3fa460a01ccacc15cb",
+      "bundle_bytes": 25611690,
+      "verified_checksums": 150,
+      "source_commit": "49565c23cbf78f9ed76c81fd2eda12d8f8da79ae",
+      "unpacked": "runs/research_publication_20261123/unpacked/step7cm_flip_s1211_u1000/step_explore",
+      "unpacked_playback": {
+        "policy_sha256": "c4142d0559759330cf98fd00b7f4c0743da5d7a85ca12e68c83bf57882281cbf",
+        "scripted": true,
+        "seed": 9901,
+        "result": {
+          "episodes": 1,
+          "successes": 1,
+          "success_rate": 1.0,
+          "max_simultaneous_wheels_on_top": [
+            4
+          ],
+          "steps": 55,
+          "initial_state": "default_on_flat",
+          "step_height": 0.07,
+          "step_edge": 0.65,
+          "independent_geometry_check": true,
+          "joint_names": [
+            "head",
+            "left_frame",
+            "right_frame",
+            "left_front_wheel",
+            "left_rear_wheel",
+            "right_front_wheel",
+            "right_rear_wheel"
+          ],
+          "body_contact_allowed": true,
+          "hold_required": false,
+          "trace_dt": 0.06
+        },
+        "video": null,
+        "video_note": "Actual post-physics frames are recorded before reset, including the terminal state."
+      }
+    }
+  ],
+  "note": "Archives remain frozen at archive_source_commit. This verification record was written after unpacking and executing them; it is not itself inside those archives."
+}

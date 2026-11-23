@@ -12,6 +12,8 @@
 | [step8cm_s1214_u1500](release/step8cm_s1214_u1500/README.md) | 当前已验证高度8cm | 64/64 / 64/64 | 2.110s | [3.00s执行](runs/research_20261122_20261122_194358/height_a/trial002/video/execution.mp4) | [ZIP](deliverables/step8cm_s1214_u1500.zip) |
 | [step7cm_flip_s1211_u1000](release/step7cm_flip_s1211_u1000/README.md) | 翻转式登台可能性 | 64/64 / 64/64 | 3.300s | [3.30s执行](runs/research_20261122_20261122_194358/diverse_b/trial002/video/execution.mp4) | [ZIP](deliverables/step7cm_flip_s1211_u1000.zip) |
 
+三份ZIP各150项文件校验通过，解压后使用包内源码、资产和TorchScript独立PhysX回放均1/1成功；见[包验证记录](docs/research_bundle_verification_20261123.json)。
+
 三份策略均从随机初始化训练，双耳和原模型未改。quality/8cm策略周期50ms，翻转策略60ms；不能省略各自回放命令中的`--control-dt`。成功仍是四轮同时到台面，无保持、归姿态或停车要求。以上64回合均为默认初态的固定PhysX场景。
 
 ## 动作质量对比
