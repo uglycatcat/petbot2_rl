@@ -1,0 +1,71 @@
+{
+  "release": "step7cm_quality_s1213_u1000",
+  "stage": "research_interim_20261123",
+  "track": "quality",
+  "training_commit": "6775a814c693d9308908ec0a26fe528c01f1a45c",
+  "training_batch": "runs/research_20261122_20261122_194358",
+  "training_trial": "quality_b/trial002",
+  "batch": "runs/research_publication_20261123/step7cm_quality_s1213_u1000",
+  "seed": 1213,
+  "completed_updates": 1000,
+  "checkpoint": "runs/research_20261122_20261122_194358/quality_b/trial002/final.pt",
+  "checkpoint_sha256": "9011913c7c165336b0f3c84780513d4b073ddce628065cea64cd5e42f6140e18",
+  "from_scratch": true,
+  "training_config": {
+    "step_height": 0.07,
+    "control_dt": 0.05,
+    "num_envs": 16384,
+    "iterations": 1000,
+    "num_steps_per_env": 32,
+    "episode_seconds": 10.0,
+    "seed": 1213,
+    "initial_std": 0.65,
+    "entropy_coef": 0.005,
+    "learning_rate": 0.0003,
+    "exploration_bonus": 10.0,
+    "eval_episodes": 64,
+    "save_interval": 100,
+    "head_default_weight": 1.275,
+    "approach_frame_weight": 2.55,
+    "action_rate_weight": 1.02,
+    "joint_speed_weight": 0.17,
+    "research_track": "quality"
+  },
+  "source_sha256": {
+    "meshes/\u4e0b\u8eab.STL": "155d4ad2937d94de679783c3acad82edfc444ae3120bc2fe77c718e701712057",
+    "meshes/\u53f3\u524d\u8f6e.STL": "caf79afda520cf11d43f81fe27029c8b18ab8bfd0fc9ec715a7db9258b0fe7d3",
+    "meshes/\u53f3\u540e\u8f6e.STL": "46366fd5a9f4afe5e1d39d69626388e0975eaeeadd59427a2f6a12712c3bf17b",
+    "meshes/\u53f3\u8033.STL": "daa8bd8dcd77555c1eb4c68a4b69a5c93f1d5cdb47838e6433657d7b2f286200",
+    "meshes/\u53f3\u8f66\u67b6.STL": "fd9e7c140f90ac23fe63d3353cb5e4921bf2736bdfe40af9d3e4c7eb498931f3",
+    "meshes/\u5934.STL": "7d14169b8fa24765b9a92fe66f37beb88fc6c52b94715741f8f6e58275807c9d",
+    "meshes/\u5de6\u524d\u8f6e.STL": "e6d152d082083181824ad1645a49d7ccd9925c1fb986c6bc4fde27d607c5662e",
+    "meshes/\u5de6\u540e\u8f6e.STL": "07be618e88eee239dfb1f40f35d21bf270834934d4353d1e15e0d62da3c8bd28",
+    "meshes/\u5de6\u8033.STL": "3c711ff1b591591efc78d09fceda0cbfcd8ed9813df981de6aee16abf96ca4da",
+    "meshes/\u5de6\u8f66\u67b6.STL": "270bfa2fb005ba6305eada80971aba3827dec1347bce8dd4385410e44f3e97be",
+    "mjcf/robot_description.xml": "8e87392ebfd0cb81d02becf1dea4bdd962ce4df5f14ec6c11cf3e6434dd4736b",
+    "mjcf/scene.xml": "7a11a61af60023b9a3f527aa737479d6d8823577520ed21fcf086cd072cdf712"
+  },
+  "asset_sha256": "61c0b6fe72048d1a4aadb9feb075ef4840afc8fb9873a813b380b1943d41e445",
+  "frozen_source_archive_sha256": "45e20ff92cb5a974c92edf5771b6dfdc9bd123a4e0ae27211e0823e53077b4c5",
+  "frozen_source_files_verified": 83,
+  "primary_policy": "policy_raw.pt",
+  "task_success_verified": true,
+  "overall_research_complete": false,
+  "evidence": {
+    "checkpoint_eval": "checkpoint64",
+    "export_eval": "exported64",
+    "video": "video"
+  },
+  "original_evidence": {
+    "checkpoint_eval": "runs/research_20261122_20261122_194358/quality_b/trial002/eval_u1000",
+    "export_eval": "runs/research_20261122_20261122_194358/quality_b/trial002/export_eval64",
+    "video": "runs/research_20261122_20261122_194358/quality_b/trial002/video"
+  },
+  "evaluation_scope": "Fixed default initial state and matching platform height in PhysX; simulation only.",
+  "inference_source_sha256": {
+    "play.py": "573f3dd704c13f572b18ad4e03c3330df9e2524a4fba227427f89be051e1ca1d",
+    "step_explore/env.py": "bfe99e51eb1d062c2dc6f9ab1fae68b4f2d2bd40353d4327bc7bbce7fefa8f78",
+    "step_explore/evaluate.py": "472d9d5c9b4631b88e3cebac3335acd22b02497217e2b110d2ad4aa292685677",
+    "step_explore/policy.py": "4ecea8d57d914de750a388723623a2439a00fffa2ca92efd9396c8046c0fac94"
+  }
+}

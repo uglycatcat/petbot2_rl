@@ -1,0 +1,39 @@
+{
+  "checkpoint_sha256": "8a1b2db9980c07dad0a5cd5197817c179be661439b62b697ffdd3d16c5995b18",
+  "completed_updates": 1500,
+  "training_step_height_m": 0.08,
+  "input_shape": [
+    "batch",
+    40
+  ],
+  "raw_output_shape": [
+    "batch",
+    5
+  ],
+  "target_order": [
+    "head",
+    "left_frame",
+    "right_frame",
+    "left_rear_wheel",
+    "right_rear_wheel"
+  ],
+  "target_units": [
+    "rad",
+    "rad",
+    "rad",
+    "rad/s",
+    "rad/s"
+  ],
+  "control_dt": 0.05,
+  "normalization_included": true,
+  "parity_samples": 4736,
+  "parity_input_source": "runs/research_20261122_20261122_194358/height_a/trial002/export_eval64/policy_inputs.npz",
+  "raw_max_abs_error": 0.0,
+  "torchscript_parity_passed": true,
+  "task_success_verified_by_export": false,
+  "files_sha256": {
+    "policy_raw.pt": "8a5546cfec44cc58db84a68a1f50fe8f638baa6228a9b8f4e83a790db8ecfe50",
+    "policy_targets.pt": "9b9e2664ff535fb64073fe0fd6238b507669383b1cc037809d846fd5691e8ffc"
+  },
+  "verified_existing_artifacts": true
+}

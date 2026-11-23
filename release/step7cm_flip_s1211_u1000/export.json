@@ -1,0 +1,39 @@
+{
+  "checkpoint_sha256": "99b8d23d7617a88671f08e2185fe0a0b2a6da7a37cba7d90e77f9eb5da1bd27c",
+  "completed_updates": 1000,
+  "training_step_height_m": 0.07,
+  "input_shape": [
+    "batch",
+    40
+  ],
+  "raw_output_shape": [
+    "batch",
+    5
+  ],
+  "target_order": [
+    "head",
+    "left_frame",
+    "right_frame",
+    "left_rear_wheel",
+    "right_rear_wheel"
+  ],
+  "target_units": [
+    "rad",
+    "rad",
+    "rad",
+    "rad/s",
+    "rad/s"
+  ],
+  "control_dt": 0.06,
+  "normalization_included": true,
+  "parity_samples": 6272,
+  "parity_input_source": "/workspace/petbot/demo_project/step_explore/runs/research_20261122_20261122_194358/diverse_b/trial002/eval_u1000/policy_inputs.npz",
+  "raw_max_abs_error": 0.0,
+  "torchscript_parity_passed": true,
+  "task_success_verified_by_export": false,
+  "files_sha256": {
+    "policy_raw.pt": "c4142d0559759330cf98fd00b7f4c0743da5d7a85ca12e68c83bf57882281cbf",
+    "policy_targets.pt": "9b0bf638b5a06dc44a88554cc645f4b1cc9d6e6710d18351d1dd5bcc6b83393a"
+  },
+  "verified_existing_artifacts": false
+}

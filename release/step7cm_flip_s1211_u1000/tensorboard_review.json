@@ -1,0 +1,170 @@
+{
+  "Loss/value_function": {
+    "points": 1000,
+    "first": 0.2875750660896301,
+    "last": 0.9774172306060791,
+    "last100_mean": 1.08773213326931,
+    "min": 0.057023223489522934,
+    "max": 98.40946960449219
+  },
+  "Loss/surrogate": {
+    "points": 1000,
+    "first": -0.01427527703344822,
+    "last": 0.010283508338034153,
+    "last100_mean": 0.0033148188006816783,
+    "min": -0.01427527703344822,
+    "max": 0.11779900640249252
+  },
+  "Loss/entropy": {
+    "points": 1000,
+    "first": 6.29334831237793,
+    "last": 28.724014282226562,
+    "last100_mean": 27.958061752319335,
+    "min": 6.29334831237793,
+    "max": 28.724048614501953
+  },
+  "Loss/learning_rate": {
+    "points": 1000,
+    "first": 5.9259258705424145e-05,
+    "last": 0.00017341530474368483,
+    "last100_mean": 0.0035816008801339196,
+    "min": 9.999999747378752e-06,
+    "max": 0.009999999776482582
+  },
+  "Policy/mean_noise_std": {
+    "points": 1000,
+    "first": 0.8525505065917969,
+    "last": 128.75082397460938,
+    "last100_mean": 106.71603401184082,
+    "min": 0.8525505065917969,
+    "max": 128.75082397460938
+  },
+  "Perf/total_fps": {
+    "points": 1000,
+    "first": 29909.0,
+    "last": 27625.0,
+    "last100_mean": 27285.09,
+    "min": 22996.0,
+    "max": 31894.0
+  },
+  "Perf/collection time": {
+    "points": 1000,
+    "first": 17.056440353393555,
+    "last": 18.74660873413086,
+    "last100_mean": 18.973531379699708,
+    "min": 16.21207618713379,
+    "max": 22.39150047302246
+  },
+  "Perf/learning_time": {
+    "points": 1000,
+    "first": 0.4729275703430176,
+    "last": 0.23168087005615234,
+    "last100_mean": 0.24553885221481322,
+    "min": 0.21692633628845215,
+    "max": 0.6072609424591064
+  },
+  "Task/success": {
+    "points": 976,
+    "first": 0.0,
+    "last": 1.0,
+    "last100_mean": 0.9997684478759765,
+    "min": 0.0,
+    "max": 1.0
+  },
+  "Task/max_simultaneous_wheels_on_top": {
+    "points": 976,
+    "first": 0.0,
+    "last": 4.0,
+    "last100_mean": 3.999559578895569,
+    "min": 0.0,
+    "max": 4.0
+  },
+  "Task/distinct_wheels_reached": {
+    "points": 976,
+    "first": 0.0,
+    "last": 4.0,
+    "last100_mean": 3.9999475646018983,
+    "min": 0.0,
+    "max": 4.0
+  },
+  "Task/progress": {
+    "points": 976,
+    "first": 0.15841607749462128,
+    "last": 1.1607187986373901,
+    "last100_mean": 1.1609232425689697,
+    "min": 0.15841607749462128,
+    "max": 1.18259596824646
+  },
+  "Task/return": {
+    "points": 976,
+    "first": -2.24855637550354,
+    "last": 73.0569839477539,
+    "last100_mean": 73.04415618896485,
+    "min": -2.24855637550354,
+    "max": 73.06104278564453
+  },
+  "MotionCost/head_default": {
+    "points": 976,
+    "first": 0.0,
+    "last": 0.0,
+    "last100_mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+  },
+  "MotionCost/approach_frame": {
+    "points": 976,
+    "first": 0.0,
+    "last": 0.0,
+    "last100_mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+  },
+  "MotionCost/action_rate": {
+    "points": 976,
+    "first": 0.0,
+    "last": 0.0,
+    "last100_mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+  },
+  "MotionCost/joint_speed": {
+    "points": 976,
+    "first": 0.0,
+    "last": 0.0,
+    "last100_mean": 0.0,
+    "min": 0.0,
+    "max": 0.0
+  },
+  "Train/mean_reward": {
+    "points": 997,
+    "first": -1.6660263538360596,
+    "last": 73.04286193847656,
+    "last100_mean": 73.04627059936523,
+    "min": -1.6660263538360596,
+    "max": 73.07723999023438
+  },
+  "Train/mean_episode_length": {
+    "points": 997,
+    "first": 116.25,
+    "last": 58.95000076293945,
+    "last100_mean": 58.03970016479492,
+    "min": 55.38999938964844,
+    "max": 166.0
+  },
+  "Train/mean_reward/time": {
+    "points": 53,
+    "first": -1.6660263538360596,
+    "last": 21.540325164794922,
+    "last100_mean": 14.391162615902019,
+    "min": -1.6660263538360596,
+    "max": 21.540325164794922
+  },
+  "Train/mean_episode_length/time": {
+    "points": 53,
+    "first": 116.25,
+    "last": 166.0,
+    "last100_mean": 163.08113198910118,
+    "min": 116.25,
+    "max": 166.0
+  }
+}

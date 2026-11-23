@@ -1,0 +1,32 @@
+{
+  "policy_sha256": "c4142d0559759330cf98fd00b7f4c0743da5d7a85ca12e68c83bf57882281cbf",
+  "scripted": true,
+  "seed": 9901,
+  "result": {
+    "episodes": 1,
+    "successes": 1,
+    "success_rate": 1.0,
+    "max_simultaneous_wheels_on_top": [
+      4
+    ],
+    "steps": 55,
+    "initial_state": "default_on_flat",
+    "step_height": 0.07,
+    "step_edge": 0.65,
+    "independent_geometry_check": true,
+    "joint_names": [
+      "head",
+      "left_frame",
+      "right_frame",
+      "left_front_wheel",
+      "left_rear_wheel",
+      "right_front_wheel",
+      "right_rear_wheel"
+    ],
+    "body_contact_allowed": true,
+    "hold_required": false,
+    "trace_dt": 0.06
+  },
+  "video": "execution.mp4",
+  "video_note": "Actual post-physics frames are recorded before reset, including the terminal state."
+}

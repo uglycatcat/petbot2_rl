@@ -1,0 +1,1136 @@
+{
+  "date": "2026-11-23",
+  "batch": "runs/research_20261122_20261122_194358",
+  "reviewed_trials": 16,
+  "scope": "Interim audit; automatic training remains active; fixed default simulation state",
+  "new_releases": [
+    "step7cm_quality_s1213_u1000",
+    "step8cm_s1214_u1500",
+    "step7cm_flip_s1211_u1000"
+  ],
+  "trials": [
+    {
+      "trial": "runs/research_20261122_20261122_194358/diverse_a/trial001",
+      "height_m": 0.07,
+      "selected_update": 201,
+      "success_rate": 0.953125,
+      "video_success_rate": 1.0,
+      "motion": {
+        "duration_s": {
+          "mean": 1.8701639344262297,
+          "min": 1.6,
+          "max": 2.56
+        },
+        "head_abs_mean_rad": {
+          "mean": 0.5296336177919732,
+          "min": 0.4030652344226837,
+          "max": 0.6936771869659424
+        },
+        "far_frame_abs_mean_rad": {
+          "mean": 0.2976896396425904,
+          "min": 0.27909234166145325,
+          "max": 0.32563766837120056
+        },
+        "far_wheel_lift_fraction": {
+          "mean": 0.6090794451450188,
+          "min": 0.46153846153846156,
+          "max": 0.7692307692307693
+        },
+        "bounded_target_rate_rms_per_s": {
+          "mean": 11.40737349592038,
+          "min": 9.439757108172218,
+          "max": 13.689292457448126
+        },
+        "angle_speed_rms_rad_s": {
+          "mean": 6.657988923494933,
+          "min": 5.926375389099121,
+          "max": 7.426703929901123
+        },
+        "angle_acceleration_rms_rad_s2": {
+          "mean": 244.28321713306866,
+          "min": 192.58262634277344,
+          "max": 280.50689697265625
+        }
+      },
+      "deep_inversion_episodes": 3,
+      "body_up_min_range": [
+        -0.9910671710968018,
+        0.6244598031044006
+      ],
+      "success_physics": {
+        "maximum_bottom_error_m": 0.0021560117602348328,
+        "minimum_support_N": 0.04089948534965515
+      },
+      "representative_failure": {
+        "episode": 23,
+        "time_s": 1.48,
+        "top_LF_RF_LR_RR": [
+          false,
+          true,
+          true,
+          false
+        ],
+        "wheel_position": [
+          [
+            0.7701396942138672,
+            -0.33863067626953125,
+            0.16300630569458008
+          ],
+          [
+            0.6848959922790527,
+            -0.41422176361083984,
+            0.1127910166978836
+          ],
+          [
+            0.6619787216186523,
+            -0.2066974639892578,
+            0.10277333855628967
+          ],
+          [
+            0.5861554145812988,
+            -0.2670316696166992,
+            0.07647518813610077
+          ]
+        ],
+        "wheel_bottom": [
+          0.12003965675830841,
+          0.06828334927558899,
+          0.06952129304409027,
+          0.043226368725299835
+        ],
+        "wheel_support_N": [
+          0.0,
+          8.296783447265625,
+          10.542693138122559,
+          0.0
+        ],
+        "root_pose": [
+          0.6492996215820312,
+          -0.3004789352416992,
+          0.1587478071451187,
+          0.8854222297668457,
+          0.2546103000640869,
+          0.18056021630764008,
+          -0.3443818986415863
+        ]
+      },
+      "training_mean_noise_std": {
+        "points": 201,
+        "first": 0.6509665250778198,
+        "last": 0.9353144764900208,
+        "last100_mean": 0.9169528180360794,
+        "min": 0.6509665250778198,
+        "max": 0.9498897790908813
+      },
+      "raw_policy_sha256": "eb6e0a5d823a10277aaf66d46aaab205435452e6b7f3cce047d04bd67f54751d"
+    },
+    {
+      "trial": "runs/research_20261122_20261122_194358/diverse_b/trial001",
+      "height_m": 0.07,
+      "selected_update": 1000,
+      "success_rate": 1.0,
+      "video_success_rate": 1.0,
+      "motion": {
+        "duration_s": {
+          "mean": 1.734375,
+          "min": 1.35,
+          "max": 3.2
+        },
+        "head_abs_mean_rad": {
+          "mean": 0.8539524339139462,
+          "min": 0.7433706521987915,
+          "max": 1.0127613544464111
+        },
+        "far_frame_abs_mean_rad": {
+          "mean": 0.9870932772755623,
+          "min": 0.9735876321792603,
+          "max": 1.0476042032241821
+        },
+        "far_wheel_lift_fraction": {
+          "mean": 0.818655303030303,
+          "min": 0.8181818181818182,
+          "max": 0.8333333333333334
+        },
+        "bounded_target_rate_rms_per_s": {
+          "mean": 18.719498612954364,
+          "min": 17.128721364955712,
+          "max": 19.9144877516298
+        },
+        "angle_speed_rms_rad_s": {
+          "mean": 7.7816286981105804,
+          "min": 6.104079246520996,
+          "max": 8.400726318359375
+        },
+        "angle_acceleration_rms_rad_s2": {
+          "mean": 156.44700264930725,
+          "min": 113.52880096435547,
+          "max": 188.61378479003906
+        }
+      },
+      "deep_inversion_episodes": 0,
+      "body_up_min_range": [
+        -0.20488834381103516,
+        -0.020070314407348633
+      ],
+      "success_physics": {
+        "maximum_bottom_error_m": 0.002152837812900543,
+        "minimum_support_N": 0.16424451768398285
+      },
+      "representative_failure": null,
+      "training_mean_noise_std": {
+        "points": 1000,
+        "first": 0.8032180070877075,
+        "last": 130.49734497070312,
+        "last100_mean": 103.54844367980957,
+        "min": 0.8032180070877075,
+        "max": 130.49734497070312
+      },
+      "raw_policy_sha256": "8100aa1094528530b2efaa720024248778351bc2319758e72cdfebbd30bd6b1c"
+    },
+    {
+      "trial": "runs/research_20261122_20261122_194358/quality_b/trial001",
+      "height_m": 0.07,
+      "selected_update": 1000,
+      "success_rate": 1.0,
+      "video_success_rate": 1.0,
+      "motion": {
+        "duration_s": {
+          "mean": 1.48828125,
+          "min": 1.4500000000000002,
+          "max": 1.55
+        },
+        "head_abs_mean_rad": {
+          "mean": 0.0754869842203334,
+          "min": 0.0595208965241909,
+          "max": 0.09494228661060333
+        },
+        "far_frame_abs_mean_rad": {
+          "mean": 0.04451622435590252,
+          "min": 0.043010275810956955,
+          "max": 0.046971891075372696
+        },
+        "far_wheel_lift_fraction": {
+          "mean": 0.09999999999999999,
+          "min": 0.1,
+          "max": 0.1
+        },
+        "bounded_target_rate_rms_per_s": {
+          "mean": 3.4128025191000155,
+          "min": 3.2364372196227693,
+          "max": 3.706549821059746
+        },
+        "angle_speed_rms_rad_s": {
+          "mean": 1.9394173342734575,
+          "min": 1.7083252668380737,
+          "max": 2.1791491508483887
+        },
+        "angle_acceleration_rms_rad_s2": {
+          "mean": 49.495701134204865,
+          "min": 42.23020553588867,
+          "max": 59.949954986572266
+        }
+      },
+      "deep_inversion_episodes": 0,
+      "body_up_min_range": [
+        0.7139229774475098,
+        0.7495288848876953
+      ],
+      "success_physics": {
+        "maximum_bottom_error_m": 0.0017344951629638672,
+        "minimum_support_N": 0.30940136313438416
+      },
+      "representative_failure": null,
+      "training_mean_noise_std": {
+        "points": 1000,
+        "first": 0.6404551267623901,
+        "last": 0.12713555991649628,
+        "last100_mean": 0.1294965250790119,
+        "min": 0.12701933085918427,
+        "max": 0.6404551267623901
+      },
+      "raw_policy_sha256": "b2da4431e340d1f94a2d42444d96aef875899a9448956d4bce699af2a3846fae"
+    },
+    {
+      "trial": "runs/research_20261122_20261122_194358/diverse_a/trial002",
+      "height_m": 0.07,
+      "selected_update": 201,
+      "success_rate": 1.0,
+      "video_success_rate": 1.0,
+      "motion": {
+        "duration_s": {
+          "mean": 2.9507812500000004,
+          "min": 1.8,
+          "max": 8.4
+        },
+        "head_abs_mean_rad": {
+          "mean": 0.7815275965258479,
+          "min": 0.6567879915237427,
+          "max": 0.962361752986908
+        },
+        "far_frame_abs_mean_rad": {
+          "mean": 0.6290876045823097,
+          "min": 0.4602435827255249,
+          "max": 0.7639501690864563
+        },
+        "far_wheel_lift_fraction": {
+          "mean": 0.48597582972582976,
+          "min": 0.25,
+          "max": 0.9090909090909091
+        },
+        "bounded_target_rate_rms_per_s": {
+          "mean": 13.666048622413877,
+          "min": 11.240787648881867,
+          "max": 16.717521701289336
+        },
+        "angle_speed_rms_rad_s": {
+          "mean": 7.183795541524887,
+          "min": 6.208984851837158,
+          "max": 8.35279369354248
+        },
+        "angle_acceleration_rms_rad_s2": {
+          "mean": 175.60569286346436,
+          "min": 138.68948364257812,
+          "max": 249.01953125
+        }
+      },
+      "deep_inversion_episodes": 3,
+      "body_up_min_range": [
+        -0.8807898759841919,
+        0.36450105905532837
+      ],
+      "success_physics": {
+        "maximum_bottom_error_m": 0.0021639391779899597,
+        "minimum_support_N": 0.12457145750522614
+      },
+      "representative_failure": null,
+      "training_mean_noise_std": {
+        "points": 201,
+        "first": 0.8533194661140442,
+        "last": 3.0602314472198486,
+        "last100_mean": 2.639782007932663,
+        "min": 0.8533194661140442,
+        "max": 3.0602314472198486
+      },
+      "raw_policy_sha256": "5c9c7561c2b75f2ca77f102ac54b5f6a84c5a1452f4c65b8b1200b08bad3fee3"
+    },
+    {
+      "trial": "runs/research_20261122_20261122_194358/quality_a/trial001",
+      "height_m": 0.07,
+      "selected_update": 201,
+      "success_rate": 1.0,
+      "video_success_rate": 1.0,
+      "motion": {
+        "duration_s": {
+          "mean": 1.809375,
+          "min": 1.6,
+          "max": 2.1
+        },
+        "head_abs_mean_rad": {
+          "mean": 0.27410928113386035,
+          "min": 0.25350674986839294,
+          "max": 0.2954483926296234
+        },
+        "far_frame_abs_mean_rad": {
+          "mean": 0.1821173073258251,
+          "min": 0.14482854306697845,
+          "max": 0.2050921767950058
+        },
+        "far_wheel_lift_fraction": {
+          "mean": 0.0809659090909091,
+          "min": 0.0,
+          "max": 0.09090909090909091
+        },
+        "bounded_target_rate_rms_per_s": {
+          "mean": 3.8471107704924177,
+          "min": 3.554909015594423,
+          "max": 4.240877872760161
+        },
+        "angle_speed_rms_rad_s": {
+          "mean": 2.4817489571869373,
+          "min": 2.237335443496704,
+          "max": 3.1165270805358887
+        },
+        "angle_acceleration_rms_rad_s2": {
+          "mean": 42.612130761146545,
+          "min": 33.42669677734375,
+          "max": 57.43674087524414
+        }
+      },
+      "deep_inversion_episodes": 0,
+      "body_up_min_range": [
+        0.31277841329574585,
+        0.5341724753379822
+      ],
+      "success_physics": {
+        "maximum_bottom_error_m": 0.001745082437992096,
+        "minimum_support_N": 0.23602008819580078
+      },
+      "representative_failure": null,
+      "training_mean_noise_std": {
+        "points": 201,
+        "first": 0.6492459177970886,
+        "last": 0.4028484523296356,
+        "last100_mean": 0.3969597941637039,
+        "min": 0.34422168135643005,
+        "max": 0.6492459177970886
+      },
+      "raw_policy_sha256": "1bbf637f9e09451c7834ca9ecddeb51497d9efbc43713e42eae7892c6a91e297"
+    },
+    {
+      "trial": "runs/research_20261122_20261122_194358/height_b/trial001",
+      "height_m": 0.1,
+      "selected_update": 201,
+      "success_rate": 0.0,
+      "video_success_rate": 0.0,
+      "motion": {
+        "duration_s": null,
+        "head_abs_mean_rad": null,
+        "far_frame_abs_mean_rad": null,
+        "far_wheel_lift_fraction": null,
+        "bounded_target_rate_rms_per_s": null,
+        "angle_speed_rms_rad_s": null,
+        "angle_acceleration_rms_rad_s2": null
+      },
+      "deep_inversion_episodes": 64,
+      "body_up_min_range": [
+        -0.9392740726470947,
+        -0.6516224145889282
+      ],
+      "success_physics": null,
+      "representative_failure": {
+        "episode": 2,
+        "time_s": 1.3,
+        "top_LF_RF_LR_RR": [
+          true,
+          true,
+          false,
+          false
+        ],
+        "wheel_position": [
+          [
+            0.6634902954101562,
+            0.29468345642089844,
+            0.14315833151340485
+          ],
+          [
+            0.7300281524658203,
+            0.17893266677856445,
+            0.14085951447486877
+          ],
+          [
+            0.5701446533203125,
+            0.18564891815185547,
+            0.033016737550497055
+          ],
+          [
+            0.5779018402099609,
+            0.09424066543579102,
+            0.0916861891746521
+          ]
+        ],
+        "wheel_bottom": [
+          0.09892049431800842,
+          0.09824468940496445,
+          -0.00033732131123542786,
+          0.058328304439783096
+        ],
+        "wheel_support_N": [
+          0.6261473894119263,
+          6.339059829711914,
+          0.0,
+          0.0
+        ],
+        "root_pose": [
+          0.5995454788208008,
+          0.18549156188964844,
+          0.13915519416332245,
+          0.9564698338508606,
+          -0.19171525537967682,
+          0.0362488217651844,
+          0.21701771020889282
+        ]
+      },
+      "training_mean_noise_std": {
+        "points": 201,
+        "first": 0.6506851315498352,
+        "last": 0.9292213320732117,
+        "last100_mean": 0.8525882577896118,
+        "min": 0.6506851315498352,
+        "max": 0.9292213320732117
+      },
+      "raw_policy_sha256": null
+    },
+    {
+      "trial": "runs/research_20261122_20261122_194358/height_a/trial001",
+      "height_m": 0.08,
+      "selected_update": 201,
+      "success_rate": 0.0,
+      "video_success_rate": 0.0,
+      "motion": {
+        "duration_s": null,
+        "head_abs_mean_rad": null,
+        "far_frame_abs_mean_rad": null,
+        "far_wheel_lift_fraction": null,
+        "bounded_target_rate_rms_per_s": null,
+        "angle_speed_rms_rad_s": null,
+        "angle_acceleration_rms_rad_s2": null
+      },
+      "deep_inversion_episodes": 64,
+      "body_up_min_range": [
+        -0.9967014789581299,
+        -0.9137382507324219
+      ],
+      "success_physics": null,
+      "representative_failure": {
+        "episode": 0,
+        "time_s": 2.6500000000000004,
+        "top_LF_RF_LR_RR": [
+          false,
+          false,
+          true,
+          true
+        ],
+        "wheel_position": [
+          [
+            0.6101150512695312,
+            0.2898855209350586,
+            0.23989234864711761
+          ],
+          [
+            0.6435098648071289,
+            0.1711864471435547,
+            0.26395097374916077
+          ],
+          [
+            0.7369174957275391,
+            0.2733163833618164,
+            0.11190865933895111
+          ],
+          [
+            0.7413644790649414,
+            0.17194652557373047,
+            0.11177635937929153
+          ]
+        ],
+        "wheel_bottom": [
+          0.19514285027980804,
+          0.21891750395298004,
+          0.0799996554851532,
+          0.07986214756965637
+        ],
+        "wheel_support_N": [
+          0.0,
+          0.0,
+          7.000968933105469,
+          10.94192123413086
+        ],
+        "root_pose": [
+          0.6621522903442383,
+          0.21774864196777344,
+          0.14065730571746826,
+          0.2550552189350128,
+          0.03820523992180824,
+          -0.9621260166168213,
+          0.08832138776779175
+        ]
+      },
+      "training_mean_noise_std": {
+        "points": 201,
+        "first": 0.6521658897399902,
+        "last": 0.8932520151138306,
+        "last100_mean": 0.7600240701436997,
+        "min": 0.6004552841186523,
+        "max": 0.9022390246391296
+      },
+      "raw_policy_sha256": null
+    },
+    {
+      "trial": "runs/research_20261122_20261122_194358/diverse_a/trial003",
+      "height_m": 0.07,
+      "selected_update": 1000,
+      "success_rate": 1.0,
+      "video_success_rate": 1.0,
+      "motion": {
+        "duration_s": {
+          "mean": 1.47375,
+          "min": 1.44,
+          "max": 1.56
+        },
+        "head_abs_mean_rad": {
+          "mean": 0.5787409534677863,
+          "min": 0.5229032635688782,
+          "max": 0.6555872559547424
+        },
+        "far_frame_abs_mean_rad": {
+          "mean": 0.728759067133069,
+          "min": 0.7262064814567566,
+          "max": 0.7308258414268494
+        },
+        "far_wheel_lift_fraction": {
+          "mean": 0.8888888888888891,
+          "min": 0.8888888888888888,
+          "max": 0.8888888888888888
+        },
+        "bounded_target_rate_rms_per_s": {
+          "mean": 8.280371619544109,
+          "min": 7.922995311951381,
+          "max": 8.696362122597165
+        },
+        "angle_speed_rms_rad_s": {
+          "mean": 6.1719930693507195,
+          "min": 5.93046236038208,
+          "max": 6.398892402648926
+        },
+        "angle_acceleration_rms_rad_s2": {
+          "mean": 133.48391699790955,
+          "min": 128.4910430908203,
+          "max": 138.88818359375
+        }
+      },
+      "deep_inversion_episodes": 0,
+      "body_up_min_range": [
+        0.3816130757331848,
+        0.3880620002746582
+      ],
+      "success_physics": {
+        "maximum_bottom_error_m": 0.0017433613538742065,
+        "minimum_support_N": 0.07866054773330688
+      },
+      "representative_failure": null,
+      "training_mean_noise_std": {
+        "points": 1000,
+        "first": 0.5011540055274963,
+        "last": 0.15222416818141937,
+        "last100_mean": 0.154694302380085,
+        "min": 0.15222416818141937,
+        "max": 0.5030714273452759
+      },
+      "raw_policy_sha256": "c2f78f06d37b492bc953a8752715e764b01adbb99a60d1500e7aff08884ec830"
+    },
+    {
+      "trial": "runs/research_20261122_20261122_194358/diverse_b/trial002",
+      "height_m": 0.07,
+      "selected_update": 1000,
+      "success_rate": 1.0,
+      "video_success_rate": 1.0,
+      "motion": {
+        "duration_s": {
+          "mean": 3.3,
+          "min": 2.6999999999999997,
+          "max": 5.88
+        },
+        "head_abs_mean_rad": {
+          "mean": 0.6206502234563231,
+          "min": 0.49874258041381836,
+          "max": 0.9419365525245667
+        },
+        "far_frame_abs_mean_rad": {
+          "mean": 0.94885796867311,
+          "min": 0.9440348744392395,
+          "max": 0.9529217481613159
+        },
+        "far_wheel_lift_fraction": {
+          "mean": 0.22222222222222227,
+          "min": 0.2222222222222222,
+          "max": 0.2222222222222222
+        },
+        "bounded_target_rate_rms_per_s": {
+          "mean": 16.499231349396737,
+          "min": 15.326212432442874,
+          "max": 17.552230830224993
+        },
+        "angle_speed_rms_rad_s": {
+          "mean": 7.782272964715958,
+          "min": 5.840279579162598,
+          "max": 8.659178733825684
+        },
+        "angle_acceleration_rms_rad_s2": {
+          "mean": 166.05698609352112,
+          "min": 122.29725646972656,
+          "max": 196.1241912841797
+        }
+      },
+      "deep_inversion_episodes": 64,
+      "body_up_min_range": [
+        -0.942440390586853,
+        -0.7446461915969849
+      ],
+      "success_physics": {
+        "maximum_bottom_error_m": 0.0021617040038108826,
+        "minimum_support_N": 0.04047653079032898
+      },
+      "representative_failure": null,
+      "training_mean_noise_std": {
+        "points": 1000,
+        "first": 0.8525505065917969,
+        "last": 128.75082397460938,
+        "last100_mean": 106.71603401184082,
+        "min": 0.8525505065917969,
+        "max": 128.75082397460938
+      },
+      "raw_policy_sha256": "c4142d0559759330cf98fd00b7f4c0743da5d7a85ca12e68c83bf57882281cbf"
+    },
+    {
+      "trial": "runs/research_20261122_20261122_194358/quality_b/trial002",
+      "height_m": 0.07,
+      "selected_update": 1000,
+      "success_rate": 1.0,
+      "video_success_rate": 1.0,
+      "motion": {
+        "duration_s": {
+          "mean": 1.49609375,
+          "min": 1.4500000000000002,
+          "max": 1.55
+        },
+        "head_abs_mean_rad": {
+          "mean": 0.0496188968536444,
+          "min": 0.03724585473537445,
+          "max": 0.06560663878917694
+        },
+        "far_frame_abs_mean_rad": {
+          "mean": 0.09158067661337554,
+          "min": 0.08826744556427002,
+          "max": 0.09555211663246155
+        },
+        "far_wheel_lift_fraction": {
+          "mean": 0.3,
+          "min": 0.3,
+          "max": 0.3
+        },
+        "bounded_target_rate_rms_per_s": {
+          "mean": 3.0876196734097374,
+          "min": 2.9684426872293015,
+          "max": 3.1836747213685808
+        },
+        "angle_speed_rms_rad_s": {
+          "mean": 1.5850566793233156,
+          "min": 1.4292885065078735,
+          "max": 1.740976333618164
+        },
+        "angle_acceleration_rms_rad_s2": {
+          "mean": 29.767846822738647,
+          "min": 25.74922752380371,
+          "max": 34.81752395629883
+        }
+      },
+      "deep_inversion_episodes": 0,
+      "body_up_min_range": [
+        0.7908039093017578,
+        0.8816130757331848
+      ],
+      "success_physics": {
+        "maximum_bottom_error_m": 0.0017478987574577332,
+        "minimum_support_N": 0.4034138023853302
+      },
+      "representative_failure": null,
+      "training_mean_noise_std": {
+        "points": 1000,
+        "first": 0.6421186327934265,
+        "last": 0.055999238044023514,
+        "last100_mean": 0.05633378714323044,
+        "min": 0.05594520643353462,
+        "max": 0.6421186327934265
+      },
+      "raw_policy_sha256": "819b66606a07573cfc81117614d6bb55e8e8584bfb14c439e71cf3158bdaa3a6"
+    },
+    {
+      "trial": "runs/research_20261122_20261122_194358/quality_a/trial002",
+      "height_m": 0.07,
+      "selected_update": 1000,
+      "success_rate": 1.0,
+      "video_success_rate": 1.0,
+      "motion": {
+        "duration_s": {
+          "mean": 1.4390625000000004,
+          "min": 1.4000000000000001,
+          "max": 1.5
+        },
+        "head_abs_mean_rad": {
+          "mean": 0.18409693101420999,
+          "min": 0.161894291639328,
+          "max": 0.20611169934272766
+        },
+        "far_frame_abs_mean_rad": {
+          "mean": 0.2634210977703333,
+          "min": 0.2559140622615814,
+          "max": 0.2695979177951813
+        },
+        "far_wheel_lift_fraction": {
+          "mean": 0.6,
+          "min": 0.6,
+          "max": 0.6
+        },
+        "bounded_target_rate_rms_per_s": {
+          "mean": 4.583834121275949,
+          "min": 4.296399795662761,
+          "max": 4.806758036854507
+        },
+        "angle_speed_rms_rad_s": {
+          "mean": 3.042759582400322,
+          "min": 2.7461202144622803,
+          "max": 3.406029462814331
+        },
+        "angle_acceleration_rms_rad_s2": {
+          "mean": 73.14108908176422,
+          "min": 66.0984878540039,
+          "max": 81.67831420898438
+        }
+      },
+      "deep_inversion_episodes": 0,
+      "body_up_min_range": [
+        0.4594387412071228,
+        0.4832885265350342
+      ],
+      "success_physics": {
+        "maximum_bottom_error_m": 0.0017457380890846252,
+        "minimum_support_N": 0.3015699088573456
+      },
+      "representative_failure": null,
+      "training_mean_noise_std": {
+        "points": 1000,
+        "first": 0.6489660143852234,
+        "last": 0.09401222318410873,
+        "last100_mean": 0.09664105772972106,
+        "min": 0.09401222318410873,
+        "max": 0.6489660143852234
+      },
+      "raw_policy_sha256": "ddcc0b6763c9f45ede5cf2b6899d3fbbec24d62925d92bade14ae91469d479cd"
+    },
+    {
+      "trial": "runs/research_20261122_20261122_194358/diverse_a/trial004",
+      "height_m": 0.07,
+      "selected_update": 201,
+      "success_rate": 1.0,
+      "video_success_rate": 1.0,
+      "motion": {
+        "duration_s": {
+          "mean": 2.8068750000000002,
+          "min": 1.84,
+          "max": 5.48
+        },
+        "head_abs_mean_rad": {
+          "mean": 0.7031748406589031,
+          "min": 0.5999055504798889,
+          "max": 0.8923458456993103
+        },
+        "far_frame_abs_mean_rad": {
+          "mean": 0.9910869793966413,
+          "min": 0.9869998693466187,
+          "max": 0.9936277866363525
+        },
+        "far_wheel_lift_fraction": {
+          "mean": 0.8341346153846153,
+          "min": 0.7692307692307693,
+          "max": 0.8461538461538461
+        },
+        "bounded_target_rate_rms_per_s": {
+          "mean": 12.778963881850732,
+          "min": 9.434181983398759,
+          "max": 14.438287268774168
+        },
+        "angle_speed_rms_rad_s": {
+          "mean": 6.359875500202179,
+          "min": 5.6328125,
+          "max": 6.945237159729004
+        },
+        "angle_acceleration_rms_rad_s2": {
+          "mean": 206.31652235984802,
+          "min": 130.8182373046875,
+          "max": 234.52040100097656
+        }
+      },
+      "deep_inversion_episodes": 0,
+      "body_up_min_range": [
+        0.06725668907165527,
+        0.08599579334259033
+      ],
+      "success_physics": {
+        "maximum_bottom_error_m": 0.002177588641643524,
+        "minimum_support_N": 0.07862753421068192
+      },
+      "representative_failure": null,
+      "training_mean_noise_std": {
+        "points": 201,
+        "first": 0.6515183448791504,
+        "last": 0.8912437558174133,
+        "last100_mean": 0.8999475646018982,
+        "min": 0.6515183448791504,
+        "max": 0.9238152503967285
+      },
+      "raw_policy_sha256": "08f1d297cc3514d01b7692042734d98a45847b481ebd925e4541df3117be859b"
+    },
+    {
+      "trial": "runs/research_20261122_20261122_194358/diverse_b/trial003",
+      "height_m": 0.07,
+      "selected_update": 501,
+      "success_rate": 1.0,
+      "video_success_rate": 1.0,
+      "motion": {
+        "duration_s": {
+          "mean": 1.725625,
+          "min": 1.52,
+          "max": 2.0
+        },
+        "head_abs_mean_rad": {
+          "mean": 0.9019915349781513,
+          "min": 0.7340672612190247,
+          "max": 0.9889318346977234
+        },
+        "far_frame_abs_mean_rad": {
+          "mean": 0.5915976334363222,
+          "min": 0.5757877826690674,
+          "max": 0.6075887084007263
+        },
+        "far_wheel_lift_fraction": {
+          "mean": 0.025540865384615384,
+          "min": 0.0,
+          "max": 0.23076923076923078
+        },
+        "bounded_target_rate_rms_per_s": {
+          "mean": 9.637780543882062,
+          "min": 8.356542770177343,
+          "max": 10.817682710200897
+        },
+        "angle_speed_rms_rad_s": {
+          "mean": 4.826640896499157,
+          "min": 4.275704860687256,
+          "max": 5.718568801879883
+        },
+        "angle_acceleration_rms_rad_s2": {
+          "mean": 148.58956921100616,
+          "min": 123.39056396484375,
+          "max": 174.0034637451172
+        }
+      },
+      "deep_inversion_episodes": 0,
+      "body_up_min_range": [
+        0.5520082116127014,
+        0.6937896013259888
+      ],
+      "success_physics": {
+        "maximum_bottom_error_m": 0.0019355937838554382,
+        "minimum_support_N": 0.19181150197982788
+      },
+      "representative_failure": null,
+      "training_mean_noise_std": {
+        "points": 501,
+        "first": 0.49999743700027466,
+        "last": 0.351937860250473,
+        "last100_mean": 0.3665306955575943,
+        "min": 0.3221939206123352,
+        "max": 0.5018966794013977
+      },
+      "raw_policy_sha256": "3036939eced3c7ccb6539f76a828abff0a5a82ea9a9220a0d73b284ed2fd19e7"
+    },
+    {
+      "trial": "runs/research_20261122_20261122_194358/diverse_a/trial005",
+      "height_m": 0.07,
+      "selected_update": 1000,
+      "success_rate": 1.0,
+      "video_success_rate": 1.0,
+      "motion": {
+        "duration_s": {
+          "mean": 2.6578125000000004,
+          "min": 2.3000000000000003,
+          "max": 4.05
+        },
+        "head_abs_mean_rad": {
+          "mean": 0.7249479331076145,
+          "min": 0.6494181156158447,
+          "max": 0.8932006359100342
+        },
+        "far_frame_abs_mean_rad": {
+          "mean": 1.1225450281053782,
+          "min": 1.1215243339538574,
+          "max": 1.123414158821106
+        },
+        "far_wheel_lift_fraction": {
+          "mean": 0.6036931818181819,
+          "min": 0.5454545454545454,
+          "max": 0.6363636363636364
+        },
+        "bounded_target_rate_rms_per_s": {
+          "mean": 17.853810363979193,
+          "min": 16.80621845667035,
+          "max": 19.048161470379984
+        },
+        "angle_speed_rms_rad_s": {
+          "mean": 7.177497670054436,
+          "min": 5.805784702301025,
+          "max": 7.851370334625244
+        },
+        "angle_acceleration_rms_rad_s2": {
+          "mean": 167.3911271095276,
+          "min": 135.59225463867188,
+          "max": 184.7479248046875
+        }
+      },
+      "deep_inversion_episodes": 64,
+      "body_up_min_range": [
+        -0.924799919128418,
+        -0.646173357963562
+      ],
+      "success_physics": {
+        "maximum_bottom_error_m": 0.002176128327846527,
+        "minimum_support_N": 0.19496677815914154
+      },
+      "representative_failure": null,
+      "training_mean_noise_std": {
+        "points": 1000,
+        "first": 0.8559519052505493,
+        "last": 99.46456909179688,
+        "last100_mean": 85.29428703308105,
+        "min": 0.8559519052505493,
+        "max": 99.46456909179688
+      },
+      "raw_policy_sha256": "e86280b006f9e6ead43721d758492625d6697680e869f3f51a2d6a0e24318ea7"
+    },
+    {
+      "trial": "runs/research_20261122_20261122_194358/height_b/trial002",
+      "height_m": 0.1,
+      "selected_update": 201,
+      "success_rate": 0.0,
+      "video_success_rate": 0.0,
+      "motion": {
+        "duration_s": null,
+        "head_abs_mean_rad": null,
+        "far_frame_abs_mean_rad": null,
+        "far_wheel_lift_fraction": null,
+        "bounded_target_rate_rms_per_s": null,
+        "angle_speed_rms_rad_s": null,
+        "angle_acceleration_rms_rad_s2": null
+      },
+      "deep_inversion_episodes": 64,
+      "body_up_min_range": [
+        -0.9990251064300537,
+        -0.8649235963821411
+      ],
+      "success_physics": null,
+      "representative_failure": {
+        "episode": 7,
+        "time_s": 1.05,
+        "top_LF_RF_LR_RR": [
+          true,
+          true,
+          false,
+          false
+        ],
+        "wheel_position": [
+          [
+            0.6865949630737305,
+            0.02506256103515625,
+            0.143403559923172
+          ],
+          [
+            0.6711235046386719,
+            -0.0987710952758789,
+            0.14356569945812225
+          ],
+          [
+            0.5340166091918945,
+            0.03803253173828125,
+            0.04704590514302254
+          ],
+          [
+            0.5343990325927734,
+            -0.061379432678222656,
+            0.03113199770450592
+          ]
+        ],
+        "wheel_bottom": [
+          0.09854437410831451,
+          0.09852401912212372,
+          0.015663880854845047,
+          -0.00024344027042388916
+        ],
+        "wheel_support_N": [
+          8.93908405303955,
+          0.6180644035339355,
+          0.0,
+          0.0
+        ],
+        "root_pose": [
+          0.5700168609619141,
+          -0.024553298950195312,
+          0.1289825290441513,
+          0.9897109866142273,
+          0.057205766439437866,
+          0.12409272789955139,
+          -0.042432110756635666
+        ]
+      },
+      "training_mean_noise_std": {
+        "points": 201,
+        "first": 0.8534590005874634,
+        "last": 1.8443788290023804,
+        "last100_mean": 1.4067321753501891,
+        "min": 0.8534590005874634,
+        "max": 1.846167802810669
+      },
+      "raw_policy_sha256": null
+    },
+    {
+      "trial": "runs/research_20261122_20261122_194358/height_a/trial002",
+      "height_m": 0.08,
+      "selected_update": 1500,
+      "success_rate": 1.0,
+      "video_success_rate": 1.0,
+      "motion": {
+        "duration_s": {
+          "mean": 2.11015625,
+          "min": 1.55,
+          "max": 3.7
+        },
+        "head_abs_mean_rad": {
+          "mean": 0.6782927317544818,
+          "min": 0.5203206539154053,
+          "max": 0.8157380819320679
+        },
+        "far_frame_abs_mean_rad": {
+          "mean": 0.9036980159580708,
+          "min": 0.8966615796089172,
+          "max": 0.9073399901390076
+        },
+        "far_wheel_lift_fraction": {
+          "mean": 0.27556818181818177,
+          "min": 0.2727272727272727,
+          "max": 0.36363636363636365
+        },
+        "bounded_target_rate_rms_per_s": {
+          "mean": 17.548438102744125,
+          "min": 15.19398377178095,
+          "max": 19.813949444585564
+        },
+        "angle_speed_rms_rad_s": {
+          "mean": 7.939740940928459,
+          "min": 7.0899810791015625,
+          "max": 8.640227317810059
+        },
+        "angle_acceleration_rms_rad_s2": {
+          "mean": 185.26103830337524,
+          "min": 146.1792755126953,
+          "max": 213.59396362304688
+        }
+      },
+      "deep_inversion_episodes": 5,
+      "body_up_min_range": [
+        -0.8740464448928833,
+        0.3304947018623352
+      ],
+      "success_physics": {
+        "maximum_bottom_error_m": 0.002132602035999298,
+        "minimum_support_N": 0.07558164745569229
+      },
+      "representative_failure": null,
+      "training_mean_noise_std": {
+        "points": 1500,
+        "first": 0.8537507057189941,
+        "last": 212103.296875,
+        "last100_mean": 174359.33953125,
+        "min": 0.8537507057189941,
+        "max": 212103.296875
+      },
+      "raw_policy_sha256": "8a5546cfec44cc58db84a68a1f50fe8f638baa6228a9b8f4e83a790db8ecfe50"
+    }
+  ]
+}
