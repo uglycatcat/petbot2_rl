@@ -52,6 +52,13 @@ evidence = {
 for target, (directory, names) in evidence.items():
     for name in names:
         files[f'evidence/{target}/{name}'] = (batch / directory / name).read_bytes()
+# Optional existing research visuals keep comparison links usable in an unpacked bundle.
+for name in selection.get('supplementary_files', []):
+    path = (PROJECT / name).resolve()
+    path.relative_to(PROJECT)
+    if name in files:
+        raise ValueError('Supplement would overwrite an archived file: ' + name)
+    files[name] = path.read_bytes()
 files['SOURCE_COMMIT'] = (commit + '\n').encode()
 files['SHA256SUMS'] = ''.join(f'{digest(data)}  {name}\n' for name, data in sorted(files.items())).encode()
 output.parent.mkdir(exist_ok=True)

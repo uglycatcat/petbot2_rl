@@ -67,5 +67,14 @@
     "step_explore/env.py": "bfe99e51eb1d062c2dc6f9ab1fae68b4f2d2bd40353d4327bc7bbce7fefa8f78",
     "step_explore/evaluate.py": "472d9d5c9b4631b88e3cebac3335acd22b02497217e2b110d2ad4aa292685677",
     "step_explore/policy.py": "4ecea8d57d914de750a388723623a2439a00fffa2ca92efd9396c8046c0fac94"
-  }
+  },
+  "supplementary_files": [
+    "runs/research_review_20261123/comparison_half_speed.mp4",
+    "runs/research_review_20261123/quality_trajectory_comparison.png",
+    "runs/research_20261122_20261122_194358/quality_b/trial002/video/execution.mp4",
+    "runs/research_20261122_20261122_194358/height_a/trial002/video/execution.mp4",
+    "runs/research_20261122_20261122_194358/diverse_b/trial002/video/execution.mp4",
+    "runs/research_20261122_20261122_194358/quality_b/trial001/video/execution.mp4",
+    "runs/research_20261122_20261122_194358/quality_b/trial001/export/policy_raw.pt"
+  ]
 }
